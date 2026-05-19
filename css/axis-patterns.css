@@ -1,0 +1,764 @@
+/* ============================================================
+   AXIS TEMPLATE DESIGN PATTERNS
+   Geïnspireerd door: https://www.styleui.dev/template/axis
+   
+   Key patterns:
+   - Floating pill navbar with scroll hide/show
+   - Two-column hero with large typography
+   - Feature section with 3-column layout
+   - Stats grid with border pattern
+   - Testimonial cards with avatars
+   - Logo cloud with grayscale hover
+   - Overlapping tool icons
+   - Team avatars with hover tooltips
+   - Pricing cards with featured state
+   - Clean footer with social links
+   ============================================================ */
+
+/* --- AXIS: Floating Pill Navbar --- */
+.axis-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease;
+}
+.axis-navbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.5rem 1rem;
+  background: rgba(10, 10, 11, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+}
+.axis-navbar.scrolled .axis-navbar-inner {
+  transform: scale(0.98);
+  box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.3);
+}
+.axis-navbar-nav {
+  display: none;
+  align-items: center;
+  gap: 2rem;
+}
+@media (min-width: 1024px) {
+  .axis-navbar-nav {
+    display: flex;
+  }
+}
+.axis-nav-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  transition: color 0.2s ease;
+}
+.axis-nav-link:hover {
+  color: #fff;
+}
+
+/* --- AXIS: Hero Two-Column --- */
+.axis-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 2rem 1rem;
+}
+@media (min-width: 1024px) {
+  .axis-hero {
+    flex-direction: row;
+    justify-content: space-between;
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+}
+.axis-hero-title {
+  font-size: 2rem;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-align: center;
+}
+@media (min-width: 768px) {
+  .axis-hero-title {
+    font-size: 3rem;
+  }
+}
+@media (min-width: 1024px) {
+  .axis-hero-title {
+    font-size: 3.75rem;
+    text-align: left;
+    max-width: 32rem;
+  }
+}
+@media (min-width: 1280px) {
+  .axis-hero-title {
+    font-size: 4.5rem;
+    max-width: 48rem;
+  }
+}
+.axis-hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 32rem;
+}
+.axis-hero-description {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+}
+@media (min-width: 1024px) {
+  .axis-hero-description {
+    font-size: 1.25rem;
+    text-align: left;
+  }
+}
+
+/* --- AXIS: Feature Section --- */
+.axis-feature {
+  position: relative;
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+.axis-feature-grid {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .axis-feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 2.5fr 1fr;
+    align-items: center;
+    gap: 3rem;
+  }
+}
+.axis-feature-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8rem;
+}
+.axis-feature-side-left {
+  padding-bottom: 6rem;
+}
+.axis-feature-side-right {
+  padding-top: 8rem;
+}
+.axis-feature-center {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+.axis-feature-card {
+  max-width: 15rem;
+}
+.axis-feature-card h3 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+.axis-feature-card p {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* --- AXIS: Stats Grid --- */
+.axis-stats {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+.axis-stats-header {
+  margin-bottom: 4rem;
+  text-align: center;
+}
+.axis-stats-header h2 {
+  font-size: 1.875rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.axis-stats-header p {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+.axis-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+@media (min-width: 768px) {
+  .axis-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.axis-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+.axis-stat-value {
+  font-size: 1.875rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+@media (min-width: 768px) {
+  .axis-stat-value {
+    font-size: 2.25rem;
+  }
+}
+.axis-stat-label {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* --- AXIS: Testimonial Cards --- */
+.axis-testimonials {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+.axis-testimonials-header {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+.axis-testimonials-header h2 {
+  font-size: 1.875rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.axis-testimonials-header p {
+  margin-top: 1rem;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.5);
+  max-width: 36rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+.axis-testimonials-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+@media (min-width: 768px) {
+  .axis-testimonials-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .axis-testimonials-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.axis-testimonial-card {
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+.axis-testimonial-card:hover {
+  border-color: rgba(212, 175, 55, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+}
+.axis-testimonial-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.axis-testimonial-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.axis-testimonial-name {
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.axis-testimonial-handle {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+.axis-testimonial-content {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.6;
+}
+.axis-testimonial-highlight {
+  color: #D4AF37;
+}
+.axis-verified-badge {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: #1D9BF0;
+  color: #fff;
+}
+
+/* --- AXIS: Logo Cloud / Companies --- */
+.axis-logo-cloud {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+.axis-logo-cloud p {
+  text-align: center;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.5);
+}
+.axis-logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+@media (min-width: 768px) {
+  .axis-logos {
+    gap: 3rem;
+  }
+}
+@media (min-width: 1024px) {
+  .axis-logos {
+    gap: 4rem;
+  }
+}
+.axis-logo-item {
+  height: 1.5rem;
+  width: auto;
+  opacity: 0.5;
+  filter: grayscale(100%);
+  transition: all 0.3s ease;
+}
+@media (min-width: 768px) {
+  .axis-logo-item {
+    height: 1.75rem;
+  }
+}
+@media (min-width: 1024px) {
+  .axis-logo-item {
+    height: 2.5rem;
+  }
+}
+.axis-logo-item:hover {
+  opacity: 1;
+  filter: grayscale(0%);
+}
+
+/* --- AXIS: Tools (Overlapping Icons) --- */
+.axis-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+  width: 100%;
+}
+.axis-tools-header {
+  text-align: center;
+}
+.axis-tools-header h2 {
+  font-size: 1.875rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.axis-tools-header p {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+  max-width: 24rem;
+}
+.axis-tools-list {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.axis-tool-icon {
+  position: relative;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -0.75rem;
+  transition: all 0.3s ease;
+}
+.axis-tool-icon:first-child {
+  margin-left: 0;
+}
+.axis-tool-icon:hover {
+  transform: scale(1.1);
+  z-index: 10;
+}
+.axis-tool-icon img {
+  width: 1.5rem;
+  height: 1.5rem;
+  opacity: 0.7;
+}
+
+/* --- AXIS: Team Avatars --- */
+.axis-team {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+  margin-top: 7rem;
+  margin-bottom: 1rem;
+}
+@media (min-width: 768px) {
+  .axis-team {
+    margin-top: 10rem;
+  }
+}
+.axis-team-avatars {
+  position: relative;
+  height: 11rem;
+  width: 16rem;
+}
+.axis-team-avatar {
+  position: absolute;
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+.axis-team-avatar:hover {
+  transform: scale(1.05);
+}
+.axis-team-avatar-1 {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.axis-team-avatar-2 {
+  bottom: 0;
+  left: 0;
+}
+.axis-team-avatar-3 {
+  bottom: 0;
+  right: 0;
+}
+.axis-team-tooltip {
+  position: absolute;
+  top: -4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  color: #000;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  white-space: nowrap;
+  z-index: 10;
+  font-size: 0.875rem;
+}
+.axis-team-tooltip .role {
+  font-size: 0.75rem;
+  color: #666;
+}
+.axis-team-tagline {
+  font-size: 1.5rem;
+  text-align: center;
+  max-width: 32rem;
+}
+@media (min-width: 768px) {
+  .axis-team-tagline {
+    font-size: 2.25rem;
+  }
+}
+
+/* --- AXIS: Pricing Cards --- */
+.axis-pricing {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+.axis-pricing-header {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+.axis-pricing-header h2 {
+  font-size: 1.875rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.axis-pricing-header p {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+.axis-pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+@media (min-width: 768px) {
+  .axis-pricing-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.axis-pricing-card {
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 2rem;
+  transition: all 0.3s ease;
+}
+.axis-pricing-card:hover {
+  border-color: rgba(212, 175, 55, 0.15);
+}
+.axis-pricing-card.featured {
+  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(212, 175, 55, 0.03);
+  position: relative;
+}
+.axis-pricing-card.featured::before {
+  content: 'Most popular';
+  position: absolute;
+  top: -0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #D4AF37, #E8C96A);
+  color: #0a0a0b;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.axis-pricing-name {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+.axis-pricing-price {
+  font-size: 2.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 1rem 0;
+}
+.axis-pricing-price span {
+  font-size: 1rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.4);
+}
+.axis-pricing-features {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.axis-pricing-features li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+.axis-pricing-features li::before {
+  content: '✓';
+  color: #D4AF37;
+  font-weight: 600;
+}
+
+/* --- AXIS: Footer --- */
+.axis-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 3rem 1rem;
+}
+.axis-footer-links {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem 2rem;
+  align-items: center;
+  justify-content: center;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+@media (min-width: 768px) {
+  .axis-footer-links {
+    gap: 2rem;
+  }
+}
+.axis-footer-links a {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.2s ease;
+}
+.axis-footer-links a:hover {
+  color: #D4AF37;
+}
+.axis-footer-social {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+.axis-footer-social a {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+}
+.axis-footer-social a:hover {
+  background: rgba(212, 175, 55, 0.1);
+}
+.axis-footer-social svg {
+  width: 1rem;
+  height: 1rem;
+  opacity: 0.6;
+}
+.axis-footer-social a:hover svg {
+  opacity: 1;
+}
+.axis-footer-copy {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* --- AXIS: Button Styles --- */
+.axis-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+}
+.axis-btn-primary {
+  background: linear-gradient(135deg, #D4AF37, #E8C96A);
+  color: #0a0a0b;
+}
+.axis-btn-primary:hover {
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+  transform: translateY(-1px);
+}
+.axis-btn-outline {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+.axis-btn-outline:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  background: rgba(212, 175, 55, 0.05);
+}
+.axis-btn-ghost {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+}
+.axis-btn-ghost:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* --- AXIS: Section Spacing --- */
+.axis-section {
+  padding: 4rem 0;
+}
+@media (min-width: 768px) {
+  .axis-section {
+    padding: 6rem 0;
+  }
+}
+@media (min-width: 1024px) {
+  .axis-section {
+    padding: 8rem 0;
+  }
+}
+
+/* --- AXIS: Container --- */
+.axis-container {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+@media (min-width: 1280px) {
+  .axis-container {
+    padding: 0 2rem;
+  }
+}
+
+/* --- AXIS: Grid Pattern Background --- */
+.axis-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+  pointer-events: none;
+}
+
+/* --- AXIS: Blurred Orb --- */
+.axis-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+}
+.axis-orb-gold {
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.15), transparent 70%);
+}
+.axis-orb-blue {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1), transparent 70%);
+}
+
+/* --- AXIS: Counter Animation --- */
+.axis-counter {
+  display: inline-flex;
+  align-items: baseline;
+}
+.axis-counter-value {
+  font-variant-numeric: tabular-nums;
+}
+.axis-counter-suffix {
+  margin-left: 0.125rem;
+}
