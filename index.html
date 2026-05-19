@@ -12,6 +12,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="css/shared.css">
   <link rel="stylesheet" href="css/axis-upgrades.css">
+  <link rel="stylesheet" href="css/skiper-upgrades.css">
   <script>
     tailwind.config = {
       theme: {
@@ -105,10 +106,10 @@
 
   <main>
     <!-- HERO -->
-    <section class="relative min-h-[85vh] flex items-center overflow-hidden" aria-label="Hero">
+    <section class="relative min-h-[85vh] flex items-center overflow-hidden metal-shimmer" aria-label="Hero">
       <div class="absolute inset-0 bg-gradient-to-br from-void via-surface/50 to-void"></div>
-      <div class="absolute top-1/3 -left-40 w-[500px] h-[500px] bg-gold/[.03] rounded-full blur-[100px]"></div>
-      <div class="absolute bottom-1/3 -right-40 w-[400px] h-[400px] bg-gold/[.02] rounded-full blur-[80px]"></div>
+      <div class="skiper-orb gold top-1/3 -left-40 w-[500px] h-[500px]"></div>
+      <div class="skiper-orb gold bottom-1/3 -right-40 w-[400px] h-[400px]"></div>
       <div class="relative max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-16 md:py-24 lg:py-28">
         <div class="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
           <div class="text-center lg:text-left">
@@ -163,10 +164,10 @@
     <section class="py-16 md:py-24 bg-surface/20" aria-label="Before After">
       <div class="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
         <div class="text-center mb-10 reveal">
-          <h2 class="section-heading mb-3">Plain wall to <span class="text-gradient-gold">legendary</span></h2>
+          <h2 class="section-heading mb-3">Plain wall to <span class="metal-text">legendary</span></h2>
           <p class="section-subheading mx-auto">Drag the slider. See what a €49 sticker does to a blank wall.</p>
         </div>
-        <div class="max-w-2xl mx-auto reveal">
+        <div class="max-w-2xl mx-auto reveal skiper-reveal-container">
           <div class="ba-slider aspect-[16/10] bg-surface border border-surface-border/30" id="ba-slider">
             <div class="ba-after bg-gradient-to-br from-surface-light via-gold/8 to-surface flex items-center justify-center">
               <div class="text-center"><span class="text-6xl block mb-2">🔱</span><span class="text-gold font-display font-bold text-lg">After</span><p class="text-text-muted text-xs mt-0.5">Greek Gods Mural — Medium</p></div>
@@ -218,12 +219,12 @@
           <p class="section-subheading mx-auto">Real walls. Real results. No Photoshop.</p>
         </div>
         <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-          <div class="portfolio-item aspect-[3/4] img-placeholder cursor-pointer reveal reveal-delay-1"><div class="absolute inset-0 flex items-center justify-center"><span class="text-4xl">⚔️</span></div><div class="overlay"><p class="font-display font-bold text-base">Viking Bedroom</p><p class="text-xs text-text-muted">History collection</p></div></div>
-          <div class="portfolio-item aspect-[3/4] img-placeholder cursor-pointer reveal reveal-delay-2"><div class="absolute inset-0 flex items-center justify-center"><span class="text-4xl">🔱</span></div><div class="overlay"><p class="font-display font-bold text-base">Greek Gods</p><p class="text-xs text-text-muted">Mythology collection</p></div></div>
-          <div class="portfolio-item aspect-[3/4] img-placeholder cursor-pointer reveal reveal-delay-3"><div class="absolute inset-0 flex items-center justify-center"><span class="text-4xl">🏯</span></div><div class="overlay"><p class="font-display font-bold text-base">Japanese Garden</p><p class="text-xs text-text-muted">Nature collection</p></div></div>
-          <div class="portfolio-item aspect-[3/4] img-placeholder cursor-pointer reveal"><div class="absolute inset-0 flex items-center justify-center"><span class="text-4xl">🎮</span></div><div class="overlay"><p class="font-display font-bold text-base">Gamer Setup</p><p class="text-xs text-text-muted">Pop Culture collection</p></div></div>
-          <div class="portfolio-item aspect-[3/4] img-placeholder cursor-pointer reveal"><div class="absolute inset-0 flex items-center justify-center"><span class="text-4xl">🌌</span></div><div class="overlay"><p class="font-display font-bold text-base">Space Nebula</p><p class="text-xs text-text-muted">Abstract collection</p></div></div>
-          <div class="portfolio-item aspect-[3/4] img-placeholder cursor-pointer reveal"><div class="absolute inset-0 flex items-center justify-center"><span class="text-4xl">🦅</span></div><div class="overlay"><p class="font-display font-bold text-base">Egyptian Temple</p><p class="text-xs text-text-muted">History collection</p></div></div>
+          <div class="portfolio-item aspect-[3/4] img-placeholder cursor-pointer reveal reveal-delay-1 skiper-hover-expand"><div class="absolute inset-0 flex items-center justify-center"><span class="text-4xl">⚔️</span></div><div class="overlay"><p class="font-display font-bold text-base">Viking Bedroom</p><p class="text-xs text-text-muted">History collection</p></div></div>
+          <div class="portfolio-item aspect-[3/4] img-placeholder cursor-pointer reveal reveal-delay-2 skiper-hover-expand"><div class="absolute inset-0 flex items-center justify-center"><span class="text-4xl">🔱</span></div><div class="overlay"><p class="font-display font-bold text-base">Greek Gods</p><p class="text-xs text-text-muted">Mythology collection</p></div></div>
+          <div class="portfolio-item aspect-[3/4] img-placeholder cursor-pointer reveal reveal-delay-3 skiper-hover-expand"><div class="absolute inset-0 flex items-center justify-center"><span class="text-4xl">🏯</span></div><div class="overlay"><p class="font-display font-bold text-base">Japanese Garden</p><p class="text-xs text-text-muted">Nature collection</p></div></div>
+          <div class="portfolio-item aspect-[3/4] img-placeholder cursor-pointer reveal skiper-hover-expand"><div class="absolute inset-0 flex items-center justify-center"><span class="text-4xl">🎮</span></div><div class="overlay"><p class="font-display font-bold text-base">Gamer Setup</p><p class="text-xs text-text-muted">Pop Culture collection</p></div></div>
+          <div class="portfolio-item aspect-[3/4] img-placeholder cursor-pointer reveal skiper-hover-expand"><div class="absolute inset-0 flex items-center justify-center"><span class="text-4xl">🌌</span></div><div class="overlay"><p class="font-display font-bold text-base">Space Nebula</p><p class="text-xs text-text-muted">Abstract collection</p></div></div>
+          <div class="portfolio-item aspect-[3/4] img-placeholder cursor-pointer reveal skiper-hover-expand"><div class="absolute inset-0 flex items-center justify-center"><span class="text-4xl">🦅</span></div><div class="overlay"><p class="font-display font-bold text-base">Egyptian Temple</p><p class="text-xs text-text-muted">History collection</p></div></div>
         </div>
         <div class="text-center mt-8 reveal"><a href="portfolio.html" class="btn-secondary text-xs">View full portfolio →</a></div>
       </div>
@@ -284,16 +285,16 @@
           <p class="section-subheading mx-auto">The ones that keep selling out.</p>
         </div>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-          <article class="group rounded-xl overflow-hidden border border-surface-border/20 card-hover bg-surface/30 reveal reveal-delay-1">
-            <div class="product-img aspect-[4/3] img-placeholder flex items-center justify-center relative"><span class="text-5xl emoji-fallback">🔱</span><div class="product-badge px-2 py-0.5 rounded bg-gold/15 text-gold text-[9px] font-bold tracking-widest uppercase">Best seller</div></div>
+          <article class="group rounded-xl overflow-hidden border border-surface-border/20 card-hover bg-surface/30 reveal reveal-delay-1 skiper-hover-expand metal-border">
+            <div class="product-img aspect-[4/3] img-placeholder flex items-center justify-center relative skiper-img-placeholder"><span class="text-5xl emoji-fallback">🔱</span><div class="product-badge px-2 py-0.5 rounded bg-gold/15 text-gold text-[9px] font-bold tracking-widest uppercase">Best seller</div></div>
             <div class="p-5"><p class="text-gold text-[10px] font-semibold uppercase tracking-widest mb-1">Mythology</p><h3 class="font-display text-lg font-bold mb-1.5 group-hover:text-gold transition-colors duration-300">Greek Gods Mural</h3><p class="text-text-secondary text-sm mb-4 leading-relaxed">Zeus, Poseidon, and the whole pantheon staring down at you.</p><div class="flex items-center justify-between"><div><span class="font-display text-lg font-bold">€49,95</span><span class="text-sm text-text-muted/50 line-through ml-1.5">€69,95</span></div><button class="btn-primary text-xs !px-4 !py-2.5 add-to-cart-btn" data-name="Greek Gods Mural" data-price="49.95" data-emoji="🔱">Add to cart</button></div></div>
           </article>
-          <article class="group rounded-xl overflow-hidden border border-surface-border/20 card-hover bg-surface/30 reveal reveal-delay-2">
-            <div class="product-img aspect-[4/3] img-placeholder flex items-center justify-center relative"><span class="text-5xl emoji-fallback">⚔️</span></div>
+          <article class="group rounded-xl overflow-hidden border border-surface-border/20 card-hover bg-surface/30 reveal reveal-delay-2 skiper-hover-expand metal-border">
+            <div class="product-img aspect-[4/3] img-placeholder flex items-center justify-center relative skiper-img-placeholder"><span class="text-5xl emoji-fallback">⚔️</span></div>
             <div class="p-5"><p class="text-gold text-[10px] font-semibold uppercase tracking-widest mb-1">History</p><h3 class="font-display text-lg font-bold mb-1.5 group-hover:text-gold transition-colors duration-300">Viking Mural</h3><p class="text-text-secondary text-sm mb-4 leading-relaxed">Norse mythology meets your bedroom wall. Longships included.</p><div class="flex items-center justify-between"><div><span class="font-display text-lg font-bold">€44,95</span></div><button class="btn-primary text-xs !px-4 !py-2.5 add-to-cart-btn" data-name="Viking Mural" data-price="44.95" data-emoji="⚔️">Add to cart</button></div></div>
           </article>
-          <article class="group rounded-xl overflow-hidden border border-surface-border/20 card-hover bg-surface/30 reveal reveal-delay-3">
-            <div class="product-img aspect-[4/3] img-placeholder flex items-center justify-center relative"><span class="text-5xl emoji-fallback">🌌</span><div class="product-badge px-2 py-0.5 rounded bg-gold/15 text-gold text-[9px] font-bold tracking-widest uppercase">New</div></div>
+          <article class="group rounded-xl overflow-hidden border border-surface-border/20 card-hover bg-surface/30 reveal reveal-delay-3 skiper-hover-expand metal-border">
+            <div class="product-img aspect-[4/3] img-placeholder flex items-center justify-center relative skiper-img-placeholder"><span class="text-5xl emoji-fallback">🌌</span><div class="product-badge px-2 py-0.5 rounded bg-gold/15 text-gold text-[9px] font-bold tracking-widest uppercase">New</div></div>
             <div class="p-5"><p class="text-gold text-[10px] font-semibold uppercase tracking-widest mb-1">Abstract</p><h3 class="font-display text-lg font-bold mb-1.5 group-hover:text-gold transition-colors duration-300">Space Nebula Mural</h3><p class="text-text-secondary text-sm mb-4 leading-relaxed">A galaxy you can actually afford to visit.</p><div class="flex items-center justify-between"><div><span class="font-display text-lg font-bold">€54,95</span></div><button class="btn-primary text-xs !px-4 !py-2.5 add-to-cart-btn" data-name="Space Nebula Mural" data-price="54.95" data-emoji="🌌">Add to cart</button></div></div>
           </article>
         </div>
@@ -336,7 +337,7 @@
     <!-- CTA -->
     <section class="py-16 md:py-24" aria-label="Call to Action">
       <div class="max-w-3xl mx-auto px-5 sm:px-6 lg:px-8 text-center">
-        <div class="p-8 md:p-12 rounded-2xl border border-surface-border/20 bg-gradient-to-br from-surface/40 to-surface/20 relative overflow-hidden reveal">
+          <div class="p-8 md:p-12 rounded-2xl border border-surface-border/20 bg-gradient-to-br from-surface/40 to-surface/20 relative overflow-hidden reveal skiper-gradient-border">
           <div class="absolute top-0 right-0 w-48 h-48 bg-gold/[.03] rounded-full blur-[60px]"></div>
           <div class="relative">
             <h2 class="section-heading mb-3">Your wall is <span class="text-gradient-gold">waiting</span></h2>
