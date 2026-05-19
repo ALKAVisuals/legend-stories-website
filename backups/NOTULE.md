@@ -1,49 +1,49 @@
-# NOTULE — Legend Stories Site
-## Laatste update: 19 mei 2026, ~15:20
+# NOTULE — Legend Stories
+## Laatste update: 19 mei 2026, ~15:30
 
-## GitHub Repo (ALKAVisuals/alka-group-agentic-engineering)
-- System prompt geladen: `system-prompts/legend-stories.md`
-- Skills geladen:
-  - `legend-stories/social-content-creator.md` — TikTok/Instagram content
-  - `legend-stories/print-production-tracker.md` — Print orders tracken
-  - `legend-stories/community-engagement.md` — Community management
-- Notule locatie: `notules/legend-stories/YYYY-MM-DD.md`
+## Development Checklist (uit GitHub repo)
 
-## Huidige Site Status
-- **Versie:** v2.0 (2026-05-19)
-- **Live:** https://alkavisuals.github.io/legend-stories-website/
-- **Framework:** Tailwind CSS (CDN) + Custom CSS
-- **Kleuren:** void #0B0B0C, surface #161618, gold #D4AF37
-- **Fonts:** Playfair Display (headings), Inter (body)
+### Volgorde bij elke code-werking:
+1. **before-you-start.md** — Voordat je begint
+2. **code-structure-cleanup.md** — Nadat feature werkt
+3. **grep-loop-review.md** — Voordat je pusht
+4. **security-checklist.md** — Altijd vóór push
 
-## Backup Systeem
-- Locatie: `backups/versions/`
-- Huidige backup: `v2.0-20260519-151303`
-- Restore script: `backups/backup.sh`
+### Belangrijkste regels:
+- Houd taken klein (één feature per keer)
+- Zoek bestaande code voordat je nieuwe schrijft
+- Test lokaal voordat je pusht
+- Beschrijvende commit messages (niet "update" of "fix")
+- Geen hardcoded secrets
+- Geen packages jonger dan 14 dagen
+- PR klein genoeg voor review
 
-## Wat is gedaan
-1. ✅ Backup-systeem opgezet
-2. ✅ Style-analyzer aangemaakt (`backups/styles/style-analyzer.md`)
-3. ✅ Axis template gedownload (niet geschikt — CRM template)
-4. ✅ Index.html volledig herschreven (streetwear aesthetic, mobiel-eerst)
-5. ✅ Shop/portfolio/about basis-updates
-6. ✅ Alles gepusht naar GitHub
-7. ✅ GitHub repo gecloned met instructies
+## Wat is er vandaag gedaan?
 
-## Wat nog moet gebeuren
-1. Wacht op nieuwe style link van K (Axis was niet geschikt)
-2. Shop.html volledig herschreven (copy nog gedeeltelijk Nederlands)
-3. Portfolio.html volledig herschreven
-4. About.html volledig herschreven
-5. Mobiel testen (95% TikTok-verkeer)
+### Site-verbeteringen
+1. Index.html volledig herschreven (streetwear aesthetic, mobiel-eerst)
+2. About.html vertaald (hero, story, footer)
+3. Shop.html bijgewerkt (navigatie, labels)
+4. Portfolio.html bijgewerkt (labels)
 
-## Style Inspiratie
-- Axis template: https://www.styleui.dev/template/axis (gedownload, geanalyseerd)
-- **K moet nieuwe link aanleveren** — Axis was een CRM template, niet geschikt
+### Backup-systeem
+- Versie-backup: v2.0-20260519-151303
+- Restore-script: backups/backup.sh
+- Style-analyzer: backups/styles/style-analyzer.md
 
-## Belangrijke Links
-- Live site: https://alkavisuals.github.io/legend-stories-website/
-- GitHub repo: https://github.com/ALKAVisuals/legend-stories-website
-- Agentic engineering: https://github.com/ALKAVisuals/alka-group-agentic-engineering
-- Style analyzer: backups/styles/style-analyzer.md
-- Backup script: backups/backup.sh
+### GitHub
+- Alka Group repo gecloned en geanalyseerd
+- Development checklist geladen
+- System prompt en skills geladen
+
+## Status
+- ✅ Alle pagina's laden (200 OK)
+- ✅ Index.html volledig Engels
+- ✅ About.html volledig Engels
+- ✅ Shop.html bijgewerkt
+- ✅ Portfolio.html bijgewerkt
+- ✅ Backup-systeem werkt
+- ✅ Development checklist geladen
+- ⬜ Wacht op nieuwe style link van K
+- ⬜ Shop.html productbeschrijvingen volledig herschrijven
+- ⬜ Mobiel testen

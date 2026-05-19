@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/shared.css">
   <script>
     tailwind.config = {
       theme: {
@@ -33,34 +34,7 @@
       },
     }
   </script>
-  <style>
-    html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
-    body { overflow-x: hidden; }
-    ::selection { background: rgba(212,175,55,.3); color: #F5F5F7; }
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #0B0B0C; }
-    ::-webkit-scrollbar-thumb { background: #2A2A30; border-radius: 9999px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,.5); }
-    .glass { background: rgba(22,22,24,.8); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(42,42,48,.5); }
-    .btn-primary { display: inline-flex; align-items: center; justify-content: center; padding: 1rem 2rem; background: linear-gradient(135deg, #D4AF37 0%, #E8C96A 50%, #D4AF37 100%); color: #0B0B0C; font-weight: 600; font-size: .875rem; text-transform: uppercase; letter-spacing: .05em; border-radius: .5rem; transition: all .3s; cursor: pointer; border: none; position: relative; overflow: hidden; }
-    .btn-primary::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent); transition: left .5s; }
-    .btn-primary:hover::before { left: 100%; }
-    .btn-primary:hover { box-shadow: 0 0 60px rgba(212,175,55,.3); transform: scale(1.02); }
-    .btn-primary:active { transform: scale(.98); }
-    .btn-secondary { display: inline-flex; align-items: center; justify-content: center; padding: 1rem 2rem; border: 1px solid rgba(212,175,55,.4); color: #D4AF37; font-weight: 600; font-size: .875rem; text-transform: uppercase; letter-spacing: .05em; border-radius: .5rem; transition: all .3s; cursor: pointer; background: transparent; }
-    .btn-secondary:hover { background: rgba(212,175,55,.1); border-color: rgba(212,175,55,.6); box-shadow: 0 0 20px rgba(212,175,55,.1); }
-    .section-heading { font-family: "Playfair Display", Georgia, serif; font-size: clamp(1.875rem, 4vw, 3rem); font-weight: 700; color: #F5F5F7; line-height: 1.1; }
-    .section-subheading { color: #A0A0B0; font-size: clamp(1rem, 2vw, 1.125rem); max-width: 42rem; }
-    .card-hover { transition: all .5s; }
-    .card-hover:hover { box-shadow: 0 0 30px rgba(212,175,55,.15); transform: translateY(-4px); }
-    .text-gradient-gold { background: linear-gradient(135deg, #D4AF37 0%, #E8C96A 50%, #D4AF37 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .filter-btn.active { background: linear-gradient(135deg, #D4AF37 0%, #E8C96A 50%, #D4AF37 100%); color: #0B0B0C; border-color: transparent; }
-    .reveal { opacity: 0; transform: translateY(30px); transition: opacity .6s ease-out, transform .6s ease-out; }
-    .reveal.visible { opacity: 1; transform: translateY(0); }
-    .product-img { position: relative; overflow: hidden; }
-    .product-img .emoji-fallback { transition: transform .5s; }
-    .group:hover .product-img .emoji-fallback { transform: scale(1.05); }
-  </style>
+  
 </head>
 <body class="bg-void text-text-primary font-body">
 
@@ -122,7 +96,7 @@
     </section>
 
     <!-- FILTER + PRODUCTS -->
-    <section class="py-12 md:py-16" aria-label="Producten">
+    <section class="py-12 md:py-16" aria-label="Products">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Filters -->
         <div class="flex flex-wrap gap-3 justify-center mb-12">
@@ -345,7 +319,7 @@
           </ul>
         </div>
         <div>
-          <h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Klantenservice</h4>
+          <h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Help</h4>
           <ul class="space-y-2">
             <li><a href="index.html#contact" class="text-sm text-text-secondary hover:text-gold transition-colors">Contact</a></li>
             <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Shipping</a></li>
@@ -383,7 +357,7 @@
     <div class="flex flex-col h-full">
       <div class="flex items-center justify-between p-6 border-b border-surface-border/30">
         <h2 class="font-display text-xl font-bold">Your cart</h2>
-        <button id="cart-close" class="p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Sluit winkelwagen">
+        <button id="cart-close" class="p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Close cart">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
       </div>
