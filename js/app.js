@@ -1,6 +1,6 @@
 /**
- * Legend Murals — Main Application JavaScript
- * Handles: Cart Drawer, Mobile Menu, Size Selector, Quantity, Add to Cart
+ * Legend Stories — Main Application JavaScript
+ * Handles: Cart Drawer, Mobile Menu, Product Filters, Add to Cart
  */
 
 (function () {
@@ -13,16 +13,12 @@
     cart: [],
     cartOpen: false,
     mobileMenuOpen: false,
-    selectedSize: 'medium',
-    selectedPrice: 49.95,
-    quantity: 1,
   };
 
   // ==========================================
   // DOM REFERENCES
   // ==========================================
   const dom = {
-    // Cart
     cartBtn: document.getElementById('cart-btn'),
     cartDrawer: document.getElementById('cart-drawer'),
     cartOverlay: document.getElementById('cart-overlay'),
@@ -31,19 +27,8 @@
     cartCount: document.getElementById('cart-count'),
     cartTotal: document.getElementById('cart-total'),
     checkoutBtn: document.getElementById('checkout-btn'),
-
-    // Mobile Menu
     mobileMenuBtn: document.getElementById('mobile-menu-btn'),
     mobileMenu: document.getElementById('mobile-menu'),
-
-    // Product Page
-    sizeBtns: document.querySelectorAll('.size-btn'),
-    qtyDecrease: document.getElementById('qty-decrease'),
-    qtyIncrease: document.getElementById('qty-increase'),
-    qtyValue: document.getElementById('qty-value'),
-    addToCartBtn: document.getElementById('add-to-cart'),
-    mobileAddToCartBtn: document.getElementById('mobile-add-to-cart'),
-    mobilePrice: document.getElementById('mobile-price'),
   };
 
   // ==========================================
@@ -68,47 +53,28 @@
     document.body.style.overflow = '';
   }
 
-  function addToCart() {
+  function formatPrice(price) {
+    return '€' + price.toFixed(2).replace('.', ',');
+  }
+
+  function addToCart(name, price, emoji) {
     const product = {
-      id: 'griekse-goden-mural',
-      name: 'Griekse Goden Mural',
-      size: state.selectedSize,
-      sizeLabel: getSizeLabel(state.selectedSize),
-      price: state.selectedPrice,
-      quantity: state.quantity,
-      image: '🔱',
+      id: name.toLowerCase().replace(/\s+/g, '-'),
+      name: name,
+      price: parseFloat(price),
+      quantity: 1,
+      image: emoji || '🎨',
     };
 
-    // Check if same product + size already in cart
-    const existingIndex = state.cart.findIndex(
-      (item) => item.id === product.id && item.size === product.size
-    );
-
+    const existingIndex = state.cart.findIndex((item) => item.id === product.id);
     if (existingIndex > -1) {
-      state.cart[existingIndex].quantity += product.quantity;
+      state.cart[existingIndex].quantity += 1;
     } else {
       state.cart.push(product);
     }
 
     updateCartCount();
     openCart();
-
-    // Visual feedback on button
-    const btn = dom.addToCartBtn || dom.mobileAddToCartBtn;
-    if (btn) {
-      const originalText = btn.innerHTML;
-      btn.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-        </svg>
-        Toegevoegd!
-      `;
-      btn.classList.add('bg-green-600');
-      setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.classList.remove('bg-green-600');
-      }, 2000);
-    }
   }
 
   function removeFromCart(index) {
@@ -129,28 +95,19 @@
 
   function updateCartCount() {
     const totalItems = state.cart.reduce((sum, item) => sum + item.quantity, 0);
-    dom.cartCount.textContent = totalItems;
-    dom.cartCount.style.opacity = totalItems > 0 ? '1' : '0';
+    if (dom.cartCount) {
+      dom.cartCount.textContent = totalItems;
+      dom.cartCount.style.opacity = totalItems > 0 ? '1' : '0';
+    }
   }
 
   function getCartTotal() {
     return state.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }
 
-  function getSizeLabel(size) {
-    const labels = {
-      small: 'Small (60×80cm)',
-      medium: 'Medium (100×140cm)',
-      mural: 'Mural (200×280cm)',
-    };
-    return labels[size] || size;
-  }
-
-  function formatPrice(price) {
-    return '€' + price.toFixed(2).replace('.', ',');
-  }
-
   function renderCart() {
+    if (!dom.cartItems) return;
+
     if (state.cart.length === 0) {
       dom.cartItems.innerHTML = `
         <div class="text-center py-12">
@@ -161,27 +118,23 @@
           </div>
           <p class="text-text-secondary font-medium">Je winkelwagen is leeg</p>
           <p class="text-text-muted text-sm mt-1">Voeg items toe om te beginnen</p>
-        </div>
-      `;
-      dom.cartTotal.textContent = '€0,00';
-      dom.checkoutBtn.disabled = true;
+        </div>`;
+      if (dom.cartTotal) dom.cartTotal.textContent = '€0,00';
+      if (dom.checkoutBtn) dom.checkoutBtn.disabled = true;
       return;
     }
 
-    dom.checkoutBtn.disabled = false;
+    if (dom.checkoutBtn) dom.checkoutBtn.disabled = false;
     const total = getCartTotal();
-    dom.cartTotal.textContent = formatPrice(total);
+    if (dom.cartTotal) dom.cartTotal.textContent = formatPrice(total);
 
     dom.cartItems.innerHTML = state.cart
       .map(
         (item, index) => `
         <div class="flex gap-4 mb-4 p-3 rounded-xl bg-surface-light/50 border border-surface-border/30">
-          <div class="w-16 h-16 rounded-lg bg-surface flex items-center justify-center text-2xl shrink-0">
-            ${item.image}
-          </div>
+          <div class="w-16 h-16 rounded-lg bg-surface flex items-center justify-center text-2xl shrink-0">${item.image}</div>
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-text-primary truncate">${item.name}</p>
-            <p class="text-xs text-text-muted">${item.sizeLabel}</p>
             <div class="flex items-center justify-between mt-2">
               <div class="flex items-center gap-2">
                 <button onclick="window.legendApp.updateQty(${index}, -1)" class="w-6 h-6 rounded bg-surface flex items-center justify-center text-text-secondary hover:text-gold transition-colors text-xs">−</button>
@@ -191,15 +144,12 @@
               <div class="flex items-center gap-3">
                 <span class="text-sm font-medium text-gold">${formatPrice(item.price * item.quantity)}</span>
                 <button onclick="window.legendApp.removeItem(${index})" class="text-text-muted hover:text-red-400 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                  </svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
                 </button>
               </div>
             </div>
           </div>
-        </div>
-      `
+        </div>`
       )
       .join('');
   }
@@ -209,80 +159,76 @@
   // ==========================================
   function toggleMobileMenu() {
     state.mobileMenuOpen = !state.mobileMenuOpen;
-    dom.mobileMenu.classList.toggle('hidden');
-    dom.mobileMenuBtn.setAttribute('aria-expanded', state.mobileMenuOpen);
+    if (dom.mobileMenu) dom.mobileMenu.classList.toggle('hidden');
+    if (dom.mobileMenuBtn) dom.mobileMenuBtn.setAttribute('aria-expanded', state.mobileMenuOpen);
   }
 
   function closeMobileMenu() {
     state.mobileMenuOpen = false;
-    dom.mobileMenu.classList.add('hidden');
-    dom.mobileMenuBtn.setAttribute('aria-expanded', 'false');
+    if (dom.mobileMenu) dom.mobileMenu.classList.add('hidden');
+    if (dom.mobileMenuBtn) dom.mobileMenuBtn.setAttribute('aria-expanded', 'false');
   }
 
   // ==========================================
-  // SIZE SELECTOR
+  // PRODUCT FILTERS (shop page)
   // ==========================================
-  function selectSize(btn) {
-    // Reset all buttons
-    dom.sizeBtns.forEach((b) => {
-      b.classList.remove('border-2', 'border-gold/50', 'bg-gold/5');
-      b.classList.add('border', 'border-surface-border/50', 'bg-surface');
-      b.setAttribute('aria-checked', 'false');
-      const title = b.querySelector('.font-display');
-      if (title) title.classList.remove('text-gold');
+  function initFilters() {
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const productCards = document.querySelectorAll('.product-card');
+
+    filterBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        // Update active state
+        filterBtns.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const filter = btn.dataset.filter;
+
+        productCards.forEach((card) => {
+          if (filter === 'all' || card.dataset.category === filter) {
+            card.style.display = '';
+            card.style.opacity = '0';
+            setTimeout(() => { card.style.opacity = '1'; }, 50);
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
     });
-
-    // Set active button
-    btn.classList.remove('border', 'border-surface-border/50', 'bg-surface');
-    btn.classList.add('border-2', 'border-gold/50', 'bg-gold/5');
-    btn.setAttribute('aria-checked', 'true');
-    const activeTitle = btn.querySelector('.font-display');
-    if (activeTitle) activeTitle.classList.add('text-gold');
-
-    // Update state
-    state.selectedSize = btn.dataset.size;
-    state.selectedPrice = parseFloat(btn.dataset.price);
-
-    // Update mobile price display
-    if (dom.mobilePrice) {
-      dom.mobilePrice.textContent = formatPrice(state.selectedPrice);
-    }
   }
 
   // ==========================================
-  // QUANTITY
+  // ADD TO CART BUTTONS (shop page)
   // ==========================================
-  function updateQuantity(delta) {
-    state.quantity = Math.max(1, Math.min(10, state.quantity + delta));
-    if (dom.qtyValue) {
-      dom.qtyValue.textContent = state.quantity;
-    }
+  function initAddToCart() {
+    const btns = document.querySelectorAll('.add-to-cart-btn');
+    btns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const name = btn.dataset.name;
+        const price = btn.dataset.price;
+        const emoji = btn.dataset.emoji;
+        addToCart(name, price, emoji);
+
+        // Visual feedback
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '✅ Toegevoegd!';
+        btn.style.background = '#16a34a';
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.style.background = '';
+        }, 2000);
+      });
+    });
   }
 
   // ==========================================
   // EVENT LISTENERS
   // ==========================================
   function initEventListeners() {
-    // Cart
     if (dom.cartBtn) dom.cartBtn.addEventListener('click', openCart);
     if (dom.cartClose) dom.cartClose.addEventListener('click', closeCart);
     if (dom.cartOverlay) dom.cartOverlay.addEventListener('click', closeCart);
-
-    // Mobile Menu
     if (dom.mobileMenuBtn) dom.mobileMenuBtn.addEventListener('click', toggleMobileMenu);
-
-    // Size Selector
-    dom.sizeBtns.forEach((btn) => {
-      btn.addEventListener('click', () => selectSize(btn));
-    });
-
-    // Quantity
-    if (dom.qtyDecrease) dom.qtyDecrease.addEventListener('click', () => updateQuantity(-1));
-    if (dom.qtyIncrease) dom.qtyIncrease.addEventListener('click', () => updateQuantity(1));
-
-    // Add to Cart
-    if (dom.addToCartBtn) dom.addToCartBtn.addEventListener('click', addToCart);
-    if (dom.mobileAddToCartBtn) dom.mobileAddToCartBtn.addEventListener('click', addToCart);
 
     // Close mobile menu on link click
     if (dom.mobileMenu) {
@@ -305,6 +251,8 @@
   // ==========================================
   function init() {
     initEventListeners();
+    initFilters();
+    initAddToCart();
     updateCartCount();
   }
 
@@ -312,6 +260,7 @@
   window.legendApp = {
     updateQty: updateCartQuantity,
     removeItem: removeFromCart,
+    addProduct: addToCart,
   };
 
   // Start
