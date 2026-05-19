@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Legend Murals — Premium muurstickers & murals geïnspireerd door epische verhalen, geschiedenis en mythologie.">
+  <title>Legend Murals — Epic Wall Stickers & Murals</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body class="bg-void text-text-primary font-body">
+
+  <!-- ========================================
+       ANNOUNCEMENT BAR
+  ======================================== -->
+  <div class="w-full bg-gradient-gold text-void text-center py-2 px-4 text-xs sm:text-sm font-semibold tracking-wide" role="banner">
+    <p>🚚 Gratis verzending bij orders boven €50 — Gebruik code <span class="font-bold">LEGEND10</span> voor 10% korting</p>
+  </div>
+
+  <!-- ========================================
+       NAVIGATION
+  ======================================== -->
+  <header class="sticky top-0 z-50 glass border-b border-surface-border/30" role="banner">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Hoofdnavigatie">
+      <div class="flex items-center justify-between h-16 md:h-20">
+
+        <!-- Logo -->
+        <a href="/" class="flex items-center gap-2 group" aria-label="Legend Murals Home">
+          <div class="w-9 h-9 rounded-lg bg-gradient-gold flex items-center justify-center">
+            <span class="text-void font-display font-bold text-lg">L</span>
+          </div>
+          <span class="font-display text-xl font-bold text-text-primary group-hover:text-gold transition-colors">
+            Legend<span class="text-gold">Murals</span>
+          </span>
+        </a>
+
+        <!-- Desktop Nav -->
+        <div class="hidden md:flex items-center gap-8">
+          <a href="#collections" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium">Collecties</a>
+          <a href="#tiktok" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium">TikTok</a>
+          <a href="#about" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium">Over Ons</a>
+          <a href="#contact" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium">Contact</a>
+        </div>
+
+        <!-- Right Actions -->
+        <div class="flex items-center gap-3">
+          <!-- Cart Button -->
+          <button id="cart-btn" class="relative p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Winkelwagen">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            </svg>
+            <span id="cart-count" class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-gold text-void text-[10px] font-bold rounded-full flex items-center justify-center opacity-0 transition-opacity duration-300">0</span>
+          </button>
+
+          <!-- Mobile Menu Button -->
+          <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Menu openen" aria-expanded="false">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-surface-border/30 mt-2 pt-4">
+        <div class="flex flex-col gap-3">
+          <a href="#collections" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium py-2">Collecties</a>
+          <a href="#tiktok" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium py-2">TikTok</a>
+          <a href="#about" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium py-2">Over Ons</a>
+          <a href="#contact" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium py-2">Contact</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ========================================
+         HERO SECTION
+    ======================================== -->
+    <section class="relative min-h-[90vh] flex items-center overflow-hidden" aria-label="Hero">
+      <!-- Background Gradient -->
+      <div class="absolute inset-0 bg-gradient-to-br from-void via-surface to-void"></div>
+      <div class="absolute top-1/4 -left-32 w-96 h-96 bg-gold/5 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-gold/3 rounded-full blur-3xl"></div>
+
+      <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
+        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+
+          <!-- Hero Text -->
+          <div class="text-center lg:text-left">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gold/20 bg-gold/5 mb-6">
+              <span class="w-2 h-2 rounded-full bg-gold animate-pulse"></span>
+              <span class="text-xs text-gold font-medium tracking-wide uppercase">Nieuw: Mythologie Collectie</span>
+            </div>
+
+            <h1 class="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] mb-6">
+              Verhaal dat je muur
+              <span class="text-gradient-gold"> tot leven</span>
+              brengt
+            </h1>
+
+            <p class="text-text-secondary text-lg md:text-xl max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed">
+              Premium muurstickers geïnspireerd door epische verhalen, geschiedenis en mythologie. 
+              Ontworpen voor wie een kamer niet ziet als een muur — maar als een <span class="text-gold font-medium">canvas</span>.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <a href="#collections" class="btn-primary animate-pulse-gold">
+                Bekijk Collecties
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </a>
+              <a href="#tiktok" class="btn-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/>
+                </svg>
+                TikTok Bekijken
+              </a>
+            </div>
+
+            <!-- Trust Badges -->
+            <div class="flex items-center gap-6 mt-10 justify-center lg:justify-start">
+              <div class="text-center">
+                <p class="text-2xl font-bold text-text-primary">2.5K+</p>
+                <p class="text-xs text-text-muted">Klanten</p>
+              </div>
+              <div class="w-px h-8 bg-surface-border"></div>
+              <div class="text-center">
+                <p class="text-2xl font-bold text-text-primary">4.9★</p>
+                <p class="text-xs text-text-muted">Rating</p>
+              </div>
+              <div class="w-px h-8 bg-surface-border"></div>
+              <div class="text-center">
+                <p class="text-2xl font-bold text-text-primary">50+</p>
+                <p class="text-xs text-text-muted">Ontwerpen</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hero Visual -->
+          <div class="relative">
+            <div class="relative aspect-[4/5] rounded-2xl overflow-hidden border border-surface-border/50 shadow-surface">
+              <!-- Placeholder for hero image/video -->
+              <div class="absolute inset-0 bg-gradient-to-br from-surface-light to-surface flex items-center justify-center">
+                <div class="text-center p-8">
+                  <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gold/10 flex items-center justify-center animate-float">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                    </svg>
+                  </div>
+                  <p class="text-text-muted text-sm">Hero Image / Video</p>
+                  <p class="text-text-muted text-xs mt-1">1200 × 1500px</p>
+                </div>
+              </div>
+              <!-- Decorative elements -->
+              <div class="absolute top-4 right-4 px-3 py-1.5 rounded-full glass text-xs text-gold font-medium">
+                ✨ Nieuw
+              </div>
+            </div>
+            <!-- Floating card -->
+            <div class="absolute -bottom-4 -left-4 md:-bottom-6 md:-left-6 p-4 rounded-xl glass shadow-gold max-w-[200px]">
+              <div class="flex items-center gap-2 mb-1">
+                <div class="flex -space-x-1">
+                  <div class="w-6 h-6 rounded-full bg-gold/30 border border-surface"></div>
+                  <div class="w-6 h-6 rounded-full bg-gold/50 border border-surface"></div>
+                  <div class="w-6 h-6 rounded-full bg-gold/70 border border-surface"></div>
+                </div>
+                <span class="text-xs text-text-muted">+2.4k</span>
+              </div>
+              <p class="text-xs text-text-secondary">Beste verkoop van deze week 🔥</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         AS SEEN ON TIKTOK
+    ======================================== -->
+    <section id="tiktok" class="py-20 md:py-28 bg-surface/30" aria-label="As Seen on TikTok">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gold/20 bg-gold/5 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gold" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/>
+            </svg>
+            <span class="text-xs text-gold font-medium tracking-wide uppercase">@legendstories_official</span>
+          </div>
+          <h2 class="section-heading mb-4">Op TikTok gezien. <span class="text-gradient-gold">In jouw kamer geleefd.</span></h2>
+          <p class="section-subheading mx-auto">Kijk hoe onze muurstickers ruimtes transformeren — van saai naar episch.</p>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <!-- TikTok Card 1 -->
+          <div class="group relative aspect-[9/16] rounded-xl overflow-hidden border border-surface-border/50 card-hover cursor-pointer">
+            <div class="absolute inset-0 bg-gradient-to-b from-surface-light to-surface flex items-center justify-center">
+              <div class="text-center">
+                <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-gold/10 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                </div>
+                <p class="text-xs text-text-muted">TikTok Video</p>
+              </div>
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-t from-void/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div class="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <p class="text-xs text-text-primary font-medium">Griekse Mythologie Mural</p>
+              <p class="text-[10px] text-text-muted">12.4K views</p>
+            </div>
+          </div>
+
+          <!-- TikTok Card 2 -->
+          <div class="group relative aspect-[9/16] rounded-xl overflow-hidden border border-surface-border/50 card-hover cursor-pointer">
+            <div class="absolute inset-0 bg-gradient-to-b from-surface-light to-surface flex items-center justify-center">
+              <div class="text-center">
+                <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-gold/10 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                </div>
+                <p class="text-xs text-text-muted">TikTok Video</p>
+              </div>
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-t from-void/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div class="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <p class="text-xs text-text-primary font-medium">Viking Woonkamer Transform</p>
+              <p class="text-[10px] text-text-muted">8.7K views</p>
+            </div>
+          </div>
+
+          <!-- TikTok Card 3 -->
+          <div class="group relative aspect-[9/16] rounded-xl overflow-hidden border border-surface-border/50 card-hover cursor-pointer">
+            <div class="absolute inset-0 bg-gradient-to-b from-surface-light to-surface flex items-center justify-center">
+              <div class="text-center">
+                <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-gold/10 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                </div>
+                <p class="text-xs text-text-muted">TikTok Video</p>
+              </div>
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-t from-void/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div class="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <p class="text-xs text-text-primary font-medium">Anime Mural Room Tour</p>
+              <p class="text-[10px] text-text-muted">21.1K views</p>
+            </div>
+          </div>
+
+          <!-- TikTok Card 4 -->
+          <div class="group relative aspect-[9/16] rounded-xl overflow-hidden border border-surface-border/50 card-hover cursor-pointer">
+            <div class="absolute inset-0 bg-gradient-to-b from-surface-light to-surface flex items-center justify-center">
+              <div class="text-center">
+                <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-gold/10 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                </div>
+                <p class="text-xs text-text-muted">TikTok Video</p>
+              </div>
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-t from-void/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div class="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <p class="text-xs text-text-primary font-medium">Egyptische Kamer Makeover</p>
+              <p class="text-[10px] text-text-muted">15.8K views</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center mt-10">
+          <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="btn-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/>
+            </svg>
+            Volg ons op TikTok
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         FEATURED COLLECTIONS
+    ======================================== -->
+    <section id="collections" class="py-20 md:py-28" aria-label="Collecties">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h2 class="section-heading mb-4">Ontdek onze <span class="text-gradient-gold">collecties</span></h2>
+          <p class="section-subheading mx-auto">Van oude goden tot moderne iconen — kies jouw verhaal.</p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Collection 1: Geschiedenis -->
+          <article class="group relative rounded-2xl overflow-hidden border border-surface-border/50 card-hover cursor-pointer">
+            <div class="aspect-[4/3] bg-gradient-to-br from-surface-light to-surface flex items-center justify-center relative overflow-hidden">
+              <div class="absolute inset-0 bg-gradient-to-t from-void/60 to-transparent"></div>
+              <div class="text-center relative z-10">
+                <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gold/10 flex items-center justify-center group-hover:bg-gold/20 transition-colors">
+                  <span class="text-3xl">⚔️</span>
+                </div>
+                <p class="text-text-muted text-sm">Collectie</p>
+              </div>
+            </div>
+            <div class="p-6">
+              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-gold transition-colors">Geschiedenis</h3>
+              <p class="text-text-secondary text-sm mb-4">Vikingen, Egyptenaren, Romeinen — de grote verhalen van onze voorouders op jouw muur.</p>
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-text-muted">12 ontwerpen</span>
+                <span class="text-gold text-sm font-medium group-hover:translate-x-1 transition-transform inline-flex items-center">
+                  Bekijk
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Collection 2: Mythologie -->
+          <article class="group relative rounded-2xl overflow-hidden border border-surface-border/50 card-hover cursor-pointer">
+            <div class="aspect-[4/3] bg-gradient-to-br from-surface-light to-surface flex items-center justify-center relative overflow-hidden">
+              <div class="absolute inset-0 bg-gradient-to-t from-void/60 to-transparent"></div>
+              <div class="text-center relative z-10">
+                <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gold/10 flex items-center justify-center group-hover:bg-gold/20 transition-colors">
+                  <span class="text-3xl">🔱</span>
+                </div>
+                <p class="text-text-muted text-sm">Collectie</p>
+              </div>
+              <div class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-gold/20 text-gold text-[10px] font-bold uppercase">
+                Populair
+              </div>
+            </div>
+            <div class="p-6">
+              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-gold transition-colors">Mythologie</h3>
+              <p class="text-text-secondary text-sm mb-4">Griekse goden, Noorse legenden, Japanse folklore — mythisch mooi.</p>
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-text-muted">18 ontwerpen</span>
+                <span class="text-gold text-sm font-medium group-hover:translate-x-1 transition-transform inline-flex items-center">
+                  Bekijk
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Collection 3: Pop Culture -->
+          <article class="group relative rounded-2xl overflow-hidden border border-surface-border/50 card-hover cursor-pointer">
+            <div class="aspect-[4/3] bg-gradient-to-br from-surface-light to-surface flex items-center justify-center relative overflow-hidden">
+              <div class="absolute inset-0 bg-gradient-to-t from-void/60 to-transparent"></div>
+              <div class="text-center relative z-10">
+                <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gold/10 flex items-center justify-center group-hover:bg-gold/20 transition-colors">
+                  <span class="text-3xl">🎮</span>
+                </div>
+                <p class="text-text-muted text-sm">Collectie</p>
+              </div>
+            </div>
+            <div class="p-6">
+              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-gold transition-colors">Pop Culture</h3>
+              <p class="text-text-secondary text-sm mb-4">Anime, games, films — breng jouw favoriete wereld tot leven op jouw muur.</p>
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-text-muted">15 ontwerpen</span>
+                <span class="text-gold text-sm font-medium group-hover:translate-x-1 transition-transform inline-flex items-center">
+                  Bekijk
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         VALUE PROPOSITIONS
+    ======================================== -->
+    <section class="py-16 bg-surface/30 border-y border-surface-border/30" aria-label="Waarom Legend Murals">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div class="text-center">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-xl bg-gold/10 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+              </svg>
+            </div>
+            <h3 class="font-display font-bold text-lg mb-2">Schadevrij</h3>
+            <p class="text-text-secondary text-sm">Geen schade aan je muren. Verwijderbaar zonder resten.</p>
+          </div>
+
+          <div class="text-center">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-xl bg-gold/10 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
+              </svg>
+            </div>
+            <h3 class="font-display font-bold text-lg mb-2">Matte Finish</h3>
+            <p class="text-text-secondary text-sm">Premium matte look voor een high-end resultaat.</p>
+          </div>
+
+          <div class="text-center">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-xl bg-gold/10 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+              </svg>
+            </div>
+            <h3 class="font-display font-bold text-lg mb-2">Premium Vinyl</h3>
+            <p class="text-text-secondary text-sm">Duurzaam kwaliteitsvinyl dat jarenlang meegaat.</p>
+          </div>
+
+          <div class="text-center">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-xl bg-gold/10 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+              </svg>
+            </div>
+            <h3 class="font-display font-bold text-lg mb-2">Snelle Verzending</h3>
+            <p class="text-text-secondary text-sm">Binnen 2-4 werkdagen bij je thuis geleverd.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         CTA SECTION
+    ======================================== -->
+    <section class="py-20 md:py-28" aria-label="Call to Action">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div class="p-8 md:p-12 rounded-2xl border border-surface-border/50 bg-gradient-to-br from-surface to-surface-light relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-64 h-64 bg-gold/5 rounded-full blur-3xl"></div>
+          <div class="relative">
+            <h2 class="section-heading mb-4">Klaar om jouw muur te <span class="text-gradient-gold">transformeren</span>?</h2>
+            <p class="section-subheading mx-auto mb-8">Sluit je aan bij 2.500+ tevreden klanten en geef jouw ruimte een epic upgrade.</p>
+            <a href="#collections" class="btn-primary text-lg">
+              Start jouw transformatie
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================
+       FOOTER
+  ======================================== -->
+  <footer id="contact" class="border-t border-surface-border/30 bg-surface/20" role="contentinfo">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+        <!-- Brand -->
+        <div class="sm:col-span-2 lg:col-span-1">
+          <a href="/" class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-gradient-gold flex items-center justify-center">
+              <span class="text-void font-display font-bold text-sm">L</span>
+            </div>
+            <span class="font-display text-lg font-bold">Legend<span class="text-gold">Murals</span></span>
+          </a>
+          <p class="text-text-secondary text-sm mb-4">Premium muurstickers die verhalen tot leven brengen.</p>
+          <div class="flex gap-3">
+            <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-gold/10 transition-colors" aria-label="TikTok">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/>
+              </svg>
+            </a>
+            <a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-gold/10 transition-colors" aria-label="Instagram">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Links -->
+        <div>
+          <h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Collecties</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Geschiedenis</a></li>
+            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Mythologie</a></li>
+            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Pop Culture</a></li>
+            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Nieuw</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Klantenservice</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Verzending</a></li>
+            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Retourneren</a></li>
+            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">FAQ</a></li>
+            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Contact</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Bedrijf</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Over Ons</a></li>
+            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Blog</a></li>
+            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Partners</a></li>
+            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Privacy</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="pt-8 border-t border-surface-border/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p class="text-xs text-text-muted">© 2026 Legend Murals. Alle rechten voorbehouden.</p>
+        <div class="flex items-center gap-4">
+          <span class="text-xs text-text-muted">Betaalmethoden:</span>
+          <div class="flex gap-2">
+            <div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">iDEAL</div>
+            <div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">Visa</div>
+            <div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">Mastercard</div>
+            <div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">PayPal</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========================================
+       CART DRAWER (hidden by default)
+  ======================================== -->
+  <div id="cart-overlay" class="fixed inset-0 bg-void/60 backdrop-blur-sm z-50 hidden transition-opacity duration-300" aria-hidden="true"></div>
+  <aside id="cart-drawer" class="fixed top-0 right-0 h-full w-full sm:w-96 bg-surface border-l border-surface-border/50 z-50 transform translate-x-full transition-transform duration-300" role="dialog" aria-label="Winkelwagen" aria-hidden="true">
+    <div class="flex flex-col h-full">
+      <!-- Cart Header -->
+      <div class="flex items-center justify-between p-6 border-b border-surface-border/30">
+        <h2 class="font-display text-xl font-bold">Winkelwagen</h2>
+        <button id="cart-close" class="p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Sluit winkelwagen">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Cart Items -->
+      <div id="cart-items" class="flex-1 overflow-y-auto p-6">
+        <div class="text-center py-12">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-surface-light flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            </svg>
+          </div>
+          <p class="text-text-secondary font-medium">Je winkelwagen is leeg</p>
+          <p class="text-text-muted text-sm mt-1">Voeg items toe om te beginnen</p>
+        </div>
+      </div>
+
+      <!-- Cart Footer -->
+      <div class="p-6 border-t border-surface-border/30">
+        <div class="flex items-center justify-between mb-4">
+          <span class="text-text-secondary">Totaal</span>
+          <span id="cart-total" class="font-display text-xl font-bold">€0,00</span>
+        </div>
+        <button class="btn-primary w-full" disabled id="checkout-btn">
+          Afrekenen
+        </button>
+        <p class="text-center text-xs text-text-muted mt-3">🚚 Gratis verzending boven €50</p>
+      </div>
+    </div>
+  </aside>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
