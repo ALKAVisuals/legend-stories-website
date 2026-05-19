@@ -292,6 +292,172 @@
   }
 
   // ==========================================
+  // SKIPER39: Particle Canvas Animation
+  // ==========================================
+  function initParticleCanvas() {
+    const canvas = document.getElementById('particle-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let width, height;
+    let particles = [];
+    const particleCount = 60;
+    const connectionDistance = 150;
+
+    function resize() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+      canvas.width = width;
+      canvas.height = height;
+    }
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.radius = Math.random() * 2 + 1;
+        this.opacity = Math.random() * 0.5 + 0.2;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.x < 0 || this.x > width) this.vx *= -1;
+        if (this.y < 0 || this.y > height) this.vy *= -1;
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(212, 175, 55, ${this.opacity})`;
+        ctx.fill();
+      }
+    }
+
+    function initParticles() {
+      particles = [];
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      for (let i = 0; i < particles.length; i++) {
+        particles[i].update();
+        particles[i].draw();
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < connectionDistance) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(212, 175, 55, ${0.08 * (1 - dist / connectionDistance)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    resize();
+    initParticles();
+    animate();
+    window.addEventListener('resize', () => { resize(); initParticles(); });
+  }
+
+  // ==========================================
+  // SKIPER34: Scroll Reveal Animation
+  // ==========================================
+  function initScrollReveal() {
+    const reveals = document.querySelectorAll('.skiper-reveal-img, .skiper-reveal-slide');
+    if (!reveals.length) return;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -30px 0px' });
+    reveals.forEach((el) => observer.observe(el));
+  }
+
+  // ==========================================
+  // SKIPER48: Card Swipe Carousel
+  // ==========================================
+  function initCarousel() {
+    const carousels = document.querySelectorAll('.skiper-carousel');
+    carousels.forEach((carousel) => {
+      const cards = carousel.querySelectorAll('.carousel-card');
+      if (!cards.length) return;
+      let currentIndex = 0;
+      const totalCards = cards.length;
+
+      // Make first card active
+      cards[0].classList.add('active');
+
+      // Touch/drag support
+      let startX = 0;
+      let isDragging = false;
+
+      carousel.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        isDragging = true;
+      });
+      carousel.addEventListener('touchend', (e) => {
+        if (!isDragging) return;
+        const endX = e.changedTouches[0].clientX;
+        const diff = startX - endX;
+        if (Math.abs(diff) > 50) {
+          if (diff > 0 && currentIndex < totalCards - 1) {
+            currentIndex++;
+          } else if (diff < 0 && currentIndex > 0) {
+            currentIndex--;
+          }
+          updateCarousel();
+        }
+        isDragging = false;
+      });
+
+      // Arrow buttons
+      const prevBtn = carousel.parentElement.querySelector('.carousel-prev');
+      const nextBtn = carousel.parentElement.querySelector('.carousel-next');
+      if (prevBtn) prevBtn.addEventListener('click', () => { if (currentIndex > 0) { currentIndex--; updateCarousel(); } });
+      if (nextBtn) nextBtn.addEventListener('click', () => { if (currentIndex < totalCards - 1) { currentIndex++; updateCarousel(); } });
+
+      function updateCarousel() {
+        cards.forEach((card, i) => {
+          card.classList.toggle('active', i === currentIndex);
+        });
+        carousel.style.transform = `translateX(-${currentIndex * (100 / totalCards)}%)`;
+      }
+    });
+  }
+
+  // ==========================================
+  // SKIPER67: Video Player Interaction
+  // ==========================================
+  function initVideoPlayer() {
+    const players = document.querySelectorAll('.skiper-video-player');
+    players.forEach((player) => {
+      player.addEventListener('click', () => {
+        // Placeholder: show alert or expand to modal
+        const videoId = player.dataset.videoId;
+        if (videoId) {
+          // Future: open video modal or redirect
+          console.log('Play video:', videoId);
+        }
+      });
+    });
+  }
+
+  // ==========================================
   // INITIALIZATION
   // ==========================================
   function init() {
@@ -301,6 +467,10 @@
     initTestimonials();
     initFilters();
     initAddToCart();
+    initParticleCanvas();
+    initScrollReveal();
+    initCarousel();
+    initVideoPlayer();
     updateCartCount();
   }
 
