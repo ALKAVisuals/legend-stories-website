@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Legend Stories — Matte vinyl wall stickers inspired by mythology, history, and pop culture. Damage-free, removable, shipped from the Netherlands.">
-  <title>Legend Stories — Wall Stickers Inspired by Mythology & History</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Legend Stories — Matte vinyl wall stickers inspired by mythology, history, and pop culture. Damage-free. Removable. Ships from the Netherlands.">
+  <meta name="theme-color" content="#0B0B0C">
+  <title>Legend Stories — Wall Art for People Who Give a Damn</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -14,15 +15,9 @@
       theme: {
         extend: {
           colors: {
-            'void': '#0B0B0C',
-            'surface': '#161618',
-            'surface-light': '#1E1E22',
-            'surface-border': '#2A2A30',
-            'gold': '#D4AF37',
-            'gold-light': '#E8C96A',
-            'gold-dark': '#B8941F',
-            'text-primary': '#F5F5F7',
-            'text-secondary': '#A0A0B0',
+            'void': '#0B0B0C', 'surface': '#161618', 'surface-light': '#1E1E22',
+            'surface-border': '#2A2A30', 'gold': '#D4AF37', 'gold-light': '#E8C96A',
+            'gold-dark': '#B8941F', 'text-primary': '#F5F5F7', 'text-secondary': '#A0A0B0',
             'text-muted': '#6B6B7B',
           },
           fontFamily: {
@@ -30,24 +25,26 @@
             'body': ['"Inter"', 'system-ui', 'sans-serif'],
           },
           animation: {
-            'fade-in': 'fadeIn 0.6s ease-out forwards',
-            'slide-up': 'slideUp 0.5s ease-out forwards',
-            'pulse-gold': 'pulseGold 2s ease-in-out infinite',
+            'fade-in': 'fadeIn 0.8s ease-out forwards',
+            'slide-up': 'slideUp 0.6s ease-out forwards',
+            'shimmer': 'shimmer 3s ease-in-out infinite',
+            'pulse-gold': 'pulseGold 2.5s ease-in-out infinite',
             'float': 'float 6s ease-in-out infinite',
           },
           keyframes: {
             fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-            slideUp: { '0%': { opacity: '0', transform: 'translateY(30px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-            pulseGold: { '0%, 100%': { boxShadow: '0 0 0 0 rgba(212, 175, 55, 0.4)' }, '50%': { boxShadow: '0 0 20px 5px rgba(212, 175, 55, 0.2)' } },
-            float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
+            slideUp: { '0%': { opacity: '0', transform: 'translateY(40px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+            shimmer: { '0%, 100%': { opacity: '0.4' }, '50%': { opacity: '0.8' } },
+            pulseGold: { '0%, 100%': { boxShadow: '0 0 0 0 rgba(212, 175, 55, 0.3)' }, '50%': { boxShadow: '0 0 30px 8px rgba(212, 175, 55, 0.15)' } },
+            float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } },
           },
           backgroundImage: {
             'gradient-gold': 'linear-gradient(135deg, #D4AF37 0%, #E8C96A 50%, #D4AF37 100%)',
           },
           boxShadow: {
-            'gold': '0 0 30px rgba(212, 175, 55, 0.15)',
-            'gold-lg': '0 0 60px rgba(212, 175, 55, 0.2)',
-            'surface': '0 4px 24px rgba(0, 0, 0, 0.4)',
+            'gold': '0 0 30px rgba(212, 175, 55, 0.12)',
+            'gold-lg': '0 0 60px rgba(212, 175, 55, 0.18)',
+            'surface': '0 4px 24px rgba(0, 0, 0, 0.5)',
           },
         },
       },
@@ -55,861 +52,429 @@
   </script>
   <style>
     html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
-    body { overflow-x: hidden; }
-    ::selection { background: rgba(212,175,55,.3); color: #F5F5F7; }
-    ::-webkit-scrollbar { width: 6px; }
+    body { overflow-x: hidden; background: #0B0B0C; }
+    *, *::before, *::after { box-sizing: border-box; }
+    ::selection { background: rgba(212,175,55,.25); color: #F5F5F7; }
+    ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: #0B0B0C; }
     ::-webkit-scrollbar-thumb { background: #2A2A30; border-radius: 9999px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,.5); }
-    .glass { background: rgba(22,22,24,.8); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(42,42,48,.5); }
-    .glass-dark { background: rgba(11,11,12,.9); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(42,42,48,.3); }
-    /* Enhanced buttons */
-    .btn-primary { display: inline-flex; align-items: center; justify-content: center; padding: 1rem 2rem; background: linear-gradient(135deg, #D4AF37 0%, #E8C96A 50%, #D4AF37 100%); color: #0B0B0C; font-weight: 600; font-size: .875rem; text-transform: uppercase; letter-spacing: .05em; border-radius: .5rem; transition: all .3s; cursor: pointer; border: none; position: relative; overflow: hidden; }
-    .btn-primary::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent); transition: left .5s; }
-    .btn-primary:hover::before { left: 100%; }
-    .btn-primary:hover { box-shadow: 0 0 60px rgba(212,175,55,.3); transform: scale(1.02); }
-    .btn-primary:active { transform: scale(.98); }
-    .btn-secondary { display: inline-flex; align-items: center; justify-content: center; padding: 1rem 2rem; border: 1px solid rgba(212,175,55,.4); color: #D4AF37; font-weight: 600; font-size: .875rem; text-transform: uppercase; letter-spacing: .05em; border-radius: .5rem; transition: all .3s; cursor: pointer; background: transparent; }
-    .btn-secondary:hover { background: rgba(212,175,55,.1); border-color: rgba(212,175,55,.6); box-shadow: 0 0 20px rgba(212,175,55,.1); }
-
-    .section-heading { font-family: "Playfair Display", Georgia, serif; font-size: clamp(1.875rem, 4vw, 3rem); font-weight: 700; color: #F5F5F7; line-height: 1.1; }
-    .section-subheading { color: #A0A0B0; font-size: clamp(1rem, 2vw, 1.125rem); max-width: 42rem; }
-    .card-hover { transition: all .5s; }
-    .card-hover:hover { box-shadow: 0 0 30px rgba(212,175,55,.15); transform: translateY(-4px); }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,.4); }
+    .glass { background: rgba(22,22,24,.85); backdrop-filter: blur(20px) saturate(1.4); -webkit-backdrop-filter: blur(20px) saturate(1.4); border: 1px solid rgba(42,42,48,.4); }
+    .btn-primary { display: inline-flex; align-items: center; justify-content: center; padding: 1rem 2.25rem; background: linear-gradient(135deg, #D4AF37 0%, #E8C96A 50%, #D4AF37 100%); color: #0B0B0C; font-weight: 700; font-size: .8125rem; text-transform: uppercase; letter-spacing: .08em; border-radius: .5rem; transition: all .35s cubic-bezier(.4,0,.2,1); cursor: pointer; border: none; position: relative; overflow: hidden; }
+    .btn-primary::before { content: ''; position: absolute; top: 0; left: -120%; width: 120%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent); transition: left .6s cubic-bezier(.4,0,.2,1); }
+    .btn-primary:hover::before { left: 120%; }
+    .btn-primary:hover { box-shadow: 0 0 50px rgba(212,175,55,.25); transform: translateY(-1px); }
+    .btn-primary:active { transform: scale(.97); }
+    .btn-secondary { display: inline-flex; align-items: center; justify-content: center; padding: 1rem 2.25rem; border: 1px solid rgba(212,175,55,.3); color: #D4AF37; font-weight: 700; font-size: .8125rem; text-transform: uppercase; letter-spacing: .08em; border-radius: .5rem; transition: all .35s cubic-bezier(.4,0,.2,1); cursor: pointer; background: transparent; }
+    .btn-secondary:hover { background: rgba(212,175,55,.06); border-color: rgba(212,175,55,.5); box-shadow: 0 0 20px rgba(212,175,55,.08); transform: translateY(-1px); }
+    .btn-secondary:active { transform: scale(.97); }
+    .section-heading { font-family: "Playfair Display", Georgia, serif; font-size: clamp(1.75rem, 5vw, 3rem); font-weight: 700; color: #F5F5F7; line-height: 1.08; }
+    .section-subheading { color: #A0A0B0; font-size: clamp(.9375rem, 2vw, 1.0625rem); max-width: 36rem; line-height: 1.6; }
     .text-gradient-gold { background: linear-gradient(135deg, #D4AF37 0%, #E8C96A 50%, #D4AF37 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-
-    /* Portfolio */
+    .card-hover { transition: all .4s cubic-bezier(.4,0,.2,1); }
+    .card-hover:hover { box-shadow: 0 0 25px rgba(212,175,55,.1); transform: translateY(-2px); }
+    .product-img { position: relative; overflow: hidden; }
+    .product-img .product-badge { position: absolute; top: 10px; right: 10px; z-index: 5; }
+    .product-img .emoji-fallback { transition: transform .5s cubic-bezier(.4,0,.2,1); }
+    .group:hover .product-img .emoji-fallback { transform: scale(1.04); }
     .portfolio-item { position: relative; overflow: hidden; border-radius: .75rem; }
-    .portfolio-item .overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(11,11,12,.9) 0%, transparent 60%); opacity: 0; transition: opacity .3s; display: flex; flex-direction: column; justify-content: flex-end; padding: 1.5rem; }
+    .portfolio-item .overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(11,11,12,.92) 0%, transparent 55%); opacity: 0; transition: opacity .35s ease; display: flex; flex-direction: column; justify-content: flex-end; padding: 1.25rem; }
     .portfolio-item:hover .overlay { opacity: 1; }
-
-    /* Scroll animations */
-    .reveal { opacity: 0; transform: translateY(30px); transition: opacity .6s ease-out, transform .6s ease-out; }
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity .7s ease-out, transform .7s ease-out; }
     .reveal.visible { opacity: 1; transform: translateY(0); }
-    .reveal-delay-1 { transition-delay: .1s; }
-    .reveal-delay-2 { transition-delay: .2s; }
-    .reveal-delay-3 { transition-delay: .3s; }
-
-    /* Before/After slider */
+    .reveal-delay-1 { transition-delay: .12s; }
+    .reveal-delay-2 { transition-delay: .24s; }
+    .reveal-delay-3 { transition-delay: .36s; }
     .ba-slider { position: relative; overflow: hidden; border-radius: 1rem; cursor: ew-resize; }
     .ba-slider .ba-after { position: absolute; inset: 0; }
     .ba-slider .ba-before { position: absolute; inset: 0; overflow: hidden; }
-    .ba-slider .ba-handle { position: absolute; top: 0; bottom: 0; width: 4px; background: #D4AF37; z-index: 10; transform: translateX(-50%); }
-    .ba-slider .ba-handle::before { content: '⟷'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; background: #D4AF37; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0B0B0C; font-size: 1.2rem; box-shadow: 0 0 20px rgba(212,175,55,.4); }
-
-    /* Testimonial carousel */
-    .testimonial-track { display: flex; transition: transform .5s ease-in-out; }
-    .testimonial-card { min-width: 100%; padding: 0 1rem; }
-
-    /* Nav active indicator */
+    .ba-slider .ba-handle { position: absolute; top: 0; bottom: 0; width: 3px; background: #D4AF37; z-index: 10; transform: translateX(-50%); }
+    .ba-slider .ba-handle::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 36px; height: 36px; background: #D4AF37; border-radius: 50%; box-shadow: 0 0 15px rgba(212,175,55,.35); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230B0B0C' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5'/%3E%3C/svg%3E"); background-size: 16px; background-repeat: no-repeat; background-position: center; }
+    .testimonial-track { display: flex; transition: transform .5s cubic-bezier(.4,0,.2,1); }
+    .testimonial-card { min-width: 100%; padding: 0 .5rem; }
+    .stars { color: #D4AF37; letter-spacing: 3px; }
     .nav-link { position: relative; }
-    .nav-link::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px; background: #D4AF37; transition: width .3s; }
-    .nav-link:hover::after, .nav-link.active::after { width: 100%; }
-
-    /* Product card image */
-    .product-img { position: relative; overflow: hidden; }
-    .product-img .product-badge { position: absolute; top: 12px; right: 12px; z-index: 5; }
-    .product-img .emoji-fallback { transition: transform .5s; }
-    .group:hover .product-img .emoji-fallback { transform: scale(1.05); }
-
-    /* Star rating */
-    .stars { color: #D4AF37; letter-spacing: 2px; }
+    .nav-link::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 1.5px; background: #D4AF37; transition: width .3s ease; }
+    .nav-link:hover::after { width: 100%; }
+    .img-placeholder { background: linear-gradient(135deg, #161618 0%, #1E1E22 50%, #161618 100%); background-size: 200% 200%; animation: shimmer 3s ease-in-out infinite; position: relative; overflow: hidden; }
+    .img-placeholder::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 0%, rgba(212,175,55,.04) 50%, transparent 100%); background-size: 200% 100%; animation: shimmer 4s ease-in-out infinite reverse; }
+    .floating-cta { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 40; animation: float 4s ease-in-out infinite; }
+    #mobile-menu { background: rgba(11,11,12,.97); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+    @media (max-width: 640px) {
+      .section-heading { font-size: clamp(1.5rem, 7vw, 2.25rem); }
+      .btn-primary, .btn-secondary { padding: .875rem 1.75rem; font-size: .75rem; }
+      .floating-cta { bottom: 1rem; right: 1rem; }
+    }
   </style>
 </head>
 <body class="bg-void text-text-primary font-body">
-
   <!-- ANNOUNCEMENT BAR -->
-  <div class="w-full bg-gradient-gold text-void text-center py-2 px-4 text-xs sm:text-sm font-semibold tracking-wide" role="banner">
-    <p>🚚 Gratis verzending boven €50 — Gebruik code <span class="font-bold">LEGEND10</span> voor 10% korting</p>
+  <div class="w-full bg-gradient-gold text-void text-center py-2.5 px-4 text-xs sm:text-sm font-semibold tracking-wide" role="banner">
+    <p>New drop: Mythologie collection — use <span class="font-bold">LEGEND10</span> for 10% off</p>
   </div>
 
   <!-- NAVIGATION -->
-  <header class="sticky top-0 z-50 glass border-b border-surface-border/30" role="banner">
-    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Hoofdnavigatie">
-      <div class="flex items-center justify-between h-16 md:h-20">
-        <a href="index.html" class="flex items-center gap-2 group" aria-label="Legend Stories Home">
-          <div class="w-9 h-9 rounded-lg bg-gradient-gold flex items-center justify-center">
-            <span class="text-void font-display font-bold text-lg">L</span>
+  <header class="sticky top-0 z-50 glass border-b border-surface-border/20" role="banner">
+    <nav class="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8" aria-label="Main navigation">
+      <div class="flex items-center justify-between h-14 md:h-16">
+        <a href="index.html" class="flex items-center gap-2.5 group" aria-label="Legend Stories Home">
+          <div class="w-8 h-8 rounded-md bg-gradient-gold flex items-center justify-center">
+            <span class="text-void font-display font-bold text-base">L</span>
           </div>
-          <span class="font-display text-xl font-bold text-text-primary group-hover:text-gold transition-colors">
+          <span class="font-display text-lg font-bold text-text-primary group-hover:text-gold transition-colors duration-300">
             Legend<span class="text-gold">Stories</span>
           </span>
         </a>
-        <div class="hidden md:flex items-center gap-8">
-          <a href="#portfolio" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium">Portfolio</a>
-          <a href="shop.html" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium">Shop</a>
-          <a href="about.html" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium">Over Ons</a>
-          <a href="#contact" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium">Contact</a>
+        <div class="hidden md:flex items-center gap-7">
+          <a href="#portfolio" class="nav-link text-[13px] text-text-secondary hover:text-gold transition-colors duration-200 font-medium tracking-wide">Portfolio</a>
+          <a href="shop.html" class="nav-link text-[13px] text-text-secondary hover:text-gold transition-colors duration-200 font-medium tracking-wide">Shop</a>
+          <a href="about.html" class="nav-link text-[13px] text-text-secondary hover:text-gold transition-colors duration-200 font-medium tracking-wide">About</a>
+          <a href="#contact" class="nav-link text-[13px] text-text-secondary hover:text-gold transition-colors duration-200 font-medium tracking-wide">Contact</a>
         </div>
-        <div class="flex items-center gap-3">
-          <a href="shop.html" class="hidden sm:inline-flex p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Shop">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" />
-            </svg>
-          </a>
-          <button id="cart-btn" class="relative p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Winkelwagen">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <div class="flex items-center gap-2">
+          <button id="cart-btn" class="relative p-2 rounded-lg hover:bg-surface-light/50 transition-colors duration-200" aria-label="Cart">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
             </svg>
-            <span id="cart-count" class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-gold text-void text-[10px] font-bold rounded-full flex items-center justify-center opacity-0 transition-opacity duration-300">0</span>
+            <span id="cart-count" class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-gold text-void text-[9px] font-bold rounded-full flex items-center justify-center opacity-0 transition-opacity duration-300">0</span>
           </button>
-          <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Menu openen" aria-expanded="false">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-surface-light/50 transition-colors duration-200" aria-label="Open menu" aria-expanded="false">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
           </button>
         </div>
       </div>
-      <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-surface-border/30 mt-2 pt-4">
-        <div class="flex flex-col gap-3">
-          <a href="#portfolio" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium py-2">Portfolio</a>
-          <a href="shop.html" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium py-2">Shop</a>
-          <a href="about.html" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium py-2">Over Ons</a>
-          <a href="#contact" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium py-2">Contact</a>
+      <div id="mobile-menu" class="hidden md:hidden pb-6 pt-4 border-t border-surface-border/20 mt-2">
+        <div class="flex flex-col gap-1">
+          <a href="#portfolio" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium py-3 px-2">Portfolio</a>
+          <a href="shop.html" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium py-3 px-2">Shop</a>
+          <a href="about.html" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium py-3 px-2">About</a>
+          <a href="#contact" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium py-3 px-2">Contact</a>
         </div>
       </div>
     </nav>
   </header>
 
   <main>
-
-    <!-- HERO SECTION -->
-    <section class="relative min-h-[90vh] flex items-center overflow-hidden" aria-label="Hero">
-      <div class="absolute inset-0 bg-gradient-to-br from-void via-surface to-void"></div>
-      <div class="absolute top-1/4 -left-32 w-96 h-96 bg-gold/5 rounded-full blur-3xl"></div>
-      <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-gold/3 rounded-full blur-3xl"></div>
-
-      <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
-        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+    <!-- HERO -->
+    <section class="relative min-h-[85vh] flex items-center overflow-hidden" aria-label="Hero">
+      <div class="absolute inset-0 bg-gradient-to-br from-void via-surface/50 to-void"></div>
+      <div class="absolute top-1/3 -left-40 w-[500px] h-[500px] bg-gold/[.03] rounded-full blur-[100px]"></div>
+      <div class="absolute bottom-1/3 -right-40 w-[400px] h-[400px] bg-gold/[.02] rounded-full blur-[80px]"></div>
+      <div class="relative max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-16 md:py-24 lg:py-28">
+        <div class="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
           <div class="text-center lg:text-left">
-            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gold/20 bg-gold/5 mb-6">
-              <span class="w-2 h-2 rounded-full bg-gold animate-pulse"></span>
-              <span class="text-xs text-gold font-medium tracking-wide uppercase">Premium Muurstickers</span>
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-gold/15 bg-gold/[.04] mb-5">
+              <span class="w-1.5 h-1.5 rounded-full bg-gold animate-pulse"></span>
+              <span class="text-[11px] text-gold font-medium tracking-widest uppercase">Wall art with a story</span>
             </div>
-            <h1 class="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] mb-6">
-              Verhalen die je muur
-              <span class="text-gradient-gold"> tot leven</span>
-              brengen
+            <h1 class="font-display text-[2.5rem] sm:text-5xl md:text-6xl lg:text-[4.25rem] font-bold leading-[1.05] mb-5">
+              Gods, myths, and<br>
+              <span class="text-gradient-gold">galaxies</span> on<br>
+              your wall
             </h1>
-            <p class="text-text-secondary text-lg md:text-xl max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed">
-              Van mythologie tot modern design — wij ontwerpen en printen premium muurstickers die elke ruimte transformeren. Ontworpen in Nederland, geliefd wereldwijd.
+            <p class="text-text-secondary text-base md:text-lg max-w-md mx-auto lg:mx-0 mb-8 leading-relaxed">
+              Matte vinyl wall stickers inspired by history, mythology, and pop culture. Damage-free. Removable. Ships from the Netherlands.
             </p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <a href="shop.html" class="btn-primary animate-pulse-gold">
-                Bekijk de Shop
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
-              </a>
-              <a href="#portfolio" class="btn-secondary">
-                Bekijk Portfolio
-              </a>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+              <a href="shop.html" class="btn-primary animate-pulse-gold">Shop the collection</a>
+              <a href="#portfolio" class="btn-secondary">See the work</a>
             </div>
-            <div class="flex items-center gap-6 mt-10 justify-center lg:justify-start">
-              <div class="text-center">
-                <p class="text-2xl font-bold text-text-primary">2.5K+</p>
-                <p class="text-xs text-text-muted">Klanten</p>
-              </div>
-              <div class="w-px h-8 bg-surface-border"></div>
-              <div class="text-center">
-                <p class="text-2xl font-bold text-text-primary">4.9★</p>
-                <p class="text-xs text-text-muted">Rating</p>
-              </div>
-              <div class="w-px h-8 bg-surface-border"></div>
-              <div class="text-center">
-                <p class="text-2xl font-bold text-text-primary">100+</p>
-                <p class="text-xs text-text-muted">Ontwerpen</p>
-              </div>
+            <div class="flex items-center gap-5 mt-8 justify-center lg:justify-start">
+              <div class="text-center"><p class="text-xl font-bold text-text-primary">1K+</p><p class="text-[11px] text-text-muted tracking-wide">Happy customers</p></div>
+              <div class="w-px h-7 bg-surface-border/50"></div>
+              <div class="text-center"><p class="text-xl font-bold text-text-primary">4.9<span class="text-sm">★</span></p><p class="text-[11px] text-text-muted tracking-wide">On Trustpilot</p></div>
+              <div class="w-px h-7 bg-surface-border/50"></div>
+              <div class="text-center"><p class="text-xl font-bold text-text-primary">100+</p><p class="text-[11px] text-text-muted tracking-wide">Unique designs</p></div>
             </div>
           </div>
-          <div class="relative">
-            <div class="relative aspect-[4/5] rounded-2xl overflow-hidden border border-surface-border/50 shadow-surface">
-              <div class="absolute inset-0 bg-gradient-to-br from-surface-light to-surface flex items-center justify-center">
-                <div class="text-center p-8">
-                  <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gold/10 flex items-center justify-center animate-float">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
-                    </svg>
+          <div class="relative max-w-sm mx-auto lg:max-w-none">
+            <div class="relative aspect-[4/5] rounded-2xl overflow-hidden border border-surface-border/30 shadow-surface img-placeholder">
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="text-center p-6">
+                  <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gold/10 flex items-center justify-center animate-float">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" /></svg>
                   </div>
-                  <p class="text-text-muted text-sm">Jouw Mural Hier</p>
-                  <p class="text-text-muted text-xs mt-1">Upload een foto van je muur voor een preview</p>
+                  <p class="text-text-muted text-xs tracking-wide">Product image coming soon</p>
                 </div>
               </div>
-              <div class="absolute top-4 right-4 px-3 py-1.5 rounded-full glass text-xs text-gold font-medium">
-                ✨ Nieuw
-              </div>
+              <div class="absolute top-3 right-3 px-2.5 py-1 rounded-full glass text-[10px] text-gold font-semibold tracking-wide">✨ New drop</div>
             </div>
-            <div class="absolute -bottom-4 -left-4 md:-bottom-6 md:-left-6 p-4 rounded-xl glass shadow-gold max-w-[200px]">
-              <div class="flex items-center gap-2 mb-1">
-                <div class="flex -space-x-1">
-                  <div class="w-6 h-6 rounded-full bg-gold/30 border border-surface"></div>
-                  <div class="w-6 h-6 rounded-full bg-gold/50 border border-surface"></div>
-                  <div class="w-6 h-6 rounded-full bg-gold/70 border border-surface"></div>
-                </div>
-                <span class="text-xs text-text-muted">+2.4k</span>
+            <div class="absolute -bottom-3 -left-3 md:-bottom-4 md:-left-4 p-3 rounded-xl glass shadow-gold max-w-[170px]">
+              <div class="flex items-center gap-1.5 mb-0.5">
+                <div class="flex -space-x-1"><div class="w-5 h-5 rounded-full bg-gold/25 border border-surface"></div><div class="w-5 h-5 rounded-full bg-gold/40 border border-surface"></div><div class="w-5 h-5 rounded-full bg-gold/60 border border-surface"></div></div>
+                <span class="text-[10px] text-text-muted">+1K sold</span>
               </div>
-              <p class="text-xs text-text-secondary">Beste verkoop van deze week 🔥</p>
+              <p class="text-[10px] text-text-secondary">Best seller this week</p>
             </div>
           </div>
         </div>
       </div>
     </section>
-
-    <!-- BEFORE / AFTER SECTION -->
-    <section class="py-20 md:py-28 bg-surface/30" aria-label="Before After">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12 reveal">
-          <h2 class="section-heading mb-4">Van saai naar <span class="text-gradient-gold">episch</span></h2>
-          <p class="section-subheading mx-auto">Sleep de slider en zie de transformatie. Dit is wat onze muurstickers doen.</p>
+    <!-- BEFORE / AFTER -->
+    <section class="py-16 md:py-24 bg-surface/20" aria-label="Before After">
+      <div class="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+        <div class="text-center mb-10 reveal">
+          <h2 class="section-heading mb-3">Plain wall to <span class="text-gradient-gold">legendary</span></h2>
+          <p class="section-subheading mx-auto">Drag the slider. See what a €49 sticker does to a blank wall.</p>
         </div>
-        <div class="max-w-3xl mx-auto reveal">
-          <div class="ba-slider aspect-[16/10] bg-surface border border-surface-border/50" id="ba-slider">
-            <div class="ba-after bg-gradient-to-br from-surface-light via-gold/10 to-surface flex items-center justify-center">
-              <div class="text-center">
-                <span class="text-7xl block mb-3">🔱</span>
-                <span class="text-gold font-display font-bold text-xl">Na</span>
-                <p class="text-text-muted text-sm mt-1">Griekse Goden Mural — Medium</p>
-              </div>
+        <div class="max-w-2xl mx-auto reveal">
+          <div class="ba-slider aspect-[16/10] bg-surface border border-surface-border/30" id="ba-slider">
+            <div class="ba-after bg-gradient-to-br from-surface-light via-gold/8 to-surface flex items-center justify-center">
+              <div class="text-center"><span class="text-6xl block mb-2">🔱</span><span class="text-gold font-display font-bold text-lg">After</span><p class="text-text-muted text-xs mt-0.5">Greek Gods Mural — Medium</p></div>
             </div>
             <div class="ba-before bg-gradient-to-br from-surface-light to-surface" id="ba-before">
               <div class="absolute inset-0 flex items-center justify-center">
-                <div class="text-center">
-                  <div class="w-24 h-24 mx-auto mb-3 rounded-full bg-surface-border/30 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a2.25 2.25 0 002.25-2.25V5.25a2.25 2.25 0 00-2.25-2.25H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" /></svg>
-                  </div>
-                  <span class="text-text-muted font-display font-bold text-xl">Voor</span>
-                  <p class="text-text-muted text-sm mt-1">Lege muur</p>
-                </div>
+                <div class="text-center"><div class="w-20 h-20 mx-auto mb-2 rounded-full bg-surface-border/20 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-text-muted/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a2.25 2.25 0 002.25-2.25V5.25a2.25 2.25 0 00-2.25-2.25H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" /></svg></div><span class="text-text-muted/60 font-display font-bold text-lg">Before</span><p class="text-text-muted/40 text-xs mt-0.5">Your wall now</p></div>
               </div>
             </div>
             <div class="ba-handle" id="ba-handle" style="left: 50%;"></div>
           </div>
-          <p class="text-center text-text-muted text-sm mt-4">← Sleep om het verschil te zien →</p>
+          <p class="text-center text-text-muted/50 text-xs mt-3 tracking-wide">← Drag to compare →</p>
         </div>
       </div>
     </section>
 
     <!-- HOW IT WORKS -->
-    <section class="py-20 md:py-28" aria-label="Hoe het werkt">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12 reveal">
-          <h2 class="section-heading mb-4">Hoe het <span class="text-gradient-gold">werkt</span></h2>
-          <p class="section-subheading mx-auto">In 3 simpele stappen van lege muur naar muurkunst.</p>
+    <section class="py-16 md:py-24" aria-label="How it works">
+      <div class="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+        <div class="text-center mb-10 reveal">
+          <h2 class="section-heading mb-3">Three steps, <span class="text-gradient-gold">zero hassle</span></h2>
+          <p class="section-subheading mx-auto">No contractors. No paint. No stress.</p>
         </div>
-        <div class="grid md:grid-cols-3 gap-8">
-          <div class="text-center reveal reveal-delay-1 p-8 rounded-2xl border border-surface-border/50 bg-surface/50 hover:bg-surface transition-colors">
-            <div class="w-16 h-16 mx-auto mb-5 rounded-full bg-gradient-gold flex items-center justify-center text-void font-display font-bold text-2xl">1</div>
-            <h3 class="font-display text-xl font-bold mb-3">Kies je ontwerp</h3>
-            <p class="text-text-secondary text-sm">Blader door ons portfolio of shop. Kies een bestaand ontwerp of vraag een custom mural aan.</p>
+        <div class="grid md:grid-cols-3 gap-5 md:gap-6">
+          <div class="reveal reveal-delay-1 p-6 md:p-8 rounded-xl border border-surface-border/20 bg-surface/30 hover:bg-surface/50 transition-colors duration-300">
+            <div class="w-12 h-12 mb-4 rounded-full bg-gradient-gold flex items-center justify-center text-void font-display font-bold text-xl">1</div>
+            <h3 class="font-display text-lg font-bold mb-2">Pick your story</h3>
+            <p class="text-text-secondary text-sm leading-relaxed">Browse 100+ designs or send us your own idea. We print whatever you want.</p>
           </div>
-          <div class="text-center reveal reveal-delay-2 p-8 rounded-2xl border border-surface-border/50 bg-surface/50 hover:bg-surface transition-colors">
-            <div class="w-16 h-16 mx-auto mb-5 rounded-full bg-gradient-gold flex items-center justify-center text-void font-display font-bold text-2xl">2</div>
-            <h3 class="font-display text-xl font-bold mb-3">Wij printen & versturen</h3>
-            <p class="text-text-secondary text-sm">Je ontwerp wordt gedrukt op premium matte vinyl en binnen 2-4 werkdagen thuisgeleverd.</p>
+          <div class="reveal reveal-delay-2 p-6 md:p-8 rounded-xl border border-surface-border/20 bg-surface/30 hover:bg-surface/50 transition-colors duration-300">
+            <div class="w-12 h-12 mb-4 rounded-full bg-gradient-gold flex items-center justify-center text-void font-display font-bold text-xl">2</div>
+            <h3 class="font-display text-lg font-bold mb-2">We print and ship</h3>
+            <p class="text-text-secondary text-sm leading-relaxed">Your mural gets printed on matte vinyl and lands at your door in 2 to 4 days.</p>
           </div>
-          <div class="text-center reveal reveal-delay-3 p-8 rounded-2xl border border-surface-border/50 bg-surface/50 hover:bg-surface transition-colors">
-            <div class="w-16 h-16 mx-auto mb-5 rounded-full bg-gradient-gold flex items-center justify-center text-void font-display font-bold text-2xl">3</div>
-            <h3 class="font-display text-xl font-bold mb-3">Plak & geniet</h3>
-            <p class="text-text-secondary text-sm">Met de meegeleverde instructies plak je de sticker in minuten. Schadevrij aan te brengen en te verwijderen.</p>
+          <div class="reveal reveal-delay-3 p-6 md:p-8 rounded-xl border border-surface-border/20 bg-surface/30 hover:bg-surface/50 transition-colors duration-300">
+            <div class="w-12 h-12 mb-4 rounded-full bg-gradient-gold flex items-center justify-center text-void font-display font-bold text-xl">3</div>
+            <h3 class="font-display text-lg font-bold mb-2">Stick it up</h3>
+            <p class="text-text-secondary text-sm leading-relaxed">Peel, stick, done. Comes with instructions. Removes clean when you are done.</p>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- PORTFOLIO PREVIEW -->
-    <section id="portfolio" class="py-20 md:py-28 bg-surface/30" aria-label="Portfolio">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12 reveal">
-          <h2 class="section-heading mb-4">Onze <span class="text-gradient-gold">projecten</span></h2>
-          <p class="section-subheading mx-auto">Van slaapkamer tot woonkamer — bekijk hoe onze murals ruimtes transformeren.</p>
-        </div>
-        <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          <div class="portfolio-item aspect-[3/4] bg-gradient-to-br from-surface-light to-surface cursor-pointer">
-            <div class="absolute inset-0 flex items-center justify-center">
-              <span class="text-5xl">⚔️</span>
-            </div>
-            <div class="overlay">
-              <p class="font-display font-bold text-lg">Viking Slaapkamer</p>
-              <p class="text-sm text-text-muted">Geschiedenis collectie</p>
-            </div>
-          </div>
-          <div class="portfolio-item aspect-[3/4] bg-gradient-to-br from-surface-light to-surface cursor-pointer">
-            <div class="absolute inset-0 flex items-center justify-center">
-              <span class="text-5xl">🔱</span>
-            </div>
-            <div class="overlay">
-              <p class="font-display font-bold text-lg">Griekse Goden</p>
-              <p class="text-sm text-text-muted">Mythologie collectie</p>
-            </div>
-          </div>
-          <div class="portfolio-item aspect-[3/4] bg-gradient-to-br from-surface-light to-surface cursor-pointer">
-            <div class="absolute inset-0 flex items-center justify-center">
-              <span class="text-5xl">🏯</span>
-            </div>
-            <div class="overlay">
-              <p class="font-display font-bold text-lg">Japanse Tuin</p>
-              <p class="text-sm text-text-muted">Natuur collectie</p>
-            </div>
-          </div>
-          <div class="portfolio-item aspect-[3/4] bg-gradient-to-br from-surface-light to-surface cursor-pointer">
-            <div class="absolute inset-0 flex items-center justify-center">
-              <span class="text-5xl">🎮</span>
-            </div>
-            <div class="overlay">
-              <p class="font-display font-bold text-lg">Gamer Room</p>
-              <p class="text-sm text-text-muted">Pop Culture collectie</p>
-            </div>
-          </div>
-          <div class="portfolio-item aspect-[3/4] bg-gradient-to-br from-surface-light to-surface cursor-pointer">
-            <div class="absolute inset-0 flex items-center justify-center">
-              <span class="text-5xl">🌌</span>
-            </div>
-            <div class="overlay">
-              <p class="font-display font-bold text-lg">Space Nebula</p>
-              <p class="text-sm text-text-muted">Abstract collectie</p>
-            </div>
-          </div>
-          <div class="portfolio-item aspect-[3/4] bg-gradient-to-br from-surface-light to-surface cursor-pointer">
-            <div class="absolute inset-0 flex items-center justify-center">
-              <span class="text-5xl">🦅</span>
-            </div>
-            <div class="overlay">
-              <p class="font-display font-bold text-lg">Egyptische Tempel</p>
-              <p class="text-sm text-text-muted">Geschiedenis collectie</p>
-            </div>
-          </div>
-        </div>
-        <div class="text-center mt-10">
-          <a href="portfolio.html" class="btn-secondary">
-            Bekijk volledige portfolio
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
-          </a>
         </div>
       </div>
     </section>
 
+    <!-- PORTFOLIO -->
+    <section id="portfolio" class="py-16 md:py-24 bg-surface/20" aria-label="Portfolio">
+      <div class="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+        <div class="text-center mb-10 reveal">
+          <h2 class="section-heading mb-3">Rooms we have <span class="text-gradient-gold">changed</span></h2>
+          <p class="section-subheading mx-auto">Real walls. Real results. No Photoshop.</p>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+          <div class="portfolio-item aspect-[3/4] img-placeholder cursor-pointer reveal reveal-delay-1"><div class="absolute inset-0 flex items-center justify-center"><span class="text-4xl">⚔️</span></div><div class="overlay"><p class="font-display font-bold text-base">Viking Bedroom</p><p class="text-xs text-text-muted">History collection</p></div></div>
+          <div class="portfolio-item aspect-[3/4] img-placeholder cursor-pointer reveal reveal-delay-2"><div class="absolute inset-0 flex items-center justify-center"><span class="text-4xl">🔱</span></div><div class="overlay"><p class="font-display font-bold text-base">Greek Gods</p><p class="text-xs text-text-muted">Mythology collection</p></div></div>
+          <div class="portfolio-item aspect-[3/4] img-placeholder cursor-pointer reveal reveal-delay-3"><div class="absolute inset-0 flex items-center justify-center"><span class="text-4xl">🏯</span></div><div class="overlay"><p class="font-display font-bold text-base">Japanese Garden</p><p class="text-xs text-text-muted">Nature collection</p></div></div>
+          <div class="portfolio-item aspect-[3/4] img-placeholder cursor-pointer reveal"><div class="absolute inset-0 flex items-center justify-center"><span class="text-4xl">🎮</span></div><div class="overlay"><p class="font-display font-bold text-base">Gamer Setup</p><p class="text-xs text-text-muted">Pop Culture collection</p></div></div>
+          <div class="portfolio-item aspect-[3/4] img-placeholder cursor-pointer reveal"><div class="absolute inset-0 flex items-center justify-center"><span class="text-4xl">🌌</span></div><div class="overlay"><p class="font-display font-bold text-base">Space Nebula</p><p class="text-xs text-text-muted">Abstract collection</p></div></div>
+          <div class="portfolio-item aspect-[3/4] img-placeholder cursor-pointer reveal"><div class="absolute inset-0 flex items-center justify-center"><span class="text-4xl">🦅</span></div><div class="overlay"><p class="font-display font-bold text-base">Egyptian Temple</p><p class="text-xs text-text-muted">History collection</p></div></div>
+        </div>
+        <div class="text-center mt-8 reveal"><a href="portfolio.html" class="btn-secondary text-xs">View full portfolio →</a></div>
+      </div>
+    </section>
     <!-- TESTIMONIALS -->
-    <section class="py-20 md:py-28" aria-label="Reviews">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12 reveal">
-          <h2 class="section-heading mb-4">Wat onze klanten <span class="text-gradient-gold">zeggen</span></h2>
-          <p class="section-subheading mx-auto">Meer dan 2.500 tevreden klanten. Dit is wat zij van ons vinden.</p>
+    <section class="py-16 md:py-24" aria-label="Reviews">
+      <div class="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+        <div class="text-center mb-10 reveal">
+          <h2 class="section-heading mb-3">What people are <span class="text-gradient-gold">saying</span></h2>
+          <p class="section-subheading mx-auto">Do not take our word for it.</p>
         </div>
-        <div class="max-w-3xl mx-auto reveal relative overflow-hidden">
+        <div class="max-w-2xl mx-auto reveal relative overflow-hidden">
           <div class="testimonial-track" id="testimonial-track">
             <div class="testimonial-card">
-              <div class="p-8 md:p-10 rounded-2xl border border-surface-border/50 bg-surface text-center">
-                <div class="stars text-2xl mb-4">★★★★★</div>
-                <p class="text-text-secondary text-lg leading-relaxed mb-6">"Absoluut fantastisch! De Griekse Goden mural heeft onze woonkamer volledig getransformeerd. De kwaliteit is super en het plakken was kinderspel. Aanrader nummer 1!"</p>
-                <div class="flex items-center justify-center gap-3">
-                  <div class="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center text-gold font-bold">M</div>
-                  <div class="text-left"><p class="font-medium text-text-primary text-sm">Mark v.d. Berg</p><p class="text-text-muted text-xs">Amsterdam</p></div>
-                </div>
+              <div class="p-6 md:p-8 rounded-xl border border-surface-border/20 bg-surface/30 text-center">
+                <div class="stars text-lg mb-3">★★★★★</div>
+                <p class="text-text-secondary text-[15px] leading-relaxed mb-5">"Okay I am obsessed. The Greek Gods mural went up in my living room and literally everyone who visits asks about it. The matte finish looks like it was painted on. Took me maybe 20 minutes to install."</p>
+                <div class="flex items-center justify-center gap-2.5"><div class="w-8 h-8 rounded-full bg-gold/15 flex items-center justify-center text-gold font-bold text-xs">R</div><div class="text-left"><p class="font-medium text-text-primary text-xs">Rik van Dijk</p><p class="text-text-muted text-[10px]">Amsterdam</p></div></div>
               </div>
             </div>
             <div class="testimonial-card">
-              <div class="p-8 md:p-10 rounded-2xl border border-surface-border/50 bg-surface text-center">
-                <div class="stars text-2xl mb-4">★★★★★</div>
-                <p class="text-text-secondary text-lg leading-relaxed mb-6">"Ik was sceptisch of het mooi zou worden, maar het resultaat overtrof alle verwachtingen. De kleuren zijn helder, de finish is prachtig mat, en het voelt als echte kunst op mijn muur."</p>
-                <div class="flex items-center justify-center gap-3">
-                  <div class="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center text-gold font-bold">S</div>
-                  <div class="text-left"><p class="font-medium text-text-primary text-sm">Sophie Jansen</p><p class="text-text-muted text-xs">Rotterdam</p></div>
-                </div>
+              <div class="p-6 md:p-8 rounded-xl border border-surface-border/20 bg-surface/30 text-center">
+                <div class="stars text-lg mb-3">★★★★★</div>
+                <p class="text-text-secondary text-[15px] leading-relaxed mb-5">"Bought the Viking mural for my sons bedroom. Colors are sharp, the vinyl feels thick and quality. Delivery was 3 days. No complaints."</p>
+                <div class="flex items-center justify-center gap-2.5"><div class="w-8 h-8 rounded-full bg-gold/15 flex items-center justify-center text-gold font-bold text-xs">P</div><div class="text-left"><p class="font-medium text-text-primary text-xs">Pieter Bakker</p><p class="text-text-muted text-[10px]">Rotterdam</p></div></div>
               </div>
             </div>
             <div class="testimonial-card">
-              <div class="p-8 md:p-10 rounded-2xl border border-surface-border/50 bg-surface text-center">
-                <div class="stars text-2xl mb-4">★★★★★</div>
-                <p class="text-text-secondary text-lg leading-relaxed mb-6">"Besteld voor de kamer van mijn zoon. Hij is er dolgoed mee! De Viking mural is episch en de kwaliteit is top. Verzending was ook super snel. Zeker voor herhaling vatbaar."</p>
-                <div class="flex items-center justify-center gap-3">
-                  <div class="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center text-gold font-bold">T</div>
-                  <div class="text-left"><p class="font-medium text-text-primary text-sm">Thomas de Vries</p><p class="text-text-muted text-xs">Utrecht</p></div>
-                </div>
+              <div class="p-6 md:p-8 rounded-xl border border-surface-border/20 bg-surface/30 text-center">
+                <div class="stars text-lg mb-3">★★★★☆</div>
+                <p class="text-text-secondary text-[15px] leading-relaxed mb-5">"Shipping took 5 days instead of the promised 4, which was annoying. But the mural itself? Genuinely impressive. The Space Nebula one looks insane in my home office. Would buy again."</p>
+                <div class="flex items-center justify-center gap-2.5"><div class="w-8 h-8 rounded-full bg-gold/15 flex items-center justify-center text-gold font-bold text-xs">A</div><div class="text-left"><p class="font-medium text-text-primary text-xs">Anna de Wit</p><p class="text-text-muted text-[10px]">Utrecht</p></div></div>
               </div>
             </div>
             <div class="testimonial-card">
-              <div class="p-8 md:p-10 rounded-2xl border border-surface-border/50 bg-surface text-center">
-                <div class="stars text-2xl mb-4">★★★★★</div>
-                <p class="text-text-secondary text-lg leading-relaxed mb-6">"We hebben een custom mural laten maken voor ons kantoor. Het team was super behulpzaam en het eindresultaat is professioneel en uniek. Onze klanten zijn altijd onder de indruk!"</p>
-                <div class="flex items-center justify-center gap-3">
-                  <div class="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center text-gold font-bold">L</div>
-                  <div class="text-left"><p class="font-medium text-text-primary text-sm">Lisa Bakker</p><p class="text-text-muted text-xs">Den Haag</p></div>
-                </div>
+              <div class="p-6 md:p-8 rounded-xl border border-surface-border/20 bg-surface/30 text-center">
+                <div class="stars text-lg mb-3">★★★★★</div>
+                <p class="text-text-secondary text-[15px] leading-relaxed mb-5">"Got the Egyptian Temple one. Looks clean. Sticks well. No bubbles. Done."</p>
+                <div class="flex items-center justify-center gap-2.5"><div class="w-8 h-8 rounded-full bg-gold/15 flex items-center justify-center text-gold font-bold text-xs">J</div><div class="text-left"><p class="font-medium text-text-primary text-xs">Jonas Peeters</p><p class="text-text-muted text-[10px]">Antwerp</p></div></div>
               </div>
             </div>
           </div>
-          <div class="flex justify-center gap-2 mt-6">
-            <button class="testimonial-dot w-2.5 h-2.5 rounded-full bg-gold transition-all" data-index="0"></button>
-            <button class="testimonial-dot w-2.5 h-2.5 rounded-full bg-surface-border hover:bg-gold/50 transition-all" data-index="1"></button>
-            <button class="testimonial-dot w-2.5 h-2.5 rounded-full bg-surface-border hover:bg-gold/50 transition-all" data-index="2"></button>
-            <button class="testimonial-dot w-2.5 h-2.5 rounded-full bg-surface-border hover:bg-gold/50 transition-all" data-index="3"></button>
+          <div class="flex justify-center gap-1.5 mt-5">
+            <button class="testimonial-dot w-2 h-2 rounded-full bg-gold transition-all duration-300" data-index="0"></button>
+            <button class="testimonial-dot w-2 h-2 rounded-full bg-surface-border hover:bg-gold/40 transition-all duration-300" data-index="1"></button>
+            <button class="testimonial-dot w-2 h-2 rounded-full bg-surface-border hover:bg-gold/40 transition-all duration-300" data-index="2"></button>
+            <button class="testimonial-dot w-2 h-2 rounded-full bg-surface-border hover:bg-gold/40 transition-all duration-300" data-index="3"></button>
           </div>
         </div>
       </div>
     </section>
 
     <!-- SHOP PREVIEW -->
-    <section class="py-20 md:py-28 bg-surface/30" aria-label="Shop Preview">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-          <h2 class="section-heading mb-4">Populaire <span class="text-gradient-gold">producten</span></h2>
-          <p class="section-subheading mx-auto">Bestel direct of vraag een custom mural aan op maat.</p>
+    <section class="py-16 md:py-24 bg-surface/20" aria-label="Shop Preview">
+      <div class="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+        <div class="text-center mb-10 reveal">
+          <h2 class="section-heading mb-3">Most <span class="text-gradient-gold">popular</span> right now</h2>
+          <p class="section-subheading mx-auto">The ones that keep selling out.</p>
         </div>
-        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <article class="group rounded-2xl overflow-hidden border border-surface-border/50 card-hover bg-surface">
-            <div class="aspect-[4/3] bg-gradient-to-br from-surface-light to-surface flex items-center justify-center relative">
-              <span class="text-6xl">🔱</span>
-              <div class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-gold/20 text-gold text-[10px] font-bold uppercase">Best Seller</div>
-            </div>
-            <div class="p-6">
-              <p class="text-gold text-xs font-medium uppercase tracking-wide mb-1">Mythologie</p>
-              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-gold transition-colors">Griekse Goden Mural</h3>
-              <p class="text-text-secondary text-sm mb-4">Van Zeus tot Poseidon — de kracht van Olympus op jouw muur.</p>
-              <div class="flex items-center justify-between">
-                <div>
-                  <span class="font-display text-xl font-bold">€49,95</span>
-                  <span class="text-sm text-text-muted line-through ml-2">€69,95</span>
-                </div>
-                <a href="shop.html" class="btn-primary text-sm !px-4 !py-2">Bestel</a>
-              </div>
-            </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+          <article class="group rounded-xl overflow-hidden border border-surface-border/20 card-hover bg-surface/30 reveal reveal-delay-1">
+            <div class="product-img aspect-[4/3] img-placeholder flex items-center justify-center relative"><span class="text-5xl emoji-fallback">🔱</span><div class="product-badge px-2 py-0.5 rounded bg-gold/15 text-gold text-[9px] font-bold tracking-widest uppercase">Best seller</div></div>
+            <div class="p-5"><p class="text-gold text-[10px] font-semibold uppercase tracking-widest mb-1">Mythology</p><h3 class="font-display text-lg font-bold mb-1.5 group-hover:text-gold transition-colors duration-300">Greek Gods Mural</h3><p class="text-text-secondary text-sm mb-4 leading-relaxed">Zeus, Poseidon, and the whole pantheon staring down at you.</p><div class="flex items-center justify-between"><div><span class="font-display text-lg font-bold">€49,95</span><span class="text-sm text-text-muted/50 line-through ml-1.5">€69,95</span></div><button class="btn-primary text-xs !px-4 !py-2.5 add-to-cart-btn" data-name="Greek Gods Mural" data-price="49.95" data-emoji="🔱">Add to cart</button></div></div>
           </article>
-          <article class="group rounded-2xl overflow-hidden border border-surface-border/50 card-hover bg-surface">
-            <div class="aspect-[4/3] bg-gradient-to-br from-surface-light to-surface flex items-center justify-center relative">
-              <span class="text-6xl">⚔️</span>
-            </div>
-            <div class="p-6">
-              <p class="text-gold text-xs font-medium uppercase tracking-wide mb-1">Geschiedenis</p>
-              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-gold transition-colors">Viking Mural</h3>
-              <p class="text-text-secondary text-sm mb-4">Noorse mythologie en Viking design voor een episch resultaat.</p>
-              <div class="flex items-center justify-between">
-                <div>
-                  <span class="font-display text-xl font-bold">€44,95</span>
-                </div>
-                <a href="shop.html" class="btn-primary text-sm !px-4 !py-2">Bestel</a>
-              </div>
-            </div>
+          <article class="group rounded-xl overflow-hidden border border-surface-border/20 card-hover bg-surface/30 reveal reveal-delay-2">
+            <div class="product-img aspect-[4/3] img-placeholder flex items-center justify-center relative"><span class="text-5xl emoji-fallback">⚔️</span></div>
+            <div class="p-5"><p class="text-gold text-[10px] font-semibold uppercase tracking-widest mb-1">History</p><h3 class="font-display text-lg font-bold mb-1.5 group-hover:text-gold transition-colors duration-300">Viking Mural</h3><p class="text-text-secondary text-sm mb-4 leading-relaxed">Norse mythology meets your bedroom wall. Longships included.</p><div class="flex items-center justify-between"><div><span class="font-display text-lg font-bold">€44,95</span></div><button class="btn-primary text-xs !px-4 !py-2.5 add-to-cart-btn" data-name="Viking Mural" data-price="44.95" data-emoji="⚔️">Add to cart</button></div></div>
           </article>
-          <article class="group rounded-2xl overflow-hidden border border-surface-border/50 card-hover bg-surface">
-            <div class="aspect-[4/3] bg-gradient-to-br from-surface-light to-surface flex items-center justify-center relative">
-              <span class="text-6xl">🌌</span>
-              <div class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-gold/20 text-gold text-[10px] font-bold uppercase">Nieuw</div>
-            </div>
-            <div class="p-6">
-              <p class="text-gold text-xs font-medium uppercase tracking-wide mb-1">Abstract</p>
-              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-gold transition-colors">Space Nebula Mural</h3>
-              <p class="text-text-secondary text-sm mb-4">Een kosmische reis door sterrenstelsels en nevels.</p>
-              <div class="flex items-center justify-between">
-                <div>
-                  <span class="font-display text-xl font-bold">€54,95</span>
-                </div>
-                <a href="shop.html" class="btn-primary text-sm !px-4 !py-2">Bestel</a>
-              </div>
-            </div>
+          <article class="group rounded-xl overflow-hidden border border-surface-border/20 card-hover bg-surface/30 reveal reveal-delay-3">
+            <div class="product-img aspect-[4/3] img-placeholder flex items-center justify-center relative"><span class="text-5xl emoji-fallback">🌌</span><div class="product-badge px-2 py-0.5 rounded bg-gold/15 text-gold text-[9px] font-bold tracking-widest uppercase">New</div></div>
+            <div class="p-5"><p class="text-gold text-[10px] font-semibold uppercase tracking-widest mb-1">Abstract</p><h3 class="font-display text-lg font-bold mb-1.5 group-hover:text-gold transition-colors duration-300">Space Nebula Mural</h3><p class="text-text-secondary text-sm mb-4 leading-relaxed">A galaxy you can actually afford to visit.</p><div class="flex items-center justify-between"><div><span class="font-display text-lg font-bold">€54,95</span></div><button class="btn-primary text-xs !px-4 !py-2.5 add-to-cart-btn" data-name="Space Nebula Mural" data-price="54.95" data-emoji="🌌">Add to cart</button></div></div>
           </article>
         </div>
-        <div class="text-center mt-10">
-          <a href="shop.html" class="btn-primary">
-            Bekijk alle producten
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
-          </a>
-        </div>
+        <div class="text-center mt-8 reveal"><a href="shop.html" class="btn-primary">See all murals →</a></div>
       </div>
     </section>
 
-    <!-- VALUE PROPOSITIONS -->
-    <section class="py-16 border-y border-surface-border/30" aria-label="Waarom Legend Stories">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div class="text-center">
-            <div class="w-14 h-14 mx-auto mb-4 rounded-xl bg-gold/10 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-              </svg>
-            </div>
-            <h3 class="font-display font-bold text-lg mb-2">Schadevrij</h3>
-            <p class="text-text-secondary text-sm">Geen schade aan je muren. Verwijderbaar zonder resten.</p>
-          </div>
-          <div class="text-center">
-            <div class="w-14 h-14 mx-auto mb-4 rounded-xl bg-gold/10 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
-              </svg>
-            </div>
-            <h3 class="font-display font-bold text-lg mb-2">Matte Finish</h3>
-            <p class="text-text-secondary text-sm">Premium matte look voor een high-end resultaat.</p>
-          </div>
-          <div class="text-center">
-            <div class="w-14 h-14 mx-auto mb-4 rounded-xl bg-gold/10 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
-              </svg>
-            </div>
-            <h3 class="font-display font-bold text-lg mb-2">Premium Vinyl</h3>
-            <p class="text-text-secondary text-sm">Duurzaam kwaliteitsvinyl dat jarenlang meegaat.</p>
-          </div>
-          <div class="text-center">
-            <div class="w-14 h-14 mx-auto mb-4 rounded-xl bg-gold/10 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-              </svg>
-            </div>
-            <h3 class="font-display font-bold text-lg mb-2">Snelle Verzending</h3>
-            <p class="text-text-secondary text-sm">Binnen 2-4 werkdagen bij je thuis geleverd.</p>
-          </div>
+    <!-- VALUE PROPS -->
+    <section class="py-14 md:py-20 border-y border-surface-border/15" aria-label="Why us">
+      <div class="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          <div class="text-center reveal reveal-delay-1"><div class="w-11 h-11 mx-auto mb-3 rounded-lg bg-gold/[.07] flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg></div><h3 class="font-display font-bold text-sm mb-1">No damage</h3><p class="text-text-secondary text-xs leading-relaxed">Peels off clean. Your deposit stays safe.</p></div>
+          <div class="text-center reveal reveal-delay-2"><div class="w-11 h-11 mx-auto mb-3 rounded-lg bg-gold/[.07] flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" /></svg></div><h3 class="font-display font-bold text-sm mb-1">Matte vinyl</h3><p class="text-text-secondary text-xs leading-relaxed">No glare. No shine. Just a clean painted look.</p></div>
+          <div class="text-center reveal reveal-delay-3"><div class="w-11 h-11 mx-auto mb-3 rounded-lg bg-gold/[.07] flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg></div><h3 class="font-display font-bold text-sm mb-1">Built to last</h3><p class="text-text-secondary text-xs leading-relaxed">Thick vinyl that stays put for years.</p></div>
+          <div class="text-center reveal"><div class="w-11 h-11 mx-auto mb-3 rounded-lg bg-gold/[.07] flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" /></svg></div><h3 class="font-display font-bold text-sm mb-1">Fast shipping</h3><p class="text-text-secondary text-xs leading-relaxed">2 to 4 working days. Ships across Europe.</p></div>
         </div>
       </div>
     </section>
-
-    <!-- TIKTOK / SOCIAL PROOF -->
-    <section class="py-20 md:py-28 bg-surface/30" aria-label="Social Proof">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gold/20 bg-gold/5 mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gold" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/>
-            </svg>
-            <span class="text-xs text-gold font-medium tracking-wide uppercase">@legendstories_official</span>
+    <!-- SOCIAL PROOF -->
+    <section class="py-16 md:py-24 bg-surface/20" aria-label="Social Proof">
+      <div class="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+        <div class="text-center mb-10 reveal">
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gold/15 bg-gold/[.04] mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/></svg>
+            <span class="text-[10px] text-gold font-medium tracking-widest uppercase">@legendstories_official</span>
           </div>
-          <h2 class="section-heading mb-4">Volg ons op <span class="text-gradient-gold">social media</span></h2>
-          <p class="section-subheading mx-auto">Bekijk onze laatste projecten, behind the scenes en klantreviews.</p>
+          <h2 class="section-heading mb-3">See it on <span class="text-gradient-gold">TikTok</span></h2>
+          <p class="section-subheading mx-auto">We post room transformations daily. Come watch.</p>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="group relative aspect-[9/16] rounded-xl overflow-hidden border border-surface-border/50 card-hover">
-            <div class="absolute inset-0 bg-gradient-to-b from-surface-light to-surface flex items-center justify-center">
-              <div class="text-center">
-                <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-gold/10 flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                </div>
-                <p class="text-xs text-text-muted">TikTok</p>
-              </div>
-            </div>
-            <div class="absolute inset-0 bg-gradient-to-t from-void/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <p class="text-xs text-text-primary font-medium">12.4K views</p>
-            </div>
-          </a>
-          <a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="group relative aspect-[9/16] rounded-xl overflow-hidden border border-surface-border/50 card-hover">
-            <div class="absolute inset-0 bg-gradient-to-b from-surface-light to-surface flex items-center justify-center">
-              <div class="text-center">
-                <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-gold/10 flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                </div>
-                <p class="text-xs text-text-muted">Instagram</p>
-              </div>
-            </div>
-            <div class="absolute inset-0 bg-gradient-to-t from-void/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <p class="text-xs text-text-primary font-medium">8.7K views</p>
-            </div>
-          </a>
-          <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="group relative aspect-[9/16] rounded-xl overflow-hidden border border-surface-border/50 card-hover">
-            <div class="absolute inset-0 bg-gradient-to-b from-surface-light to-surface flex items-center justify-center">
-              <div class="text-center">
-                <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-gold/10 flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                </div>
-                <p class="text-xs text-text-muted">TikTok</p>
-              </div>
-            </div>
-            <div class="absolute inset-0 bg-gradient-to-t from-void/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <p class="text-xs text-text-primary font-medium">21.1K views</p>
-            </div>
-          </a>
-          <a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="group relative aspect-[9/16] rounded-xl overflow-hidden border border-surface-border/50 card-hover">
-            <div class="absolute inset-0 bg-gradient-to-b from-surface-light to-surface flex items-center justify-center">
-              <div class="text-center">
-                <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-gold/10 flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                </div>
-                <p class="text-xs text-text-muted">Instagram</p>
-              </div>
-            </div>
-            <div class="absolute inset-0 bg-gradient-to-t from-void/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <p class="text-xs text-text-primary font-medium">15.8K views</p>
-            </div>
-          </a>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 reveal">
+          <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="group relative aspect-[9/16] rounded-lg overflow-hidden border border-surface-border/20 card-hover"><div class="absolute inset-0 bg-gradient-to-b from-surface-light to-surface flex items-center justify-center"><div class="text-center"><div class="w-10 h-10 mx-auto mb-1.5 rounded-full bg-gold/10 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><p class="text-[10px] text-text-muted">TikTok</p></div></div><div class="absolute inset-0 bg-gradient-to-t from-void/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div><div class="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"><p class="text-[10px] text-text-primary font-medium">12.4K views</p></div></a>
+          <a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="group relative aspect-[9/16] rounded-lg overflow-hidden border border-surface-border/20 card-hover"><div class="absolute inset-0 bg-gradient-to-b from-surface-light to-surface flex items-center justify-center"><div class="text-center"><div class="w-10 h-10 mx-auto mb-1.5 rounded-full bg-gold/10 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><p class="text-[10px] text-text-muted">Instagram</p></div></div><div class="absolute inset-0 bg-gradient-to-t from-void/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div><div class="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"><p class="text-[10px] text-text-primary font-medium">8.7K views</p></div></a>
+          <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="group relative aspect-[9/16] rounded-lg overflow-hidden border border-surface-border/20 card-hover"><div class="absolute inset-0 bg-gradient-to-b from-surface-light to-surface flex items-center justify-center"><div class="text-center"><div class="w-10 h-10 mx-auto mb-1.5 rounded-full bg-gold/10 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><p class="text-[10px] text-text-muted">TikTok</p></div></div><div class="absolute inset-0 bg-gradient-to-t from-void/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div><div class="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"><p class="text-[10px] text-text-primary font-medium">21.1K views</p></div></a>
+          <a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="group relative aspect-[9/16] rounded-lg overflow-hidden border border-surface-border/20 card-hover"><div class="absolute inset-0 bg-gradient-to-b from-surface-light to-surface flex items-center justify-center"><div class="text-center"><div class="w-10 h-10 mx-auto mb-1.5 rounded-full bg-gold/10 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><p class="text-[10px] text-text-muted">Instagram</p></div></div><div class="absolute inset-0 bg-gradient-to-t from-void/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div><div class="absolute bottom-2 left-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"><p class="text-[10px] text-text-primary font-medium">15.8K views</p></div></a>
         </div>
-        <div class="flex justify-center gap-4 mt-10">
-          <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="btn-secondary">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/>
-            </svg>
-            TikTok
-          </a>
-          <a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="btn-secondary">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
-            </svg>
-            Instagram
-          </a>
-        </div>
+        <div class="flex justify-center gap-3 mt-8 reveal"><a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="btn-secondary text-xs">Follow on TikTok</a><a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="btn-secondary text-xs">Follow on IG</a></div>
       </div>
     </section>
 
-    <!-- CTA SECTION -->
-    <section class="py-20 md:py-28" aria-label="Call to Action">
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div class="p-8 md:p-12 rounded-2xl border border-surface-border/50 bg-gradient-to-br from-surface to-surface-light relative overflow-hidden">
-          <div class="absolute top-0 right-0 w-64 h-64 bg-gold/5 rounded-full blur-3xl"></div>
+    <!-- CTA -->
+    <section class="py-16 md:py-24" aria-label="Call to Action">
+      <div class="max-w-3xl mx-auto px-5 sm:px-6 lg:px-8 text-center">
+        <div class="p-8 md:p-12 rounded-2xl border border-surface-border/20 bg-gradient-to-br from-surface/40 to-surface/20 relative overflow-hidden reveal">
+          <div class="absolute top-0 right-0 w-48 h-48 bg-gold/[.03] rounded-full blur-[60px]"></div>
           <div class="relative">
-            <h2 class="section-heading mb-4">Klaar om jouw muur te <span class="text-gradient-gold">transformeren</span>?</h2>
-            <p class="section-subheading mx-auto mb-8">Of je nu een kamer, kantoor of kinderkamer wilt opfleuren — wij maken het mogelijk.</p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="shop.html" class="btn-primary text-lg">
-                Bekijk de Shop
-              </a>
-              <a href="#contact" class="btn-secondary text-lg">
-                Custom Mural Aanvragen
-              </a>
-            </div>
+            <h2 class="section-heading mb-3">Your wall is <span class="text-gradient-gold">waiting</span></h2>
+            <p class="section-subheading mx-auto mb-7">Pick a design. We will handle the rest.</p>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center"><a href="shop.html" class="btn-primary">Shop the collection</a><a href="#contact" class="btn-secondary">Request custom mural</a></div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- CONTACT SECTION -->
-    <section id="contact" class="py-20 md:py-28 bg-surface/30" aria-label="Contact">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16">
-          <div>
-            <h2 class="section-heading mb-4">Neem <span class="text-gradient-gold">contact</span> op</h2>
-            <p class="section-subheading mb-8">Heb je een vraag, wil je een custom mural, of gewoon meer info? Stuur ons een bericht!</p>
-            <div class="space-y-6">
-              <div class="flex items-start gap-4">
-                <div class="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                  </svg>
-                </div>
-                <div>
-                  <p class="font-medium text-text-primary">Email</p>
-                  <p class="text-text-secondary text-sm">info@legendstories.nl</p>
-                </div>
-              </div>
-              <div class="flex items-start gap-4">
-                <div class="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gold" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/>
-                  </svg>
-                </div>
-                <div>
-                  <p class="font-medium text-text-primary">TikTok</p>
-                  <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="text-text-secondary text-sm hover:text-gold transition-colors">@legendstories_official</a>
-                </div>
-              </div>
-              <div class="flex items-start gap-4">
-                <div class="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gold" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069z"/>
-                  </svg>
-                </div>
-                <div>
-                  <p class="font-medium text-text-primary">Instagram</p>
-                  <a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="text-text-secondary text-sm hover:text-gold transition-colors">@legendstories_official</a>
-                </div>
-              </div>
+    <!-- CONTACT -->
+    <section id="contact" class="py-16 md:py-24 bg-surface/20" aria-label="Contact">
+      <div class="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-2 gap-10 lg:gap-14">
+          <div class="reveal">
+            <h2 class="section-heading mb-3">Got a <span class="text-gradient-gold">question</span>?</h2>
+            <p class="section-subheading mb-8">Custom orders, bulk pricing, or just want to say hi. We read everything.</p>
+            <div class="space-y-5">
+              <div class="flex items-start gap-3"><div class="w-9 h-9 rounded-lg bg-gold/[.07] flex items-center justify-center shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg></div><div><p class="font-medium text-text-primary text-sm">Email</p><p class="text-text-secondary text-sm">hello@legendstories.nl</p></div></div>
+              <div class="flex items-start gap-3"><div class="w-9 h-9 rounded-lg bg-gold/[.07] flex items-center justify-center shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/></svg></div><div><p class="font-medium text-text-primary text-sm">TikTok</p><a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="text-text-secondary text-sm hover:text-gold transition-colors">@legendstories_official</a></div></div>
+              <div class="flex items-start gap-3"><div class="w-9 h-9 rounded-lg bg-gold/[.07] flex items-center justify-center shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gold" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069z"/></svg></div><div><p class="font-medium text-text-primary text-sm">Instagram</p><a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="text-text-secondary text-sm hover:text-gold transition-colors">@legendstories_official</a></div></div>
             </div>
           </div>
-          <div>
-            <form class="p-6 md:p-8 rounded-2xl border border-surface-border/50 bg-surface space-y-5">
-              <div>
-                <label for="name" class="block text-sm font-medium text-text-primary mb-2">Naam</label>
-                <input type="text" id="name" name="name" required class="w-full px-4 py-3 rounded-lg bg-surface-light border border-surface-border/50 text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50 transition-colors" placeholder="Jouw naam">
-              </div>
-              <div>
-                <label for="email" class="block text-sm font-medium text-text-primary mb-2">Email</label>
-                <input type="email" id="email" name="email" required class="w-full px-4 py-3 rounded-lg bg-surface-light border border-surface-border/50 text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50 transition-colors" placeholder="jouw@email.nl">
-              </div>
-              <div>
-                <label for="subject" class="block text-sm font-medium text-text-primary mb-2">Onderwerp</label>
-                <select id="subject" name="subject" class="w-full px-4 py-3 rounded-lg bg-surface-light border border-surface-border/50 text-text-primary focus:outline-none focus:border-gold/50 transition-colors">
-                  <option value="general">Algemene vraag</option>
-                  <option value="custom">Custom mural aanvragen</option>
-                  <option value="order">Bestelling / Bestelling volgen</option>
-                  <option value="wholesale">Wholesale / Zakelijk</option>
-                  <option value="other">Anders</option>
-                </select>
-              </div>
-              <div>
-                <label for="message" class="block text-sm font-medium text-text-primary mb-2">Bericht</label>
-                <textarea id="message" name="message" rows="4" required class="w-full px-4 py-3 rounded-lg bg-surface-light border border-surface-border/50 text-text-primary placeholder-text-muted focus:outline-none focus:border-gold/50 transition-colors resize-none" placeholder="Schrijf hier je bericht..."></textarea>
-              </div>
-              <button type="submit" class="btn-primary w-full">
-                Verstuur bericht
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                </svg>
-              </button>
+          <div class="reveal">
+            <form class="p-5 md:p-7 rounded-xl border border-surface-border/20 bg-surface/30 space-y-4">
+              <div><label for="name" class="block text-xs font-medium text-text-primary mb-1.5 tracking-wide">Your name</label><input type="text" id="name" name="name" required class="w-full px-3.5 py-2.5 rounded-lg bg-surface-light/50 border border-surface-border/20 text-text-primary placeholder-text-muted/40 focus:outline-none focus:border-gold/40 transition-colors text-sm" placeholder="Your name"></div>
+              <div><label for="email" class="block text-xs font-medium text-text-primary mb-1.5 tracking-wide">Your email</label><input type="email" id="email" name="email" required class="w-full px-3.5 py-2.5 rounded-lg bg-surface-light/50 border border-surface-border/20 text-text-primary placeholder-text-muted/40 focus:outline-none focus:border-gold/40 transition-colors text-sm" placeholder="you@email.com"></div>
+              <div><label for="subject" class="block text-xs font-medium text-text-primary mb-1.5 tracking-wide">What is this about</label><select id="subject" name="subject" class="w-full px-3.5 py-2.5 rounded-lg bg-surface-light/50 border border-surface-border/20 text-text-primary focus:outline-none focus:border-gold/40 transition-colors text-sm"><option value="general">General question</option><option value="custom">Custom mural request</option><option value="order">Order / Track order</option><option value="wholesale">Wholesale / Business</option><option value="other">Something else</option></select></div>
+              <div><label for="message" class="block text-xs font-medium text-text-primary mb-1.5 tracking-wide">Your message</label><textarea id="message" name="message" rows="3" required class="w-full px-3.5 py-2.5 rounded-lg bg-surface-light/50 border border-surface-border/20 text-text-primary placeholder-text-muted/40 focus:outline-none focus:border-gold/40 transition-colors resize-none text-sm" placeholder="Tell us what you need..."></textarea></div>
+              <button type="submit" class="btn-primary w-full text-xs">Send message</button>
             </form>
           </div>
         </div>
       </div>
     </section>
   </main>
-
   <!-- FOOTER -->
-  <footer class="border-t border-surface-border/30 bg-surface/20" role="contentinfo">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <!-- Trust badges row -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 pb-10 border-b border-surface-border/30">
-        <div class="flex items-center gap-3 p-3 rounded-lg bg-surface/50">
-          <div class="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" /></svg>
-          </div>
-          <div><p class="text-xs font-medium text-text-primary">Gratis verzending</p><p class="text-[10px] text-text-muted">Boven €50</p></div>
-        </div>
-        <div class="flex items-center gap-3 p-3 rounded-lg bg-surface/50">
-          <div class="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
-          </div>
-          <div><p class="text-xs font-medium text-text-primary">Schadevrij</p><p class="text-[10px] text-text-muted">Verwijderbaar</p></div>
-        </div>
-        <div class="flex items-center gap-3 p-3 rounded-lg bg-surface/50">
-          <div class="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
-          </div>
-          <div><p class="text-xs font-medium text-text-primary">2.5K+ klanten</p><p class="text-[10px] text-text-muted">4.9★ rating</p></div>
-        </div>
-        <div class="flex items-center gap-3 p-3 rounded-lg bg-surface/50">
-          <div class="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
-          </div>
-          <div><p class="text-xs font-medium text-text-primary">30 dagen</p><p class="text-[10px] text-text-muted">Bedenktijd</p></div>
-        </div>
-      </div>
-
-      <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
+  <footer class="border-t border-surface-border/15 bg-surface/10" role="contentinfo">
+    <div class="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-10">
+      <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
         <div class="sm:col-span-2 lg:col-span-2">
-          <a href="index.html" class="flex items-center gap-2 mb-4">
-            <div class="w-8 h-8 rounded-lg bg-gradient-gold flex items-center justify-center"><span class="text-void font-display font-bold text-sm">L</span></div>
-            <span class="font-display text-lg font-bold">Legend<span class="text-gold">Stories</span></span>
-          </a>
-          <p class="text-text-secondary text-sm mb-4">Premium muurstickers die verhalen tot leven brengen. Ontworpen in Nederland.</p>
-          <div class="flex gap-3">
-            <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-gold/10 transition-colors" aria-label="TikTok"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/></svg></a>
-            <a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-gold/10 transition-colors" aria-label="Instagram"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069z"/></svg></a>
-          </div>
-        </div>
-        <div>
-          <h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Shop</h4>
-          <ul class="space-y-2">
-            <li><a href="shop.html" class="text-sm text-text-secondary hover:text-gold transition-colors">Alle Producten</a></li>
-            <li><a href="shop.html" class="text-sm text-text-secondary hover:text-gold transition-colors">Mythologie</a></li>
-            <li><a href="shop.html" class="text-sm text-text-secondary hover:text-gold transition-colors">Geschiedenis</a></li>
-            <li><a href="shop.html" class="text-sm text-text-secondary hover:text-gold transition-colors">Pop Culture</a></li>
-            <li><a href="shop.html" class="text-sm text-text-secondary hover:text-gold transition-colors">Custom Murals</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Klantenservice</h4>
-          <ul class="space-y-2">
-            <li><a href="#contact" class="text-sm text-text-secondary hover:text-gold transition-colors">Contact</a></li>
-            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Verzending</a></li>
-            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Retourneren</a></li>
-            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">FAQ</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Bedrijf</h4>
-          <ul class="space-y-2">
-            <li><a href="about.html" class="text-sm text-text-secondary hover:text-gold transition-colors">Over Ons</a></li>
-            <li><a href="portfolio.html" class="text-sm text-text-secondary hover:text-gold transition-colors">Portfolio</a></li>
-            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Privacy Policy</a></li>
-            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Voorwaarden</a></li>
-          </ul>
-        </div>
-      </div>
-      <div class="pt-8 border-t border-surface-border/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p class="text-xs text-text-muted">© 2026 Legend Stories. Alle rechten voorbehouden.</p>
-        <div class="flex items-center gap-4">
-          <span class="text-xs text-text-muted">Betaalmethoden:</span>
+          <a href="index.html" class="flex items-center gap-2 mb-3"><div class="w-7 h-7 rounded-md bg-gradient-gold flex items-center justify-center"><span class="text-void font-display font-bold text-xs">L</span></div><span class="font-display text-base font-bold">Legend<span class="text-gold">Stories</span></span></a>
+          <p class="text-text-secondary text-xs leading-relaxed mb-4 max-w-xs">Matte vinyl wall stickers inspired by mythology, history, and pop culture. Made in the Netherlands.</p>
           <div class="flex gap-2">
-            <div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">iDEAL</div>
-            <div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">Visa</div>
-            <div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">Mastercard</div>
-            <div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">PayPal</div>
+            <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded-md bg-surface-light/50 flex items-center justify-center hover:bg-gold/10 transition-colors" aria-label="TikTok"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/></svg></a>
+            <a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded-md bg-surface-light/50 flex items-center justify-center hover:bg-gold/10 transition-colors" aria-label="Instagram"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069z"/></svg></a>
           </div>
         </div>
+        <div><h4 class="font-display font-bold text-xs uppercase tracking-wider text-text-primary mb-3">Shop</h4><ul class="space-y-1.5"><li><a href="shop.html" class="text-xs text-text-secondary hover:text-gold transition-colors">All murals</a></li><li><a href="shop.html" class="text-xs text-text-secondary hover:text-gold transition-colors">Mythology</a></li><li><a href="shop.html" class="text-xs text-text-secondary hover:text-gold transition-colors">History</a></li><li><a href="shop.html" class="text-xs text-text-secondary hover:text-gold transition-colors">Custom</a></li></ul></div>
+        <div><h4 class="font-display font-bold text-xs uppercase tracking-wider text-text-primary mb-3">Help</h4><ul class="space-y-1.5"><li><a href="#contact" class="text-xs text-text-secondary hover:text-gold transition-colors">Contact</a></li><li><a href="#" class="text-xs text-text-secondary hover:text-gold transition-colors">Shipping</a></li><li><a href="#" class="text-xs text-text-secondary hover:text-gold transition-colors">Returns</a></li><li><a href="#" class="text-xs text-text-secondary hover:text-gold transition-colors">FAQ</a></li></ul></div>
+        <div><h4 class="font-display font-bold text-xs uppercase tracking-wider text-text-primary mb-3">Company</h4><ul class="space-y-1.5"><li><a href="about.html" class="text-xs text-text-secondary hover:text-gold transition-colors">About</a></li><li><a href="portfolio.html" class="text-xs text-text-secondary hover:text-gold transition-colors">Portfolio</a></li><li><a href="#" class="text-xs text-text-secondary hover:text-gold transition-colors">Privacy</a></li><li><a href="#" class="text-xs text-text-secondary hover:text-gold transition-colors">Terms</a></li></ul></div>
+      </div>
+      <div class="pt-6 border-t border-surface-border/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p class="text-[10px] text-text-muted/50">© 2026 Legend Stories. All rights reserved.</p>
+        <div class="flex items-center gap-3"><span class="text-[10px] text-text-muted/50">Payments:</span><div class="flex gap-1.5"><div class="px-1.5 py-0.5 rounded bg-surface-light/30 text-[8px] text-text-muted/40 font-medium">iDEAL</div><div class="px-1.5 py-0.5 rounded bg-surface-light/30 text-[8px] text-text-muted/40 font-medium">Visa</div><div class="px-1.5 py-0.5 rounded bg-surface-light/30 text-[8px] text-text-muted/40 font-medium">MC</div><div class="px-1.5 py-0.5 rounded bg-surface-light/30 text-[8px] text-text-muted/40 font-medium">PayPal</div></div></div>
       </div>
     </div>
   </footer>
 
   <!-- CART DRAWER -->
-  <div id="cart-overlay" class="fixed inset-0 bg-void/60 backdrop-blur-sm z-50 hidden transition-opacity duration-300" aria-hidden="true"></div>
-  <aside id="cart-drawer" class="fixed top-0 right-0 h-full w-full sm:w-96 bg-surface border-l border-surface-border/50 z-50 transform translate-x-full transition-transform duration-300" role="dialog" aria-label="Winkelwagen" aria-hidden="true">
+  <div id="cart-overlay" class="fixed inset-0 bg-void/70 backdrop-blur-sm z-50 hidden transition-opacity duration-300" aria-hidden="true"></div>
+  <aside id="cart-drawer" class="fixed top-0 right-0 h-full w-full sm:w-96 bg-surface border-l border-surface-border/20 z-50 transform translate-x-full transition-transform duration-300" role="dialog" aria-label="Cart" aria-hidden="true">
     <div class="flex flex-col h-full">
-      <div class="flex items-center justify-between p-6 border-b border-surface-border/30">
-        <h2 class="font-display text-xl font-bold">Winkelwagen</h2>
-        <button id="cart-close" class="p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Sluit winkelwagen">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+      <div class="flex items-center justify-between p-5 border-b border-surface-border/15">
+        <h2 class="font-display text-lg font-bold">Your cart</h2>
+        <button id="cart-close" class="p-1.5 rounded-lg hover:bg-surface-light/50 transition-colors" aria-label="Close cart"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
       </div>
-      <div id="cart-items" class="flex-1 overflow-y-auto p-6">
-        <div class="text-center py-12">
-          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-surface-light flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-            </svg>
-          </div>
-          <p class="text-text-secondary font-medium">Je winkelwagen is leeg</p>
-          <p class="text-text-muted text-sm mt-1">Voeg items toe om te beginnen</p>
-        </div>
+      <div id="cart-items" class="flex-1 overflow-y-auto p-5">
+        <div class="text-center py-10"><div class="w-12 h-12 mx-auto mb-3 rounded-full bg-surface-light/30 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-muted/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg></div><p class="text-text-secondary font-medium text-sm">Your cart is empty</p><p class="text-text-muted text-xs mt-1">Add something to get started</p></div>
       </div>
-      <div class="p-6 border-t border-surface-border/30">
-        <!-- Upsell items -->
-        <div id="cart-upsell" class="mb-4 hidden">
-          <p class="text-xs text-text-muted mb-3">💡 Andere klanten kochten ook:</p>
-          <div class="space-y-2">
-            <div class="flex items-center gap-3 p-2 rounded-lg bg-surface-light/50 hover:bg-surface-light transition-colors cursor-pointer" onclick="window.legendApp.addProduct('Viking Mural', 44.95, '⚔️')">
-              <div class="w-10 h-10 rounded bg-surface flex items-center justify-center text-lg shrink-0">⚔️</div>
-              <div class="flex-1 min-w-0">
-                <p class="text-xs font-medium text-text-primary truncate">Viking Mural</p>
-                <p class="text-xs text-gold">€44,95</p>
-              </div>
-              <button class="text-xs text-gold hover:underline shrink-0">+ Toevoegen</button>
-            </div>
-            <div class="flex items-center gap-3 p-2 rounded-lg bg-surface-light/50 hover:bg-surface-light transition-colors cursor-pointer" onclick="window.legendApp.addProduct('Space Nebula Mural', 54.95, '🌌')">
-              <div class="w-10 h-10 rounded bg-surface flex items-center justify-center text-lg shrink-0">🌌</div>
-              <div class="flex-1 min-w-0">
-                <p class="text-xs font-medium text-text-primary truncate">Space Nebula Mural</p>
-                <p class="text-xs text-gold">€54,95</p>
-              </div>
-              <button class="text-xs text-gold hover:underline shrink-0">+ Toevoegen</button>
-            </div>
-          </div>
-        </div>
-        <div class="flex items-center justify-between mb-4">
-          <span class="text-text-secondary">Totaal</span>
-          <span id="cart-total" class="font-display text-xl font-bold">€0,00</span>
-        </div>
-        <button class="btn-primary w-full" disabled id="checkout-btn">
-          Afrekenen
-        </button>
-        <p class="text-center text-xs text-text-muted mt-3">🚚 Gratis verzending boven €50</p>
+      <div class="p-5 border-t border-surface-border/15">
+        <div id="cart-upsell" class="mb-4 hidden"><p class="text-xs text-text-muted mb-2">People also bought:</p><div class="space-y-2"><div class="flex items-center gap-2 p-2 rounded-lg bg-surface-light/30 hover:bg-surface-light/50 transition-colors cursor-pointer" onclick="window.legendApp.addProduct('Viking Mural', 44.95, '⚔️')"><div class="w-8 h-8 rounded bg-surface flex items-center justify-center text-sm">⚔️</div><div class="flex-1 min-w-0"><p class="text-[11px] font-medium text-text-primary truncate">Viking Mural</p><p class="text-[10px] text-gold">€44,95</p></div><span class="text-[10px] text-gold">+ Add</span></div></div></div>
+        <div class="flex items-center justify-between mb-3"><span class="text-text-secondary text-sm">Total</span><span id="cart-total" class="font-display text-lg font-bold">€0,00</span></div>
+        <button class="btn-primary w-full text-xs" disabled id="checkout-btn">Checkout</button>
+        <p class="text-center text-[10px] text-text-muted/50 mt-2">Free shipping on orders over €50</p>
       </div>
     </div>
   </aside>
 
-  <script src="js/app.js"></script>
-
   <!-- FLOATING CTA -->
-  <a href="index.html#contact" class="floating-cta hidden md:flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-gold text-void font-semibold text-sm shadow-gold-lg hover:scale-105 transition-transform z-40" style="position:fixed;bottom:2rem;right:2rem;">
-    <span>✨</span> Custom Mural
-  </a>
+  <a href="index.html#contact" class="floating-cta hidden md:flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-gold text-void font-semibold text-xs shadow-gold-lg hover:scale-105 transition-transform z-40" style="position:fixed;bottom:1.5rem;right:1.5rem;"><span>✨</span> Custom mural</a>
 
-  <!-- WHATSAPP BUTTON -->
-  <a href="https://wa.me/31612345678" target="_blank" rel="noopener noreferrer" class="fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-green-500 flex items-center justify-center shadow-lg hover:scale-110 transition-transform" aria-label="WhatsApp">
-    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-  </a>
+  <!-- WHATSAPP -->
+  <a href="https://wa.me/31612345678" target="_blank" rel="noopener noreferrer" class="fixed bottom-5 left-5 z-40 w-12 h-12 rounded-full bg-green-500 flex items-center justify-center shadow-lg hover:scale-110 transition-transform" aria-label="WhatsApp"><svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
 
+  <script src="js/app.js"></script>
 </body>
 </html>
