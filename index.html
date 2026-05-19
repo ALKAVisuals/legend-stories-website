@@ -63,20 +63,57 @@
     ::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,.5); }
     .glass { background: rgba(22,22,24,.8); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(42,42,48,.5); }
     .glass-dark { background: rgba(11,11,12,.9); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(42,42,48,.3); }
-    .btn-primary { display: inline-flex; align-items: center; justify-content: center; padding: 1rem 2rem; background: linear-gradient(135deg, #D4AF37 0%, #E8C96A 50%, #D4AF37 100%); color: #0B0B0C; font-weight: 600; font-size: .875rem; text-transform: uppercase; letter-spacing: .05em; border-radius: .5rem; transition: all .3s; cursor: pointer; border: none; }
-    .btn-primary:hover { box-shadow: 0 0 60px rgba(212,175,55,.2); transform: scale(1.02); }
+    /* Enhanced buttons */
+    .btn-primary { display: inline-flex; align-items: center; justify-content: center; padding: 1rem 2rem; background: linear-gradient(135deg, #D4AF37 0%, #E8C96A 50%, #D4AF37 100%); color: #0B0B0C; font-weight: 600; font-size: .875rem; text-transform: uppercase; letter-spacing: .05em; border-radius: .5rem; transition: all .3s; cursor: pointer; border: none; position: relative; overflow: hidden; }
+    .btn-primary::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent); transition: left .5s; }
+    .btn-primary:hover::before { left: 100%; }
+    .btn-primary:hover { box-shadow: 0 0 60px rgba(212,175,55,.3); transform: scale(1.02); }
     .btn-primary:active { transform: scale(.98); }
     .btn-secondary { display: inline-flex; align-items: center; justify-content: center; padding: 1rem 2rem; border: 1px solid rgba(212,175,55,.4); color: #D4AF37; font-weight: 600; font-size: .875rem; text-transform: uppercase; letter-spacing: .05em; border-radius: .5rem; transition: all .3s; cursor: pointer; background: transparent; }
-    .btn-secondary:hover { background: rgba(212,175,55,.1); border-color: rgba(212,175,55,.6); }
-    .btn-secondary:active { transform: scale(.98); }
+    .btn-secondary:hover { background: rgba(212,175,55,.1); border-color: rgba(212,175,55,.6); box-shadow: 0 0 20px rgba(212,175,55,.1); }
+
     .section-heading { font-family: "Playfair Display", Georgia, serif; font-size: clamp(1.875rem, 4vw, 3rem); font-weight: 700; color: #F5F5F7; line-height: 1.1; }
     .section-subheading { color: #A0A0B0; font-size: clamp(1rem, 2vw, 1.125rem); max-width: 42rem; }
     .card-hover { transition: all .5s; }
     .card-hover:hover { box-shadow: 0 0 30px rgba(212,175,55,.15); transform: translateY(-4px); }
     .text-gradient-gold { background: linear-gradient(135deg, #D4AF37 0%, #E8C96A 50%, #D4AF37 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    /* Portfolio */
     .portfolio-item { position: relative; overflow: hidden; border-radius: .75rem; }
     .portfolio-item .overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(11,11,12,.9) 0%, transparent 60%); opacity: 0; transition: opacity .3s; display: flex; flex-direction: column; justify-content: flex-end; padding: 1.5rem; }
     .portfolio-item:hover .overlay { opacity: 1; }
+
+    /* Scroll animations */
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity .6s ease-out, transform .6s ease-out; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: .1s; }
+    .reveal-delay-2 { transition-delay: .2s; }
+    .reveal-delay-3 { transition-delay: .3s; }
+
+    /* Before/After slider */
+    .ba-slider { position: relative; overflow: hidden; border-radius: 1rem; cursor: ew-resize; }
+    .ba-slider .ba-after { position: absolute; inset: 0; }
+    .ba-slider .ba-before { position: absolute; inset: 0; overflow: hidden; }
+    .ba-slider .ba-handle { position: absolute; top: 0; bottom: 0; width: 4px; background: #D4AF37; z-index: 10; transform: translateX(-50%); }
+    .ba-slider .ba-handle::before { content: '⟷'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; background: #D4AF37; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0B0B0C; font-size: 1.2rem; box-shadow: 0 0 20px rgba(212,175,55,.4); }
+
+    /* Testimonial carousel */
+    .testimonial-track { display: flex; transition: transform .5s ease-in-out; }
+    .testimonial-card { min-width: 100%; padding: 0 1rem; }
+
+    /* Nav active indicator */
+    .nav-link { position: relative; }
+    .nav-link::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px; background: #D4AF37; transition: width .3s; }
+    .nav-link:hover::after, .nav-link.active::after { width: 100%; }
+
+    /* Product card image */
+    .product-img { position: relative; overflow: hidden; }
+    .product-img .product-badge { position: absolute; top: 12px; right: 12px; z-index: 5; }
+    .product-img .emoji-fallback { transition: transform .5s; }
+    .group:hover .product-img .emoji-fallback { transform: scale(1.05); }
+
+    /* Star rating */
+    .stars { color: #D4AF37; letter-spacing: 2px; }
   </style>
 </head>
 <body class="bg-void text-text-primary font-body">
@@ -218,10 +255,71 @@
       </div>
     </section>
 
-    <!-- PORTFOLIO PREVIEW -->
-    <section id="portfolio" class="py-20 md:py-28" aria-label="Portfolio">
+    <!-- BEFORE / AFTER SECTION -->
+    <section class="py-20 md:py-28 bg-surface/30" aria-label="Before After">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
+        <div class="text-center mb-12 reveal">
+          <h2 class="section-heading mb-4">Van saai naar <span class="text-gradient-gold">episch</span></h2>
+          <p class="section-subheading mx-auto">Sleep de slider en zie de transformatie. Dit is wat onze muurstickers doen.</p>
+        </div>
+        <div class="max-w-3xl mx-auto reveal">
+          <div class="ba-slider aspect-[16/10] bg-surface border border-surface-border/50" id="ba-slider">
+            <div class="ba-after bg-gradient-to-br from-surface-light via-gold/10 to-surface flex items-center justify-center">
+              <div class="text-center">
+                <span class="text-7xl block mb-3">🔱</span>
+                <span class="text-gold font-display font-bold text-xl">Na</span>
+                <p class="text-text-muted text-sm mt-1">Griekse Goden Mural — Medium</p>
+              </div>
+            </div>
+            <div class="ba-before bg-gradient-to-br from-surface-light to-surface" id="ba-before">
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="text-center">
+                  <div class="w-24 h-24 mx-auto mb-3 rounded-full bg-surface-border/30 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a2.25 2.25 0 002.25-2.25V5.25a2.25 2.25 0 00-2.25-2.25H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" /></svg>
+                  </div>
+                  <span class="text-text-muted font-display font-bold text-xl">Voor</span>
+                  <p class="text-text-muted text-sm mt-1">Lege muur</p>
+                </div>
+              </div>
+            </div>
+            <div class="ba-handle" id="ba-handle" style="left: 50%;"></div>
+          </div>
+          <p class="text-center text-text-muted text-sm mt-4">← Sleep om het verschil te zien →</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="py-20 md:py-28" aria-label="Hoe het werkt">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12 reveal">
+          <h2 class="section-heading mb-4">Hoe het <span class="text-gradient-gold">werkt</span></h2>
+          <p class="section-subheading mx-auto">In 3 simpele stappen van lege muur naar muurkunst.</p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+          <div class="text-center reveal reveal-delay-1 p-8 rounded-2xl border border-surface-border/50 bg-surface/50 hover:bg-surface transition-colors">
+            <div class="w-16 h-16 mx-auto mb-5 rounded-full bg-gradient-gold flex items-center justify-center text-void font-display font-bold text-2xl">1</div>
+            <h3 class="font-display text-xl font-bold mb-3">Kies je ontwerp</h3>
+            <p class="text-text-secondary text-sm">Blader door ons portfolio of shop. Kies een bestaand ontwerp of vraag een custom mural aan.</p>
+          </div>
+          <div class="text-center reveal reveal-delay-2 p-8 rounded-2xl border border-surface-border/50 bg-surface/50 hover:bg-surface transition-colors">
+            <div class="w-16 h-16 mx-auto mb-5 rounded-full bg-gradient-gold flex items-center justify-center text-void font-display font-bold text-2xl">2</div>
+            <h3 class="font-display text-xl font-bold mb-3">Wij printen & versturen</h3>
+            <p class="text-text-secondary text-sm">Je ontwerp wordt gedrukt op premium matte vinyl en binnen 2-4 werkdagen thuisgeleverd.</p>
+          </div>
+          <div class="text-center reveal reveal-delay-3 p-8 rounded-2xl border border-surface-border/50 bg-surface/50 hover:bg-surface transition-colors">
+            <div class="w-16 h-16 mx-auto mb-5 rounded-full bg-gradient-gold flex items-center justify-center text-void font-display font-bold text-2xl">3</div>
+            <h3 class="font-display text-xl font-bold mb-3">Plak & geniet</h3>
+            <p class="text-text-secondary text-sm">Met de meegeleverde instructies plak je de sticker in minuten. Schadevrij aan te brengen en te verwijderen.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PORTFOLIO PREVIEW -->
+    <section id="portfolio" class="py-20 md:py-28 bg-surface/30" aria-label="Portfolio">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12 reveal">
           <h2 class="section-heading mb-4">Onze <span class="text-gradient-gold">projecten</span></h2>
           <p class="section-subheading mx-auto">Van slaapkamer tot woonkamer — bekijk hoe onze murals ruimtes transformeren.</p>
         </div>
@@ -288,6 +386,66 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
             </svg>
           </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- TESTIMONIALS -->
+    <section class="py-20 md:py-28" aria-label="Reviews">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12 reveal">
+          <h2 class="section-heading mb-4">Wat onze klanten <span class="text-gradient-gold">zeggen</span></h2>
+          <p class="section-subheading mx-auto">Meer dan 2.500 tevreden klanten. Dit is wat zij van ons vinden.</p>
+        </div>
+        <div class="max-w-3xl mx-auto reveal relative overflow-hidden">
+          <div class="testimonial-track" id="testimonial-track">
+            <div class="testimonial-card">
+              <div class="p-8 md:p-10 rounded-2xl border border-surface-border/50 bg-surface text-center">
+                <div class="stars text-2xl mb-4">★★★★★</div>
+                <p class="text-text-secondary text-lg leading-relaxed mb-6">"Absoluut fantastisch! De Griekse Goden mural heeft onze woonkamer volledig getransformeerd. De kwaliteit is super en het plakken was kinderspel. Aanrader nummer 1!"</p>
+                <div class="flex items-center justify-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center text-gold font-bold">M</div>
+                  <div class="text-left"><p class="font-medium text-text-primary text-sm">Mark v.d. Berg</p><p class="text-text-muted text-xs">Amsterdam</p></div>
+                </div>
+              </div>
+            </div>
+            <div class="testimonial-card">
+              <div class="p-8 md:p-10 rounded-2xl border border-surface-border/50 bg-surface text-center">
+                <div class="stars text-2xl mb-4">★★★★★</div>
+                <p class="text-text-secondary text-lg leading-relaxed mb-6">"Ik was sceptisch of het mooi zou worden, maar het resultaat overtrof alle verwachtingen. De kleuren zijn helder, de finish is prachtig mat, en het voelt als echte kunst op mijn muur."</p>
+                <div class="flex items-center justify-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center text-gold font-bold">S</div>
+                  <div class="text-left"><p class="font-medium text-text-primary text-sm">Sophie Jansen</p><p class="text-text-muted text-xs">Rotterdam</p></div>
+                </div>
+              </div>
+            </div>
+            <div class="testimonial-card">
+              <div class="p-8 md:p-10 rounded-2xl border border-surface-border/50 bg-surface text-center">
+                <div class="stars text-2xl mb-4">★★★★★</div>
+                <p class="text-text-secondary text-lg leading-relaxed mb-6">"Besteld voor de kamer van mijn zoon. Hij is er dolgoed mee! De Viking mural is episch en de kwaliteit is top. Verzending was ook super snel. Zeker voor herhaling vatbaar."</p>
+                <div class="flex items-center justify-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center text-gold font-bold">T</div>
+                  <div class="text-left"><p class="font-medium text-text-primary text-sm">Thomas de Vries</p><p class="text-text-muted text-xs">Utrecht</p></div>
+                </div>
+              </div>
+            </div>
+            <div class="testimonial-card">
+              <div class="p-8 md:p-10 rounded-2xl border border-surface-border/50 bg-surface text-center">
+                <div class="stars text-2xl mb-4">★★★★★</div>
+                <p class="text-text-secondary text-lg leading-relaxed mb-6">"We hebben een custom mural laten maken voor ons kantoor. Het team was super behulpzaam en het eindresultaat is professioneel en uniek. Onze klanten zijn altijd onder de indruk!"</p>
+                <div class="flex items-center justify-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center text-gold font-bold">L</div>
+                  <div class="text-left"><p class="font-medium text-text-primary text-sm">Lisa Bakker</p><p class="text-text-muted text-xs">Den Haag</p></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-center gap-2 mt-6">
+            <button class="testimonial-dot w-2.5 h-2.5 rounded-full bg-gold transition-all" data-index="0"></button>
+            <button class="testimonial-dot w-2.5 h-2.5 rounded-full bg-surface-border hover:bg-gold/50 transition-all" data-index="1"></button>
+            <button class="testimonial-dot w-2.5 h-2.5 rounded-full bg-surface-border hover:bg-gold/50 transition-all" data-index="2"></button>
+            <button class="testimonial-dot w-2.5 h-2.5 rounded-full bg-surface-border hover:bg-gold/50 transition-all" data-index="3"></button>
+          </div>
         </div>
       </div>
     </section>
@@ -702,5 +860,16 @@
   </aside>
 
   <script src="js/app.js"></script>
+
+  <!-- FLOATING CTA -->
+  <a href="index.html#contact" class="floating-cta hidden md:flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-gold text-void font-semibold text-sm shadow-gold-lg hover:scale-105 transition-transform z-40" style="position:fixed;bottom:2rem;right:2rem;">
+    <span>✨</span> Custom Mural
+  </a>
+
+  <!-- WHATSAPP BUTTON -->
+  <a href="https://wa.me/31612345678" target="_blank" rel="noopener noreferrer" class="fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-green-500 flex items-center justify-center shadow-lg hover:scale-110 transition-transform" aria-label="WhatsApp">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  </a>
+
 </body>
 </html>
