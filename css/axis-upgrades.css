@@ -1,0 +1,246 @@
+/* ============================================================
+   AXIS TEMPLATE UPGRADES
+   Inspiratie van: https://www.styleui.dev/template/axis
+   
+   Axis is een Next.js CRM template met:
+   - Subtle muted color palette (niet puur zwart)
+   - Rounded-2xl cards met lichte borders
+   - Toggle/switch UI elementen
+   - Clean section spacing (py-16)
+   - Muted foreground voor secondary text
+   - Border-ring focus states
+   - Backdrop blur navigation
+   ============================================================ */
+
+/* --- AXIS: Refined Color Palette --- */
+@layer base {
+  :root {
+    /* Axis gebruikt een zachtere dark mode — niet puur zwart */
+    --axis-bg: #0a0a0b;
+    --axis-surface: #141416;
+    --axis-surface-hover: #1a1a1e;
+    --axis-border: rgba(255, 255, 255, 0.08);
+    --axis-border-hover: rgba(255, 255, 255, 0.14);
+    --axis-muted: #1c1c20;
+    --axis-text-secondary: #8a8a93;
+    --axis-text-muted: #5c5c64;
+  }
+}
+
+/* --- AXIS: Glass Navigation (backdrop-blur) --- */
+.axis-nav {
+  background: rgba(10, 10, 11, 0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--axis-border);
+}
+
+/* --- AXIS: Card Stijl --- */
+.axis-card {
+  background: var(--axis-surface);
+  border: 1px solid var(--axis-border);
+  border-radius: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.axis-card:hover {
+  border-color: var(--axis-border-hover);
+  background: var(--axis-surface-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* --- AXIS: Subtle Glow op hover --- */
+.axis-glow {
+  position: relative;
+}
+.axis-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), transparent 50%, rgba(212, 175, 55, 0.05));
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1;
+}
+.axis-glow:hover::before {
+  opacity: 1;
+}
+
+/* --- AXIS: Section Spacing --- */
+.axis-section {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+@media (min-width: 768px) {
+  .axis-section {
+    padding-top: 7rem;
+    padding-bottom: 7rem;
+  }
+}
+
+/* --- AXIS: Muted Badge / Tag --- */
+.axis-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  color: var(--axis-text-secondary);
+  background: var(--axis-muted);
+  border: 1px solid var(--axis-border);
+  border-radius: 9999px;
+}
+
+/* --- AXIS: Refined Button --- */
+.axis-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.axis-btn-primary {
+  background: linear-gradient(135deg, #D4AF37, #E8C547);
+  color: #0a0a0b;
+}
+.axis-btn-primary:hover {
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+  transform: translateY(-1px);
+}
+.axis-btn-ghost {
+  background: transparent;
+  color: var(--axis-text-secondary);
+  border-color: var(--axis-border);
+}
+.axis-btn-ghost:hover {
+  color: #fff;
+  border-color: var(--axis-border-hover);
+  background: var(--axis-surface);
+}
+
+/* --- AXIS: Divider --- */
+.axis-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--axis-border), transparent);
+}
+
+/* --- AXIS: Grid Pattern Background --- */
+.axis-grid-bg {
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* --- AXIS: Noise Texture Overlay --- */
+.axis-noise::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.015;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  z-index: 9999;
+}
+
+/* --- AXIS: Smooth Scroll Reveal --- */
+.axis-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.axis-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --- AXIS: Stat Counter --- */
+.axis-stat {
+  text-align: center;
+  padding: 2rem;
+}
+.axis-stat-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #D4AF37;
+  line-height: 1;
+}
+.axis-stat-label {
+  font-size: 0.8rem;
+  color: var(--axis-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 0.5rem;
+}
+
+/* --- AXIS: Testimonial Card --- */
+.axis-testimonial {
+  background: var(--axis-surface);
+  border: 1px solid var(--axis-border);
+  border-radius: 1rem;
+  padding: 2rem;
+  position: relative;
+}
+.axis-testimonial::before {
+  content: '"';
+  position: absolute;
+  top: 1rem;
+  left: 1.5rem;
+  font-size: 4rem;
+  font-family: 'Playfair Display', serif;
+  color: rgba(212, 175, 55, 0.15);
+  line-height: 1;
+}
+
+/* --- AXIS: Input Field --- */
+.axis-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--axis-muted);
+  border: 1px solid var(--axis-border);
+  border-radius: 0.5rem;
+  color: #fff;
+  font-size: 0.875rem;
+  transition: border-color 0.2s ease;
+  outline: none;
+}
+.axis-input:focus {
+  border-color: rgba(212, 175, 55, 0.5);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+.axis-input::placeholder {
+  color: var(--axis-text-muted);
+}
+
+/* --- AXIS: Floating Label --- */
+.axis-floating-label {
+  position: relative;
+}
+.axis-floating-label label {
+  position: absolute;
+  left: 1rem;
+  top: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--axis-text-muted);
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+.axis-floating-label input:focus + label,
+.axis-floating-label input:not(:placeholder-shown) + label {
+  top: -0.5rem;
+  left: 0.75rem;
+  font-size: 0.7rem;
+  color: #D4AF37;
+  background: var(--axis-bg);
+  padding: 0 0.25rem;
+}
