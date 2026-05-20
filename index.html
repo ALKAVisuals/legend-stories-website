@@ -20,8 +20,8 @@
         extend: {
           colors: {
             'void': '#0B0B0C', 'surface': '#161618', 'surface-light': '#1E1E22',
-            'surface-border': '#2A2A30', 'gold': '#D4AF37', 'gold-light': '#E8C96A',
-            'gold-dark': '#B8941F', 'text-primary': '#F5F5F7', 'text-secondary': '#A0A0B0',
+            'surface-border': '#2A2A30', 'gold': '#00FF41', 'gold-light': '#33FF66',
+            'gold-dark': '#00CC33', 'text-primary': '#F5F5F7', 'text-secondary': '#A0A0B0',
             'text-muted': '#6B6B7B',
           },
           fontFamily: {
@@ -39,15 +39,15 @@
             fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
             slideUp: { '0%': { opacity: '0', transform: 'translateY(40px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
             shimmer: { '0%, 100%': { opacity: '0.4' }, '50%': { opacity: '0.8' } },
-            pulseGold: { '0%, 100%': { boxShadow: '0 0 0 0 rgba(212, 175, 55, 0.3)' }, '50%': { boxShadow: '0 0 30px 8px rgba(212, 175, 55, 0.15)' } },
+            pulseGold: { '0%, 100%': { boxShadow: '0 0 0 0 rgba(0, 255, 65, 0.3)' }, '50%': { boxShadow: '0 0 30px 8px rgba(0, 255, 65, 0.15)' } },
             float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } },
           },
           backgroundImage: {
-            'gradient-gold': 'linear-gradient(135deg, #D4AF37 0%, #E8C96A 50%, #D4AF37 100%)',
+            'gradient-gold': 'linear-gradient(135deg, #00FF41 0%, #33FF66 50%, #00FF41 100%)',
           },
           boxShadow: {
-            'gold': '0 0 30px rgba(212, 175, 55, 0.12)',
-            'gold-lg': '0 0 60px rgba(212, 175, 55, 0.18)',
+            'gold': '0 0 30px rgba(0, 255, 65, 0.12)',
+            'gold-lg': '0 0 60px rgba(0, 255, 65, 0.18)',
             'surface': '0 4px 24px rgba(0, 0, 0, 0.5)',
           },
         },
@@ -81,6 +81,16 @@
           <a href="#contact" class="nav-link text-[13px] text-text-secondary hover:text-gold transition-colors duration-200 font-medium tracking-wide">Contact</a>
         </div>
         <div class="flex items-center gap-2">
+          <button id="theme-toggle" class="relative p-2 rounded-lg hover:bg-surface-light/50 transition-colors duration-200" aria-label="Toggle dark/light mode">
+            <!-- Sun icon (shown in dark mode) -->
+            <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+            </svg>
+            <!-- Moon icon (shown in light mode) -->
+            <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-text-secondary hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+            </svg>
+          </button>
           <button id="cart-btn" class="relative p-2 rounded-lg hover:bg-surface-light/50 transition-colors duration-200" aria-label="Cart">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />

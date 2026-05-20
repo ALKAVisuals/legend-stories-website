@@ -19,8 +19,8 @@
         extend: {
           colors: {
             'void': '#0B0B0C', 'surface': '#161618', 'surface-light': '#1E1E22',
-            'surface-border': '#2A2A30', 'gold': '#D4AF37', 'gold-light': '#E8C96A',
-            'gold-dark': '#B8941F', 'text-primary': '#F5F5F7', 'text-secondary': '#A0A0B0',
+            'surface-border': '#2A2A30', 'gold': '#00FF41', 'gold-light': '#33FF66',
+            'gold-dark': '#00CC33', 'text-primary': '#F5F5F7', 'text-secondary': '#A0A0B0',
             'text-muted': '#6B6B7B',
           },
           fontFamily: { 'display': ['"Playfair Display"', 'Georgia', 'serif'], 'body': ['"Inter"', 'system-ui', 'sans-serif'] },
@@ -28,11 +28,11 @@
           keyframes: {
             fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
             slideUp: { '0%': { opacity: '0', transform: 'translateY(30px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-            pulseGold: { '0%, 100%': { boxShadow: '0 0 0 0 rgba(212, 175, 55, 0.4)' }, '50%': { boxShadow: '0 0 20px 5px rgba(212, 175, 55, 0.2)' } },
+            pulseGold: { '0%, 100%': { boxShadow: '0 0 0 0 rgba(0, 255, 65, 0.4)' }, '50%': { boxShadow: '0 0 20px 5px rgba(0, 255, 65, 0.2)' } },
             float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
           },
-          backgroundImage: { 'gradient-gold': 'linear-gradient(135deg, #D4AF37 0%, #E8C96A 50%, #D4AF37 100%)' },
-          boxShadow: { 'gold': '0 0 30px rgba(212, 175, 55, 0.15)', 'gold-lg': '0 0 60px rgba(212, 175, 55, 0.2)', 'surface': '0 4px 24px rgba(0, 0, 0, 0.4)' },
+          backgroundImage: { 'gradient-gold': 'linear-gradient(135deg, #00FF41 0%, #33FF66 50%, #00FF41 100%)' },
+          boxShadow: { 'gold': '0 0 30px rgba(0, 255, 65, 0.15)', 'gold-lg': '0 0 60px rgba(0, 255, 65, 0.2)', 'surface': '0 4px 24px rgba(0, 0, 0, 0.4)' },
         },
       },
     }
@@ -66,6 +66,14 @@
           <a href="shop.html" class="hidden sm:inline-flex p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Shop">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" /></svg>
           </a>
+                    <button id="theme-toggle" class="relative p-2 rounded-lg hover:bg-surface-light/50 transition-colors duration-200" aria-label="Toggle dark/light mode">
+            <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+            </svg>
+            <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+            </svg>
+          </button>
           <button id="cart-btn" class="relative p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Cart">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
             <span id="cart-count" class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-gold text-void text-[10px] font-bold rounded-full flex items-center justify-center opacity-0 transition-opacity duration-300">0</span>

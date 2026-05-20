@@ -13,9 +13,9 @@ export default {
         'surface': '#161618',
         'surface-light': '#1E1E22',
         'surface-border': '#2A2A30',
-        'gold': '#D4AF37',
-        'gold-light': '#E8C96A',
-        'gold-dark': '#B8941F',
+        'gold': '#00FF41',
+        'gold-light': '#33FF66',
+        'gold-dark': '#00CC33',
         'text-primary': '#F5F5F7',
         'text-secondary': '#A0A0B0',
         'text-muted': '#6B6B7B',
@@ -50,8 +50,8 @@ export default {
           '100%': { transform: 'translateX(100%)' },
         },
         pulseGold: {
-          '0%, 100%': { boxShadow: '0 0 0 0 rgba(212, 175, 55, 0.4)' },
-          '50%': { boxShadow: '0 0 20px 5px rgba(212, 175, 55, 0.2)' },
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(0, 255, 65, 0.4)' },
+          '50%': { boxShadow: '0 0 20px 5px rgba(0, 255, 65, 0.2)' },
         },
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
@@ -60,11 +60,11 @@ export default {
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-gold': 'linear-gradient(135deg, #D4AF37 0%, #E8C96A 50%, #D4AF37 100%)',
+        'gradient-gold': 'linear-gradient(135deg, #00FF41 0%, #33FF66 50%, #00FF41 100%)',
       },
       boxShadow: {
-        'gold': '0 0 30px rgba(212, 175, 55, 0.15)',
-        'gold-lg': '0 0 60px rgba(212, 175, 55, 0.2)',
+        'gold': '0 0 30px rgba(0, 255, 65, 0.15)',
+        'gold-lg': '0 0 60px rgba(0, 255, 65, 0.2)',
         'surface': '0 4px 24px rgba(0, 0, 0, 0.4)',
       },
     },

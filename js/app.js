@@ -271,6 +271,34 @@
   }
 
   // ==========================================
+  // DAY / NIGHT TOGGLE
+  // ==========================================
+  function initThemeToggle() {
+    const toggle = document.getElementById('theme-toggle');
+    const sunIcon = document.getElementById('theme-icon-sun');
+    const moonIcon = document.getElementById('theme-icon-moon');
+    if (!toggle || !sunIcon || !moonIcon) return;
+
+    // Check saved preference or default to dark
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    let isDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+
+    function applyTheme(dark) {
+      isDark = dark;
+      document.documentElement.classList.toggle('light-mode', !dark);
+      sunIcon.classList.toggle('hidden', !dark);
+      moonIcon.classList.toggle('hidden', dark);
+      localStorage.setItem('theme', dark ? 'dark' : 'light');
+    }
+
+    // Apply initial
+    applyTheme(isDark);
+
+    toggle.addEventListener('click', () => applyTheme(!isDark));
+  }
+
+  // ==========================================
   // EVENT LISTENERS
   // ==========================================
   function initEventListeners() {
@@ -331,7 +359,7 @@
       draw() {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(212, 175, 55, ${this.opacity})`;
+        ctx.fillStyle = `rgba(0, 255, 65, ${this.opacity})`;
         ctx.fill();
       }
     }
@@ -356,7 +384,7 @@
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(212, 175, 55, ${0.08 * (1 - dist / connectionDistance)})`;
+            ctx.strokeStyle = `rgba(0, 255, 65, ${0.08 * (1 - dist / connectionDistance)})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
@@ -471,6 +499,7 @@
     initScrollReveal();
     initCarousel();
     initVideoPlayer();
+    initThemeToggle();
     updateCartCount();
   }
 
