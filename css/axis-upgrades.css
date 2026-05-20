@@ -109,7 +109,7 @@
   border: 1px solid transparent;
 }
 .axis-btn-primary {
-  background: linear-gradient(135deg, #c9a84c, #E8C547);
+  background: linear-gradient(135deg, #2a8a4a, #E8C547);
   color: #0a0a0b;
 }
 .axis-btn-primary:hover {
@@ -172,7 +172,7 @@
   font-family: 'Playfair Display', serif;
   font-size: 2.5rem;
   font-weight: 700;
-  color: #c9a84c;
+  color: #2a8a4a;
   line-height: 1;
 }
 .axis-stat-label {
@@ -240,7 +240,7 @@
   top: -0.5rem;
   left: 0.75rem;
   font-size: 0.7rem;
-  color: #c9a84c;
+  color: #2a8a4a;
   background: var(--axis-bg);
   padding: 0 0.25rem;
 }

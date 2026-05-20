@@ -13,7 +13,7 @@
    - Icon (1 loader)
    
    Usage:
-   <div class="dmx-root" style="--dmx-dot-fill:#c9a84c;width:48px;height:48px">
+   <div class="dmx-root" style="--dmx-dot-fill:#2a8a4a;width:48px;height:48px">
      <div class="dmx-grid">
        <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:0"></div>
        ... (25 dots total)
@@ -53,7 +53,7 @@
 .dmx-dot {
   border-radius: 999px;
   display: block;
-  background: var(--dmx-dot-fill, currentColor);
+  background: var(--dmx-dot-fill, #2a8a4a);
   opacity: calc(0.5 * (var(--dmx-opacity-base) + var(--dmx-opacity-mid)));
   --dmx-bloom-level: 0;
   transform-origin: center;
@@ -85,7 +85,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: var(--dmx-dot-fill, currentColor);
+  background: var(--dmx-dot-fill, #2a8a4a);
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='black' d='m8.593.827c-1.008.012-1.953.464-2.593,1.227-.641-.762-1.586-1.214-2.598-1.227C1.519.839-.007,2.378,0,4.257,0,8.362,4.201,10.875,5.488,11.547h0c.16.084.336.125.511.125s.352-.042.511-.125c1.287-.672,5.489-3.184,5.489-7.289.007-1.88-1.519-3.42-3.407-3.431Z'/%3E%3C/svg%3E");
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='black' d='m8.593.827c-1.008.012-1.953.464-2.593,1.227-.641-.762-1.586-1.214-2.598-1.227C1.519.839-.007,2.378,0,4.257,0,8.362,4.201,10.875,5.488,11.547h0c.16.084.336.125.511.125s.352-.042.511-.125c1.287-.672,5.489-3.184,5.489-7.289.007-1.88-1.519-3.42-3.407-3.431Z'/%3E%3C/svg%3E");
   -webkit-mask-position: center;
@@ -99,16 +99,16 @@
 /* Bloom / glow */
 .dmx-bloom .dmx-dot {
   filter:
-    drop-shadow(0 0 calc(var(--dmx-dot-size, 3px) * 0.75 * max(var(--dmx-bloom-level, 0), var(--dmx-halo-level, 0))) currentColor)
-    drop-shadow(0 0 calc(var(--dmx-dot-size, 3px) * 1.35 * max(var(--dmx-bloom-level, 0), var(--dmx-halo-level, 0))) currentColor);
+    drop-shadow(0 0 calc(var(--dmx-dot-size, 3px) * 0.75 * max(var(--dmx-bloom-level, 0), var(--dmx-halo-level, 0))) #2a8a4a)
+    drop-shadow(0 0 calc(var(--dmx-dot-size, 3px) * 1.35 * max(var(--dmx-bloom-level, 0), var(--dmx-halo-level, 0))) #2a8a4a);
   will-change: opacity, filter;
 }
 
 .dmx-root.dmx-bloom-halo.dmx-bloom .dmx-dot {
   filter:
-    drop-shadow(0 0 calc(var(--dmx-dot-size, 3px) * 0.92 * max(var(--dmx-bloom-level, 0), var(--dmx-halo-level, 0))) currentColor)
-    drop-shadow(0 0 calc(var(--dmx-dot-size, 3px) * 1.62 * max(var(--dmx-bloom-level, 0), var(--dmx-halo-level, 0))) currentColor)
-    drop-shadow(0 0 calc(var(--dmx-dot-size, 3px) * 2.55 * max(var(--dmx-bloom-level, 0), var(--dmx-halo-level, 0))) currentColor);
+    drop-shadow(0 0 calc(var(--dmx-dot-size, 3px) * 0.92 * max(var(--dmx-bloom-level, 0), var(--dmx-halo-level, 0))) #2a8a4a)
+    drop-shadow(0 0 calc(var(--dmx-dot-size, 3px) * 1.62 * max(var(--dmx-bloom-level, 0), var(--dmx-halo-level, 0))) #2a8a4a)
+    drop-shadow(0 0 calc(var(--dmx-dot-size, 3px) * 2.55 * max(var(--dmx-bloom-level, 0), var(--dmx-halo-level, 0))) #2a8a4a);
 }
 
 .dmx-muted .dmx-dot {

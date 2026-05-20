@@ -1,0 +1,198 @@
+/* ============================================
+   AXIS — CRM Landing Page Styles
+   Source: https://www.styleui.dev/template/axis
+   ============================================ */
+
+:root {
+  --axis-indigo-500: #6366f1;
+  --axis-violet-500: #8b5cf6;
+  --axis-indigo-950: #1e1b4b;
+  --axis-slate-50:   #f8fafc;
+  --axis-slate-900:  #0f172a;
+  --axis-slate-400:  #94a3b8;
+  --axis-slate-300:  #cbd5e1;
+  --axis-indigo-300: #a5b4fc;
+  --axis-indigo-200: #c7d2fe;
+  --axis-violet-300: #c4b5fd;
+}
+
+/* AXIS gradient backgrounds */
+.axis-hero {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+}
+
+.axis-card-gradient {
+  background: linear-gradient(135deg, #1e1b4b, #312e81);
+}
+
+/* AXIS gradient text */
+.axis-gradient-text {
+  background: linear-gradient(90deg, #818cf8, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* AXIS button styles */
+.axis-btn-primary {
+  background: var(--axis-indigo-500);
+  color: #fff;
+  border: 1px solid var(--axis-indigo-500);
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 150ms ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.axis-btn-primary:hover {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+.axis-btn-outline {
+  background: transparent;
+  color: var(--axis-indigo-300);
+  border: 1px solid rgba(129, 140, 248, 0.4);
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 150ms ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.axis-btn-outline:hover {
+  border-color: var(--axis-indigo-300);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+/* AXIS card */
+.axis-card {
+  background: var(--axis-slate-900);
+  border: 1px solid #1e293b;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+.axis-card-popular {
+  background: linear-gradient(135deg, #1e1b4b, #312e81);
+  border: 1px solid var(--axis-indigo-500);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  position: relative;
+}
+
+/* AXIS badge */
+.axis-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 9999px;
+}
+.axis-badge-indigo {
+  background: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+}
+
+/* AXIS navbar */
+.axis-navbar {
+  background: var(--axis-slate-900);
+  border: 1px solid #1e293b;
+  border-radius: 0.75rem;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* AXIS stat */
+.axis-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+}
+.axis-stat-label {
+  font-size: 0.75rem;
+  color: var(--axis-slate-400);
+  margin-top: 0.25rem;
+}
+
+/* AXIS testimonial */
+.axis-testimonial {
+  background: var(--axis-slate-900);
+  border: 1px solid #1e293b;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+.axis-testimonial-text {
+  font-size: 0.875rem;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+.axis-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+/* AXIS footer */
+.axis-footer {
+  background: var(--axis-slate-900);
+  border: 1px solid #1e293b;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+/* AXIS pricing */
+.axis-price {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #fff;
+}
+.axis-price-period {
+  font-size: 0.875rem;
+  color: var(--axis-slate-400);
+}
+.axis-feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+}
+.axis-feature-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--axis-slate-400);
+  margin-bottom: 0.5rem;
+}
+.axis-feature-list li .check {
+  color: #818cf8;
+  font-weight: 700;
+}
+
+/* AXIS popular badge */
+.axis-popular-badge {
+  position: absolute;
+  top: -0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--axis-indigo-500);
+  color: #fff;
+}

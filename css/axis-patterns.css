@@ -308,7 +308,7 @@
   line-height: 1.6;
 }
 .axis-testimonial-highlight {
-  color: #c9a84c;
+  color: #2a8a4a;
 }
 .axis-verified-badge {
   width: 1.25rem;
@@ -549,7 +549,7 @@
   top: -0.75rem;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(135deg, #c9a84c, #e0c56a);
+  background: linear-gradient(135deg, #2a8a4a, #3da86a);
   color: #0a0a0b;
   font-size: 0.7rem;
   font-weight: 600;
@@ -591,7 +591,7 @@
 }
 .axis-pricing-features li::before {
   content: '✓';
-  color: #c9a84c;
+  color: #2a8a4a;
   font-weight: 600;
 }
 
@@ -625,7 +625,7 @@
   transition: color 0.2s ease;
 }
 .axis-footer-links a:hover {
-  color: #c9a84c;
+  color: #2a8a4a;
 }
 .axis-footer-social {
   display: flex;
@@ -672,7 +672,7 @@
   border: none;
 }
 .axis-btn-primary {
-  background: linear-gradient(135deg, #c9a84c, #e0c56a);
+  background: linear-gradient(135deg, #2a8a4a, #3da86a);
   color: #0a0a0b;
 }
 .axis-btn-primary:hover {

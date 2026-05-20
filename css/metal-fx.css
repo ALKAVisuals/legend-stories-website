@@ -1,0 +1,424 @@
+/* ============================================
+   LEGEND STORIES × METAL-FX
+   Liquid Metal Effect Styles
+   Source: https://github.com/Jakubantalik/metal-fx
+   ============================================
+   
+   Two layers:
+   1. CSS-FALLBACK — pure CSS approximation of the metal ring
+      (for static previews, no WebGL needed)
+   2. METAL-FX-CORE — original library styles
+      (for actual WebGL canvas rendering)
+   
+   Usage in HTML:
+   <!-- CSS fallback preview -->
+   <div class="metal-fx metal-fx--gold metal-fx--button">
+     <button>Upgrade to Pro</button>
+   </div>
+   
+   <!-- Full WebGL (need metal-fx JS library) -->
+   <MetalFx variant="button" preset="gold">
+     <button>Upgrade to Pro</button>
+   </MetalFx>
+   ============================================ */
+
+/* ═══════════════════════════════════════════
+   1. CSS FALLBACK — Metal Ring Approximation
+   ═══════════════════════════════════════════ */
+
+/* Base metal container */
+.metal-fx {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+  overflow: visible;
+  border-radius: 9999px;
+  /* Default dark theme */
+  --mfx-bg:          #272727;
+  --mfx-fg:          #f8f8f8;
+  --mfx-rim-color:   rgba(230, 200, 140, 0.35);
+  --mfx-rim-glow:    rgba(230, 200, 140, 0.15);
+  --mfx-inner-shadow: rgba(0, 0, 0, 0.6);
+  --mfx-highlight:   rgba(255, 255, 255, 0.06);
+  background: var(--mfx-bg);
+  color: var(--mfx-fg);
+}
+
+/* ── Presets ── */
+
+/* Gold (warm metallic) */
+.metal-fx--gold {
+  --mfx-rim-color: rgba(230, 200, 100, 0.55);
+  --mfx-rim-glow:  rgba(230, 200, 100, 0.2);
+  --mfx-highlight: rgba(255, 240, 180, 0.1);
+  --mfx-bg: #1e1a12;
+  --mfx-fg: #f5e6c8;
+}
+
+/* Silver (cool steel) */
+.metal-fx--silver {
+  --mfx-rim-color: rgba(180, 190, 210, 0.45);
+  --mfx-rim-glow:  rgba(180, 190, 210, 0.18);
+  --mfx-highlight: rgba(220, 225, 235, 0.08);
+  --mfx-bg: #1a1b1e;
+  --mfx-fg: #d8dbe2;
+}
+
+/* Chromatic (iridescent rainbow) */
+.metal-fx--chromatic {
+  --mfx-rim-color: rgba(200, 180, 255, 0.4);
+  --mfx-rim-glow:  rgba(180, 160, 255, 0.2);
+  --mfx-highlight: rgba(200, 180, 255, 0.1);
+  --mfx-bg: #1a1620;
+  --mfx-fg: #e8e0f5;
+}
+
+/* Rose Gold */
+.metal-fx--rose-gold {
+  --mfx-rim-color: rgba(230, 160, 140, 0.5);
+  --mfx-rim-glow:  rgba(230, 160, 140, 0.2);
+  --mfx-highlight: rgba(255, 200, 190, 0.1);
+  --mfx-bg: #1e1614;
+  --mfxxf: #f5e0d8;
+}
+
+/* Legend Stories — custom match */
+.metal-fx--legend {
+  --mfx-rim-color: rgba(201, 168, 76, 0.6);
+  --mfx-rim-glow:  rgba(201, 168, 76, 0.25);
+  --mfx-highlight: rgba(201, 168, 76, 0.12);
+  --mfx-bg: #1a1610;
+  --mfx-fg: #f5f0e0;
+}
+
+/* ── Variants ── */
+
+/* Button (pill, 1px ring) */
+.metal-fx--button {
+  border-radius: 9999px;
+  padding: 0;
+}
+.metal-fx--button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
+  box-shadow:
+    inset 0 0 50px 0 var(--mfx-highlight),
+    inset 0 0 0 1px var(--mfx-rim-color);
+}
+
+/* Circle (compact, 2px ring) */
+.metal-fx--circle {
+  border-radius: 50%;
+}
+.metal-fx--circle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
+  box-shadow:
+    inset 0 0 30px 0 var(--mfx-highlight),
+    inset 0 0 0 2px var(--mfx-rim-color);
+}
+
+/* Outer glow halo */
+.metal-fx::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+  background: radial-gradient(ellipse at center, var(--mfx-rim-glow) 0%, transparent 70%);
+  opacity: 0.6;
+}
+
+/* Shimmer animation (subtle moving highlight) */
+.metal-fx--shimmer {
+  --shimmer-angle: 0deg;
+}
+.metal-fx--shimmer::after {
+  background: conic-gradient(
+    from var(--shimmer-angle) at 50% 50%,
+    transparent 0deg,
+    var(--mfx-highlight) 30deg,
+    var(--mfx-rim-glow) 60deg,
+    transparent 90deg,
+    transparent 360deg
+  );
+  opacity: 0.35;
+  animation: metal-shimmer 4s linear infinite;
+}
+
+@keyframes metal-shimmer {
+  0%   { --shimmer-angle: 0deg; }
+  100% { --shimmer-angle: 360deg; }
+}
+
+/* Fallback for browsers that don't support @property */
+@supports not (--custom: green) {
+  .metal-fx--shimmer::after {
+    background: radial-gradient(ellipse at 30% 30%, var(--mfx-rim-glow) 0%, transparent 60%);
+    animation: metal-pulse 3s ease-in-out infinite;
+  }
+  @keyframes metal-pulse {
+    0%, 100% { opacity: 0.3; }
+    50%      { opacity: 0.6; }
+  }
+}
+
+/* ── Legend Stories brand shimmer (gold sweep) ── */
+.metal-fx--legend-shimmer::after {
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(201, 168, 76, 0.3) 35%,
+    rgba(255, 240, 180, 0.15) 50%,
+    transparent 65%
+  );
+  background-size: 250% 100%;
+  animation: legend-shimmer 3s ease-in-out infinite;
+}
+
+@keyframes legend-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Inner spacer */
+.metal-fx__inner {
+  position: absolute;
+  inset: 3px;
+  border-radius: inherit;
+  z-index: 1;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+.metal-fx--circle .metal-fx__inner {
+  inset: 0;
+  border-radius: 50%;
+}
+
+/* Content wrapper */
+.metal-fx__content {
+  position: relative;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  pointer-events: none;
+}
+.metal-fx__content > * {
+  pointer-events: auto;
+}
+
+/* Strength modifier */
+.metal-fx--strength-25::before  { opacity: 0.25; }
+.metal-fx--strength-50::before  { opacity: 0.5; }
+.metal-fx--strength-75::before  { opacity: 0.75; }
+.metal-fx--strength-100::before { opacity: 1; }
+
+/* ── Sizes ── */
+.metal-fx--xs { min-width: 32px; min-height: 32px; }
+.metal-fx--sm { min-width: 40px; min-height: 40px; }
+.metal-fx--md { min-width: 48px; min-height: 48px; }
+.metal-fx--lg { min-width: 64px; min-height: 64px; }
+.metal-fx--xl { min-width: 80px; min-height: 80px; }
+
+/* ── Light mode override ── */
+.metal-fx--light {
+  --mfx-bg:          #ffffff;
+  --mfx-fg:          #1d1d1d;
+  --mfx-rim-color:   rgba(201, 168, 76, 0.3);
+  --mfx-rim-glow:    rgba(201, 168, 76, 0.1);
+  --mfx-highlight:   rgba(201, 168, 76, 0.05);
+}
+
+/* ── Hover state ── */
+.metal-fx--interactive:hover::before {
+  box-shadow:
+    inset 0 0 60px 0 var(--mfx-highlight),
+    inset 0 0 0 1px var(--mfx-rim-color),
+    0 0 20px var(--mfx-rim-glow);
+}
+
+/* ═══════════════════════════════════════════
+   2. METAL-FX-CORE — Original Library Styles
+   For use with the metal-fx WebGL renderer
+   ═══════════════════════════════════════════ */
+
+.metal-fx-root {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+  overflow: visible;
+  background: #272727;
+  color: #f8f8f8;
+}
+
+.metal-fx-root[data-theme='light'] {
+  background: #ffffff;
+  color: #1d1d1d;
+}
+
+.metal-fx-root::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
+  box-shadow: inset 0 0 50px 0 rgba(255, 255, 255, 0.02);
+}
+
+.metal-fx-root[data-theme='light']::before {
+  box-shadow: inset 0 0 50px 0 rgba(0, 0, 0, 0.02);
+}
+
+.metal-fx-root::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 4;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.metal-fx-root[data-theme='light']::after {
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.metal-fx-root[data-variant='circle']::after {
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.metal-fx-root[data-theme='light'][data-variant='circle']::after {
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.06);
+}
+
+.metal-fx-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.metal-fx-inner {
+  position: absolute;
+  inset: 3px;
+  border-radius: inherit;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.metal-fx-root[data-variant='button'][data-shape='pill'] .metal-fx-inner {
+  border-radius: calc(var(--mfx-radius, 20px) - 3px);
+}
+
+.metal-fx-root[data-variant='button'][data-shape='circle'] .metal-fx-inner {
+  border-radius: calc(var(--mfx-radius, 16px) - 3px);
+}
+
+.metal-fx-root[data-variant='circle'][data-shape='pill'] .metal-fx-inner,
+.metal-fx-root[data-variant='circle'][data-shape='circle'] .metal-fx-inner {
+  inset: 0;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
+}
+
+.metal-fx-root[data-theme='light'][data-variant='circle'] .metal-fx-inner {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0);
+}
+
+.metal-fx-glow-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.metal-fx-root[data-theme='light'] .metal-fx-glow-svg {
+  inset: -1px;
+  width: calc(100% + 2px);
+  height: calc(100% + 2px);
+  mix-blend-mode: multiply;
+  opacity: 0.2746;
+  filter: saturate(5.355) brightness(0.78);
+}
+
+.metal-fx-root[data-variant='circle'][data-shape='circle'][data-theme='light'] .metal-fx-glow-svg {
+  filter: saturate(7.5) brightness(0.6);
+}
+
+.metal-fx-content {
+  position: relative;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  pointer-events: none;
+}
+
+.metal-fx-content > * {
+  pointer-events: auto;
+}
+
+.metal-fx-root[data-normalize='true'] .metal-fx-content > * {
+  background: transparent !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Reflection overlay */
+[data-metal-fx-reflection] {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  overflow: hidden;
+  z-index: 0;
+  isolation: isolate;
+}
+
+.metal-fx-reflection-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: blur(4px) saturate(1.2) brightness(1.58);
+}
+
+.metal-fx-reflection-stroke-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: saturate(1.35) brightness(1.75);
+}
+
+[data-metal-fx-reflect-host] {
+  isolation: isolate;
+}
