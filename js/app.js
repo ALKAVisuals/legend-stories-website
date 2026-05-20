@@ -136,12 +136,16 @@
   // ==========================================
   function toggleMobileMenu() {
     state.mobileMenuOpen = !state.mobileMenuOpen;
-    if (dom.mobileMenu) dom.mobileMenu.classList.toggle('hidden');
+    if (dom.mobileMenu) {
+      dom.mobileMenu.style.display = state.mobileMenuOpen ? 'block' : 'none';
+    }
     if (dom.mobileMenuBtn) dom.mobileMenuBtn.setAttribute('aria-expanded', state.mobileMenuOpen);
   }
   function closeMobileMenu() {
     state.mobileMenuOpen = false;
-    if (dom.mobileMenu) dom.mobileMenu.classList.add('hidden');
+    if (dom.mobileMenu) {
+      dom.mobileMenu.style.display = 'none';
+    }
     if (dom.mobileMenuBtn) dom.mobileMenuBtn.setAttribute('aria-expanded', 'false');
   }
 
