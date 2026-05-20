@@ -1,0 +1,213 @@
+/* ============================================
+   COMPONENTRY.FUN — Component Styles
+   Source: https://componentry.fun
+   ============================================
+
+   CSS + Canvas 2D adaptations of WebGL shader components.
+   Original components use React + TypeScript + WebGL GLSL shaders.
+
+   Component list:
+   1. ClosingPlasma — Atmospheric plasma background
+   ============================================ */
+
+/* ═══════════════════════════════════════════
+   1. CLOSING PLASMA — Atmospheric Background
+   ═══════════════════════════════════════════ */
+
+.crp-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.crp-container canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.crp-overlay {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Control panel */
+.crp-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  width: 100%;
+  max-width: 64rem;
+}
+
+.crp-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.crp-control label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9a9a9a;
+}
+
+.crp-control input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: #2a2a2a;
+  outline: none;
+  cursor: pointer;
+}
+
+.crp-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #c9a84c;
+  border: 2px solid #0a0a0a;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.crp-control input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.crp-control input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #c9a84c;
+  border: 2px solid #0a0a0a;
+  cursor: pointer;
+}
+
+.crp-control-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.625rem;
+  color: #6a6a6a;
+  text-align: right;
+}
+
+/* Color swatches */
+.crp-colors {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.crp-color-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.crp-color-swatch .swatch {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 2px solid #2a2a2a;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.crp-color-swatch .swatch:hover {
+  transform: scale(1.05);
+  border-color: #c9a84c;
+}
+
+.crp-color-swatch .label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.625rem;
+  color: #6a6a6a;
+}
+
+/* Theme toggle */
+.crp-theme-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.crp-theme-btn {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #2a2a2a;
+  background: transparent;
+  color: #9a9a9a;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.crp-theme-btn:hover {
+  border-color: #4a4a4a;
+  color: #c0c0c0;
+}
+
+.crp-theme-btn.active {
+  border-color: #c9a84c;
+  background: rgba(201, 168, 76, 0.1);
+  color: #c9a84c;
+}
+
+/* API table */
+.crp-api-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.crp-api-table th,
+.crp-api-table td {
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #1a1a1a;
+  font-size: 0.75rem;
+}
+
+.crp-api-table th {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #c9a84c;
+  font-size: 0.625rem;
+}
+
+.crp-api-table td {
+  color: #9a9a9a;
+}
+
+.crp-api-table td:first-child {
+  font-family: 'JetBrains Mono', monospace;
+  color: #e0c56a;
+}
+
+.crp-api-table td:nth-child(2) {
+  font-family: 'JetBrains Mono', monospace;
+  color: #6a6a6a;
+  font-size: 0.625rem;
+}
+
+.crp-api-table tr:hover td {
+  background: rgba(201, 168, 76, 0.03);
+}
