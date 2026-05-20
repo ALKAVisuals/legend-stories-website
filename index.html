@@ -42,15 +42,15 @@
             fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
             slideUp: { '0%': { opacity: '0', transform: 'translateY(40px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
             shimmer: { '0%, 100%': { opacity: '0.4' }, '50%': { opacity: '0.8' } },
-            pulseGold: { '0%, 100%': { boxShadow: '0 0 0 0 rgba(c9,a8,4c, 0.3)' }, '50%': { boxShadow: '0 0 30px 8px rgba(c9,a8,4c, 0.15)' } },
+            pulseGold: { '0%, 100%': { boxShadow: '0 0 0 0 rgba(42, 138, 74, 0.3)' }, '50%': { boxShadow: '0 0 30px 8px rgba(42, 138, 74, 0.15)' } },
             float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } },
           },
           backgroundImage: {
             'gradient-gold': 'linear-gradient(135deg, #2a8a4a 0%, #3da86a 50%, #2a8a4a 100%)',
           },
           boxShadow: {
-            'gold': '0 0 30px rgba(c9,a8,4c, 0.12)',
-            'gold-lg': '0 0 60px rgba(c9,a8,4c, 0.18)',
+            'gold': '0 0 30px rgba(42, 138, 74, 0.12)',
+            'gold-lg': '0 0 60px rgba(42, 138, 74, 0.18)',
             'surface': '0 4px 24px rgba(0, 0, 0, 0.5)',
           },
         },
@@ -142,7 +142,9 @@
               Matte vinyl wall stickers inspired by history, mythology, and pop culture. Damage-free. Removable. Ships from the Netherlands.
             </p>
             <div class="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-              <a href="shop.html" class="axis-btn axis-btn-primary">Shop the collection</a>
+              <div class="metal-fx metal-fx--legend metal-fx--button metal-fx--shimmer">
+                <a href="shop.html" class="axis-btn axis-btn-primary" style="background:transparent;border:none;">Shop the collection</a>
+              </div>
               <a href="#portfolio" class="axis-btn axis-btn-outline">See the work</a>
             </div>
             <div class="flex items-center gap-5 mt-8 justify-center lg:justify-start">
@@ -154,38 +156,7 @@
             </div>
           </div>
           <div class="relative max-w-sm mx-auto lg:max-w-none">
-            <!-- DOT MATRIX LOADER -->
-            <div class="dmx-root dmx-bloom dmx-bloom-halo" style="--dmx-dot-fill:#2a8a4a;--dmx-cycle:1800ms;--dmx-speed:1;--dmx-dot-size:4px;width:80px;height:80px;position:absolute;top:-40px;left:50%;transform:translateX(-50%);z-index:20;">
-              <div class="dmx-grid">
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:0"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:1"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:1"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:6"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:6"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:7"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:6"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:7"></div>
-                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:8"></div>
-              </div>
-            </div>
-            <!-- END DOT MATRIX -->
-            <div class="relative aspect-[4/5] rounded-2xl overflow-hidden border border-surface-border/30 shadow-surface img-placeholder" style="margin-top:60px;">
+            <div class="relative aspect-[4/5] rounded-2xl overflow-hidden border border-surface-border/30 shadow-surface img-placeholder">
               <div class="absolute inset-0 flex items-center justify-center">
                 <div class="text-center p-6">
                   <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gold/10 flex items-center justify-center animate-float">
@@ -194,6 +165,37 @@
                   <p class="text-text-muted text-xs tracking-wide">Product image coming soon</p>
                 </div>
               </div>
+              <!-- DOT MATRIX LOADER - top right corner -->
+              <div class="dmx-root dmx-bloom dmx-bloom-halo" style="--dmx-dot-fill:#2a8a4a;--dmx-cycle:1800ms;--dmx-speed:1;--dmx-dot-size:3px;width:56px;height:56px;position:absolute;top:12px;right:12px;z-index:10;">
+                <div class="dmx-grid">
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:0"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:1"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:1"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:6"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:6"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:7"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:6"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:7"></div>
+                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:8"></div>
+                </div>
+              </div>
+              <!-- END DOT MATRIX -->
               <div class="absolute top-3 right-3 px-2.5 py-1 rounded-full glass text-[10px] text-gold font-semibold tracking-wide">✨ New drop</div>
             </div>
             <div class="absolute -bottom-3 -left-3 md:-bottom-4 md:-left-4 p-3 rounded-xl glass shadow-gold max-w-[170px]">
@@ -400,7 +402,11 @@
             <div class="p-5"><p class="text-gold text-[10px] font-semibold uppercase tracking-widest mb-1">Abstract</p><h3 class="font-display text-lg font-bold mb-1.5 group-hover:text-gold transition-colors duration-300">Space Nebula Mural</h3><p class="text-text-secondary text-sm mb-4 leading-relaxed">A galaxy you can actually afford to visit.</p><div class="flex items-center justify-between"><div><span class="font-display text-lg font-bold">€54,95</span></div><button class="btn-primary text-xs !px-4 !py-2.5 add-to-cart-btn" data-name="Space Nebula Mural" data-price="54.95" data-emoji="🌌">Add to cart</button></div></div>
           </article>
         </div>
-        <div class="text-center mt-8 reveal"><a href="shop.html" class="btn-primary">See all murals →</a></div>
+        <div class="text-center mt-8 reveal">
+          <div class="metal-fx metal-fx--legend metal-fx--button metal-fx--shimmer inline-flex">
+            <a href="shop.html" class="btn-primary" style="background:transparent;border:none;">See all murals →</a>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -445,7 +451,12 @@
           <div class="relative">
             <h2 class="section-heading mb-3">Your wall is <span class="text-gradient-gold">waiting</span></h2>
             <p class="section-subheading mx-auto mb-7">Pick a design. We will handle the rest.</p>
-            <div class="flex flex-col sm:flex-row gap-3 justify-center"><a href="shop.html" class="btn-primary">Shop the collection</a><a href="#contact" class="btn-secondary">Request custom mural</a></div>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+              <div class="metal-fx metal-fx--legend metal-fx--button metal-fx--shimmer">
+                <a href="shop.html" class="btn-primary" style="background:transparent;border:none;">Shop the collection</a>
+              </div>
+              <a href="#contact" class="btn-secondary">Request custom mural</a>
+            </div>
           </div>
         </div>
       </div>
