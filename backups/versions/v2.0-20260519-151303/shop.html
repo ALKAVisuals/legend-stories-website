@@ -15,8 +15,8 @@
         extend: {
           colors: {
             'void': '#0B0B0C', 'surface': '#161618', 'surface-light': '#1E1E22',
-            'surface-border': '#2A2A30', 'gold': '#D4AF37', 'gold-light': '#E8C96A',
-            'gold-dark': '#B8941F', 'text-primary': '#F5F5F7', 'text-secondary': '#A0A0B0',
+            'surface-border': '#2A2A30', 'gold': '#D4AF37', 'mint-light': '#E8C96A',
+            'mint-dark': '#B8941F', 'text-primary': '#F5F5F7', 'text-secondary': '#A0A0B0',
             'text-muted': '#6B6B7B',
           },
           fontFamily: { 'display': ['"Playfair Display"', 'Georgia', 'serif'], 'body': ['"Inter"', 'system-ui', 'sans-serif'] },
@@ -53,7 +53,7 @@
     .section-subheading { color: #A0A0B0; font-size: clamp(1rem, 2vw, 1.125rem); max-width: 42rem; }
     .card-hover { transition: all .5s; }
     .card-hover:hover { box-shadow: 0 0 30px rgba(212,175,55,.15); transform: translateY(-4px); }
-    .text-gradient-gold { background: linear-gradient(135deg, #D4AF37 0%, #E8C96A 50%, #D4AF37 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-mint { background: linear-gradient(135deg, #D4AF37 0%, #E8C96A 50%, #D4AF37 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .filter-btn.active { background: linear-gradient(135deg, #D4AF37 0%, #E8C96A 50%, #D4AF37 100%); color: #0B0B0C; border-color: transparent; }
     .reveal { opacity: 0; transform: translateY(30px); transition: opacity .6s ease-out, transform .6s ease-out; }
     .reveal.visible { opacity: 1; transform: translateY(0); }
@@ -65,7 +65,7 @@
 <body class="bg-void text-text-primary font-body">
 
   <!-- ANNOUNCEMENT BAR -->
-  <div class="w-full bg-gradient-gold text-void text-center py-2 px-4 text-xs sm:text-sm font-semibold tracking-wide" role="banner">
+  <div class="w-full bg-gradient-mint text-void text-center py-2 px-4 text-xs sm:text-sm font-semibold tracking-wide" role="banner">
     <p>🔥 New drop: Mythologie collection just landed — use <span class="font-bold">LEGEND10</span> for 10% off</p>
   </div>
 
@@ -74,16 +74,16 @@
     <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Hoofdnavigatie">
       <div class="flex items-center justify-between h-16 md:h-20">
         <a href="index.html" class="flex items-center gap-2 group" aria-label="Legend Stories Home">
-          <div class="w-9 h-9 rounded-lg bg-gradient-gold flex items-center justify-center">
+          <div class="w-9 h-9 rounded-lg bg-gradient-mint flex items-center justify-center">
             <span class="text-void font-display font-bold text-lg">L</span>
           </div>
-          <span class="font-display text-xl font-bold text-text-primary group-hover:text-gold transition-colors">Legend<span class="text-gold">Stories</span></span>
+          <span class="font-display text-xl font-bold text-text-primary group-hover:text-mint transition-colors">Legend<span class="text-mint">Stories</span></span>
         </a>
         <div class="hidden md:flex items-center gap-8">
-          <a href="index.html#portfolio" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium">Portfolio</a>
-          <a href="shop.html" class="text-sm text-gold font-medium">Shop</a>
-          <a href="about.html" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium">About</a>
-          <a href="index.html#contact" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium">Contact</a>
+          <a href="index.html#portfolio" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Portfolio</a>
+          <a href="shop.html" class="text-sm text-mint font-medium">Shop</a>
+          <a href="about.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">About</a>
+          <a href="index.html#contact" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Contact</a>
         </div>
         <div class="flex items-center gap-3">
           <button id="cart-btn" class="relative p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Cart">
@@ -101,10 +101,10 @@
       </div>
       <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-surface-border/30 mt-2 pt-4">
         <div class="flex flex-col gap-3">
-          <a href="index.html#portfolio" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium py-2">Portfolio</a>
-          <a href="shop.html" class="text-sm text-gold font-medium py-2">Shop</a>
-          <a href="about.html" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium py-2">About</a>
-          <a href="index.html#contact" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium py-2">Contact</a>
+          <a href="index.html#portfolio" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Portfolio</a>
+          <a href="shop.html" class="text-sm text-mint font-medium py-2">Shop</a>
+          <a href="about.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">About</a>
+          <a href="index.html#contact" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Contact</a>
         </div>
       </div>
     </nav>
@@ -114,9 +114,9 @@
     <!-- SHOP HEADER -->
     <section class="py-16 md:py-24 relative overflow-hidden">
       <div class="absolute inset-0 bg-gradient-to-br from-void via-surface to-void"></div>
-      <div class="absolute top-1/4 -left-32 w-96 h-96 bg-gold/5 rounded-full blur-3xl"></div>
+      <div class="absolute top-1/4 -left-32 w-96 h-96 bg-mint/5 rounded-full blur-3xl"></div>
       <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 class="section-heading mb-4">The full <span class="text-gradient-gold">collection</span></h1>
+        <h1 class="section-heading mb-4">The full <span class="text-gradient-mint">collection</span></h1>
         <p class="section-subheading mx-auto">100+ designs. Four themes. One wall.</p>
       </div>
     </section>
@@ -126,12 +126,12 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Filters -->
         <div class="flex flex-wrap gap-3 justify-center mb-12">
-          <button class="filter-btn active px-5 py-2.5 rounded-full border border-surface-border/50 text-sm font-medium text-text-secondary hover:border-gold/40 hover:text-gold transition-all" data-filter="all">All</button>
-          <button class="filter-btn px-5 py-2.5 rounded-full border border-surface-border/50 text-sm font-medium text-text-secondary hover:border-gold/40 hover:text-gold transition-all" data-filter="mythologie">Mythology</button>
-          <button class="filter-btn px-5 py-2.5 rounded-full border border-surface-border/50 text-sm font-medium text-text-secondary hover:border-gold/40 hover:text-gold transition-all" data-filter="geschiedenis">History</button>
-          <button class="filter-btn px-5 py-2.5 rounded-full border border-surface-border/50 text-sm font-medium text-text-secondary hover:border-gold/40 hover:text-gold transition-all" data-filter="popculture">Pop Culture</button>
-          <button class="filter-btn px-5 py-2.5 rounded-full border border-surface-border/50 text-sm font-medium text-text-secondary hover:border-gold/40 hover:text-gold transition-all" data-filter="abstract">Abstract</button>
-          <button class="filter-btn px-5 py-2.5 rounded-full border border-surface-border/50 text-sm font-medium text-text-secondary hover:border-gold/40 hover:text-gold transition-all" data-filter="custom">Custom</button>
+          <button class="filter-btn active px-5 py-2.5 rounded-full border border-surface-border/50 text-sm font-medium text-text-secondary hover:border-mint/40 hover:text-mint transition-all" data-filter="all">All</button>
+          <button class="filter-btn px-5 py-2.5 rounded-full border border-surface-border/50 text-sm font-medium text-text-secondary hover:border-mint/40 hover:text-mint transition-all" data-filter="mythologie">Mythology</button>
+          <button class="filter-btn px-5 py-2.5 rounded-full border border-surface-border/50 text-sm font-medium text-text-secondary hover:border-mint/40 hover:text-mint transition-all" data-filter="geschiedenis">History</button>
+          <button class="filter-btn px-5 py-2.5 rounded-full border border-surface-border/50 text-sm font-medium text-text-secondary hover:border-mint/40 hover:text-mint transition-all" data-filter="popculture">Pop Culture</button>
+          <button class="filter-btn px-5 py-2.5 rounded-full border border-surface-border/50 text-sm font-medium text-text-secondary hover:border-mint/40 hover:text-mint transition-all" data-filter="abstract">Abstract</button>
+          <button class="filter-btn px-5 py-2.5 rounded-full border border-surface-border/50 text-sm font-medium text-text-secondary hover:border-mint/40 hover:text-mint transition-all" data-filter="custom">Custom</button>
         </div>
 
         <!-- Product Grid -->
@@ -141,11 +141,11 @@
           <article class="product-card group rounded-2xl overflow-hidden border border-surface-border/50 card-hover bg-surface" data-category="mythologie">
             <div class="aspect-[4/3] bg-gradient-to-br from-surface-light to-surface flex items-center justify-center relative">
               <span class="text-6xl">🔱</span>
-              <div class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-gold/20 text-gold text-[10px] font-bold uppercase">Best seller</div>
+              <div class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-mint/20 text-mint text-[10px] font-bold uppercase">Best seller</div>
             </div>
             <div class="p-6">
-              <p class="text-gold text-xs font-medium uppercase tracking-wide mb-1">Mythology</p>
-              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-gold transition-colors">Greek Gods Mural</h3>
+              <p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">Mythology</p>
+              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-mint transition-colors">Greek Gods Mural</h3>
               <p class="text-text-secondary text-sm mb-4">Zeus, Poseidon, and the whole pantheon staring down at you.</p>
               <div class="flex items-center justify-between">
                 <div>
@@ -163,8 +163,8 @@
               <span class="text-6xl">⚔️</span>
             </div>
             <div class="p-6">
-              <p class="text-gold text-xs font-medium uppercase tracking-wide mb-1">History</p>
-              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-gold transition-colors">Viking Mural</h3>
+              <p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">History</p>
+              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-mint transition-colors">Viking Mural</h3>
               <p class="text-text-secondary text-sm mb-4">Norse mythology meets your bedroom wall. Longships included.</p>
               <div class="flex items-center justify-between">
                 <div><span class="font-display text-xl font-bold">€44,95</span></div>
@@ -177,11 +177,11 @@
           <article class="product-card group rounded-2xl overflow-hidden border border-surface-border/50 card-hover bg-surface" data-category="abstract">
             <div class="aspect-[4/3] bg-gradient-to-br from-surface-light to-surface flex items-center justify-center relative">
               <span class="text-6xl">🌌</span>
-              <div class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-gold/20 text-gold text-[10px] font-bold uppercase">New</div>
+              <div class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-mint/20 text-mint text-[10px] font-bold uppercase">New</div>
             </div>
             <div class="p-6">
-              <p class="text-gold text-xs font-medium uppercase tracking-wide mb-1">Abstract</p>
-              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-gold transition-colors">Space Nebula Mural</h3>
+              <p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">Abstract</p>
+              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-mint transition-colors">Space Nebula Mural</h3>
               <p class="text-text-secondary text-sm mb-4">A galaxy you can actually afford to visit.</p>
               <div class="flex items-center justify-between">
                 <div><span class="font-display text-xl font-bold">€54,95</span></div>
@@ -196,8 +196,8 @@
               <span class="text-6xl">🎮</span>
             </div>
             <div class="p-6">
-              <p class="text-gold text-xs font-medium uppercase tracking-wide mb-1">Pop Culture</p>
-              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-gold transition-colors">Gamer Room Mural</h3>
+              <p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">Pop Culture</p>
+              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-mint transition-colors">Gamer Room Mural</h3>
               <p class="text-text-secondary text-sm mb-4">Your setup deserves better than a blank wall.</p>
               <div class="flex items-center justify-between">
                 <div><span class="font-display text-xl font-bold">€39,95</span></div>
@@ -212,8 +212,8 @@
               <span class="text-6xl">🦅</span>
             </div>
             <div class="p-6">
-              <p class="text-gold text-xs font-medium uppercase tracking-wide mb-1">History</p>
-              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-gold transition-colors">Egyptian Temple</h3>
+              <p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">History</p>
+              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-mint transition-colors">Egyptian Temple</h3>
               <p class="text-text-secondary text-sm mb-4">Pharaohs, pyramids, and hieroglyphs. History on your wall.</p>
               <div class="flex items-center justify-between">
                 <div><span class="font-display text-xl font-bold">€47,95</span></div>
@@ -228,8 +228,8 @@
               <span class="text-6xl">🏯</span>
             </div>
             <div class="p-6">
-              <p class="text-gold text-xs font-medium uppercase tracking-wide mb-1">Mythology</p>
-              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-gold transition-colors">Japanese Garden Mural</h3>
+              <p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">Mythology</p>
+              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-mint transition-colors">Japanese Garden Mural</h3>
               <p class="text-text-secondary text-sm mb-4">Cherry blossoms and koi ponds. Calm, delivered.</p>
               <div class="flex items-center justify-between">
                 <div><span class="font-display text-xl font-bold">€42,95</span></div>
@@ -244,8 +244,8 @@
               <span class="text-6xl">🦸</span>
             </div>
             <div class="p-6">
-              <p class="text-gold text-xs font-medium uppercase tracking-wide mb-1">Pop Culture</p>
-              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-gold transition-colors">Comic Book Heroes</h3>
+              <p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">Pop Culture</p>
+              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-mint transition-colors">Comic Book Heroes</h3>
               <p class="text-text-secondary text-sm mb-4">Classic comic book style. Your inner 10-year-old approves.</p>
               <div class="flex items-center justify-between">
                 <div><span class="font-display text-xl font-bold">€44,95</span></div>
@@ -260,8 +260,8 @@
               <span class="text-6xl">🎨</span>
             </div>
             <div class="p-6">
-              <p class="text-gold text-xs font-medium uppercase tracking-wide mb-1">Abstract</p>
-              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-gold transition-colors">Geometric Art</h3>
+              <p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">Abstract</p>
+              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-mint transition-colors">Geometric Art</h3>
               <p class="text-text-secondary text-sm mb-4">Clean lines, gold and black. Works in any room.</p>
               <div class="flex items-center justify-between">
                 <div><span class="font-display text-xl font-bold">€37,95</span></div>
@@ -271,16 +271,16 @@
           </article>
 
           <!-- Product 9: Custom -->
-          <article class="product-card group rounded-2xl overflow-hidden border border-gold/30 card-hover bg-surface" data-category="custom">
-            <div class="aspect-[4/3] bg-gradient-to-br from-gold/5 to-surface flex items-center justify-center relative">
+          <article class="product-card group rounded-2xl overflow-hidden border border-mint/30 card-hover bg-surface" data-category="custom">
+            <div class="aspect-[4/3] bg-gradient-to-br from-mint/5 to-surface flex items-center justify-center relative">
               <div class="text-center">
                 <span class="text-6xl block mb-2">✨</span>
-                <span class="text-gold text-sm font-medium">Made to order</span>
+                <span class="text-mint text-sm font-medium">Made to order</span>
               </div>
             </div>
             <div class="p-6">
-              <p class="text-gold text-xs font-medium uppercase tracking-wide mb-1">Custom</p>
-              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-gold transition-colors">Custom Mural</h3>
+              <p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">Custom</p>
+              <h3 class="font-display text-xl font-bold mb-2 group-hover:text-mint transition-colors">Custom Mural</h3>
               <p class="text-text-secondary text-sm mb-4">Send us your idea. We will print it. No minimums.</p>
               <div class="flex items-center justify-between">
                 <div><span class="font-display text-xl font-bold">From €59,95</span></div>
@@ -320,17 +320,17 @@
       <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
         <div class="sm:col-span-2 lg:col-span-1">
           <a href="index.html" class="flex items-center gap-2 mb-4">
-            <div class="w-8 h8 rounded-lg bg-gradient-gold flex items-center justify-center">
+            <div class="w-8 h8 rounded-lg bg-gradient-mint flex items-center justify-center">
               <span class="text-void font-display font-bold text-sm">L</span>
             </div>
-            <span class="font-display text-lg font-bold">Legend<span class="text-gold">Stories</span></span>
+            <span class="font-display text-lg font-bold">Legend<span class="text-mint">Stories</span></span>
           </a>
           <p class="text-text-secondary text-sm mb-4">Premium muurstickers die verhalen tot leven brengen.</p>
           <div class="flex gap-3">
-            <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-gold/10 transition-colors" aria-label="TikTok">
+            <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-mint/10 transition-colors" aria-label="TikTok">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/></svg>
             </a>
-            <a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-gold/10 transition-colors" aria-label="Instagram">
+            <a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-mint/10 transition-colors" aria-label="Instagram">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069z"/></svg>
             </a>
           </div>
@@ -338,27 +338,27 @@
         <div>
           <h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Shop</h4>
           <ul class="space-y-2">
-            <li><a href="shop.html" class="text-sm text-text-secondary hover:text-gold transition-colors">All murals</a></li>
-            <li><a href="shop.html" class="text-sm text-text-secondary hover:text-gold transition-colors">Mythology</a></li>
-            <li><a href="shop.html" class="text-sm text-text-secondary hover:text-gold transition-colors">History</a></li>
-            <li><a href="shop.html" class="text-sm text-text-secondary hover:text-gold transition-colors">Custom Murals</a></li>
+            <li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">All murals</a></li>
+            <li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Mythology</a></li>
+            <li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">History</a></li>
+            <li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Custom Murals</a></li>
           </ul>
         </div>
         <div>
           <h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Klantenservice</h4>
           <ul class="space-y-2">
-            <li><a href="index.html#contact" class="text-sm text-text-secondary hover:text-gold transition-colors">Contact</a></li>
-            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Shipping</a></li>
-            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Returns</a></li>
-            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">FAQ</a></li>
+            <li><a href="index.html#contact" class="text-sm text-text-secondary hover:text-mint transition-colors">Contact</a></li>
+            <li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Shipping</a></li>
+            <li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Returns</a></li>
+            <li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">FAQ</a></li>
           </ul>
         </div>
         <div>
           <h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Bedrijf</h4>
           <ul class="space-y-2">
-            <li><a href="about.html" class="text-sm text-text-secondary hover:text-gold transition-colors">About</a></li>
-            <li><a href="portfolio.html" class="text-sm text-text-secondary hover:text-gold transition-colors">Portfolio</a></li>
-            <li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Privacy</a></li>
+            <li><a href="about.html" class="text-sm text-text-secondary hover:text-mint transition-colors">About</a></li>
+            <li><a href="portfolio.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Portfolio</a></li>
+            <li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Privacy</a></li>
           </ul>
         </div>
       </div>
@@ -410,7 +410,7 @@
   <script src="js/app.js"></script>
 
   <!-- FLOATING CTA -->
-  <a href="index.html#contact" class="floating-cta hidden md:flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-gold text-void font-semibold text-sm shadow-gold-lg hover:scale-105 transition-transform z-40" style="position:fixed;bottom:2rem;right:2rem;">
+  <a href="index.html#contact" class="floating-cta hidden md:flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-mint text-void font-semibold text-sm shadow-mint-lg hover:scale-105 transition-transform z-40" style="position:fixed;bottom:2rem;right:2rem;">
     <span>✨</span> Custom Mural
   </a>
 

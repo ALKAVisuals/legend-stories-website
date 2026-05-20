@@ -15,8 +15,8 @@
         extend: {
           colors: {
             'void': '#0B0B0C', 'surface': '#161618', 'surface-light': '#1E1E22',
-            'surface-border': '#2A2A30', 'gold': '#D4AF37', 'gold-light': '#E8C96A',
-            'gold-dark': '#B8941F', 'text-primary': '#F5F5F7', 'text-secondary': '#A0A0B0',
+            'surface-border': '#2A2A30', 'gold': '#D4AF37', 'mint-light': '#E8C96A',
+            'mint-dark': '#B8941F', 'text-primary': '#F5F5F7', 'text-secondary': '#A0A0B0',
             'text-muted': '#6B6B7B',
           },
           fontFamily: { 'display': ['"Playfair Display"', 'Georgia', 'serif'], 'body': ['"Inter"', 'system-ui', 'sans-serif'] },
@@ -53,7 +53,7 @@
     .section-subheading { color: #A0A0B0; font-size: clamp(1rem, 2vw, 1.125rem); max-width: 42rem; }
     .card-hover { transition: all .5s; }
     .card-hover:hover { box-shadow: 0 0 30px rgba(212,175,55,.15); transform: translateY(-4px); }
-    .text-gradient-gold { background: linear-gradient(135deg, #D4AF37 0%, #E8C96A 50%, #D4AF37 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .text-gradient-mint { background: linear-gradient(135deg, #D4AF37 0%, #E8C96A 50%, #D4AF37 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .reveal { opacity: 0; transform: translateY(30px); transition: opacity .6s ease-out, transform .6s ease-out; }
     .reveal.visible { opacity: 1; transform: translateY(0); }
   </style>
@@ -61,7 +61,7 @@
 <body class="bg-void text-text-primary font-body">
 
   <!-- ANNOUNCEMENT BAR -->
-  <div class="w-full bg-gradient-gold text-void text-center py-2 px-4 text-xs sm:text-sm font-semibold tracking-wide" role="banner">
+  <div class="w-full bg-gradient-mint text-void text-center py-2 px-4 text-xs sm:text-sm font-semibold tracking-wide" role="banner">
     <p>🔥 New drop: Mythologie collection just landed — use <span class="font-bold">LEGEND10</span> for 10% off</p>
   </div>
 
@@ -70,16 +70,16 @@
     <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Hoofdnavigatie">
       <div class="flex items-center justify-between h-16 md:h-20">
         <a href="index.html" class="flex items-center gap-2 group" aria-label="Legend Stories Home">
-          <div class="w-9 h-9 rounded-lg bg-gradient-gold flex items-center justify-center">
+          <div class="w-9 h-9 rounded-lg bg-gradient-mint flex items-center justify-center">
             <span class="text-void font-display font-bold text-lg">L</span>
           </div>
-          <span class="font-display text-xl font-bold text-text-primary group-hover:text-gold transition-colors">Legend<span class="text-gold">Stories</span></span>
+          <span class="font-display text-xl font-bold text-text-primary group-hover:text-mint transition-colors">Legend<span class="text-mint">Stories</span></span>
         </a>
         <div class="hidden md:flex items-center gap-8">
-          <a href="portfolio.html" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium">Portfolio</a>
-          <a href="shop.html" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium">Shop</a>
-          <a href="about.html" class="text-sm text-gold font-medium">About</a>
-          <a href="index.html#contact" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium">Contact</a>
+          <a href="portfolio.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Portfolio</a>
+          <a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Shop</a>
+          <a href="about.html" class="text-sm text-mint font-medium">About</a>
+          <a href="index.html#contact" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Contact</a>
         </div>
         <div class="flex items-center gap-3">
           <a href="shop.html" class="hidden sm:inline-flex p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Shop">
@@ -96,10 +96,10 @@
       </div>
       <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-surface-border/30 mt-2 pt-4">
         <div class="flex flex-col gap-3">
-          <a href="portfolio.html" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium py-2">Portfolio</a>
-          <a href="shop.html" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium py-2">Shop</a>
-          <a href="about.html" class="text-sm text-gold font-medium py-2">About</a>
-          <a href="index.html#contact" class="text-sm text-text-secondary hover:text-gold transition-colors font-medium py-2">Contact</a>
+          <a href="portfolio.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Portfolio</a>
+          <a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Shop</a>
+          <a href="about.html" class="text-sm text-mint font-medium py-2">About</a>
+          <a href="index.html#contact" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Contact</a>
         </div>
       </div>
     </nav>
@@ -109,9 +109,9 @@
     <!-- HERO -->
     <section class="py-20 md:py-32 relative overflow-hidden">
       <div class="absolute inset-0 bg-gradient-to-br from-void via-surface to-void"></div>
-      <div class="absolute top-1/4 -left-32 w-96 h-96 bg-gold/5 rounded-full blur-3xl"></div>
+      <div class="absolute top-1/4 -left-32 w-96 h-96 bg-mint/5 rounded-full blur-3xl"></div>
       <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 class="section-heading mb-6">The <span class="text-gradient-gold">story</span></h1>
+        <h1 class="section-heading mb-6">The <span class="text-gradient-mint">story</span></h1>
         <p class="text-text-secondary text-lg md:text-xl leading-relaxed max-w-2xl mx-auto">
           Legend Stories is ontstaan uit een passie voor verhalen en design. Wij geloven dat elke muur een canvas is — en elk verhaal een kans om tot leven te komen.
         </p>
@@ -123,7 +123,7 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div>
-            <h2 class="section-heading mb-6">From idea to <span class="text-gradient-gold">wall art</span></h2>
+            <h2 class="section-heading mb-6">From idea to <span class="text-gradient-mint">wall art</span></h2>
             <div class="space-y-5 text-text-secondary leading-relaxed">
               <p>
                 Het begon simpel: een groep vrienden die vonden dat muurdecoratie meer kon dan alleen effe kleuren en platenframes. Wat als je muur kon vertellen wie je bent? Wat als je kamer een verhaal kon vertellen?
@@ -140,7 +140,7 @@
             <div class="aspect-[4/5] rounded-2xl overflow-hidden border border-surface-border/50 bg-gradient-to-br from-surface-light to-surface">
               <div class="absolute inset-0 flex items-center justify-center">
                 <div class="text-center">
-                  <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-gold/10 flex items-center justify-center animate-float">
+                  <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-mint/10 flex items-center justify-center animate-float">
                     <span class="text-5xl">🎨</span>
                   </div>
                   <p class="text-text-muted text-sm">Ons atelier</p>
@@ -156,26 +156,26 @@
     <section class="py-16 md:py-24 bg-surface/30">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
-          <h2 class="section-heading mb-4">What we <span class="text-gradient-gold">stand for</span></h2>
+          <h2 class="section-heading mb-4">What we <span class="text-gradient-mint">stand for</span></h2>
         </div>
         <div class="grid md:grid-cols-3 gap-8">
           <div class="p-8 rounded-2xl border border-surface-border/50 bg-surface text-center">
-            <div class="w-16 h-16 mx-auto mb-5 rounded-xl bg-gold/10 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
+            <div class="w-16 h-16 mx-auto mb-5 rounded-xl bg-mint/10 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-mint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
             </div>
             <h3 class="font-display text-xl font-bold mb-3">Quality first</h3>
             <p class="text-text-secondary text-sm">Thick matte vinyl, sharp printing, and a finish that looks painted on. Not a cheap sticker.</p>
           </div>
           <div class="p-8 rounded-2xl border border-surface-border/50 bg-surface text-center">
-            <div class="w-16 h-16 mx-auto mb-5 rounded-xl bg-gold/10 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" /></svg>
+            <div class="w-16 h-16 mx-auto mb-5 rounded-xl bg-mint/10 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-mint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" /></svg>
             </div>
             <h3 class="font-display text-xl font-bold mb-3">Made for you</h3>
             <p class="text-text-secondary text-sm">Custom designs, specific sizes, your own ideas. Every project is different and we like it that way.</p>
           </div>
           <div class="p-8 rounded-2xl border border-surface-border/50 bg-surface text-center">
-            <div class="w-16 h-16 mx-auto mb-5 rounded-xl bg-gold/10 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
+            <div class="w-16 h-16 mx-auto mb-5 rounded-xl bg-mint/10 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-mint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
             </div>
             <h3 class="font-display text-xl font-bold mb-3">We give a damn</h3>
             <p class="text-text-secondary text-sm">We are wall art people. Every day we work on new designs and better ways to get them to your door.</p>
@@ -188,7 +188,7 @@
     <section class="py-16 md:py-24">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
-          <h2 class="section-heading mb-4">The <span class="text-gradient-gold">people</span></h2>
+          <h2 class="section-heading mb-4">The <span class="text-gradient-mint">people</span></h2>
           <p class="section-subheading mx-auto">Three people. One wall at a time.</p>
         </div>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-4xl mx-auto">
@@ -197,7 +197,7 @@
               <span class="text-4xl">👨‍🎨</span>
             </div>
             <h3 class="font-display font-bold text-lg">K</h3>
-            <p class="text-gold text-sm font-medium">Founder & Designer</p>
+            <p class="text-mint text-sm font-medium">Founder & Designer</p>
             <p class="text-text-secondary text-sm mt-2">Started this whole thing. Still picks every design.</p>
           </div>
           <div class="text-center">
@@ -205,7 +205,7 @@
               <span class="text-4xl">👩‍💻</span>
             </div>
             <h3 class="font-display font-bold text-lg">Compagnon</h3>
-            <p class="text-gold text-sm font-medium">Co-owner & Operations</p>
+            <p class="text-mint text-sm font-medium">Co-owner & Operations</p>
             <p class="text-text-secondary text-sm mt-2">Makes sure your order actually arrives. Handles everything else.</p>
           </div>
           <div class="text-center">
@@ -213,7 +213,7 @@
               <span class="text-4xl">🤖</span>
             </div>
             <h3 class="font-display font-bold text-lg">OWL</h3>
-            <p class="text-gold text-sm font-medium">AI Assistant</p>
+            <p class="text-mint text-sm font-medium">AI Assistant</p>
             <p class="text-text-secondary text-sm mt-2">Helps with design, code, and keeping this whole thing running.</p>
           </div>
         </div>
@@ -223,7 +223,7 @@
     <!-- CTA -->
     <section class="py-20 md:py-28 bg-surface/30">
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 class="section-heading mb-4">Ready to <span class="text-gradient-gold">start</span>?</h2>
+        <h2 class="section-heading mb-4">Ready to <span class="text-gradient-mint">start</span>?</h2>
         <p class="section-subheading mx-auto mb-8">Pick a mural or send us your idea. We will take it from there.</p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
           <a href="index.html#contact" class="btn-primary text-lg">Get in touch</a>
@@ -239,18 +239,18 @@
       <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
         <div class="sm:col-span-2 lg:col-span-1">
           <a href="index.html" class="flex items-center gap-2 mb-4">
-            <div class="w-8 h-8 rounded-lg bg-gradient-gold flex items-center justify-center"><span class="text-void font-display font-bold text-sm">L</span></div>
-            <span class="font-display text-lg font-bold">Legend<span class="text-gold">Stories</span></span>
+            <div class="w-8 h-8 rounded-lg bg-gradient-mint flex items-center justify-center"><span class="text-void font-display font-bold text-sm">L</span></div>
+            <span class="font-display text-lg font-bold">Legend<span class="text-mint">Stories</span></span>
           </a>
           <p class="text-text-secondary text-sm mb-4">Premium muurstickers die verhalen tot leven brengen.</p>
           <div class="flex gap-3">
-            <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-gold/10 transition-colors" aria-label="TikTok"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/></svg></a>
-            <a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-gold/10 transition-colors" aria-label="Instagram"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069z"/></svg></a>
+            <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-mint/10 transition-colors" aria-label="TikTok"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/></svg></a>
+            <a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-mint/10 transition-colors" aria-label="Instagram"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069z"/></svg></a>
           </div>
         </div>
-        <div><h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Shop</h4><ul class="space-y-2"><li><a href="shop.html" class="text-sm text-text-secondary hover:text-gold transition-colors">All murals</a></li><li><a href="shop.html" class="text-sm text-text-secondary hover:text-gold transition-colors">Mythology</a></li><li><a href="shop.html" class="text-sm text-text-secondary hover:text-gold transition-colors">History</a></li><li><a href="shop.html" class="text-sm text-text-secondary hover:text-gold transition-colors">Custom Murals</a></li></ul></div>
-        <div><h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Klantenservice</h4><ul class="space-y-2"><li><a href="index.html#contact" class="text-sm text-text-secondary hover:text-gold transition-colors">Contact</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Shipping</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Returns</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">FAQ</a></li></ul></div>
-        <div><h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Bedrijf</h4><ul class="space-y-2"><li><a href="about.html" class="text-sm text-text-secondary hover:text-gold transition-colors">About</a></li><li><a href="portfolio.html" class="text-sm text-text-secondary hover:text-gold transition-colors">Portfolio</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-gold transition-colors">Privacy</a></li></ul></div>
+        <div><h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Shop</h4><ul class="space-y-2"><li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">All murals</a></li><li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Mythology</a></li><li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">History</a></li><li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Custom Murals</a></li></ul></div>
+        <div><h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Klantenservice</h4><ul class="space-y-2"><li><a href="index.html#contact" class="text-sm text-text-secondary hover:text-mint transition-colors">Contact</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Shipping</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Returns</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">FAQ</a></li></ul></div>
+        <div><h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Bedrijf</h4><ul class="space-y-2"><li><a href="about.html" class="text-sm text-text-secondary hover:text-mint transition-colors">About</a></li><li><a href="portfolio.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Portfolio</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Privacy</a></li></ul></div>
       </div>
       <div class="pt-8 border-t border-surface-border/30 flex flex-col sm:flex-row items-center justify-between gap-4">
         <p class="text-xs text-text-muted">© 2026 Legend Stories. All rights reserved.</p>
@@ -272,7 +272,7 @@
   <script src="js/app.js"></script>
 
   <!-- FLOATING CTA -->
-  <a href="index.html#contact" class="floating-cta hidden md:flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-gold text-void font-semibold text-sm shadow-gold-lg hover:scale-105 transition-transform z-40" style="position:fixed;bottom:2rem;right:2rem;">
+  <a href="index.html#contact" class="floating-cta hidden md:flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-mint text-void font-semibold text-sm shadow-mint-lg hover:scale-105 transition-transform z-40" style="position:fixed;bottom:2rem;right:2rem;">
     <span>✨</span> Custom mural
   </a>
 

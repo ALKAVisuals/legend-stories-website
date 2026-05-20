@@ -16,7 +16,7 @@
   }
 
   ::selection {
-    @apply bg-gold/30 text-text-primary;
+    @apply bg-mint/30 text-text-primary;
   }
 
   /* Custom scrollbar */
@@ -30,7 +30,7 @@
     @apply bg-surface-border rounded-full;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gold/50;
+    @apply bg-mint/50;
   }
 }
 
@@ -44,11 +44,11 @@
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center px-8 py-4 bg-gradient-gold text-void font-semibold text-sm uppercase tracking-wider rounded-lg transition-all duration-300 hover:shadow-gold-lg hover:scale-[1.02] active:scale-[0.98];
+    @apply inline-flex items-center justify-center px-8 py-4 bg-gradient-mint text-void font-semibold text-sm uppercase tracking-wider rounded-lg transition-all duration-300 hover:shadow-mint-lg hover:scale-[1.02] active:scale-[0.98];
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-8 py-4 border border-gold/40 text-gold font-semibold text-sm uppercase tracking-wider rounded-lg transition-all duration-300 hover:bg-gold/10 hover:border-gold/60 active:scale-[0.98];
+    @apply inline-flex items-center justify-center px-8 py-4 border border-mint/40 text-mint font-semibold text-sm uppercase tracking-wider rounded-lg transition-all duration-300 hover:bg-mint/10 hover:border-mint/60 active:scale-[0.98];
   }
 
   .section-heading {
@@ -60,13 +60,13 @@
   }
 
   .card-hover {
-    @apply transition-all duration-500 hover:shadow-gold hover:-translate-y-1;
+    @apply transition-all duration-500 hover:shadow-mint hover:-translate-y-1;
   }
 }
 
 @layer utilities {
-  .text-gradient-gold {
-    @apply bg-gradient-gold bg-clip-text text-transparent;
+  .text-gradient-mint {
+    @apply bg-gradient-mint bg-clip-text text-transparent;
   }
 
   .delay-100 { animation-delay: 100ms; }

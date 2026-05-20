@@ -9,31 +9,33 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/shared.css">
-  <link rel="stylesheet" href="css/axis-upgrades.css">
-  <link rel="stylesheet" href="css/skiper-upgrades.css">
-  <link rel="stylesheet" href="css/axis-patterns.css">
   <link rel="stylesheet" href="css/matrix.css">
   <link rel="stylesheet" href="css/metal-fx.css">
+  <link rel="stylesheet" href="css/skipper.css">
   <link rel="stylesheet" href="css/axis.css">
   <link rel="stylesheet" href="css/componentry.css">
-  <link rel="stylesheet" href="css/skipper.css">
+  <link rel="stylesheet" href="css/axis-patterns.css">
+  <link rel="stylesheet" href="css/axis-upgrades.css">
+  <link rel="stylesheet" href="css/skiper-upgrades.css">
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
             'void': '#0B0B0C', 'surface': '#161618', 'surface-light': '#1E1E22',
-            'surface-border': '#2A2A30', 'gold': '#2a8a4a', 'gold-light': '#3da86a',
-            'gold-dark': '#1e6b38', 'text-primary': '#F5F5F7', 'text-secondary': '#A0A0B0',
+            'surface-border': '#2A2A30', 'mint': '#2a8a4a', 'mint-light': '#3da86a',
+            'mint-dark': '#1e6b38', 'text-primary': '#F5F5F7', 'text-secondary': '#A0A0B0',
             'text-muted': '#6B6B7B',
           },
           fontFamily: { 'display': ['"Playfair Display"', 'Georgia', 'serif'], 'body': ['"Inter"', 'system-ui', 'sans-serif'] },
-          animation: { 'fade-in': 'fadeIn 0.6s ease-out forwards', 'slide-up': 'slideUp 0.5s ease-out forwards', 'pulse-gold': 'pulseGold 2s ease-in-out infinite', 'float': 'float 6s ease-in-out infinite' },
+          animation: { 'fade-in': 'fadeIn 0.6s ease-out forwards', 'slide-up': 'slideUp 0.5s ease-out forwards', 'pulse-mint': 'pulseMint 2s ease-in-out infinite', 'float': 'float 6s ease-in-out infinite' },
           keyframes: {
             fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
             slideUp: { '0%': { opacity: '0', transform: 'translateY(30px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-            pulseGold: { '0%, 100%': { boxShadow: '0 0 0 0 rgba(42, 138, 74, 0.4)' }, '50%': { boxShadow: '0 0 20px 5px rgba(42, 138, 74, 0.2)' } },
+            pulseMint: { '0%, 100%': { boxShadow: '0 0 0 0 rgba(42, 138, 74, 0.4)' }, '50%': { boxShadow: '0 0 20px 5px rgba(42, 138, 74, 0.2)' } },
             float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
           },
           backgroundImage: { 'gradient-gold': 'linear-gradient(135deg, #2a8a4a 0%, #3da86a 50%, #2a8a4a 100%)' },
@@ -47,7 +49,7 @@
 <body class="bg-void text-text-primary font-body">
 
   <!-- ANNOUNCEMENT BAR -->
-  <div class="w-full bg-gradient-gold text-void text-center py-2 px-4 text-xs sm:text-sm font-semibold tracking-wide" role="banner">
+  <div class="w-full bg-gradient-mint text-void text-center py-2 px-4 text-xs sm:text-sm font-semibold tracking-wide" role="banner">
     <p>🔥 New drop: Mythologie collection just landed — use <span class="font-bold">LEGEND10</span> for 10% off</p>
   </div>
 
@@ -56,13 +58,13 @@
     <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
       <div class="flex items-center justify-between h-16 md:h-20">
         <a href="index.html" class="flex items-center gap-2 group" aria-label="Legend Stories Home">
-          <div class="w-9 h-9 rounded-lg bg-gradient-gold flex items-center justify-center">
+          <div class="w-9 h-9 rounded-lg bg-gradient-mint flex items-center justify-center">
             <span class="text-void font-display font-bold text-lg">L</span>
           </div>
-          <span class="font-display text-xl font-bold text-text-primary group-hover:text-mint transition-colors">Legend<span class="text-gold">Stories</span></span>
+          <span class="font-display text-xl font-bold text-text-primary group-hover:text-mint transition-colors">Legend<span class="text-mint">Stories</span></span>
         </a>
         <div class="hidden md:flex items-center gap-8">
-          <a href="portfolio.html" class="text-sm text-gold font-medium">Portfolio</a>
+          <a href="portfolio.html" class="text-sm text-mint font-medium">Portfolio</a>
           <a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Shop</a>
           <a href="about.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">About</a>
           <a href="index.html#contact" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Contact</a>
@@ -90,7 +92,7 @@
       </div>
       <div id="mobile-menu" class="md:hidden" style="display:none;">
         <div class="flex flex-col gap-3 pb-4 border-t border-surface-border/30 mt-2 pt-4">
-          <a href="portfolio.html" class="text-sm text-gold font-medium py-2">Portfolio</a>
+          <a href="portfolio.html" class="text-sm text-mint font-medium py-2">Portfolio</a>
           <a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Shop</a>
           <a href="about.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">About</a>
           <a href="index.html#contact" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Contact</a>
@@ -103,7 +105,7 @@
     <!-- HEADER -->
     <section class="py-16 md:py-24 relative overflow-hidden">
       <div class="absolute inset-0 bg-gradient-to-br from-void via-surface to-void"></div>
-      <div class="absolute top-1/4 -left-32 w-96 h-96 bg-gold/5 rounded-full blur-3xl"></div>
+      <div class="absolute top-1/4 -left-32 w-96 h-96 bg-mint/5 rounded-full blur-3xl"></div>
       <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <!-- DOT MATRIX LOADER -->
             <div class="flex justify-center mb-6">
@@ -138,7 +140,7 @@
               </div>
             </div>
             <!-- END DOT MATRIX -->
-<h1 class="section-heading mb-4">Rooms we have <span class="text-gradient-gold">done</span></h1>
+<h1 class="section-heading mb-4">Rooms we have <span class="text-gradient-mint">done</span></h1>
         <p class="section-subheading mx-auto">Real installations. No Photoshop. Just vinyl on walls.</p>
       </div>
     </section>
@@ -253,7 +255,7 @@
     <!-- CTA -->
     <section class="py-20 md:py-28 bg-surface/30">
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 class="section-heading mb-4">Got your own <span class="text-gradient-gold">idea</span>?</h2>
+        <h2 class="section-heading mb-4">Got your own <span class="text-gradient-mint">idea</span>?</h2>
         <p class="section-subheading mx-auto mb-8">Every project starts with a conversation. Tell us what you want.</p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
           <a href="index.html#contact" class="btn-primary text-lg">Start your project</a>
@@ -269,13 +271,13 @@
       <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
         <div class="sm:col-span-2 lg:col-span-1">
           <a href="index.html" class="flex items-center gap-2 mb-4">
-            <div class="w-8 h-8 rounded-lg bg-gradient-gold flex items-center justify-center"><span class="text-void font-display font-bold text-sm">L</span></div>
-            <span class="font-display text-lg font-bold">Legend<span class="text-gold">Stories</span></span>
+            <div class="w-8 h-8 rounded-lg bg-gradient-mint flex items-center justify-center"><span class="text-void font-display font-bold text-sm">L</span></div>
+            <span class="font-display text-lg font-bold">Legend<span class="text-mint">Stories</span></span>
           </a>
           <p class="text-text-secondary text-sm mb-4">Premium wall stickers that bring stories to life.</p>
           <div class="flex gap-3">
-            <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-gold/10 transition-colors" aria-label="TikTok"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/></svg></a>
-            <a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-gold/10 transition-colors" aria-label="Instagram"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069z"/></svg></a>
+            <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-mint/10 transition-colors" aria-label="TikTok"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/></svg></a>
+            <a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-mint/10 transition-colors" aria-label="Instagram"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069z"/></svg></a>
           </div>
         </div>
         <div><h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Shop</h4><ul class="space-y-2"><li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">All murals</a></li><li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Mythology</a></li><li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">History</a></li><li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Custom Murals</a></li></ul></div>
@@ -304,7 +306,7 @@
   <script src="js/app.js"></script>
 
   <!-- FLOATING CTA -->
-  <a href="index.html#contact" class="floating-cta hidden md:flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-gold text-void font-semibold text-sm shadow-gold-lg hover:scale-105 transition-transform z-40" style="position:fixed;bottom:2rem;right:2rem;">
+  <a href="index.html#contact" class="floating-cta hidden md:flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-mint text-void font-semibold text-sm shadow-mint-lg hover:scale-105 transition-transform z-40" style="position:fixed;bottom:2rem;right:2rem;">
     <span>✨</span> Custom mural
   </a>
 
