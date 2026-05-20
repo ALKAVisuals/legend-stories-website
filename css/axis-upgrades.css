@@ -58,7 +58,7 @@
   position: absolute;
   inset: -1px;
   border-radius: inherit;
-  background: linear-gradient(135deg, rgba(0, 255, 65, 0.15), transparent 50%, rgba(0, 255, 65, 0.05));
+  background: linear-gradient(135deg, rgba(c9,a8,4c, 0.15), transparent 50%, rgba(c9,a8,4c, 0.05));
   opacity: 0;
   transition: opacity 0.4s ease;
   z-index: -1;
@@ -109,11 +109,11 @@
   border: 1px solid transparent;
 }
 .axis-btn-primary {
-  background: linear-gradient(135deg, #00FF41, #E8C547);
+  background: linear-gradient(135deg, #c9a84c, #E8C547);
   color: #0a0a0b;
 }
 .axis-btn-primary:hover {
-  box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+  box-shadow: 0 0 20px rgba(c9,a8,4c, 0.3);
   transform: translateY(-1px);
 }
 .axis-btn-ghost {
@@ -172,7 +172,7 @@
   font-family: 'Playfair Display', serif;
   font-size: 2.5rem;
   font-weight: 700;
-  color: #00FF41;
+  color: #c9a84c;
   line-height: 1;
 }
 .axis-stat-label {
@@ -198,7 +198,7 @@
   left: 1.5rem;
   font-size: 4rem;
   font-family: 'Playfair Display', serif;
-  color: rgba(0, 255, 65, 0.15);
+  color: rgba(c9,a8,4c, 0.15);
   line-height: 1;
 }
 
@@ -215,8 +215,8 @@
   outline: none;
 }
 .axis-input:focus {
-  border-color: rgba(0, 255, 65, 0.5);
-  box-shadow: 0 0 0 3px rgba(0, 255, 65, 0.1);
+  border-color: rgba(c9,a8,4c, 0.5);
+  box-shadow: 0 0 0 3px rgba(c9,a8,4c, 0.1);
 }
 .axis-input::placeholder {
   color: var(--axis-text-muted);
@@ -240,7 +240,7 @@
   top: -0.5rem;
   left: 0.75rem;
   font-size: 0.7rem;
-  color: #00FF41;
+  color: #c9a84c;
   background: var(--axis-bg);
   padding: 0 0.25rem;
 }

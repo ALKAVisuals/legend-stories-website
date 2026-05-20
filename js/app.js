@@ -359,7 +359,7 @@
       draw() {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 255, 65, ${this.opacity})`;
+        ctx.fillStyle = `rgba(c9,a8,4c, ${this.opacity})`;
         ctx.fill();
       }
     }
@@ -384,7 +384,7 @@
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(0, 255, 65, ${0.08 * (1 - dist / connectionDistance)})`;
+            ctx.strokeStyle = `rgba(c9,a8,4c, ${0.08 * (1 - dist / connectionDistance)})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }

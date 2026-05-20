@@ -14,14 +14,15 @@
   <link rel="stylesheet" href="css/axis-upgrades.css">
   <link rel="stylesheet" href="css/skiper-upgrades.css">
   <link rel="stylesheet" href="css/axis-patterns.css">
+  <link rel="stylesheet" href="css/matrix.css">
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
             'void': '#0B0B0C', 'surface': '#161618', 'surface-light': '#1E1E22',
-            'surface-border': '#2A2A30', 'gold': '#00FF41', 'gold-light': '#33FF66',
-            'gold-dark': '#00CC33', 'text-primary': '#F5F5F7', 'text-secondary': '#A0A0B0',
+            'surface-border': '#2A2A30', 'gold': '#c9a84c', 'gold-light': '#e0c56a',
+            'gold-dark': '#a07830', 'text-primary': '#F5F5F7', 'text-secondary': '#A0A0B0',
             'text-muted': '#6B6B7B',
           },
           fontFamily: {
@@ -39,15 +40,15 @@
             fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
             slideUp: { '0%': { opacity: '0', transform: 'translateY(40px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
             shimmer: { '0%, 100%': { opacity: '0.4' }, '50%': { opacity: '0.8' } },
-            pulseGold: { '0%, 100%': { boxShadow: '0 0 0 0 rgba(0, 255, 65, 0.3)' }, '50%': { boxShadow: '0 0 30px 8px rgba(0, 255, 65, 0.15)' } },
+            pulseGold: { '0%, 100%': { boxShadow: '0 0 0 0 rgba(c9,a8,4c, 0.3)' }, '50%': { boxShadow: '0 0 30px 8px rgba(c9,a8,4c, 0.15)' } },
             float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } },
           },
           backgroundImage: {
-            'gradient-gold': 'linear-gradient(135deg, #00FF41 0%, #33FF66 50%, #00FF41 100%)',
+            'gradient-gold': 'linear-gradient(135deg, #c9a84c 0%, #e0c56a 50%, #c9a84c 100%)',
           },
           boxShadow: {
-            'gold': '0 0 30px rgba(0, 255, 65, 0.12)',
-            'gold-lg': '0 0 60px rgba(0, 255, 65, 0.18)',
+            'gold': '0 0 30px rgba(c9,a8,4c, 0.12)',
+            'gold-lg': '0 0 60px rgba(c9,a8,4c, 0.18)',
             'surface': '0 4px 24px rgba(0, 0, 0, 0.5)',
           },
         },
@@ -151,7 +152,38 @@
             </div>
           </div>
           <div class="relative max-w-sm mx-auto lg:max-w-none">
-            <div class="relative aspect-[4/5] rounded-2xl overflow-hidden border border-surface-border/30 shadow-surface img-placeholder">
+            <!-- DOT MATRIX LOADER -->
+            <div class="dmx-root dmx-bloom dmx-bloom-halo" style="--dmx-dot-fill:#c9a84c;--dmx-cycle:1800ms;--dmx-speed:1;--dmx-dot-size:4px;width:80px;height:80px;position:absolute;top:-40px;left:50%;transform:translateX(-50%);z-index:20;">
+              <div class="dmx-grid">
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:0"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:1"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:1"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:6"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:6"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:7"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:6"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:7"></div>
+                <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:8"></div>
+              </div>
+            </div>
+            <!-- END DOT MATRIX -->
+            <div class="relative aspect-[4/5] rounded-2xl overflow-hidden border border-surface-border/30 shadow-surface img-placeholder" style="margin-top:60px;">
               <div class="absolute inset-0 flex items-center justify-center">
                 <div class="text-center p-6">
                   <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gold/10 flex items-center justify-center animate-float">
