@@ -720,7 +720,7 @@
           init: function() {
             this.slides.forEach(function(slide, i) {
               if (i !== this.activeIndex) {
-                slide.style.opacity = '0';
+                slide.style.opacity = '0.35';
                 slide.style.pointerEvents = 'none';
               }
             }.bind(this));
@@ -731,12 +731,12 @@
                 slide.style.opacity = '1';
                 slide.style.pointerEvents = 'auto';
               } else {
-                slide.style.opacity = '0';
+                slide.style.opacity = '0.35';
                 slide.style.pointerEvents = 'none';
               }
             }.bind(this));
-          },
-        },
+          }
+        }
       });
     });
   </script>
