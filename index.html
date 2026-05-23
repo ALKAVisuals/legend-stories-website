@@ -714,10 +714,11 @@
         effect: 'cards',
         grabCursor: true,
         cardsEffect: {
-          perSlideOffset: 12,
-          perSlideRotate: 4,
+          perSlideOffset: 8,
+          perSlideRotate: 2,
           rotate: true,
           slideShadows: false,
+          perSlideClip: false,
         },
         loop: false,
         autoplay: {
@@ -734,68 +735,26 @@
         },
         on: {
           init: function() {
-            var total = this.slides.length;
-            var active = this.activeIndex;
             this.slides.forEach(function(slide, i) {
-              if (i === active) {
-                slide.style.opacity = '1';
-                slide.style.pointerEvents = 'auto';
-                slide.style.filter = 'none';
-              } else if (i === active + 1) {
-                slide.style.opacity = '0.25';
+              slide.style.zIndex = String(100 - Math.abs(i - this.activeIndex));
+              if (i !== this.activeIndex) {
                 slide.style.pointerEvents = 'none';
-                slide.style.filter = 'blur(1px)';
-              } else if (i === active + 2) {
-                slide.style.opacity = '0.12';
-                slide.style.pointerEvents = 'none';
-                slide.style.filter = 'blur(3px)';
-              } else if (i === active - 1) {
-                slide.style.opacity = '0.25';
-                slide.style.pointerEvents = 'none';
-                slide.style.filter = 'blur(1px)';
-              } else if (i === active - 2) {
-                slide.style.opacity = '0.12';
-                slide.style.pointerEvents = 'none';
-                slide.style.filter = 'blur(3px)';
               } else {
-                slide.style.opacity = '0';
-                slide.style.pointerEvents = 'none';
-                slide.style.filter = 'blur(6px)';
+                slide.style.pointerEvents = 'auto';
               }
             }.bind(this));
           },
           slideChange: function() {
-            var total = this.slides.length;
-            var active = this.activeIndex;
             this.slides.forEach(function(slide, i) {
-              if (i === active) {
-                slide.style.opacity = '1';
-                slide.style.pointerEvents = 'auto';
-                slide.style.filter = 'none';
-              } else if (i === active + 1) {
-                slide.style.opacity = '0.25';
+              slide.style.zIndex = String(100 - Math.abs(i - this.activeIndex));
+              if (i !== this.activeIndex) {
                 slide.style.pointerEvents = 'none';
-                slide.style.filter = 'blur(1px)';
-              } else if (i === active + 2) {
-                slide.style.opacity = '0.12';
-                slide.style.pointerEvents = 'none';
-                slide.style.filter = 'blur(3px)';
-              } else if (i === active - 1) {
-                slide.style.opacity = '0.25';
-                slide.style.pointerEvents = 'none';
-                slide.style.filter = 'blur(1px)';
-              } else if (i === active - 2) {
-                slide.style.opacity = '0.12';
-                slide.style.pointerEvents = 'none';
-                slide.style.filter = 'blur(3px)';
               } else {
-                slide.style.opacity = '0';
-                slide.style.pointerEvents = 'none';
-                slide.style.filter = 'blur(6px)';
+                slide.style.pointerEvents = 'auto';
               }
             }.bind(this));
           }
-      });
+        });
     });
   </script>
 </body>
