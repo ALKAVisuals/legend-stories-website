@@ -81,7 +81,7 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #c9a84c;
+  background: #2a8a4a;
   border: 2px solid #0a0a0a;
   cursor: pointer;
   transition: transform 0.15s ease;
@@ -95,7 +95,7 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #c9a84c;
+  background: #2a8a4a;
   border: 2px solid #0a0a0a;
   cursor: pointer;
 }
@@ -132,7 +132,7 @@
 
 .crp-color-swatch .swatch:hover {
   transform: scale(1.05);
-  border-color: #c9a84c;
+  border-color: #2a8a4a;
 }
 
 .crp-color-swatch .label {
@@ -166,9 +166,9 @@
 }
 
 .crp-theme-btn.active {
-  border-color: #c9a84c;
+  border-color: #2a8a4a;
   background: rgba(201, 168, 76, 0.1);
-  color: #c9a84c;
+  color: #2a8a4a;
 }
 
 /* API table */
@@ -189,7 +189,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #c9a84c;
+  color: #2a8a4a;
   font-size: 0.625rem;
 }
 

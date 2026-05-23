@@ -16,7 +16,7 @@
 }
 .skiper-hover-expand:hover {
   transform: scale(1.03);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(c9,a8,4c, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(42, 138, 74, 0.1);
 }
 
 /* --- SKIPER48: Card Swipe Carousel --- */

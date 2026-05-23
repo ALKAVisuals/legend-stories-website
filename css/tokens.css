@@ -41,8 +41,8 @@
   --color-border-hover: var(--color-gray);
 
   /* === TYPOGRAPHY === */
-  --font-display:   'Bebas Neue', 'Impact', 'Arial Black', sans-serif;
-  --font-heading:   'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+  --font-display:   'Playfair Display', Georgia, serif;
+  --font-heading:   'Inter', 'Segoe UI', system-ui, sans-serif;
   --font-body:      'Inter', 'Segoe UI', system-ui, sans-serif;
   --font-mono:      'JetBrains Mono', 'Fira Code', monospace;
 
