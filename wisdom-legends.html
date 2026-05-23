@@ -70,15 +70,15 @@
         </div>
         <div class="flex items-center gap-3">
           <button id="theme-toggle" class="relative p-2 rounded-lg hover:bg-surface-light/50 transition-colors duration-200" aria-label="Toggle dark/light mode">
-            <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>
-            <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>
+            <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>
+            <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
           </button>
           <button id="cart-btn" class="relative p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Cart">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
             <span id="cart-count" class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-mint text-void text-[10px] font-bold rounded-full flex items-center justify-center opacity-0 transition-opacity duration-300">0</span>
           </button>
           <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Menu openen" aria-expanded="false">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
           </button>
         </div>
       </div>
@@ -98,17 +98,133 @@
   </header>
 
   <main>
-    <section class="py-20 md:py-32 relative overflow-hidden">
+    <!-- HERO — Coming Soon -->
+    <section class="py-20 md:py-32 relative overflow-hidden min-h-[70vh] flex items-center">
       <div class="absolute inset-0 bg-gradient-to-br from-void via-surface to-void"></div>
       <div class="absolute top-1/4 -left-32 w-96 h-96 bg-mint/5 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-mint/[.03] rounded-full blur-3xl"></div>
       <div class="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <!-- DOT MATRIX LOADER -->
+        <div class="flex justify-center mb-8">
+          <div class="dmx-root dmx-bloom dmx-bloom-halo" style="--dmx-dot-fill:#2a8a4a;--dmx-cycle:2000ms;--dmx-speed:0.8;--dmx-dot-size:3px;width:60px;height:60px;">
+            <div class="dmx-grid">
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:0"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:1"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:1"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:6"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:6"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:7"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:6"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:7"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:8"></div>
+            </div>
+          </div>
+        </div>
+        <!-- END DOT MATRIX -->
         <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-mint/15 bg-mint/[.04] mb-6">
           <span class="w-1.5 h-1.5 rounded-full bg-mint animate-pulse"></span>
           <span class="text-[11px] text-mint font-medium tracking-widest uppercase">Coming Soon</span>
         </div>
         <h1 class="section-heading mb-4">Wisdom <span class="text-gradient-mint">Legends</span></h1>
-        <p class="section-subheading mx-auto mb-8">The collection is being crafted. Wisdom takes time. Check back soon.</p>
-        <a href="shop.html" class="btn-primary">Browse all collections</a>
+        <p class="section-subheading mx-auto mb-4">The collection is being crafted. Wisdom takes time.</p>
+        <p class="text-text-muted text-sm mb-8 max-w-md mx-auto">Sign up for updates and be the first to know when the Wisdom Legends drop.</p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <a href="shop.html" class="btn-primary">Browse current collection</a>
+          <a href="index.html#contact" class="btn-secondary">Get notified</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEASER GRID — 3 placeholder cards -->
+    <section class="py-16 md:py-24 bg-surface/20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-10">
+          <h2 class="section-heading mb-3">Sneak <span class="text-gradient-mint">peek</span></h2>
+          <p class="section-subheading mx-auto">Three designs. More coming.</p>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <article class="group rounded-2xl overflow-hidden border border-surface-border/30 bg-surface/50">
+            <div class="aspect-[4/3] bg-gradient-to-br from-surface-light/50 to-surface flex items-center justify-center relative">
+              <div class="text-center p-6">
+                <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-mint/5 flex items-center justify-center animate-float">
+                  <span class="text-3xl">📜</span>
+                </div>
+                <p class="text-text-muted text-xs tracking-wide">Design #1 — TBA</p>
+              </div>
+              <div class="absolute inset-0 bg-gradient-to-t from-surface/80 via-transparent to-transparent"></div>
+              <div class="absolute top-3 right-3 px-2 py-0.5 rounded bg-mint/10 text-mint text-[9px] font-bold tracking-widest uppercase">Soon</div>
+            </div>
+            <div class="p-6">
+              <p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">Wisdom Legends</p>
+              <h3 class="font-display text-xl font-bold mb-2 text-text-primary/60">Ancient Knowledge</h3>
+              <p class="text-text-muted text-sm mb-4">Where philosophy meets the wall. Timeless truths in matte vinyl.</p>
+              <div class="flex items-center justify-between">
+                <span class="font-display text-xl font-bold text-text-muted/40">€49,95</span>
+                <span class="text-text-muted/40 text-sm">Coming soon</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="group rounded-2xl overflow-hidden border border-surface-border/30 bg-surface/50">
+            <div class="aspect-[4/3] bg-gradient-to-br from-surface-light/50 to-surface flex items-center justify-center relative">
+              <div class="text-center p-6">
+                <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-mint/5 flex items-center justify-center animate-float" style="animation-delay: 0.5s;">
+                  <span class="text-3xl">🧠</span>
+                </div>
+                <p class="text-text-muted text-xs tracking-wide">Design #2 — TBA</p>
+              </div>
+              <div class="absolute inset-0 bg-gradient-to-t from-surface/80 via-transparent to-transparent"></div>
+              <div class="absolute top-3 right-3 px-2 py-0.5 rounded bg-mint/10 text-mint text-[9px] font-bold tracking-widest uppercase">Soon</div>
+            </div>
+            <div class="p-6">
+              <p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">Wisdom Legends</p>
+              <h3 class="font-display text-xl font-bold mb-2 text-text-primary/60">Mind Over Matter</h3>
+              <p class="text-text-muted text-sm mb-4">The sharpest weapon is a trained mind. Wear it on your wall.</p>
+              <div class="flex items-center justify-between">
+                <span class="font-display text-xl font-bold text-text-muted/40">€49,95</span>
+                <span class="text-text-muted/40 text-sm">Coming soon</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="group rounded-2xl overflow-hidden border border-surface-border/30 bg-surface/50">
+            <div class="aspect-[4/3] bg-gradient-to-br from-surface-light/50 to-surface flex items-center justify-center relative">
+              <div class="text-center p-6">
+                <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-mint/5 flex items-center justify-center animate-float" style="animation-delay: 1s;">
+                  <span class="text-3xl">⚖️</span>
+                </div>
+                <p class="text-text-muted text-xs tracking-wide">Design #3 — TBA</p>
+              </div>
+              <div class="absolute inset-0 bg-gradient-to-t from-surface/80 via-transparent to-transparent"></div>
+              <div class="absolute top-3 right-3 px-2 py-0.5 rounded bg-mint/10 text-mint text-[9px] font-bold tracking-widest uppercase">Soon</div>
+            </div>
+            <div class="p-6">
+              <p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">Wisdom Legends</p>
+              <h3 class="font-display text-xl font-bold mb-2 text-text-primary/60">The Balance</h3>
+              <p class="text-text-muted text-sm mb-4">Between chaos and order lies wisdom. Find your center.</p>
+              <div class="flex items-center justify-between">
+                <span class="font-display text-xl font-bold text-text-muted/40">€49,95</span>
+                <span class="text-text-muted/40 text-sm">Coming soon</span>
+              </div>
+            </div>
+          </article>
+        </div>
       </div>
     </section>
   </main>
