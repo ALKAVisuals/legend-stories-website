@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sport Legends wall stickers — Unstoppable Will, Peak Performer, Lion's Pride, Luxury Standard, Mamba Mindset, Pursuit of Greatness, Unforgettable Roots. Matte vinyl murals inspired by athletic spirit.">
+  <title>Sport Legends — Legend Stories</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/shared.css">
+  <link rel="stylesheet" href="css/matrix.css">
+  <link rel="stylesheet" href="css/metal-fx.css">
+  <link rel="stylesheet" href="css/skipper.css">
+  <link rel="stylesheet" href="css/axis.css">
+  <link rel="stylesheet" href="css/componentry.css">
+  <link rel="stylesheet" href="css/axis-patterns.css">
+  <link rel="stylesheet" href="css/axis-upgrades.css">
+  <link rel="stylesheet" href="css/skiper-upgrades.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'void': '#0B0B0C', 'surface': '#161618', 'surface-light': '#1E1E22',
+            'surface-border': '#2A2A30', 'mint': '#2a8a4a', 'mint-light': '#3da86a',
+            'mint-dark': '#1e6b38', 'text-primary': '#F5F5F7', 'text-secondary': '#A0A0B0',
+            'text-muted': '#6B6B7B',
+          },
+          fontFamily: { 'display': ['"Playfair Display"', 'Georgia', 'serif'], 'body': ['"Inter"', 'system-ui', 'sans-serif'] },
+          animation: { 'fade-in': 'fadeIn 0.6s ease-out forwards', 'slide-up': 'slideUp 0.5s ease-out forwards', 'pulse-mint': 'pulseMint 2s ease-in-out infinite', 'float': 'float 6s ease-in-out infinite' },
+          keyframes: {
+            fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+            slideUp: { '0%': { opacity: '0', transform: 'translateY(30px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+            pulseMint: { '0%, 100%': { boxShadow: '0 0 0 0 rgba(42, 138, 74, 0.4)' }, '50%': { boxShadow: '0 0 20px 5px rgba(42, 138, 74, 0.2)' } },
+            float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
+          },
+          backgroundImage: { 'gradient-mint': 'linear-gradient(135deg, #2a8a4a 0%, #3da86a 50%, #2a8a4a 100%)' },
+          boxShadow: { 'mint': '0 0 30px rgba(42, 138, 74, 0.15)', 'mint-lg': '0 0 60px rgba(42, 138, 74, 0.2)', 'surface': '0 4px 24px rgba(0, 0, 0, 0.4)' },
+        },
+      },
+    }
+  </script>
+</head>
+<body class="bg-void text-text-primary font-body">
+  <div class="w-full bg-gradient-mint text-void text-center py-2 px-4 text-xs sm:text-sm font-semibold tracking-wide" role="banner">
+    <p>🔥 New drop: Sport Legends collection — use <span class="font-bold">LEGEND10</span> for 10% off</p>
+  </div>
+  <header class="sticky top-0 z-50 glass border-b border-surface-border/30" role="banner">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
+      <div class="flex items-center justify-between h-16 md:h-20">
+        <a href="index.html" class="flex items-center gap-2 group" aria-label="Legend Stories Home">
+          <div class="w-9 h-9 rounded-lg bg-gradient-mint flex items-center justify-center"><span class="text-void font-display font-bold text-lg">L</span></div>
+          <span class="font-display text-xl font-bold text-text-primary group-hover:text-mint transition-colors">Legend<span class="text-mint">Stories</span></span>
+        </a>
+        <div class="hidden md:flex items-center gap-8">
+          <a href="index.html#portfolio" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Portfolio</a>
+          <a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Shop</a>
+          <a href="music-legends.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Music Legends</a>
+          <a href="sport-legends.html" class="text-sm text-mint font-medium">Sport Legends</a>
+          <a href="combat-legends.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Combat Legends</a>
+          <a href="wisdom-legends.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Wisdom Legends</a>
+          <a href="about.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">About</a>
+          <a href="index.html#contact" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Contact</a>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="theme-toggle" class="relative p-2 rounded-lg hover:bg-surface-light/50 transition-colors duration-200" aria-label="Toggle dark/light mode">
+            <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>
+            <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
+          </button>
+          <button id="cart-btn" class="relative p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Cart">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+            <span id="cart-count" class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-mint text-void text-[10px] font-bold rounded-full flex items-center justify-center opacity-0 transition-opacity duration-300">0</span>
+          </button>
+          <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Menu openen" aria-expanded="false">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="mobile-menu" class="md:hidden" style="display:none;">
+        <div class="flex flex-col gap-3 pb-4 border-t border-surface-border/30 mt-2 pt-4">
+          <a href="index.html#portfolio" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Portfolio</a>
+          <a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Shop</a>
+          <a href="music-legends.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Music Legends</a>
+          <a href="sport-legends.html" class="text-sm text-mint font-medium py-2">Sport Legends</a>
+          <a href="combat-legends.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Combat Legends</a>
+          <a href="wisdom-legends.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Wisdom Legends</a>
+          <a href="about.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">About</a>
+          <a href="index.html#contact" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Contact</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <section class="py-16 md:py-24 relative overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-br from-void via-surface to-void"></div>
+      <div class="absolute top-1/4 -left-32 w-96 h-96 bg-mint/5 rounded-full blur-3xl"></div>
+      <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div class="flex justify-center mb-6">
+          <div class="dmx-root dmx-bloom dmx-bloom-halo" style="--dmx-dot-fill:#2a8a4a;--dmx-cycle:2000ms;--dmx-speed:0.8;--dmx-dot-size:3px;width:60px;height:60px;">
+            <div class="dmx-grid">
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:0"></div><div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:1"></div><div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div><div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div><div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:1"></div><div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div><div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div><div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div><div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
+            </div>
+          </div>
+        </div>
+        <h1 class="section-heading mb-4">Sport <span class="text-gradient-mint">Legends</span></h1>
+        <p class="section-subheading mx-auto">7 designs. Play hard, stay mint.</p>
+      </div>
+    </section>
+    <section class="py-12 md:py-16" aria-label="Sport Legends Products">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Product cards – each follows same pattern -->
+          <article class="product-card group rounded-2xl overflow-hidden border border-surface-border/50 card-hover bg-surface skiper-hover-expand" data-category="sport">
+            <div class="aspect-[4/3] relative overflow-hidden"><img src="media/stikkers/2026/batch%203/Sport%20Legends/unstoppable-will-sport-legend-mural.png" alt="Unstoppable Will — Sport Legend Wall Sticker" class="w-full h-full object-cover" loading="lazy"></div>
+            <div class="p-6"><p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">Sport Legends</p><h3 class="font-display text-xl font-bold mb-2 group-hover:text-mint transition-colors">Unstoppable Will</h3><p class="text-text-secondary text-sm mb-4">Champions are made when nobody is watching.</p><div class="flex items-center justify-between"><span class="font-display text-xl font-bold">€49,95</span><button class="btn-primary text-sm !px-4 !py-2 add-to-cart-btn" data-name="Unstoppable Will Sport" data-price="49.95">Add to cart</button></div></div>
+          </article>
+
+          <article class="product-card group rounded-2xl overflow-hidden border border-surface-border/50 card-hover bg-surface skiper-hover-expand" data-category="sport">
+            <div class="aspect-[4/3] relative overflow-hidden"><img src="media/stikkers/2026/batch%203/Sport%20Legends/peak-performer-sport-legend-mural.png" alt="The Peak Performer — Sport Legend Wall Sticker" class="w-full h-full object-cover" loading="lazy"></div>
+            <div class="p-6"><p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">Sport Legends</p><h3 class="font-display text-xl font-bold mb-2 group-hover:text-mint transition-colors">The Peak Performer</h3><p class="text-text-secondary text-sm mb-4">Maximum output. Every single day.</p><div class="flex items-center justify-between"><span class="font-display text-xl font-bold">€49,95</span><button class="btn-primary text-sm !px-4 !py-2 add-to-cart-btn" data-name="The Peak Performer" data-price="49.95">Add to cart</button></div></div>
+          </article>
+
+          <article class="product-card group rounded-2xl overflow-hidden border border-surface-border/50 card-hover bg-surface skiper-hover-expand" data-category="sport">
+            <div class="aspect-[4/3] relative overflow-hidden"><img src="media/stikkers/2026/batch%203/Sport%20Legends/lions-pride-sport-legend-mural.png" alt="The Lion's Pride — Sport Legend Wall Sticker" class="w-full h-full object-cover" loading="lazy"></div>
+            <div class="p-6"><p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">Sport Legends</p><h3 class="font-display text-xl font-bold mb-2 group-hover:text-mint transition-colors">The Lion's Pride</h3><p class="text-text-secondary text-sm mb-4">Lead the pack. Roar louder than the rest.</p><div class="flex items-center justify-between"><span class="font-display text-xl font-bold">€49,95</span><button class="btn-primary text-sm !px-4 !py-2 add-to-cart-btn" data-name="The Lion's Pride" data-price="49.95">Add to cart</button></div></div>
+          </article>
+
+          <article class="product-card group rounded-2xl overflow-hidden border border-surface-border/50 card-hover bg-surface skiper-hover-expand" data-category="sport">
+            <div class="aspect-[4/3] relative overflow-hidden"><img src="media/stikkers/2026/batch%203/Sport%20Legends/football-luxury-performance-legend-mural.png" alt="The Luxury Standard — Sport Legend Wall Sticker" class="w-full h-full object-cover" loading="lazy"></div>
+            <div class="p-6"><p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">Sport Legends</p><h3 class="font-display text-xl font-bold mb-2 group-hover:text-mint transition-colors">The Luxury Standard</h3><p class="text-text-secondary text-sm mb-4">Elite performance. Premium results.</p><div class="flex items-center justify-between"><span class="font-display text-xl font-bold">€49,95</span><button class="btn-primary text-sm !px-4 !py-2 add-to-cart-btn" data-name="The Luxury Standard" data-price="49.95">Add to cart</button></div></div>
+          </article>
+
+          <article class="product-card group rounded-2xl overflow-hidden border border-surface-border/50 card-hover bg-surface skiper-hover-expand" data-category="sport">
+            <div class="aspect-[4/3] relative overflow-hidden"><img src="media/stikkers/2026/batch%203/Sport%20Legends/mamba-mindset-sport-legend-mural.png" alt="Mamba Mindset — Sport Legend Wall Sticker" class="w-full h-full object-cover" loading="lazy"></div>
+            <div class="p-6"><p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">Sport Legends</p><h3 class="font-display text-xl font-bold mb-2 group-hover:text-mint transition-colors">Mamba Mindset</h3><p class="text-text-secondary text-sm mb-4">Relentless focus. Killer instinct. No mercy.</p><div class="flex items-center justify-between"><span class="font-display text-xl font-bold">€49,95</span><button class="btn-primary text-sm !px-4 !py-2 add-to-cart-btn" data-name="Mamba Mindset" data-price="49.95">Add to cart</button></div></div>
+          </article>
+
+          <article class="product-card group rounded-2xl overflow-hidden border border-surface-border/50 card-hover bg-surface skiper-hover-expand" data-category="sport">
+            <div class="aspect-[4/3] relative overflow-hidden"><img src="media/stikkers/2026/batch%203/Sport%20Legends/pursuit-greatness-sport-legend-mural.png" alt="Pursuit of Greatness — Sport Legend Wall Sticker" class="w-full h-full object-cover" loading="lazy"></div>
+            <div class="p-6"><p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">Sport Legends</p><h3 class="font-display text-xl font-bold mb-2 group-hover:text-mint transition-colors">Pursuit of Greatness</h3><p class="text-text-secondary text-sm mb-4">The grind never stops. Neither do you.</p><div class="flex items-center justify-between"><span class="font-display text-xl font-bold">€49,95</span><button class="btn-primary text-sm !px-4 !py-2 add-to-cart-btn" data-name="Pursuit of Greatness" data-price="49.95">Add to cart</button></div></div>
+          </article>
+
+          <article class="product-card group rounded-2xl overflow-hidden border border-surface-border/50 card-hover bg-surface skiper-hover-expand" data-category="sport">
+            <div class="aspect-[4/3] relative overflow-hidden"><img src="media/stikkers/2026/batch%203/Sport%20Legends/unforgettable-roots-sport-legend-mural.png" alt="Unforgettable Roots — Sport Legend Wall Sticker" class="w-full h-full object-cover" loading="lazy"></div>
+            <div class="p-6"><p class="text-mint text-xs font-medium uppercase tracking-wide mb-1">Sport Legends</p><h3 class="font-display text-xl font-bold mb-2 group-hover:text-mint transition-colors">Unforgettable Roots</h3><p class="text-text-secondary text-sm mb-4">Where you come from. Where you are going.</p><div class="flex items-center justify-between"><span class="font-display text-xl font-bold">€49,95</span><button class="btn-primary text-sm !px-4 !py-2 add-to-cart-btn" data-name="Unforgettable Roots" data-price="49.95">Add to cart</button></div></div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="border-t border-surface-border/30 bg-surface/20" role="contentinfo">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+        <div class="sm:col-span-2 lg:col-span-1">
+          <a href="index.html" class="flex items-center gap-2 mb-4"><div class="w-8 h-8 rounded-lg bg-gradient-mint flex items-center justify-center"><span class="text-void font-display font-bold text-sm">L</span></div><span class="font-display text-lg font-bold">Legend<span class="text-mint">Stories</span></span></a>
+          <p class="text-text-secondary text-sm mb-4">Matte vinyl wall stickers inspired by sport, combat, music and more. Made in the Netherlands.</p>
+        </div>
+        <div><h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Shop</h4><ul class="space-y-2"><li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">All murals</a></li><li><a href="combat-legends.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Combat Legends</a></li><li><a href="music-legends.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Music Legends</a></li><li><a href="sport-legends.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Sport Legends</a></li><li><a href="wisdom-legends.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Wisdom Legends</a></li></ul></div>
+        <div><h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Help</h4><ul class="space-y-2"><li><a href="index.html#contact" class="text-sm text-text-secondary hover:text-mint transition-colors">Contact</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Shipping</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Returns</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">FAQ</a></li></ul></div>
+        <div><h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Company</h4><ul class="space-y-2"><li><a href="about.html" class="text-sm text-text-secondary hover:text-mint transition-colors">About</a></li><li><a href="portfolio.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Portfolio</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Privacy</a></li></ul></div>
+      </div>
+      <div class="pt-8 border-t border-surface-border/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p class="text-xs text-text-muted">© 2026 Legend Stories. All rights reserved.</p>
+        <div class="flex items-center gap-4"><span class="text-xs text-text-muted">Payments:</span><div class="flex gap-2"><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">iDEAL</div><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">Visa</div><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">Mastercard</div><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">PayPal</div></div></div>
+      </div>
+    </div>
+  </footer>
+  <script src="js/componentry.js"></script>
+  <script src="js/skipper.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
