@@ -393,6 +393,13 @@
     <!-- SHOP PREVIEW — Swiper Card Swipe Carousel (All 20 Batch 3 Products) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
     <style>
+      .legend-card-swiper { overflow: hidden !important; }
+      .legend-card-swiper .swiper-wrapper { align-items: stretch; }
+      .legend-card-swiper .swiper-slide {
+        transform-style: preserve-3d;
+        backface-visibility: hidden;
+        overflow: hidden;
+      }
       .legend-card-swiper::before {
         content: '';
         position: absolute;
@@ -403,9 +410,6 @@
         background: radial-gradient(ellipse at center, rgba(42,138,74,0.12) 0%, transparent 70%);
         z-index: 0;
         pointer-events: none;
-      }
-      .legend-card-swiper .swiper-slide {
-        z-index: 1;
       }
     </style>
     <section class="py-16 md:py-24 bg-surface/20" aria-label="Shop Preview">
