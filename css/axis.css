@@ -27,17 +27,17 @@
 
 /* AXIS gradient text */
 .axis-gradient-text {
-  background: linear-gradient(90deg, #818cf8, #c084fc);
+  background: linear-gradient(90deg, #2a8a4a, #3da86a);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* AXIS button styles */
+/* AXIS button styles — Legend Stories mint green */
 .axis-btn-primary {
-  background: var(--axis-indigo-500);
+  background: linear-gradient(135deg, #2a8a4a, #3da86a);
   color: #fff;
-  border: 1px solid var(--axis-indigo-500);
+  border: 1px solid #2a8a4a;
   border-radius: 0.5rem;
   padding: 0.625rem 1.5rem;
   font-weight: 600;
@@ -49,15 +49,15 @@
   justify-content: center;
 }
 .axis-btn-primary:hover {
-  background: #4f46e5;
-  border-color: #4f46e5;
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  background: #3da86a;
+  border-color: #3da86a;
+  box-shadow: 0 0 20px rgba(42, 138, 74, 0.3);
 }
 
 .axis-btn-outline {
   background: transparent;
-  color: var(--axis-indigo-300);
-  border: 1px solid rgba(129, 140, 248, 0.4);
+  color: #2a8a4a;
+  border: 1px solid rgba(42, 138, 74, 0.4);
   border-radius: 0.5rem;
   padding: 0.625rem 1.5rem;
   font-weight: 600;
@@ -69,8 +69,8 @@
   justify-content: center;
 }
 .axis-btn-outline:hover {
-  border-color: var(--axis-indigo-300);
-  background: rgba(99, 102, 241, 0.1);
+  border-color: #2a8a4a;
+  background: rgba(42, 138, 74, 0.1);
 }
 
 /* AXIS card */

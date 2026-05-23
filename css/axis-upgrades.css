@@ -109,11 +109,11 @@
   border: 1px solid transparent;
 }
 .axis-btn-primary {
-  background: linear-gradient(135deg, #2a8a4a, #E8C547);
-  color: #0a0a0b;
+  background: linear-gradient(135deg, #2a8a4a, #3da86a);
+  color: #fff;
 }
 .axis-btn-primary:hover {
-  box-shadow: 0 0 20px rgba(c9,a8,4c, 0.3);
+  box-shadow: 0 0 20px rgba(42, 138, 74, 0.3);
   transform: translateY(-1px);
 }
 .axis-btn-ghost {
