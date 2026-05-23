@@ -701,7 +701,7 @@
           perSlideOffset: 12,
           perSlideRotate: 4,
           rotate: true,
-          slideShadows: true,
+          slideShadows: false,
         },
         loop: false,
         autoplay: {
@@ -715,6 +715,27 @@
         navigation: {
           prevEl: '.swiper-button-prev',
           nextEl: '.swiper-button-next',
+        },
+        on: {
+          init: function() {
+            this.slides.forEach(function(slide, i) {
+              if (i !== this.activeIndex) {
+                slide.style.opacity = '0';
+                slide.style.pointerEvents = 'none';
+              }
+            }.bind(this));
+          },
+          slideChange: function() {
+            this.slides.forEach(function(slide, i) {
+              if (i === this.activeIndex) {
+                slide.style.opacity = '1';
+                slide.style.pointerEvents = 'auto';
+              } else {
+                slide.style.opacity = '0';
+                slide.style.pointerEvents = 'none';
+              }
+            }.bind(this));
+          },
         },
       });
     });
