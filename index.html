@@ -392,6 +392,22 @@
 
     <!-- SHOP PREVIEW — Swiper Card Swipe Carousel (All 20 Batch 3 Products) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+    <style>
+      .legend-card-swiper::before {
+        content: '';
+        position: absolute;
+        bottom: -20px;
+        left: 5%;
+        right: 5%;
+        height: 40px;
+        background: radial-gradient(ellipse at center, rgba(42,138,74,0.12) 0%, transparent 70%);
+        z-index: 0;
+        pointer-events: none;
+      }
+      .legend-card-swiper .swiper-slide {
+        z-index: 1;
+      }
+    </style>
     <section class="py-16 md:py-24 bg-surface/20" aria-label="Shop Preview">
       <div class="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
         <div class="text-center mb-10 reveal">
@@ -720,7 +736,7 @@
           init: function() {
             this.slides.forEach(function(slide, i) {
               if (i !== this.activeIndex) {
-                slide.style.opacity = '0.35';
+                slide.style.opacity = '0';
                 slide.style.pointerEvents = 'none';
               }
             }.bind(this));
@@ -731,7 +747,7 @@
                 slide.style.opacity = '1';
                 slide.style.pointerEvents = 'auto';
               } else {
-                slide.style.opacity = '0.35';
+                slide.style.opacity = '0';
                 slide.style.pointerEvents = 'none';
               }
             }.bind(this));
