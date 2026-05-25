@@ -520,16 +520,18 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
 /* ── Card ── */
 .social-proof-card {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: 20px;
   overflow: hidden;
+  border-radius: 20px;
   background: linear-gradient(160deg, rgba(22,22,24,.97) 0%, rgba(14,14,16,1) 100%);
   border: 1px solid rgba(42, 42, 48, .2);
   transition: all .45s cubic-bezier(.4,0,.2,1);
-  padding: 2rem 1.5rem;
+}
+.social-proof-card .iphone-mockup {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  aspect-ratio: 9/16;
+  border-radius: 44px;
 }
 .social-proof-card:hover {
   border-color: rgba(42, 138, 74, .3);
@@ -543,8 +545,9 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
 /* ── iPhone Mockup ── */
 .iphone-mockup {
   position: relative;
+  display: block;
   width: 320px;
-  height: 600px;
+  height: 640px;
   background: #0a0a0c;
   border-radius: 44px;
   border: 5px solid #1a1a1e;
@@ -557,6 +560,8 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
   overflow: hidden;
   z-index: 2;
   flex-shrink: 0;
+  text-decoration: none;
+  color: inherit;
 }
 
 /* Dynamic Island */
@@ -781,73 +786,6 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
 }
 .social-proof-card:hover::before {
   opacity: 1;
-}
-
-/* ── Video Modal ── */
-.video-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-}
-.video-modal.active {
-  display: flex;
-}
-.video-modal-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-.video-modal-content {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  max-width: 380px;
-  max-height: 90vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-.video-modal-close {
-  position: absolute;
-  top: -48px;
-  right: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255,255,255,.1);
-  border: 1px solid rgba(255,255,255,.15);
-  color: #fff;
-  font-size: 24px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all .3s ease;
-  z-index: 3;
-}
-.video-modal-close:hover {
-  background: rgba(255,255,255,.2);
-  transform: scale(1.1);
-}
-.video-modal-embed {
-  position: relative;
-  background: #000;
-  border-radius: 16px;
-  overflow: visible;
-  min-height: 500px;
-}
-.video-modal-embed iframe,
-.video-modal-embed blockquote {
-  width: 100% !important;
-  border: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
 }
 
 /* Light mode */

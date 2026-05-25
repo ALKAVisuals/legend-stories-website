@@ -606,7 +606,7 @@
 
           <!-- Card 1: TikTok — Logan Paul vs Bradley Martyn -->
           <div class="social-proof-card">
-            <div class="iphone-mockup" onclick="openVideoModal('tiktok','7502965493687405846','Logan Paul vs Bradley Martyn')" role="button" tabindex="0">
+            <a href="https://www.tiktok.com/@legendstories_official/video/7502965493687405846" target="_blank" rel="noopener noreferrer" class="iphone-mockup">
               <div class="iphone-screen" style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);">
                 <div class="iphone-play-overlay">
                   <div class="iphone-play-btn">
@@ -619,12 +619,12 @@
                 </div>
               </div>
               <div class="iphone-home-indicator"></div>
-            </div>
+            </a>
           </div>
 
           <!-- Card 2: Instagram — Post 1 -->
           <div class="social-proof-card">
-            <div class="iphone-mockup" onclick="openVideoModal('instagram','DMYi2t7sIeO','Room Transformation')" role="button" tabindex="0">
+            <a href="https://www.instagram.com/p/DMYi2t7sIeO/?hl=en" target="_blank" rel="noopener noreferrer" class="iphone-mockup">
               <div class="iphone-screen" style="background:linear-gradient(135deg,#2e1a2e 0%,#1a1a2e 50%,#2d1b69 100%);">
                 <div class="iphone-play-overlay">
                   <div class="iphone-play-btn">
@@ -637,12 +637,12 @@
                 </div>
               </div>
               <div class="iphone-home-indicator"></div>
-            </div>
+            </a>
           </div>
 
           <!-- Card 3: TikTok — 6ix9ine -->
           <div class="social-proof-card">
-            <div class="iphone-mockup" onclick="openVideoModal('tiktok','7469438117485858070','6ix9ine: The Day He Snitched')" role="button" tabindex="0">
+            <a href="https://www.tiktok.com/@legendstories_official/video/7469438117485858070" target="_blank" rel="noopener noreferrer" class="iphone-mockup">
               <div class="iphone-screen" style="background:linear-gradient(135deg,#1a1a1a 0%,#2a1a1a 50%,#1a2a1a 100%);">
                 <div class="iphone-play-overlay">
                   <div class="iphone-play-btn">
@@ -655,12 +655,12 @@
                 </div>
               </div>
               <div class="iphone-home-indicator"></div>
-            </div>
+            </a>
           </div>
 
           <!-- Card 4: Instagram — Post 2 -->
           <div class="social-proof-card">
-            <div class="iphone-mockup" onclick="openVideoModal('instagram','DFlGEDzsthi','Behind the Scenes')" role="button" tabindex="0">
+            <a href="https://www.instagram.com/p/DFlGEDzsthi/?hl=en" target="_blank" rel="noopener noreferrer" class="iphone-mockup">
               <div class="iphone-screen" style="background:linear-gradient(135deg,#1a2a2e 0%,#2a1a1e 50%,#1a1a2e 100%);">
                 <div class="iphone-play-overlay">
                   <div class="iphone-play-btn">
@@ -673,27 +673,11 @@
                 </div>
               </div>
               <div class="iphone-home-indicator"></div>
-            </div>
+            </a>
           </div>
 
         </div>
 
-        <!-- Hidden embed containers for auto-play -->
-        <div id="tiktok-embeds" style="position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;">
-          <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@legendstories_official/video/7502965493687405846" data-video-id="7502965493687405846" data-embed-from="oembed"><section></section></blockquote>
-          <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@legendstories_official/video/7469438117485858070" data-video-id="7469438117485858070" data-embed-from="oembed"><section></section></blockquote>
-        </div>
-        <div id="instagram-embeds" style="position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;">
-          <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/DMYi2t7sIeO/?hl=en" data-instgrm-version="14"><section></section></blockquote>
-          <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/DFlGEDzsthi/?hl=en" data-instgrm-version="14"><section></section></blockquote>
-        </div>
-        <div id="videoModal" class="video-modal" onclick="closeVideoModal(event)">
-          <div class="video-modal-overlay"></div>
-          <div class="video-modal-content">
-            <button class="video-modal-close" onclick="closeVideoModal()">&times;</button>
-            <div class="video-modal-embed" id="videoModalEmbed"></div>
-          </div>
-        </div>
         <div class="flex justify-center gap-3 mt-10 reveal">
           <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="btn-secondary text-xs">Follow on TikTok</a>
           <a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="btn-secondary text-xs">Follow on IG</a>
@@ -877,66 +861,5 @@
       });
     });
   </script>
-<script>
-// Load embed scripts early so videos are ready
-(function() {
-  var ts = document.createElement('script');
-  ts.src = 'https://www.tiktok.com/embed.js';
-  ts.async = true;
-  document.body.appendChild(ts);
-  var is = document.createElement('script');
-  is.src = 'https://www.instagram.com/embed.js';
-  is.async = true;
-  document.body.appendChild(is);
-})();
-
-// Video Modal
-function openVideoModal(platform, id, title) {
-  var modal = document.getElementById('videoModal');
-  var embed = document.getElementById('videoModalEmbed');
-  // Find the pre-loaded embed
-  var source;
-  if (platform === 'tiktok') {
-    var tiktoks = document.querySelectorAll('#tiktok-embeds .tiktok-embed');
-    for (var i = 0; i < tiktoks.length; i++) {
-      if (tiktoks[i].getAttribute('data-video-id') === id) {
-        source = tiktoks[i];
-        break;
-      }
-    }
-  } else {
-    var igs = document.querySelectorAll('#instagram-embeds .instagram-media');
-    for (var i = 0; i < igs.length; i++) {
-      if (igs[i].getAttribute('data-instgrm-permalink').indexOf(id) !== -1) {
-        source = igs[i];
-        break;
-      }
-    }
-  }
-  if (source) {
-    embed.innerHTML = '';
-    embed.appendChild(source);
-  }
-  modal.classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
-function closeVideoModal(e) {
-  if (e && e.target !== e.currentTarget && e.target !== document.getElementById('videoModal') && !e.target.classList.contains('video-modal-overlay')) return;
-  var modal = document.getElementById('videoModal');
-  modal.classList.remove('active');
-  document.body.style.overflow = '';
-  // Move embeds back to hidden container
-  var embed = document.getElementById('videoModalEmbed');
-  var tiktokEmbeds = embed.querySelectorAll('.tiktok-embed');
-  var igEmbeds = embed.querySelectorAll('.instagram-media');
-  var tiktokContainer = document.getElementById('tiktok-embeds');
-  var igContainer = document.getElementById('instagram-embeds');
-  tiktokEmbeds.forEach(function(el) { tiktokContainer.appendChild(el); });
-  igEmbeds.forEach(function(el) { igContainer.appendChild(el); });
-}
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeVideoModal();
-});
-</script>
 </body>
 </html>
