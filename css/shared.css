@@ -603,6 +603,110 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
 }
 
 /* ── TikTok embed — scaled to fit mockup ── */
+/* ── Video thumbnail link ── */
+.iphone-video-link {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 5;
+  display: block;
+  text-decoration: none;
+  border-radius: 40px;
+  overflow: hidden;
+}
+@media (min-width: 768px) {
+  .iphone-video-link {
+    border-radius: 44px;
+  }
+}
+
+/* Thumbnail image */
+.iphone-thumb {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  border-radius: 40px;
+}
+@media (min-width: 768px) {
+  .iphone-thumb {
+    border-radius: 44px;
+  }
+}
+
+/* Play button overlay */
+.iphone-play-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.3);
+  transition: background .3s ease;
+  border-radius: 40px;
+}
+.iphone-video-link:hover .iphone-play-overlay {
+  background: rgba(0,0,0,.45);
+}
+@media (min-width: 768px) {
+  .iphone-play-overlay {
+    border-radius: 44px;
+  }
+}
+
+/* Play button circle */
+.iphone-play-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,.4);
+  transition: transform .3s ease, box-shadow .3s ease;
+}
+.iphone-video-link:hover .iphone-play-btn {
+  transform: scale(1.1);
+  box-shadow: 0 6px 30px rgba(0,0,0,.5);
+}
+.iphone-play-btn svg {
+  width: 24px;
+  height: 24px;
+  color: #000;
+  margin-left: 2px;
+}
+
+/* Platform badge bottom-left */
+.iphone-video-info {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 8px;
+  z-index: 6;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  border: 1px solid rgba(255,255,255,.08);
+}
+.iphone-video-info svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ── TikTok embed — scaled to fit mockup ── */
 .iphone-tiktok-wrap {
   position: absolute;
   top: 0; left: 0;
@@ -617,7 +721,6 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
   display: block !important;
   border: none !important;
   background: #000 !important;
-  /* TikTok embeds render at ~325x575 — scale to fit our 320x600 mockup */
   width: 320px !important;
   height: 575px !important;
   max-width: none !important;
