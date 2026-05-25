@@ -523,7 +523,7 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
   display: flex;
   flex-direction: column;
   border-radius: 16px;
-  overflow: hidden;
+  overflow: visible;
   background: linear-gradient(145deg, rgba(22,22,24,.95) 0%, rgba(16,16,18,1) 100%);
   border: 1px solid rgba(42, 42, 48, .25);
   transition: all .45s cubic-bezier(.4,0,.2,1);
@@ -531,7 +531,8 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
 @media (min-width: 768px) {
   .social-proof-card {
     flex-direction: row;
-    min-height: 280px;
+    min-height: 340px;
+    overflow: hidden;
   }
 }
 .social-proof-card:hover {
@@ -548,26 +549,36 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
   position: relative;
   flex: 0 0 auto;
   width: 100%;
-  aspect-ratio: 9 / 16;
-  overflow: hidden;
+  min-height: 320px;
+  overflow: visible;
   background: #000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
 }
 @media (min-width: 768px) {
   .social-proof-embed {
-    width: 200px;
-    flex: 0 0 200px;
-    aspect-ratio: auto;
+    width: 220px;
+    flex: 0 0 220px;
+    min-height: 340px;
     height: 100%;
-    min-height: 280px;
+    overflow: hidden;
   }
 }
 .social-proof-embed iframe,
 .social-proof-embed blockquote {
   width: 100% !important;
-  height: 100% !important;
+  min-height: 320px !important;
   border: none !important;
   margin: 0 !important;
   padding: 0 !important;
+}
+@media (min-width: 768px) {
+  .social-proof-embed iframe,
+  .social-proof-embed blockquote {
+    min-height: 340px !important;
+    height: 100% !important;
+  }
 }
 .social-proof-embed .tiktok-embed,
 .social-proof-embed .instagram-media {
