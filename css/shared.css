@@ -807,7 +807,10 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 400px;
+  max-width: 380px;
+  max-height: 90vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .video-modal-close {
   position: absolute;
@@ -836,7 +839,7 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
   position: relative;
   background: #000;
   border-radius: 16px;
-  overflow: hidden;
+  overflow: visible;
   min-height: 500px;
 }
 .video-modal-embed iframe,

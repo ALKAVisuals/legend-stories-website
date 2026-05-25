@@ -678,7 +678,15 @@
 
         </div>
 
-        <!-- Video Modal -->
+        <!-- Hidden embed containers for auto-play -->
+        <div id="tiktok-embeds" style="position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;">
+          <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@legendstories_official/video/7502965493687405846" data-video-id="7502965493687405846" data-embed-from="oembed"><section></section></blockquote>
+          <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@legendstories_official/video/7469438117485858070" data-video-id="7469438117485858070" data-embed-from="oembed"><section></section></blockquote>
+        </div>
+        <div id="instagram-embeds" style="position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;">
+          <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/DMYi2t7sIeO/?hl=en" data-instgrm-version="14"><section></section></blockquote>
+          <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/DFlGEDzsthi/?hl=en" data-instgrm-version="14"><section></section></blockquote>
+        </div>
         <div id="videoModal" class="video-modal" onclick="closeVideoModal(event)">
           <div class="video-modal-overlay"></div>
           <div class="video-modal-content">
@@ -870,48 +878,62 @@
     });
   </script>
 <script>
+// Load embed scripts early so videos are ready
+(function() {
+  var ts = document.createElement('script');
+  ts.src = 'https://www.tiktok.com/embed.js';
+  ts.async = true;
+  document.body.appendChild(ts);
+  var is = document.createElement('script');
+  is.src = 'https://www.instagram.com/embed.js';
+  is.async = true;
+  document.body.appendChild(is);
+})();
+
 // Video Modal
 function openVideoModal(platform, id, title) {
   var modal = document.getElementById('videoModal');
   var embed = document.getElementById('videoModalEmbed');
-  var html = '';
+  // Find the pre-loaded embed
+  var source;
   if (platform === 'tiktok') {
-    html = '<blockquote class="tiktok-embed" cite="https://www.tiktok.com/@legendstories_official/video/' + id + '" data-video-id="' + id + '" data-embed-from="oembed"><section></section></blockquote>';
+    var tiktoks = document.querySelectorAll('#tiktok-embeds .tiktok-embed');
+    for (var i = 0; i < tiktoks.length; i++) {
+      if (tiktoks[i].getAttribute('data-video-id') === id) {
+        source = tiktoks[i];
+        break;
+      }
+    }
   } else {
-    html = '<blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/' + id + '/?hl=en" data-instgrm-version="14"><section></section></blockquote>';
+    var igs = document.querySelectorAll('#instagram-embeds .instagram-media');
+    for (var i = 0; i < igs.length; i++) {
+      if (igs[i].getAttribute('data-instgrm-permalink').indexOf(id) !== -1) {
+        source = igs[i];
+        break;
+      }
+    }
   }
-  embed.innerHTML = html;
+  if (source) {
+    embed.innerHTML = '';
+    embed.appendChild(source);
+  }
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
-  // Load embed script
-  if (platform === 'tiktok') {
-    if (!window.tiktokEmbedLoaded) {
-      var s = document.createElement('script');
-      s.src = 'https://www.tiktok.com/embed.js';
-      s.async = true;
-      document.body.appendChild(s);
-      window.tiktokEmbedLoaded = true;
-    }
-  } else {
-    if (!window.instagramEmbedLoaded) {
-      var s = document.createElement('script');
-      s.src = 'https://www.instagram.com/embed.js';
-      s.async = true;
-      document.body.appendChild(s);
-      window.instagramEmbedLoaded = true;
-    }
-  }
 }
 function closeVideoModal(e) {
-  if (e && e.target !== e.currentTarget) return;
+  if (e && e.target !== e.currentTarget && e.target !== document.getElementById('videoModal') && !e.target.classList.contains('video-modal-overlay')) return;
   var modal = document.getElementById('videoModal');
   modal.classList.remove('active');
   document.body.style.overflow = '';
-  setTimeout(function() {
-    document.getElementById('videoModalEmbed').innerHTML = '';
-  }, 300);
+  // Move embeds back to hidden container
+  var embed = document.getElementById('videoModalEmbed');
+  var tiktokEmbeds = embed.querySelectorAll('.tiktok-embed');
+  var igEmbeds = embed.querySelectorAll('.instagram-media');
+  var tiktokContainer = document.getElementById('tiktok-embeds');
+  var igContainer = document.getElementById('instagram-embeds');
+  tiktokEmbeds.forEach(function(el) { tiktokContainer.appendChild(el); });
+  igEmbeds.forEach(function(el) { igContainer.appendChild(el); });
 }
-// Close on Escape key
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeVideoModal();
 });
