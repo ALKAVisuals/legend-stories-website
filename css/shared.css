@@ -529,7 +529,7 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
   background: linear-gradient(160deg, rgba(22,22,24,.97) 0%, rgba(14,14,16,1) 100%);
   border: 1px solid rgba(42, 42, 48, .2);
   transition: all .45s cubic-bezier(.4,0,.2,1);
-  padding: 2rem;
+  padding: 2rem 1.5rem;
 }
 .social-proof-card:hover {
   border-color: rgba(42, 138, 74, .3);
@@ -544,9 +544,9 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
 .iphone-mockup {
   position: relative;
   width: 320px;
-  height: 640px;
+  height: 600px;
   background: #0a0a0c;
-  border-radius: 48px;
+  border-radius: 44px;
   border: 5px solid #1a1a1e;
   box-shadow:
     0 0 0 2px rgba(0,0,0,.9),
@@ -563,13 +563,13 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
 .iphone-mockup::before {
   content: '';
   position: absolute;
-  top: 12px;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
-  width: 120px;
-  height: 34px;
+  width: 100px;
+  height: 30px;
   background: #000;
-  border-radius: 0 0 24px 24px;
+  border-radius: 0 0 20px 20px;
   z-index: 30;
   box-shadow: 0 4px 12px rgba(0,0,0,.5);
 }
@@ -578,89 +578,76 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
 .iphone-mockup::after {
   content: '';
   position: absolute;
-  top: 140px;
-  right: -7px;
-  width: 5px;
-  height: 50px;
+  top: 130px;
+  right: -6px;
+  width: 4px;
+  height: 45px;
   background: linear-gradient(180deg, #333, #1a1a1a);
-  border-radius: 0 6px 6px 0;
+  border-radius: 0 5px 5px 0;
   box-shadow:
-    0 80px 0 0 #333,
+    0 70px 0 0 #333,
     inset 1px 0 0 rgba(255,255,255,.05);
-}
-
-/* Screen — embeds render here */
-.iphone-screen {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  border-radius: 43px;
-  overflow: hidden;
-  background: #000;
-  z-index: 1;
 }
 
 /* Home indicator */
 .iphone-home-indicator {
   position: absolute;
-  bottom: 10px;
+  bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
-  width: 120px;
+  width: 100px;
   height: 5px;
   background: rgba(255,255,255,.25);
   border-radius: 3px;
   z-index: 30;
 }
 
-/* ── TikTok embed ── */
+/* ── TikTok embed — scaled to fit mockup ── */
 .iphone-tiktok-wrap {
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  overflow: hidden;
+  top: 0; left: 0;
+  width: 320px;
+  height: 600px;
   z-index: 1;
   background: #000;
+  overflow: hidden;
 }
-.iphone-tiktok-wrap .tiktok-embed {
-  width: 100% !important;
-  height: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  background: #000 !important;
-  display: block !important;
-}
+.iphone-tiktok-wrap .tiktok-embed,
 .iphone-tiktok-wrap iframe {
   display: block !important;
-  width: 100% !important;
-  height: 100% !important;
   border: none !important;
   background: #000 !important;
-}
-
-/* ── Instagram embed ── */
-.iphone-ig-wrap {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  overflow: hidden;
-  z-index: 1;
-  background: #000;
-}
-.iphone-ig-wrap .instagram-media {
-  width: 100% !important;
-  height: 100% !important;
-  min-height: unset !important;
+  /* TikTok embeds render at ~325x575 — scale to fit our 320x600 mockup */
+  width: 320px !important;
+  height: 575px !important;
+  max-width: none !important;
+  max-height: none !important;
   margin: 0 !important;
   padding: 0 !important;
-  border: none !important;
-  background: #000 !important;
-  display: block !important;
 }
+
+/* ── Instagram embed — scaled to fit mockup ── */
+.iphone-ig-wrap {
+  position: absolute;
+  top: 0; left: 0;
+  width: 320px;
+  height: 600px;
+  z-index: 1;
+  background: #000;
+  overflow: hidden;
+}
+.iphone-ig-wrap .instagram-media,
 .iphone-ig-wrap iframe {
   display: block !important;
-  width: 100% !important;
-  height: 100% !important;
   border: none !important;
   background: #000 !important;
+  width: 320px !important;
+  height: 575px !important;
+  min-height: unset !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* Decorative corner glow */

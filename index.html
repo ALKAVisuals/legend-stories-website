@@ -845,5 +845,43 @@
 <!-- TikTok & Instagram Embed Scripts -->
 <script async src="https://www.tiktok.com/embed.js"></script>
 <script async src="https://www.instagram.com/embed.js"></script>
+<script>
+// Scale embed iframes to fit iPhone mockup
+function scaleEmbeds() {
+  // TikTok embeds
+  document.querySelectorAll('.iphone-tiktok-wrap iframe, .iphone-tiktok-wrap .tiktok-embed').forEach(function(el) {
+    el.style.width = '320px';
+    el.style.height = '575px';
+    el.style.maxWidth = 'none';
+    el.style.maxHeight = 'none';
+    el.style.margin = '0';
+    el.style.padding = '0';
+    el.style.border = 'none';
+    el.style.background = '#000';
+    el.style.display = 'block';
+  });
+  // Instagram embeds
+  document.querySelectorAll('.iphone-ig-wrap iframe, .iphone-ig-wrap .instagram-media').forEach(function(el) {
+    el.style.width = '320px';
+    el.style.height = '575px';
+    el.style.minHeight = 'unset';
+    el.style.maxWidth = 'none';
+    el.style.maxHeight = 'none';
+    el.style.margin = '0';
+    el.style.padding = '0';
+    el.style.border = 'none';
+    el.style.background = '#000';
+    el.style.display = 'block';
+  });
+}
+
+// Run after DOM ready and after embed scripts load
+document.addEventListener('DOMContentLoaded', function() {
+  // Try multiple times as embeds load asynchronously
+  setTimeout(scaleEmbeds, 500);
+  setTimeout(scaleEmbeds, 1500);
+  setTimeout(scaleEmbeds, 3000);
+});
+</script>
 </body>
 </html>
