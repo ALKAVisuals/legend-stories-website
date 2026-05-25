@@ -522,17 +522,20 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
   position: relative;
   display: flex;
   flex-direction: column;
+  align-items: center;
   border-radius: 16px;
   overflow: visible;
   background: linear-gradient(145deg, rgba(22,22,24,.95) 0%, rgba(16,16,18,1) 100%);
   border: 1px solid rgba(42, 42, 48, .25);
   transition: all .45s cubic-bezier(.4,0,.2,1);
+  padding: 1.5rem;
 }
 @media (min-width: 768px) {
   .social-proof-card {
     flex-direction: row;
-    min-height: 340px;
+    min-height: 420px;
     overflow: hidden;
+    padding: 2rem;
   }
 }
 .social-proof-card:hover {
@@ -544,50 +547,114 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
   transform: translateY(-3px);
 }
 
-/* ── Embed side ── */
-.social-proof-embed {
+/* ── iPhone Mockup ── */
+.iphone-mockup {
   position: relative;
   flex: 0 0 auto;
-  width: 100%;
-  min-height: 320px;
-  overflow: visible;
-  background: #000;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
+  width: 220px;
+  height: 440px;
+  background: #1a1a1e;
+  border-radius: 36px;
+  border: 3px solid #2a2a30;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.6),
+    0 8px 32px rgba(0,0,0,.5),
+    0 0 60px rgba(0,0,0,.3),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  overflow: hidden;
+  z-index: 2;
 }
 @media (min-width: 768px) {
-  .social-proof-embed {
-    width: 220px;
-    flex: 0 0 220px;
-    min-height: 340px;
-    height: 100%;
-    overflow: hidden;
+  .iphone-mockup {
+    width: 240px;
+    height: 480px;
+    border-radius: 40px;
   }
 }
-.social-proof-embed iframe,
-.social-proof-embed blockquote {
+
+/* Notch / Dynamic Island */
+.iphone-mockup::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 24px;
+  background: #000;
+  border-radius: 0 0 16px 16px;
+  z-index: 10;
+}
+@media (min-width: 768px) {
+  .iphone-mockup::before {
+    width: 100px;
+    height: 26px;
+    border-radius: 0 0 18px 18px;
+  }
+}
+
+/* Side buttons (volume + power) */
+.iphone-mockup::after {
+  content: '';
+  position: absolute;
+  top: 100px;
+  right: -5px;
+  width: 3px;
+  height: 50px;
+  background: #2a2a30;
+  border-radius: 0 3px 3px 0;
+  box-shadow: 0 60px 0 #2a2a30;
+}
+
+/* Screen area — where the embed lives */
+.iphone-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 33px;
+  overflow: hidden;
+  background: #000;
+}
+@media (min-width: 768px) {
+  .iphone-screen {
+    border-radius: 37px;
+  }
+}
+.iphone-screen iframe,
+.iphone-screen blockquote,
+.iphone-screen .tiktok-embed,
+.iphone-screen .instagram-media {
   width: 100% !important;
-  min-height: 320px !important;
+  height: 100% !important;
+  min-height: 100% !important;
   border: none !important;
   margin: 0 !important;
   padding: 0 !important;
-}
-@media (min-width: 768px) {
-  .social-proof-embed iframe,
-  .social-proof-embed blockquote {
-    min-height: 340px !important;
-    height: 100% !important;
-  }
-}
-.social-proof-embed .tiktok-embed,
-.social-proof-embed .instagram-media {
+  background: #000 !important;
   max-width: 100% !important;
   min-width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-  background: #000 !important;
+}
+
+/* Home indicator bar */
+.iphone-home-indicator {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: rgba(255,255,255,.15);
+  border-radius: 2px;
+  z-index: 10;
+}
+@media (min-width: 768px) {
+  .iphone-home-indicator {
+    width: 90px;
+    height: 5px;
+    bottom: 8px;
+  }
 }
 
 /* ── Info side ── */
@@ -596,12 +663,14 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 1.25rem 1.5rem;
+  padding: 1.25rem 0 0;
   position: relative;
+  text-align: center;
 }
 @media (min-width: 768px) {
   .social-proof-info {
-    padding: 1.5rem 1.75rem;
+    padding: 0 0 0 2rem;
+    text-align: left;
   }
 }
 
