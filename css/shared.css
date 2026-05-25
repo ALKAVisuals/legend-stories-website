@@ -523,19 +523,20 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
   display: flex;
   flex-direction: column;
   align-items: center;
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: visible;
-  background: linear-gradient(145deg, rgba(22,22,24,.95) 0%, rgba(16,16,18,1) 100%);
-  border: 1px solid rgba(42, 42, 48, .25);
+  background: linear-gradient(160deg, rgba(22,22,24,.97) 0%, rgba(14,14,16,1) 100%);
+  border: 1px solid rgba(42, 42, 48, .2);
   transition: all .45s cubic-bezier(.4,0,.2,1);
-  padding: 1.5rem;
+  padding: 1.5rem 1rem;
 }
 @media (min-width: 768px) {
   .social-proof-card {
     flex-direction: row;
-    min-height: 420px;
+    min-height: 620px;
     overflow: hidden;
-    padding: 2rem;
+    padding: 2.5rem;
+    gap: 2rem;
   }
 }
 .social-proof-card:hover {
@@ -551,24 +552,25 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
 .iphone-mockup {
   position: relative;
   flex: 0 0 auto;
-  width: 220px;
-  height: 440px;
-  background: #1a1a1e;
-  border-radius: 36px;
-  border: 3px solid #2a2a30;
+  width: 280px;
+  height: 560px;
+  background: #111114;
+  border-radius: 44px;
+  border: 4px solid #1e1e22;
   box-shadow:
-    0 0 0 1px rgba(0,0,0,.6),
-    0 8px 32px rgba(0,0,0,.5),
-    0 0 60px rgba(0,0,0,.3),
-    inset 0 1px 0 rgba(255,255,255,.05);
+    0 0 0 1px rgba(0,0,0,.8),
+    0 20px 60px rgba(0,0,0,.6),
+    0 0 80px rgba(0,0,0,.4),
+    inset 0 1px 0 rgba(255,255,255,.06),
+    inset 0 -1px 0 rgba(255,255,255,.02);
   overflow: hidden;
   z-index: 2;
 }
 @media (min-width: 768px) {
   .iphone-mockup {
-    width: 240px;
-    height: 480px;
-    border-radius: 40px;
+    width: 300px;
+    height: 600px;
+    border-radius: 48px;
   }
 }
 
@@ -576,52 +578,57 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
 .iphone-mockup::before {
   content: '';
   position: absolute;
-  top: 0;
+  top: 8px;
   left: 50%;
   transform: translateX(-50%);
-  width: 90px;
-  height: 24px;
+  width: 100px;
+  height: 28px;
   background: #000;
-  border-radius: 0 0 16px 16px;
+  border-radius: 0 0 20px 20px;
   z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,.4);
 }
 @media (min-width: 768px) {
   .iphone-mockup::before {
-    width: 100px;
-    height: 26px;
-    border-radius: 0 0 18px 18px;
+    width: 110px;
+    height: 30px;
+    border-radius: 0 0 22px 22px;
   }
 }
 
-/* Side buttons (volume + power) */
+/* Side buttons */
 .iphone-mockup::after {
   content: '';
   position: absolute;
-  top: 100px;
-  right: -5px;
-  width: 3px;
-  height: 50px;
-  background: #2a2a30;
-  border-radius: 0 3px 3px 0;
-  box-shadow: 0 60px 0 #2a2a30;
+  top: 120px;
+  right: -6px;
+  width: 4px;
+  height: 44px;
+  background: linear-gradient(180deg, #2a2a30, #1e1e22);
+  border-radius: 0 4px 4px 0;
+  box-shadow:
+    0 65px 0 0 #2a2a30,
+    0 65px 0 0 #1e1e22;
 }
 
-/* Screen area — where the embed lives */
+/* Screen area */
 .iphone-screen {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  border-radius: 33px;
+  border-radius: 40px;
   overflow: hidden;
   background: #000;
 }
 @media (min-width: 768px) {
   .iphone-screen {
-    border-radius: 37px;
+    border-radius: 44px;
   }
 }
+
+/* Embed content — scale to fit */
 .iphone-screen iframe,
 .iphone-screen blockquote,
 .iphone-screen .tiktok-embed,
@@ -635,25 +642,26 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
   background: #000 !important;
   max-width: 100% !important;
   min-width: 100% !important;
+  object-fit: cover !important;
 }
 
 /* Home indicator bar */
 .iphone-home-indicator {
   position: absolute;
-  bottom: 6px;
+  bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
-  width: 80px;
-  height: 4px;
-  background: rgba(255,255,255,.15);
-  border-radius: 2px;
+  width: 100px;
+  height: 5px;
+  background: rgba(255,255,255,.2);
+  border-radius: 3px;
   z-index: 10;
 }
 @media (min-width: 768px) {
   .iphone-home-indicator {
-    width: 90px;
+    width: 120px;
     height: 5px;
-    bottom: 8px;
+    bottom: 10px;
   }
 }
 
