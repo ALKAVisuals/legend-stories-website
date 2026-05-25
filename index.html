@@ -606,9 +606,12 @@
 
           <!-- Card 1: TikTok — Logan Paul vs Bradley Martyn -->
           <div class="social-proof-card">
-            <a href="https://www.tiktok.com/@legendstories_official/video/7502965493687405846" target="_blank" rel="noopener noreferrer" class="iphone-mockup">
-              <div class="iphone-screen" style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);">
-                <div class="iphone-play-overlay">
+            <div class="iphone-mockup">
+              <div class="iphone-screen">
+                <div class="iphone-embed-wrap" id="embed-1">
+                  <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@legendstories_official/video/7502965493687405846" data-video-id="7502965493687405846" data-embed-from="oembed"><section></section></blockquote>
+                </div>
+                <div class="iphone-play-overlay" id="overlay-1" onclick="startEmbed(1)">
                   <div class="iphone-play-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                   </div>
@@ -619,14 +622,17 @@
                 </div>
               </div>
               <div class="iphone-home-indicator"></div>
-            </a>
+            </div>
           </div>
 
           <!-- Card 2: Instagram — Post 1 -->
           <div class="social-proof-card">
-            <a href="https://www.instagram.com/p/DMYi2t7sIeO/?hl=en" target="_blank" rel="noopener noreferrer" class="iphone-mockup">
-              <div class="iphone-screen" style="background:linear-gradient(135deg,#2e1a2e 0%,#1a1a2e 50%,#2d1b69 100%);">
-                <div class="iphone-play-overlay">
+            <div class="iphone-mockup">
+              <div class="iphone-screen">
+                <div class="iphone-embed-wrap" id="embed-2">
+                  <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/DMYi2t7sIeO/?hl=en" data-instgrm-version="14"><section></section></blockquote>
+                </div>
+                <div class="iphone-play-overlay" id="overlay-2" onclick="startEmbed(2)">
                   <div class="iphone-play-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                   </div>
@@ -637,14 +643,17 @@
                 </div>
               </div>
               <div class="iphone-home-indicator"></div>
-            </a>
+            </div>
           </div>
 
           <!-- Card 3: TikTok — 6ix9ine -->
           <div class="social-proof-card">
-            <a href="https://www.tiktok.com/@legendstories_official/video/7469438117485858070" target="_blank" rel="noopener noreferrer" class="iphone-mockup">
-              <div class="iphone-screen" style="background:linear-gradient(135deg,#1a1a1a 0%,#2a1a1a 50%,#1a2a1a 100%);">
-                <div class="iphone-play-overlay">
+            <div class="iphone-mockup">
+              <div class="iphone-screen">
+                <div class="iphone-embed-wrap" id="embed-3">
+                  <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@legendstories_official/video/7469438117485858070" data-video-id="7469438117485858070" data-embed-from="oembed"><section></section></blockquote>
+                </div>
+                <div class="iphone-play-overlay" id="overlay-3" onclick="startEmbed(3)">
                   <div class="iphone-play-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                   </div>
@@ -655,14 +664,17 @@
                 </div>
               </div>
               <div class="iphone-home-indicator"></div>
-            </a>
+            </div>
           </div>
 
           <!-- Card 4: Instagram — Post 2 -->
           <div class="social-proof-card">
-            <a href="https://www.instagram.com/p/DFlGEDzsthi/?hl=en" target="_blank" rel="noopener noreferrer" class="iphone-mockup">
-              <div class="iphone-screen" style="background:linear-gradient(135deg,#1a2a2e 0%,#2a1a1e 50%,#1a1a2e 100%);">
-                <div class="iphone-play-overlay">
+            <div class="iphone-mockup">
+              <div class="iphone-screen">
+                <div class="iphone-embed-wrap" id="embed-4">
+                  <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/DFlGEDzsthi/?hl=en" data-instgrm-version="14"><section></section></blockquote>
+                </div>
+                <div class="iphone-play-overlay" id="overlay-4" onclick="startEmbed(4)">
                   <div class="iphone-play-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                   </div>
@@ -673,7 +685,7 @@
                 </div>
               </div>
               <div class="iphone-home-indicator"></div>
-            </a>
+            </div>
           </div>
 
         </div>
@@ -861,5 +873,28 @@
       });
     });
   </script>
+<script>
+// Load embed scripts immediately
+(function() {
+  var ts = document.createElement('script');
+  ts.src = 'https://www.tiktok.com/embed.js';
+  ts.async = true;
+  document.body.appendChild(ts);
+  var ins = document.createElement('script');
+  ins.src = 'https://www.instagram.com/embed.js';
+  ins.async = true;
+  document.body.appendChild(ins);
+})();
+
+// Remove play overlay on click — embed takes over
+function startEmbed(num) {
+  var overlay = document.getElementById('overlay-' + num);
+  if (overlay) {
+    overlay.style.opacity = '0';
+    overlay.style.pointerEvents = 'none';
+    setTimeout(function() { overlay.style.display = 'none'; }, 300);
+  }
+}
+</script>
 </body>
 </html>
