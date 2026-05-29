@@ -1,335 +1,336 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="About Legend Stories — a Dutch company designing and printing matte vinyl wall stickers inspired by mythology, history, and pop culture.">
-  <title>About — Legend Stories</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/tokens.css">
-  <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/shared.css">
-  <link rel="stylesheet" href="css/matrix.css">
-  <link rel="stylesheet" href="css/metal-fx.css">
-  <link rel="stylesheet" href="css/skipper.css">
-  <link rel="stylesheet" href="css/axis.css">
-  <link rel="stylesheet" href="css/componentry.css">
-  <link rel="stylesheet" href="css/axis-patterns.css">
-  <link rel="stylesheet" href="css/axis-upgrades.css">
-  <link rel="stylesheet" href="css/skiper-upgrades.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'void': '#0B0B0C', 'surface': '#161618', 'surface-light': '#1E1E22',
-            'surface-border': '#2A2A30', 'mint': '#2a8a4a', 'mint-light': '#3da86a',
-            'mint-dark': '#1e6b38', 'text-primary': '#F5F5F7', 'text-secondary': '#A0A0B0',
-            'text-muted': '#6B6B7B',
-          },
-          fontFamily: { 'display': ['"Playfair Display"', 'Georgia', 'serif'], 'body': ['"Inter"', 'system-ui', 'sans-serif'] },
-          animation: { 'fade-in': 'fadeIn 0.6s ease-out forwards', 'slide-up': 'slideUp 0.5s ease-out forwards', 'pulse-mint': 'pulseMint 2s ease-in-out infinite', 'float': 'float 6s ease-in-out infinite' },
-          keyframes: {
-            fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-            slideUp: { '0%': { opacity: '0', transform: 'translateY(30px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-            pulseMint: { '0%, 100%': { boxShadow: '0 0 0 0 rgba(42, 138, 74, 0.4)' }, '50%': { boxShadow: '0 0 20px 5px rgba(42, 138, 74, 0.2)' } },
-            float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
-          },
-          backgroundImage: { 'gradient-mint': 'linear-gradient(135deg, #2a8a4a 0%, #3da86a 50%, #2a8a4a 100%)' },
-          boxShadow: { 'mint': '0 0 30px rgba(42, 138, 74, 0.15)', 'mint-lg': '0 0 60px rgba(42, 138, 74, 0.2)', 'surface': '0 4px 24px rgba(0, 0, 0, 0.4)' },
-        },
-      },
-    }
-  </script>
-  
-</head>
-<body class="bg-void text-text-primary font-body">
-
-  <!-- ANNOUNCEMENT BAR -->
-  <div class="w-full bg-gradient-mint text-void text-center py-2 px-4 text-xs sm:text-sm font-semibold tracking-wide" role="banner">
-    <p>🔥 New drop: Mythologie collection just landed — use <span class="font-bold">LEGEND10</span> for 10% off</p>
-  </div>
-
-  <!-- NAVIGATION -->
-  <header class="sticky top-0 z-50 glass border-b border-surface-border/30" role="banner">
-    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
-      <div class="flex items-center justify-between h-16 md:h-20">
-        <a href="index.html" class="flex items-center gap-2 group logo-wrap" aria-label="Legend Stories Home"><img src="media/LOGO/lm-logo-transparant.png" alt="" class="w-14 h-14 md:w-16 md:h-16 object-contain shrink-0 logo-glow" onerror="this.style.display='none'"></a>
-        <div class="hidden md:flex items-center gap-8">
-          <a href="portfolio.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Portfolio</a>
-          <a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Shop</a>
-          <a href="about.html" class="text-sm text-mint font-medium">About</a>
-          <a href="index.html#contact" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Contact</a>
-        </div>
-        <div class="flex items-center gap-3">
-          <a href="shop.html" class="hidden sm:inline-flex p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Shop">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" /></svg>
-          </a>
-                    <button id="theme-toggle" class="relative p-2 rounded-lg hover:bg-surface-light/50 transition-colors duration-200" aria-label="Toggle dark/light mode">
-            <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-            </svg>
-            <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
-            </svg>
-          </button>
-          <button id="cart-btn" class="relative p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Cart">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
-            <span id="cart-count" class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-mint text-void text-[10px] font-bold rounded-full flex items-center justify-center opacity-0 transition-opacity duration-300">0</span>
-          </button>
-          <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Menu openen" aria-expanded="false">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
-          </button>
-        </div>
-      </div>
-      <div id="mobile-menu" class="md:hidden" style="display:none;">
-        <div class="flex flex-col gap-3 pb-4 border-t border-surface-border/30 mt-2 pt-4">
-          <a href="portfolio.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Portfolio</a>
-          <a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Shop</a>
-          <a href="about.html" class="text-sm text-mint font-medium py-2">About</a>
-          <a href="index.html#contact" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Contact</a>
-        </div>
-      </div>
-    </nav>
-  </header>
-
-  <main>
-    <!-- HERO -->
-    <section class="py-20 md:py-32 relative overflow-hidden">
-      <div class="absolute inset-0 bg-gradient-to-br from-void via-surface to-void"></div>
-      <div class="absolute top-1/4 -left-32 w-96 h-96 bg-mint/5 rounded-full blur-3xl"></div>
-      <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <!-- DOT MATRIX LOADER -->
-            <div class="flex justify-center mb-6">
-              <div class="dmx-root dmx-bloom dmx-bloom-halo" style="--dmx-dot-fill:#2a8a4a;--dmx-cycle:2000ms;--dmx-speed:0.8;--dmx-dot-size:3px;width:60px;height:60px;">
-                <div class="dmx-grid">
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:0"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:1"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:1"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:6"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:6"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:7"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:6"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:7"></div>
-                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:8"></div>
-                </div>
-              </div>
-            </div>
-            <!-- END DOT MATRIX -->
-<h1 class="section-heading mb-6">The <span class="text-gradient-mint">story</span></h1>
-        <p class="text-text-secondary text-lg md:text-xl leading-relaxed max-w-2xl mx-auto">
-          Legend Stories started with a simple idea: walls should tell stories. Not be blank.
-        </p>
-      </div>
-    </section>
-
-    <!-- STORY -->
-    <section class="py-16 md:py-24">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          <div>
-            <h2 class="section-heading mb-6">From idea to <span class="text-gradient-mint">wall art</span></h2>
-            <div class="space-y-5 text-text-secondary leading-relaxed">
-              <p>
-                It started with a group of friends who were tired of blank walls and generic posters. We wanted something that actually said something about who you are.
-              </p>
-              <p>
-                So we started designing wall stickers inspired by the stories that actually matter to people — mythology, history, pop culture, and abstract art. Each one printed on matte vinyl in the Netherlands.
-              </p>
-              <p>
-                Our mission is straightforward: make wall art that people actually want to look at. Whether it is your bedroom, living room, or office — we have got you covered.
-              </p>
-            </div>
-          </div>
-          <div class="relative">
-            <div class="aspect-[4/5] rounded-2xl overflow-hidden border border-surface-border/50 bg-gradient-to-br from-surface-light to-surface">
-              <div class="absolute inset-0 flex items-center justify-center">
-                <div class="text-center">
-                  <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-mint/10 flex items-center justify-center animate-float">
-                    <span class="text-5xl">🎨</span>
-                  </div>
-                  <p class="text-text-muted text-sm">Our studio</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- VALUES -->
-    <section class="py-16 md:py-24 bg-surface/30">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-          <h2 class="section-heading mb-4">What we <span class="text-gradient-mint">stand for</span></h2>
-        </div>
-        <div class="grid md:grid-cols-3 gap-8">
-          <div class="p-8 rounded-2xl border border-surface-border/50 bg-surface text-center">
-            <div class="w-16 h-16 mx-auto mb-5 rounded-xl bg-mint/10 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-mint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
-            </div>
-            <h3 class="font-display text-xl font-bold mb-3">Quality first</h3>
-            <p class="text-text-secondary text-sm">Thick matte vinyl, sharp printing, and a finish that looks painted on. Not a cheap sticker.</p>
-          </div>
-          <div class="p-8 rounded-2xl border border-surface-border/50 bg-surface text-center">
-            <div class="w-16 h-16 mx-auto mb-5 rounded-xl bg-mint/10 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-mint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" /></svg>
-            </div>
-            <h3 class="font-display text-xl font-bold mb-3">Made for you</h3>
-            <p class="text-text-secondary text-sm">Custom designs, specific sizes, your own ideas. Every project is different and we like it that way.</p>
-          </div>
-          <div class="p-8 rounded-2xl border border-surface-border/50 bg-surface text-center">
-            <div class="w-16 h-16 mx-auto mb-5 rounded-xl bg-mint/10 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-mint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
-            </div>
-            <h3 class="font-display text-xl font-bold mb-3">We give a damn</h3>
-            <p class="text-text-secondary text-sm">We are wall art people. Every day we work on new designs and better ways to get them to your door.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- TEAM -->
-    <section class="py-16 md:py-24">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-          <h2 class="section-heading mb-4">The <span class="text-gradient-mint">people</span></h2>
-          <p class="section-subheading mx-auto">Three people. One wall at a time.</p>
-        </div>
-        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-4xl mx-auto">
-          <div class="text-center">
-            <div class="w-28 h-28 mx-auto mb-4 rounded-full bg-gradient-to-br from-surface-light to-surface border border-surface-border/50 flex items-center justify-center">
-              <span class="text-4xl">👨‍🎨</span>
-            </div>
-            <h3 class="font-display font-bold text-lg">K</h3>
-            <p class="text-mint text-sm font-medium">Founder & Designer</p>
-            <p class="text-text-secondary text-sm mt-2">Started this whole thing. Still picks every design.</p>
-          </div>
-          <div class="text-center">
-            <div class="w-28 h-28 mx-auto mb-4 rounded-full bg-gradient-to-br from-surface-light to-surface border border-surface-border/50 flex items-center justify-center">
-              <span class="text-4xl">👩‍💻</span>
-            </div>
-            <h3 class="font-display font-bold text-lg">Compagnon</h3>
-            <p class="text-mint text-sm font-medium">Co-owner & Operations</p>
-            <p class="text-text-secondary text-sm mt-2">Makes sure your order actually arrives. Handles everything else.</p>
-          </div>
-          <div class="text-center">
-            <div class="w-28 h-28 mx-auto mb-4 rounded-full bg-gradient-to-br from-surface-light to-surface border border-surface-border/50 flex items-center justify-center">
-              <span class="text-4xl">🤖</span>
-            </div>
-            <h3 class="font-display font-bold text-lg">OWL</h3>
-            <p class="text-mint text-sm font-medium">AI Assistant</p>
-            <p class="text-text-secondary text-sm mt-2">Helps with design, code, and keeping this whole thing running.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- VIDEO — Skiper67 placeholder -->
-    <section class="py-16 md:py-24 bg-surface/30" aria-label="How to apply">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-10 reveal">
-          <h2 class="section-heading mb-3">How to <span class="text-gradient-mint">apply</span></h2>
-          <p class="section-subheading mx-auto">Watch how easy it is to put up your mural. Takes 15 minutes, no tools needed.</p>
-        </div>
-        <div class="max-w-3xl mx-auto reveal">
-          <div class="skiper-video-player" data-videoId="how-to-apply">
-            <div class="video-thumbnail" style="background: linear-gradient(135deg, #1a1a1e 0%, #0B0B0C 100%);"></div>
-            <div class="video-overlay">
-              <div class="play-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-              </div>
-            </div>
-            <div class="video-duration">2:34</div>
-          </div>
-          <p class="text-center text-text-muted/50 text-xs mt-3 tracking-wide">Video coming soon — placeholder</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- CTA -->
-    <section class="py-20 md:py-28 bg-surface/30">
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 class="section-heading mb-4">Ready to <span class="text-gradient-mint">start</span>?</h2>
-        <p class="section-subheading mx-auto mb-8">Pick a mural or send us your idea. We will take it from there.</p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="index.html#contact" class="btn-primary text-lg">Get in touch</a>
-          <a href="shop.html" class="btn-secondary text-lg">Shop the collection</a>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- FOOTER -->
-  <footer class="border-t border-surface-border/30 bg-surface/20" role="contentinfo">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-        <div class="sm:col-span-2 lg:col-span-1">
-          <a href="index.html" class="flex items-center gap-2 mb-4">
-            <img src="media/LOGO/lm-logo-transparant.png" alt="Legend Stories" class="w-11 h-11 object-contain shrink-0 logo-glow">
-            <span class="font-display text-lg font-bold"><img src="media/LOGO/lm-logo-transparant.png" alt="" class="w-10 h-10 object-contain inline-block align-middle logo-glow" onerror="this.style.display='none'"></span>
-          </a>
-          <p class="text-text-secondary text-sm mb-4">Matte vinyl wall stickers inspired by mythology, history, and pop culture. Made in the Netherlands.</p>
-          <div class="flex gap-3">
-            <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-mint/10 transition-colors" aria-label="TikTok"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/></svg></a>
-            <a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-mint/10 transition-colors" aria-label="Instagram"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069z"/></svg></a>
-          </div>
-        </div>
-        <div><h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Shop</h4><ul class="space-y-2"><li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">All murals</a></li><li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Mythology</a></li><li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">History</a></li><li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Custom Murals</a></li></ul></div>
-        <div><h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Help</h4><ul class="space-y-2"><li><a href="index.html#contact" class="text-sm text-text-secondary hover:text-mint transition-colors">Contact</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Shipping</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Returns</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">FAQ</a></li></ul></div>
-        <div><h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Company</h4><ul class="space-y-2"><li><a href="about.html" class="text-sm text-text-secondary hover:text-mint transition-colors">About</a></li><li><a href="portfolio.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Portfolio</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Privacy</a></li></ul></div>
-      </div>
-      <div class="pt-8 border-t border-surface-border/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p class="text-xs text-text-muted">© 2026 Legend Stories. All rights reserved.</p>
-        <div class="flex items-center gap-4"><span class="text-xs text-text-muted">Betaalmethoden:</span><div class="flex gap-2"><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">iDEAL</div><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">Visa</div><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">Mastercard</div><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">PayPal</div></div></div>
-      </div>
-    </div>
-  </footer>
-
-  <!-- CART DRAWER -->
-  <div id="cart-overlay" class="fixed inset-0 bg-void/60 backdrop-blur-sm z-50 hidden transition-opacity duration-300" aria-hidden="true"></div>
-  <aside id="cart-drawer" class="fixed top-0 right-0 h-full w-full sm:w-96 bg-surface border-l border-surface-border/50 z-50 transform translate-x-full transition-transform duration-300" role="dialog" aria-label="Cart" aria-hidden="true">
-    <div class="flex flex-col h-full">
-      <div class="flex items-center justify-between p-6 border-b border-surface-border/30"><h2 class="font-display text-xl font-bold">Your cart</h2><button id="cart-close" class="p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Close cart"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div>
-      <div id="cart-items" class="flex-1 overflow-y-auto p-6"><div class="text-center py-12"><div class="w-16 h-16 mx-auto mb-4 rounded-full bg-surface-light flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg></div><p class="text-text-secondary font-medium">Your cart is empty</p><p class="text-text-muted text-sm mt-1">Add something to get started</p></div></div>
-      <div class="p-6 border-t border-surface-border/30"><div class="flex items-center justify-between mb-4"><span class="text-text-secondary">Total</span><span id="cart-total" class="font-display text-xl font-bold">€0,00</span></div><button class="btn-primary w-full" disabled id="checkout-btn">Checkout</button><p class="text-center text-xs text-text-muted mt-3">🚚 Free shipping on orders over €50</p></div>
-    </div>
-  </aside>
-
-  <script src="js/componentry.js"></script>
-  <script src="js/skipper.js"></script>
-  <script src="js/app.js"></script>
-
-  <!-- FLOATING CTA -->
-  <a href="index.html#contact" class="floating-cta hidden md:flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-mint text-void font-semibold text-sm shadow-mint-lg hover:scale-105 transition-transform z-40" style="position:fixed;bottom:2rem;right:2rem;">
-    <span>✨</span> Custom mural
-  </a>
-
-  <!-- WHATSAPP BUTTON -->
-  <a href="https://wa.me/31612345678" target="_blank" rel="noopener noreferrer" class="fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-green-500 flex items-center justify-center shadow-lg hover:scale-110 transition-transform" aria-label="WhatsApp">
-    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-  </a>
-
-</body>
-</html>
+     1|<!DOCTYPE html>
+     2|<html lang="en">
+     3|<head>
+     4|  <meta charset="UTF-8">
+     5|  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     6|  <meta name="description" content="About Legend Stories — a Dutch company designing and printing matte vinyl wall stickers inspired by mythology, history, and pop culture.">
+     7|  <title>About — Legend Stories</title>
+     8|  <link rel="preconnect" href="https://fonts.googleapis.com">
+     9|  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    10|  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    11|  <script src="https://cdn.tailwindcss.com"></script>
+    12|  <link rel="stylesheet" href="css/tokens.css">
+    13|  <link rel="stylesheet" href="css/components.css">
+    14|  <link rel="stylesheet" href="css/shared.css">
+    15|  <link rel="stylesheet" href="css/matrix.css">
+    16|  <link rel="stylesheet" href="css/metal-fx.css">
+    17|  <link rel="stylesheet" href="css/skipper.css">
+    18|  <link rel="stylesheet" href="css/axis.css">
+    19|  <link rel="stylesheet" href="css/componentry.css">
+    20|  <link rel="stylesheet" href="css/axis-patterns.css">
+    21|  <link rel="stylesheet" href="css/axis-upgrades.css">
+    22|  <link rel="stylesheet" href="css/skiper-upgrades.css">
+    23|  <script>
+    24|    tailwind.config = {
+    25|      theme: {
+    26|        extend: {
+    27|          colors: {
+    28|            'void': '#0B0B0C', 'surface': '#161618', 'surface-light': '#1E1E22',
+    29|            'surface-border': '#2A2A30', 'mint': '#2a8a4a', 'mint-light': '#3da86a',
+    30|            'mint-dark': '#1e6b38', 'text-primary': '#F5F5F7', 'text-secondary': '#A0A0B0',
+    31|            'text-muted': '#6B6B7B',
+    32|          },
+    33|          fontFamily: { 'display': ['"Playfair Display"', 'Georgia', 'serif'], 'body': ['"Inter"', 'system-ui', 'sans-serif'] },
+    34|          animation: { 'fade-in': 'fadeIn 0.6s ease-out forwards', 'slide-up': 'slideUp 0.5s ease-out forwards', 'pulse-mint': 'pulseMint 2s ease-in-out infinite', 'float': 'float 6s ease-in-out infinite' },
+    35|          keyframes: {
+    36|            fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+    37|            slideUp: { '0%': { opacity: '0', transform: 'translateY(30px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+    38|            pulseMint: { '0%, 100%': { boxShadow: '0 0 0 0 rgba(42, 138, 74, 0.4)' }, '50%': { boxShadow: '0 0 20px 5px rgba(42, 138, 74, 0.2)' } },
+    39|            float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
+    40|          },
+    41|          backgroundImage: { 'gradient-mint': 'linear-gradient(135deg, #2a8a4a 0%, #3da86a 50%, #2a8a4a 100%)' },
+    42|          boxShadow: { 'mint': '0 0 30px rgba(42, 138, 74, 0.15)', 'mint-lg': '0 0 60px rgba(42, 138, 74, 0.2)', 'surface': '0 4px 24px rgba(0, 0, 0, 0.4)' },
+    43|        },
+    44|      },
+    45|    }
+    46|  </script>
+    47|  
+    48|</head>
+    49|<body class="bg-void text-text-primary font-body">
+    50|
+    51|  <!-- ANNOUNCEMENT BAR -->
+    52|  <div class="w-full bg-gradient-mint text-void text-center py-2 px-4 text-xs sm:text-sm font-semibold tracking-wide" role="banner">
+    53|    <p>🔥 New drop: Mythologie collection just landed — use <span class="font-bold">LEGEND10</span> for 10% off</p>
+    54|  </div>
+    55|
+    56|  <!-- NAVIGATION -->
+    57|  <header class="sticky top-0 z-50 glass border-b border-surface-border/30" role="banner">
+    58|    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
+    59|      <div class="flex items-center justify-between h-16 md:h-20">
+    60|        <a href="index.html" class="flex items-center gap-2 group logo-wrap" aria-label="Legend Stories Home"><img src="media/LOGO/lm-logo-transparant.png" alt="" class="w-auto h-10 md:h-12 object-contain shrink-0 logo-glow" onerror="this.style.display='none'"></a>
+    61|        <div class="hidden md:flex items-center gap-8">
+    62|          <a href="portfolio.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Portfolio</a>
+    63|          <a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Shop</a>
+    64|          <a href="about.html" class="text-sm text-mint font-medium">About</a>
+    65|          <a href="index.html#contact" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium">Contact</a>
+    66|        </div>
+    67|        <div class="flex items-center gap-3">
+    68|          <a href="shop.html" class="hidden sm:inline-flex p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Shop">
+    69|            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" /></svg>
+    70|          </a>
+    71|                    <button id="theme-toggle" class="relative p-2 rounded-lg hover:bg-surface-light/50 transition-colors duration-200" aria-label="Toggle dark/light mode">
+    72|            <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+    73|              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+    74|            </svg>
+    75|            <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+    76|              <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+    77|            </svg>
+    78|          </button>
+    79|          <button id="cart-btn" class="relative p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Cart">
+    80|            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+    81|            <span id="cart-count" class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-mint text-void text-[10px] font-bold rounded-full flex items-center justify-center opacity-0 transition-opacity duration-300">0</span>
+    82|          </button>
+    83|          <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Menu openen" aria-expanded="false">
+    84|            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+    85|          </button>
+    86|        </div>
+    87|      </div>
+    88|      <div id="mobile-menu" class="md:hidden" style="display:none;">
+    89|        <div class="flex flex-col gap-3 pb-4 border-t border-surface-border/30 mt-2 pt-4">
+    90|          <a href="portfolio.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Portfolio</a>
+    91|          <a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Shop</a>
+    92|          <a href="about.html" class="text-sm text-mint font-medium py-2">About</a>
+    93|          <a href="index.html#contact" class="text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2">Contact</a>
+    94|        </div>
+    95|      </div>
+    96|    </nav>
+    97|  </header>
+    98|
+    99|  <main>
+   100|    <!-- HERO -->
+   101|    <section class="py-20 md:py-32 relative overflow-hidden">
+   102|      <div class="absolute inset-0 bg-gradient-to-br from-void via-surface to-void"></div>
+   103|      <div class="absolute top-1/4 -left-32 w-96 h-96 bg-mint/5 rounded-full blur-3xl"></div>
+   104|      <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+   105|        <!-- DOT MATRIX LOADER -->
+   106|            <div class="flex justify-center mb-6">
+   107|              <div class="dmx-root dmx-bloom dmx-bloom-halo" style="--dmx-dot-fill:#2a8a4a;--dmx-cycle:2000ms;--dmx-speed:0.8;--dmx-dot-size:3px;width:60px;height:60px;">
+   108|                <div class="dmx-grid">
+   109|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:0"></div>
+   110|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:1"></div>
+   111|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div>
+   112|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
+   113|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+   114|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:1"></div>
+   115|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div>
+   116|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
+   117|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+   118|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
+   119|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div>
+   120|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
+   121|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+   122|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
+   123|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:6"></div>
+   124|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div>
+   125|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+   126|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
+   127|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:6"></div>
+   128|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:7"></div>
+   129|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
+   130|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
+   131|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:6"></div>
+   132|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:7"></div>
+   133|                  <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:8"></div>
+   134|                </div>
+   135|              </div>
+   136|            </div>
+   137|            <!-- END DOT MATRIX -->
+   138|<h1 class="section-heading mb-6">The <span class="text-gradient-mint">story</span></h1>
+   139|        <p class="text-text-secondary text-lg md:text-xl leading-relaxed max-w-2xl mx-auto">
+   140|          Legend Stories started with a simple idea: walls should tell stories. Not be blank.
+   141|        </p>
+   142|      </div>
+   143|    </section>
+   144|
+   145|    <!-- STORY -->
+   146|    <section class="py-16 md:py-24">
+   147|      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   148|        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+   149|          <div>
+   150|            <h2 class="section-heading mb-6">From idea to <span class="text-gradient-mint">wall art</span></h2>
+   151|            <div class="space-y-5 text-text-secondary leading-relaxed">
+   152|              <p>
+   153|                It started with a group of friends who were tired of blank walls and generic posters. We wanted something that actually said something about who you are.
+   154|              </p>
+   155|              <p>
+   156|                So we started designing wall stickers inspired by the stories that actually matter to people — mythology, history, pop culture, and abstract art. Each one printed on matte vinyl in the Netherlands.
+   157|              </p>
+   158|              <p>
+   159|                Our mission is straightforward: make wall art that people actually want to look at. Whether it is your bedroom, living room, or office — we have got you covered.
+   160|              </p>
+   161|            </div>
+   162|          </div>
+   163|          <div class="relative">
+   164|            <div class="aspect-[4/5] rounded-2xl overflow-hidden border border-surface-border/50 bg-gradient-to-br from-surface-light to-surface">
+   165|              <div class="absolute inset-0 flex items-center justify-center">
+   166|                <div class="text-center">
+   167|                  <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-mint/10 flex items-center justify-center animate-float">
+   168|                    <span class="text-5xl">🎨</span>
+   169|                  </div>
+   170|                  <p class="text-text-muted text-sm">Our studio</p>
+   171|                </div>
+   172|              </div>
+   173|            </div>
+   174|          </div>
+   175|        </div>
+   176|      </div>
+   177|    </section>
+   178|
+   179|    <!-- VALUES -->
+   180|    <section class="py-16 md:py-24 bg-surface/30">
+   181|      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   182|        <div class="text-center mb-12">
+   183|          <h2 class="section-heading mb-4">What we <span class="text-gradient-mint">stand for</span></h2>
+   184|        </div>
+   185|        <div class="grid md:grid-cols-3 gap-8">
+   186|          <div class="p-8 rounded-2xl border border-surface-border/50 bg-surface text-center">
+   187|            <div class="w-16 h-16 mx-auto mb-5 rounded-xl bg-mint/10 flex items-center justify-center">
+   188|              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-mint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
+   189|            </div>
+   190|            <h3 class="font-display text-xl font-bold mb-3">Quality first</h3>
+   191|            <p class="text-text-secondary text-sm">Thick matte vinyl, sharp printing, and a finish that looks painted on. Not a cheap sticker.</p>
+   192|          </div>
+   193|          <div class="p-8 rounded-2xl border border-surface-border/50 bg-surface text-center">
+   194|            <div class="w-16 h-16 mx-auto mb-5 rounded-xl bg-mint/10 flex items-center justify-center">
+   195|              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-mint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" /></svg>
+   196|            </div>
+   197|            <h3 class="font-display text-xl font-bold mb-3">Made for you</h3>
+   198|            <p class="text-text-secondary text-sm">Custom designs, specific sizes, your own ideas. Every project is different and we like it that way.</p>
+   199|          </div>
+   200|          <div class="p-8 rounded-2xl border border-surface-border/50 bg-surface text-center">
+   201|            <div class="w-16 h-16 mx-auto mb-5 rounded-xl bg-mint/10 flex items-center justify-center">
+   202|              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-mint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
+   203|            </div>
+   204|            <h3 class="font-display text-xl font-bold mb-3">We give a damn</h3>
+   205|            <p class="text-text-secondary text-sm">We are wall art people. Every day we work on new designs and better ways to get them to your door.</p>
+   206|          </div>
+   207|        </div>
+   208|      </div>
+   209|    </section>
+   210|
+   211|    <!-- TEAM -->
+   212|    <section class="py-16 md:py-24">
+   213|      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   214|        <div class="text-center mb-12">
+   215|          <h2 class="section-heading mb-4">The <span class="text-gradient-mint">people</span></h2>
+   216|          <p class="section-subheading mx-auto">Three people. One wall at a time.</p>
+   217|        </div>
+   218|        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-4xl mx-auto">
+   219|          <div class="text-center">
+   220|            <div class="w-28 h-28 mx-auto mb-4 rounded-full bg-gradient-to-br from-surface-light to-surface border border-surface-border/50 flex items-center justify-center">
+   221|              <span class="text-4xl">👨‍🎨</span>
+   222|            </div>
+   223|            <h3 class="font-display font-bold text-lg">K</h3>
+   224|            <p class="text-mint text-sm font-medium">Founder & Designer</p>
+   225|            <p class="text-text-secondary text-sm mt-2">Started this whole thing. Still picks every design.</p>
+   226|          </div>
+   227|          <div class="text-center">
+   228|            <div class="w-28 h-28 mx-auto mb-4 rounded-full bg-gradient-to-br from-surface-light to-surface border border-surface-border/50 flex items-center justify-center">
+   229|              <span class="text-4xl">👩‍💻</span>
+   230|            </div>
+   231|            <h3 class="font-display font-bold text-lg">Compagnon</h3>
+   232|            <p class="text-mint text-sm font-medium">Co-owner & Operations</p>
+   233|            <p class="text-text-secondary text-sm mt-2">Makes sure your order actually arrives. Handles everything else.</p>
+   234|          </div>
+   235|          <div class="text-center">
+   236|            <div class="w-28 h-28 mx-auto mb-4 rounded-full bg-gradient-to-br from-surface-light to-surface border border-surface-border/50 flex items-center justify-center">
+   237|              <span class="text-4xl">🤖</span>
+   238|            </div>
+   239|            <h3 class="font-display font-bold text-lg">OWL</h3>
+   240|            <p class="text-mint text-sm font-medium">AI Assistant</p>
+   241|            <p class="text-text-secondary text-sm mt-2">Helps with design, code, and keeping this whole thing running.</p>
+   242|          </div>
+   243|        </div>
+   244|      </div>
+   245|    </section>
+   246|
+   247|    <!-- VIDEO — Skiper67 placeholder -->
+   248|    <section class="py-16 md:py-24 bg-surface/30" aria-label="How to apply">
+   249|      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+   250|        <div class="text-center mb-10 reveal">
+   251|          <h2 class="section-heading mb-3">How to <span class="text-gradient-mint">apply</span></h2>
+   252|          <p class="section-subheading mx-auto">Watch how easy it is to put up your mural. Takes 15 minutes, no tools needed.</p>
+   253|        </div>
+   254|        <div class="max-w-3xl mx-auto reveal">
+   255|          <div class="skiper-video-player" data-videoId="how-to-apply">
+   256|            <div class="video-thumbnail" style="background: linear-gradient(135deg, #1a1a1e 0%, #0B0B0C 100%);"></div>
+   257|            <div class="video-overlay">
+   258|              <div class="play-btn">
+   259|                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+   260|                  <path d="M8 5v14l11-7z"/>
+   261|                </svg>
+   262|              </div>
+   263|            </div>
+   264|            <div class="video-duration">2:34</div>
+   265|          </div>
+   266|          <p class="text-center text-text-muted/50 text-xs mt-3 tracking-wide">Video coming soon — placeholder</p>
+   267|        </div>
+   268|      </div>
+   269|    </section>
+   270|
+   271|    <!-- CTA -->
+   272|    <section class="py-20 md:py-28 bg-surface/30">
+   273|      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+   274|        <h2 class="section-heading mb-4">Ready to <span class="text-gradient-mint">start</span>?</h2>
+   275|        <p class="section-subheading mx-auto mb-8">Pick a mural or send us your idea. We will take it from there.</p>
+   276|        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+   277|          <a href="index.html#contact" class="btn-primary text-lg">Get in touch</a>
+   278|          <a href="shop.html" class="btn-secondary text-lg">Shop the collection</a>
+   279|        </div>
+   280|      </div>
+   281|    </section>
+   282|  </main>
+   283|
+   284|  <!-- FOOTER -->
+   285|  <footer class="border-t border-surface-border/30 bg-surface/20" role="contentinfo">
+   286|    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+   287|      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+   288|        <div class="sm:col-span-2 lg:col-span-1">
+   289|          <a href="index.html" class="flex items-center gap-2 mb-4">
+   290|            <img src="media/LOGO/lm-logo-transparant.png" alt="Legend Stories" class="w-auto h-8 md:h-10 object-contain shrink-0 logo-glow">
+   291|            <span class="font-display text-lg font-bold"><img src="media/LOGO/lm-logo-transparant.png" alt="" class="w-auto h-7 md:h-8 object-contain inline-block align-middle logo-glow" onerror="this.style.display='none'"></span>
+   292|          </a>
+   293|          <p class="text-text-secondary text-sm mb-4">Matte vinyl wall stickers inspired by mythology, history, and pop culture. Made in the Netherlands.</p>
+   294|          <div class="flex gap-3">
+   295|            <a href="https://tiktok.com/@legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-mint/10 transition-colors" aria-label="TikTok"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/></svg></a>
+   296|            <a href="https://instagram.com/legendstories_official" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-lg bg-surface-light flex items-center justify-center hover:bg-mint/10 transition-colors" aria-label="Instagram"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-text-secondary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069z"/></svg></a>
+   297|          </div>
+   298|        </div>
+   299|        <div><h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Shop</h4><ul class="space-y-2"><li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">All murals</a></li><li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Mythology</a></li><li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">History</a></li><li><a href="shop.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Custom Murals</a></li></ul></div>
+   300|        <div><h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Help</h4><ul class="space-y-2"><li><a href="index.html#contact" class="text-sm text-text-secondary hover:text-mint transition-colors">Contact</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Shipping</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Returns</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">FAQ</a></li></ul></div>
+   301|        <div><h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Company</h4><ul class="space-y-2"><li><a href="about.html" class="text-sm text-text-secondary hover:text-mint transition-colors">About</a></li><li><a href="portfolio.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Portfolio</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Privacy</a></li></ul></div>
+   302|      </div>
+   303|      <div class="pt-8 border-t border-surface-border/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+   304|        <p class="text-xs text-text-muted">© 2026 Legend Stories. All rights reserved.</p>
+   305|        <div class="flex items-center gap-4"><span class="text-xs text-text-muted">Betaalmethoden:</span><div class="flex gap-2"><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">iDEAL</div><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">Visa</div><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">Mastercard</div><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">PayPal</div></div></div>
+   306|      </div>
+   307|    </div>
+   308|  </footer>
+   309|
+   310|  <!-- CART DRAWER -->
+   311|  <div id="cart-overlay" class="fixed inset-0 bg-void/60 backdrop-blur-sm z-50 hidden transition-opacity duration-300" aria-hidden="true"></div>
+   312|  <aside id="cart-drawer" class="fixed top-0 right-0 h-full w-full sm:w-96 bg-surface border-l border-surface-border/50 z-50 transform translate-x-full transition-transform duration-300" role="dialog" aria-label="Cart" aria-hidden="true">
+   313|    <div class="flex flex-col h-full">
+   314|      <div class="flex items-center justify-between p-6 border-b border-surface-border/30"><h2 class="font-display text-xl font-bold">Your cart</h2><button id="cart-close" class="p-2 rounded-lg hover:bg-surface-light transition-colors" aria-label="Close cart"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div>
+   315|      <div id="cart-items" class="flex-1 overflow-y-auto p-6"><div class="text-center py-12"><div class="w-16 h-16 mx-auto mb-4 rounded-full bg-surface-light flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg></div><p class="text-text-secondary font-medium">Your cart is empty</p><p class="text-text-muted text-sm mt-1">Add something to get started</p></div></div>
+   316|      <div class="p-6 border-t border-surface-border/30"><div class="flex items-center justify-between mb-4"><span class="text-text-secondary">Total</span><span id="cart-total" class="font-display text-xl font-bold">€0,00</span></div><button class="btn-primary w-full" disabled id="checkout-btn">Checkout</button><p class="text-center text-xs text-text-muted mt-3">🚚 Free shipping on orders over €50</p></div>
+   317|    </div>
+   318|  </aside>
+   319|
+   320|  <script src="js/componentry.js"></script>
+   321|  <script src="js/skipper.js"></script>
+   322|  <script src="js/app.js"></script>
+   323|
+   324|  <!-- FLOATING CTA -->
+   325|  <a href="index.html#contact" class="floating-cta hidden md:flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-mint text-void font-semibold text-sm shadow-mint-lg hover:scale-105 transition-transform z-40" style="position:fixed;bottom:2rem;right:2rem;">
+   326|    <span>✨</span> Custom mural
+   327|  </a>
+   328|
+   329|  <!-- WHATSAPP BUTTON -->
+   330|  <a href="https://wa.me/31612345678" target="_blank" rel="noopener noreferrer" class="fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-green-500 flex items-center justify-center shadow-lg hover:scale-110 transition-transform" aria-label="WhatsApp">
+   331|    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+   332|  </a>
+   333|
+   334|</body>
+   335|</html>
+   336|
