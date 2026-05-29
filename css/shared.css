@@ -22,13 +22,22 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
   border: 1px solid rgba(60,60,70,.35);
 }
 
-/* LOGO GLOW — makes black logo pop on dark header */
+/* LOGO GLOW — green-yellow galaxies glow matching metal-text */
 .logo-glow {
-  filter: drop-shadow(0 0 6px rgba(255,255,255,0.08)) drop-shadow(0 0 14px rgba(42,138,74,0.12));
+  filter: drop-shadow(0 0 8px rgba(42,138,74,0.5)) drop-shadow(0 0 18px rgba(245,230,163,0.25)) drop-shadow(0 0 30px rgba(42,138,74,0.15));
+  animation: logoGlow 4s ease-in-out infinite;
   transition: filter 0.3s ease;
 }
 .logo-glow:hover {
-  filter: drop-shadow(0 0 8px rgba(255,255,255,0.12)) drop-shadow(0 0 20px rgba(42,138,74,0.2));
+  filter: drop-shadow(0 0 12px rgba(42,138,74,0.7)) drop-shadow(0 0 28px rgba(245,230,163,0.4)) drop-shadow(0 0 45px rgba(42,138,74,0.25));
+}
+@keyframes logoGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(42,138,74,0.5)) drop-shadow(0 0 18px rgba(245,230,163,0.25)) drop-shadow(0 0 30px rgba(42,138,74,0.15));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(42,138,74,0.65)) drop-shadow(0 0 24px rgba(245,230,163,0.35)) drop-shadow(0 0 40px rgba(42,138,74,0.2));
+  }
 }
 
 /* BUTTONS */
