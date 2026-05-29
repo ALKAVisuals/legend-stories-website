@@ -664,7 +664,53 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
 /* ── Particles ── */
 [data-theme="light"] .skiper-particle-canvas { opacity: 0.2; }
 
-/* ── Social proof cards ── */
+/* ── Social proof grid ── */
+.social-proof-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  justify-items: center;
+}
+.social-proof-card {
+  width: 100%;
+  max-width: 340px;
+  background: rgba(22,22,24,.85);
+  border: 1px solid rgba(60,60,70,.35);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all .4s ease;
+  position: relative;
+  overflow: hidden;
+}
+.social-proof-card:hover {
+  border-color: rgba(42,138,74,.3);
+  box-shadow: 0 8px 40px rgba(0,0,0,.3);
+  transform: translateY(-4px);
+}
+.social-proof-card::after {
+  content: '';
+  position: absolute;
+  top: -30%;
+  right: -30%;
+  width: 70%;
+  height: 70%;
+  background: radial-gradient(circle, rgba(42,138,74,.06) 0%, transparent 65%);
+  pointer-events: none;
+}
+.social-proof-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(42,138,74,.2), transparent);
+}
+
+/* ── Social proof cards light mode ── */
 [data-theme="light"] .social-proof-card {
   background: #FFFFFF;
   border-color: rgba(0,0,0,.06);
@@ -772,4 +818,135 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
 .iphone-play-overlay {
   position:absolute; inset:0; display:flex; align-items:center; justify-content:center; cursor:pointer; background:rgba(0,0,0,0.2); transition:opacity .3s; }
 .iphone-play-overlay.hidden { opacity:0; pointer-events:none; }
+
+/* ── iPhone Video Player (single carousel) ── */
+.iphone-player {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  background: #000;
+  border-radius: 36px;
+  overflow: hidden;
+  border: 6px solid #333;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.1),
+    0 20px 60px rgba(0,0,0,.3);
+}
+.iphone-player::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 24px;
+  background: #000;
+  border-radius: 0 0 16px 16px;
+  z-index: 20;
+}
+.video-slides {
+  position: relative;
+  width: 100%;
+  padding-bottom: 177%; /* 9:16 aspect */
+  overflow: hidden;
+}
+.video-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity .4s ease;
+  overflow: hidden;
+}
+.video-slide.active {
+  opacity: 1;
+  z-index: 5;
+}
+.video-slide iframe,
+.video-slide blockquote,
+.video-slide > * {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+}
+.iphone-video-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8px 14px;
+  background: linear-gradient(transparent, rgba(0,0,0,.7));
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 10;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+.iphone-video-info svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+/* Nav dots & buttons */
+.iphone-dots { display: flex; gap: 8px; align-items: center; }
+.iphone-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.3);
+  border: none; padding: 0;
+  cursor: pointer;
+  transition: all .3s ease;
+}
+.iphone-dot.active {
+  background: var(--color-mint, #2a8a4a);
+  transform: scale(1.3);
+}
+.iphone-nav-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--color-surface-light, rgba(255,255,255,.1));
+  color: var(--color-text-secondary, #A0A0B0);
+  border: none; cursor: pointer;
+  transition: all .2s ease;
+}
+.iphone-nav-btn:hover {
+  background: var(--color-mint, #2a8a4a);
+  color: #fff;
+}
+
+[data-theme="light"] .iphone-nav-btn {
+  background: rgba(0,0,0,.06);
+  color: #6E6E73;
+}
+[data-theme="light"] .iphone-nav-btn:hover {
+  background: #B5945B;
+  color: #fff;
+}
+[data-theme="light"] .iphone-dot {
+  background: rgba(0,0,0,.15);
+}
+[data-theme="light"] .iphone-dot.active {
+  background: #B5945B;
+}
+
+/* Home indicator */
+.iphone-home-indicator {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 4px;
+  background: rgba(255,255,255,.3);
+  border-radius: 2px;
+  z-index: 15;
+}
+
+/* Light mode iPhone player */
+[data-theme="light"] .iphone-player {
+  border-color: #d8d8dc;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.06),
+    0 20px 60px rgba(0,0,0,.15);
+}
 
