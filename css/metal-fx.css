@@ -269,7 +269,7 @@
 
 .metal-fx-root[data-theme='light'] {
   background: #ffffff;
-  color: #1d1d1d;
+  color: #1A1A1A;
 }
 
 .metal-fx-root::before {
@@ -421,4 +421,42 @@
 
 [data-metal-fx-reflect-host] {
   isolation: isolate;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT MODE — Metal FX gold overrides
+   ═══════════════════════════════════════════════════════════════ */
+
+[data-theme="light"] .metal-fx--gold,
+[data-theme="light"] .metal-fx--legend {
+  --mfx-rim-color: rgba(181, 148, 91, 0.55);
+  --mfx-rim-glow:  rgba(181, 148, 91, 0.2);
+  --mfx-highlight: rgba(181, 148, 91, 0.1);
+  --mfx-bg: #FFFFFF;
+  --mfx-fg: #1A1A1A;
+}
+
+[data-theme="light"] .metal-fx--silver {
+  --mfx-rim-color: rgba(150, 150, 160, 0.4);
+  --mfx-rim-glow:  rgba(150, 150, 160, 0.15);
+  --mfx-highlight: rgba(180, 180, 190, 0.08);
+  --mfx-bg: #FFFFFF;
+  --mfx-fg: #1A1A1A;
+}
+
+[data-theme="light"] .metal-fx--chromatic {
+  --mfx-rim-color: rgba(181, 148, 91, 0.35);
+  --mfx-rim-glow:  rgba(181, 148, 91, 0.15);
+  --mfx-highlight: rgba(181, 148, 91, 0.08);
+  --mfx-bg: #FFFFFF;
+  --mfx-fg: #1A1A1A;
+}
+
+[data-theme="light"] .metal-fx--rose-gold {
+  --mfx-rim-color: rgba(181, 148, 91, 0.45);
+  --mfx-rim-glow:  rgba(181, 148, 91, 0.18);
+  --mfx-highlight: rgba(181, 148, 91, 0.1);
+  --mfx-bg: #FFFFFF;
+  --mfx-fg: #1A1A1A;
 }

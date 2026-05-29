@@ -762,3 +762,28 @@
 .axis-counter-suffix {
   margin-left: 0.125rem;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT MODE overrides
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="light"] .axis-patterns-title {
+  color: #1A1A1A;
+}
+[data-theme="light"] .axis-patterns-subtitle {
+  color: #6E6E73;
+}
+[data-theme="light"] .axis-pattern-card {
+  background: #FFFFFF;
+  border-color: rgba(0,0,0,.06);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+[data-theme="light"] .axis-pattern-card:hover {
+  border-color: rgba(181,148,91,.2);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+}
+[data-theme="light"] .axis-pattern-card h3 {
+  color: #1A1A1A;
+}
+[data-theme="light"] .axis-pattern-card p {
+  color: #6E6E73;
+}

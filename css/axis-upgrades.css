@@ -244,3 +244,37 @@
   background: var(--axis-bg);
   padding: 0 0.25rem;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT MODE overrides
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="light"] .axis-section-title {
+  color: #1A1A1A;
+}
+[data-theme="light"] .axis-section-subtitle {
+  color: #6E6E73;
+}
+[data-theme="light"] .axis-card {
+  background: #FFFFFF;
+  border-color: rgba(0,0,0,.06);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+[data-theme="light"] .axis-card:hover {
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+  border-color: rgba(181,148,91,.2);
+}
+[data-theme="light"] .axis-testimonial-content {
+  color: #555;
+}
+[data-theme="light"] .axis-testimonial-name {
+  color: #1A1A1A;
+}
+[data-theme="light"] .axis-testimonial-handle {
+  color: #9A9A9A;
+}
+[data-theme="light"] .axis-feature-card h3 {
+  color: #1A1A1A;
+}
+[data-theme="light"] .axis-feature-card p {
+  color: #6E6E73;
+}
