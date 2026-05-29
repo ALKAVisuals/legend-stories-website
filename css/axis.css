@@ -196,36 +196,3 @@
   background: var(--axis-indigo-500);
   color: #fff;
 }
-
-/* ═══════════════════════════════════════════════════════════════
-   LIGHT MODE overrides
-   ═══════════════════════════════════════════════════════════════ */
-[data-theme="light"] .axis-gradient-text {
-  background: linear-gradient(90deg, #B5945B, #C9A86E);
-}
-[data-theme="light"] .axis-btn-primary {
-  background: #111111;
-  color: #FFFFFF;
-  border-color: #111111;
-}
-[data-theme="light"] .axis-btn-primary:hover {
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-}
-[data-theme="light"] .axis-stat-value {
-  color: #B5945B;
-}
-[data-theme="light"] .axis-divider {
-  background: linear-gradient(90deg, transparent, rgba(0,0,0,.06), transparent);
-}
-[data-theme="light"] .axis-nav-link {
-  color: rgba(0,0,0,.6);
-}
-[data-theme="light"] .axis-nav-link:hover,
-[data-theme="light"] .axis-nav-link.active {
-  color: #1A1A1A;
-}
-[data-theme="light"] .axis-badge {
-  color: #6E6E73;
-  background: rgba(0,0,0,.04);
-  border-color: rgba(0,0,0,.06);
-}

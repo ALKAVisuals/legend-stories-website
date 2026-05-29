@@ -283,16 +283,13 @@
     const moonIcon = document.getElementById('theme-icon-moon');
     if (!toggle || !sunIcon || !moonIcon) return;
 
-    // Check saved preference or default to dark
+    // Check saved preference — default to dark mode
     const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    let isDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+    let isDark = savedTheme !== 'light';
 
     function applyTheme(dark) {
       isDark = dark;
-      // Toggle helper class for any CSS that uses .light-mode
       document.documentElement.classList.toggle('light-mode', !dark);
-      // Also set the data-theme attribute expected by our light-mode CSS overrides
       document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
       sunIcon.classList.toggle('hidden', !dark);
       moonIcon.classList.toggle('hidden', dark);

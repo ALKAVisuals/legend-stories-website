@@ -124,33 +124,23 @@
 /* === LIGHT MODE OVERRIDES === */
 /* Premium art-gallery palette */
 [data-theme="light"] {
-  /* Surfaces */
-  --color-bg-primary:   #F6F5F2;   /* warm gallery off-white */
-  --color-bg-secondary: #FFFFFF;   /* pure white cards/nav */
-  --color-bg-tertiary:  #EAEAEA;   /* subtle grey */
-
-  /* Text */
-  --color-text-primary: #1A1A1A;   /* deep charcoal */
-  --color-text-secondary: #6E6E73; /* neutral grey */
-  --color-text-muted:   #9A9A9A;   /* lighter grey */
-
-  /* Accent — matte gold/bronze */
+  --color-bg-primary:   #F6F5F2;
+  --color-bg-secondary: #FFFFFF;
+  --color-bg-tertiary:  #EAEAEA;
+  --color-text-primary: #1A1A1A;
+  --color-text-secondary: #6E6E73;
+  --color-text-muted:   #9A9A9A;
   --color-accent:       #B5945B;
-  --color-mint:         #B5945B;   /* override mint → gold in light mode */
+  --color-mint:         #B5945B;
   --color-mint-light:   #C9A86E;
   --color-mint-dark:    #9A7D48;
   --color-mint-glow:    rgba(181,148,91,0.2);
   --color-emerald:      #B5945B;
-
-  /* Borders */
   --color-border:       rgba(0,0,0,0.08);
   --color-border-hover: rgba(0,0,0,0.14);
-
-  /* Shadows */
   --shadow-sm:    0 1px 2px rgba(0,0,0,0.04);
   --shadow-md:    0 4px 6px rgba(0,0,0,0.05);
   --shadow-lg:    0 10px 15px rgba(0,0,0,0.06);
   --shadow-xl:    0 20px 25px rgba(0,0,0,0.08);
   --shadow-mint-glow: 0 4px 20px rgba(0,0,0,0.05);
-  --shadow-crimson-glow: 0 0 20px rgba(139,26,26,0.15);
 }
