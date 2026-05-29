@@ -16,10 +16,19 @@ body { overflow-x: hidden; background: var(--color-bg-primary); color: var(--col
 
 /* GLASS */
 .glass {
-  background: rgba(22,22,24,.85);
+  background: rgba(38,38,44,.88);
   backdrop-filter: blur(20px) saturate(1.4);
   -webkit-backdrop-filter: blur(20px) saturate(1.4);
-  border: 1px solid rgba(42,42,48,.4);
+  border: 1px solid rgba(60,60,70,.35);
+}
+
+/* LOGO GLOW — makes black logo pop on dark header */
+.logo-glow {
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.08)) drop-shadow(0 0 14px rgba(42,138,74,0.12));
+  transition: filter 0.3s ease;
+}
+.logo-glow:hover {
+  filter: drop-shadow(0 0 8px rgba(255,255,255,0.12)) drop-shadow(0 0 20px rgba(42,138,74,0.2));
 }
 
 /* BUTTONS */
