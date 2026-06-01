@@ -1,0 +1,202 @@
+[
+  {
+    "name": "The Grind Cycle",
+    "fact": "Defined by a relentless work ethic, this warrior proved that consistency and a simple, disciplined routine are the keys to total dominance.",
+    "filename_slug": "grind-cycle-combat-legend-mural",
+    "slug": "grind-cycle",
+    "category": "Combat Legends",
+    "page": "combat-legends.html",
+    "cat_slug": "combat",
+    "img_filename": "grind-cycle-combat-legend-mural.png"
+  },
+  {
+    "name": "Unstoppable Will",
+    "fact": "An explosive force who mastered the art of psychological dominance and climbed to the top by believing in himself when no one else did.",
+    "filename_slug": "unstoppable-will-combat-legend-mural",
+    "slug": "unstoppable-will",
+    "category": "Combat Legends",
+    "page": "combat-legends.html",
+    "cat_slug": "combat",
+    "img_filename": "unstoppable-will-combat-legend-mural.png"
+  },
+  {
+    "name": "Dream Reality",
+    "fact": "Forged in the harsh conditions of the mountains, this legend maintained an undefeated legacy through iron discipline and unwavering focus.",
+    "filename_slug": "dream-reality-combat-legend-mural",
+    "slug": "dream-reality",
+    "category": "Combat Legends",
+    "page": "combat-legends.html",
+    "cat_slug": "combat",
+    "img_filename": "dream-reality-combat-legend-mural.png"
+  },
+  {
+    "name": "Courageous Risk",
+    "fact": "A legendary force who combined unmatched speed with the bravery to stand up for his convictions, even when the entire world was against him.",
+    "filename_slug": "courageous-risk-combat-legend-mura",
+    "slug": "courageous-risk",
+    "category": "Combat Legends",
+    "page": "combat-legends.html",
+    "cat_slug": "combat",
+    "img_filename": "courageous-risk-combat-legend-mural.png"
+  },
+  {
+    "name": "The Greatest Courage",
+    "fact": "Widely regarded as the most influential figure in his field, proving that true greatness comes from a combination of skill and an unbreakable spirit.",
+    "filename_slug": "greatest-courage-combat-legend-mural",
+    "slug": "greatest-courage",
+    "category": "Combat Legends",
+    "page": "combat-legends.html",
+    "cat_slug": "combat",
+    "img_filename": "greatest-courage-combat-legend-mural.png"
+  },
+  {
+    "name": "Constant Evolution",
+    "fact": "A master of transformation who blends cinematic soundscapes with a mysterious persona to captivate the world.",
+    "filename_slug": "constant-evolution-music-legend-mural",
+    "slug": "constant-evolution",
+    "category": "Music Legends",
+    "page": "music-legends.html",
+    "cat_slug": "music",
+    "img_filename": "constant-evolution-music-legend-mural.png"
+  },
+  {
+    "name": "Eternal Smile",
+    "fact": "Found beauty in the chaos and inspired millions with an honest, evolving perspective on the journey of life.",
+    "filename_slug": "eternal-smile-music-legend-mural",
+    "slug": "eternal-smile",
+    "category": "Music Legends",
+    "page": "music-legends.html",
+    "cat_slug": "music",
+    "img_filename": "eternal-smile-music-legend-mural.png"
+  },
+  {
+    "name": "Lyric Mastery",
+    "fact": "A master of linguistic precision who proved that raw passion and technical skill can break every barrier.",
+    "filename_slug": "lyric-mastery-music-legend-mural",
+    "slug": "lyric-mastery",
+    "category": "Music Legends",
+    "page": "music-legends.html",
+    "cat_slug": "music",
+    "img_filename": "lyric-mastery-music-legend-mural.png"
+  },
+  {
+    "name": "Pure Confidence",
+    "fact": "Possesses an unshakable belief in himself, proving that confidence is the first step toward total dominance.",
+    "filename_slug": "pure-confidence-music-legend-mural",
+    "slug": "pure-confidence",
+    "category": "Music Legends",
+    "page": "music-legends.html",
+    "cat_slug": "music",
+    "img_filename": "pure-confidence-music-legend-mural.png"
+  },
+  {
+    "name": "The Style Code",
+    "fact": "A visionary who understands that true elegance isn't about the price tag, but about how you carry yourself.",
+    "filename_slug": "style-code-music-legend-mural",
+    "slug": "style-code",
+    "category": "Music Legends",
+    "page": "music-legends.html",
+    "cat_slug": "music",
+    "img_filename": "style-code-music-legend-mural.png"
+  },
+  {
+    "name": "The Free Spirit",
+    "fact": "Lives by his own rules, embracing a life of absolute independence and authenticity without compromise.",
+    "filename_slug": "free-spirit-music-legend-mural",
+    "slug": "free-spirit",
+    "category": "Music Legends",
+    "page": "music-legends.html",
+    "cat_slug": "music",
+    "img_filename": "free-spirit-music-legend-mural.png"
+  },
+  {
+    "name": "The Truth Seeker",
+    "fact": "A voice for the voiceless who saw through the illusions of the world to speak raw, unfiltered truth.",
+    "filename_slug": "truth-seeker-music-legend-mural",
+    "slug": "truth-seeker",
+    "category": "Music Legends",
+    "page": "music-legends.html",
+    "cat_slug": "music",
+    "img_filename": "truth-seeker-music-legend-mural.png"
+  },
+  {
+    "name": "The Style Prophet",
+    "fact": "Views aesthetics as a spiritual experience, blending art and attire to redefine the culture of the modern era.",
+    "filename_slug": "style-prophet-music-legend-mural",
+    "slug": "style-prophet",
+    "category": "Music Legends",
+    "page": "music-legends.html",
+    "cat_slug": "music",
+    "img_filename": "style-prophet-music-legend-mural.png"
+  },
+  {
+    "name": "Unstoppable Will",
+    "fact": "A relentless competitor who showed the world that hard work beats talent when talent doesn't work hard.",
+    "filename_slug": "unstoppable-will-sport-legend-mural",
+    "slug": "unstoppable-will",
+    "category": "Sport Legends",
+    "page": "sport-legends.html",
+    "cat_slug": "sport",
+    "img_filename": "unstoppable-will-sport-legend-mural.png"
+  },
+  {
+    "name": "The Peak Performer",
+    "fact": "A master of mental toughness who proved that absolute focus is the key to staying at the top.",
+    "filename_slug": "peak-performer-sport-legend-mural",
+    "slug": "peak-performer",
+    "category": "Sport Legends",
+    "page": "sport-legends.html",
+    "cat_slug": "sport",
+    "img_filename": "peak-performer-sport-legend-mural.png"
+  },
+  {
+    "name": "The Lion's Pride",
+    "fact": "A dominant force of nature who refuses to be compared to others, existing in a league of his own.",
+    "filename_slug": "lions-pride-sport-legend-mural",
+    "slug": "lions-pride",
+    "category": "Sport Legends",
+    "page": "sport-legends.html",
+    "cat_slug": "sport",
+    "img_filename": "lions-pride-sport-legend-mural.png"
+  },
+  {
+    "name": "The Luxury Standard",
+    "fact": "A world-class talent whose confidence is as legendary as the impossible feats he achieves on the field.",
+    "filename_slug": "football-luxury-performance-legend-mural",
+    "slug": "luxury-standard",
+    "category": "Sport Legends",
+    "page": "sport-legends.html",
+    "cat_slug": "sport",
+    "img_filename": "football-luxury-performance-legend-mural.png"
+  },
+  {
+    "name": "Mamba Mindset",
+    "fact": "Defined an entire era through a legendary obsession with preparation and a will that refused to quit.",
+    "filename_slug": "mamba-mindset-sport-legend-mural",
+    "slug": "mamba-mindset",
+    "category": "Sport Legends",
+    "page": "sport-legends.html",
+    "cat_slug": "sport",
+    "img_filename": "mamba-mindset-sport-legend-mural.png"
+  },
+  {
+    "name": "Pursuit of Greatness",
+    "fact": "Turned every setback into fuel, proving that determination is the only bridge between failure and success.",
+    "filename_slug": "pursuit-greatness-sport-legend-mural",
+    "slug": "pursuit-greatness",
+    "category": "Sport Legends",
+    "page": "sport-legends.html",
+    "cat_slug": "sport",
+    "img_filename": "pursuit-greatness-sport-legend-mural.png"
+  },
+  {
+    "name": "Unforgettable Roots",
+    "fact": "A powerhouse who conquered the global stage while remaining eternally loyal to where his journey began.",
+    "filename_slug": "unforgettable-roots-sport-legend-mural",
+    "slug": "unforgettable-roots",
+    "category": "Sport Legends",
+    "page": "sport-legends.html",
+    "cat_slug": "sport",
+    "img_filename": "unforgettable-roots-sport-legend-mural.png"
+  }
+]
