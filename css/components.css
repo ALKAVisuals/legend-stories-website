@@ -319,3 +319,49 @@ body {
 .product-card:hover .product-img img {
   transform: scale(1.05);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT MODE — Hardcoded green → gold overrides
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Buttons ── */
+[data-theme="light"] .btn-outline:hover,
+.light-mode .btn-outline:hover {
+  background: rgba(181,148,91,0.1);
+}
+[data-theme="light"] .btn-ghost:hover,
+.light-mode .btn-ghost:hover {
+  border-color: #B5945B;
+  color: #B5945B;
+}
+
+/* ── Cards ── */
+[data-theme="light"] .card-mint:hover,
+.light-mode .card-mint:hover {
+  border-color: #B5945B;
+  box-shadow: 0 0 20px rgba(181,148,91,0.15);
+}
+
+/* ── Badges ── */
+[data-theme="light"] .badge-mint,
+.light-mode .badge-mint {
+  background: rgba(181,148,91,0.15);
+  color: #B5945B;
+}
+
+/* ── Inputs ── */
+[data-theme="light"] .input:focus,
+.light-mode .input:focus {
+  border-color: #B5945B;
+  box-shadow: 0 0 0 3px rgba(181,148,91,0.15);
+}
+
+/* ── Nav ── */
+[data-theme="light"] .nav-link:hover,
+[data-theme="light"] .nav-link.active,
+.light-mode .nav-link:hover,
+.light-mode .nav-link.active {
+  color: #B5945B;
+  background: rgba(181,148,91,0.08);
+}
+

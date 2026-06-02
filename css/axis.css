@@ -196,3 +196,41 @@
   background: var(--axis-indigo-500);
   color: #fff;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT MODE — Hardcoded green → gold overrides
+   ═══════════════════════════════════════════════════════════════ */
+
+[data-theme="light"] .axis-gradient-text,
+.light-mode .axis-gradient-text {
+  background: linear-gradient(90deg, #B5945B, #C9A84C);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+[data-theme="light"] .axis-btn-primary,
+.light-mode .axis-btn-primary {
+  background: linear-gradient(135deg, #B5945B, #C9A84C);
+  border-color: #B5945B;
+}
+[data-theme="light"] .axis-btn-primary:hover,
+.light-mode .axis-btn-primary:hover {
+  background: #C9A84C;
+  border-color: #C9A84C;
+  box-shadow: 0 0 20px rgba(181,148,91,0.3);
+}
+[data-theme="light"] .axis-btn-outline,
+.light-mode .axis-btn-outline {
+  color: #B5945B;
+  border-color: rgba(181,148,91,0.4);
+}
+[data-theme="light"] .axis-btn-outline:hover,
+.light-mode .axis-btn-outline:hover {
+  border-color: #B5945B;
+  background: rgba(181,148,91,0.1);
+}
+[data-theme="light"] .axis-stat-value,
+.light-mode .axis-stat-value {
+  color: #B5945B;
+}
+

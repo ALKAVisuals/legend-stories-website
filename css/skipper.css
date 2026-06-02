@@ -624,3 +624,62 @@
   height: 4rem;
   background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT MODE — Hardcoded green → gold overrides
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Carousel dots ── */
+[data-theme="light"] .skp-carousel-cards__dot--active,
+.light-mode .skp-carousel-cards__dot--active {
+  background: #B5945B;
+}
+
+/* ── Perspective carousel ── */
+[data-theme="light"] .skp-carousel-perspective__slide--center,
+.light-mode .skp-carousel-perspective__slide--center {
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 30px rgba(181,148,91,0.15);
+}
+[data-theme="light"] .skp-carousel-perspective__arrow,
+.light-mode .skp-carousel-perspective__arrow {
+  background: rgba(181,148,91,0.15);
+  border-color: rgba(181,148,91,0.3);
+  color: #B5945B;
+}
+[data-theme="light"] .skp-carousel-perspective__arrow:hover,
+.light-mode .skp-carousel-perspective__arrow:hover {
+  background: rgba(181,148,91,0.3);
+  border-color: #B5945B;
+}
+[data-theme="light"] .skp-carousel-perspective__dot,
+.light-mode .skp-carousel-perspective__dot {
+  background: rgba(181,148,91,0.2);
+  border-color: rgba(181,148,91,0.3);
+}
+[data-theme="light"] .skp-carousel-perspective__dot:hover,
+.light-mode .skp-carousel-perspective__dot:hover {
+  background: rgba(181,148,91,0.4);
+}
+[data-theme="light"] .skp-carousel-perspective__dot--active,
+.light-mode .skp-carousel-perspective__dot--active {
+  background: #B5945B;
+  border-color: #B5945B;
+  box-shadow: 0 0 10px rgba(181,148,91,0.4);
+}
+
+/* ── Autoplay bar ── */
+[data-theme="light"] .skp-carousel-perspective__autoplay-bar,
+.light-mode .skp-carousel-perspective__autoplay-bar {
+  background: linear-gradient(90deg, #B5945B, #C9A84C);
+}
+
+/* ── Crowd fallback ── */
+[data-theme="light"] .skp-crowd-fallback__peep,
+.light-mode .skp-crowd-fallback__peep {
+  background: linear-gradient(135deg, #B5945B, #C9A84C);
+}
+[data-theme="light"] .skp-crowd-fallback__peep:nth-child(odd),
+.light-mode .skp-crowd-fallback__peep:nth-child(odd) {
+  background: linear-gradient(135deg, #C9A84B, #D4B85C);
+}
+

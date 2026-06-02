@@ -198,7 +198,7 @@
   left: 1.5rem;
   font-size: 4rem;
   font-family: 'Playfair Display', serif;
-  color: rgba(c9,a8,4c, 0.15);
+  color: rgba(201,168,76, 0.15);
   line-height: 1;
 }
 
@@ -215,8 +215,8 @@
   outline: none;
 }
 .axis-input:focus {
-  border-color: rgba(c9,a8,4c, 0.5);
-  box-shadow: 0 0 0 3px rgba(c9,a8,4c, 0.1);
+  border-color: rgba(181,148,91, 0.5);
+  box-shadow: 0 0 0 3px rgba(181,148,91, 0.1);
 }
 .axis-input::placeholder {
   color: var(--axis-text-muted);
@@ -240,7 +240,7 @@
   top: -0.5rem;
   left: 0.75rem;
   font-size: 0.7rem;
-  color: #2a8a4a;
+  color: #B5945B;
   background: var(--axis-bg);
   padding: 0 0.25rem;
 }
