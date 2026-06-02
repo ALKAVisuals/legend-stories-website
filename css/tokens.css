@@ -17,11 +17,11 @@
   --color-off-white:    #e8e8e8;
 
   /* Brand accent — Mint Green (logo kleuren: groen + zwart) */
-  --color-mint:         #2a8a4a;
-  --color-mint-light:   #3da86a;
-  --color-mint-dark:    #1d6a36;
-  --color-mint-glow:    rgba(42,138,74,0.25);
-  --color-emerald:      #22c55e;
+  --color-mint:         #B5945B;
+  --color-mint-light:   #D4A853;
+  --color-mint-dark:    #9A7D48;
+  --color-mint-glow:    rgba(181,148,91,0.25);
+  --color-emerald:      #B5945B;
 
   /* Crimson accent */
   --color-crimson:      #8b1a1a;
