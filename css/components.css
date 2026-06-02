@@ -295,3 +295,27 @@ body {
   .section-title { font-size: var(--text-3xl); }
   .asset-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
 }
+
+/* ── Product Card (listing pages) ── */
+.product-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-secondary, #161618);
+  border-radius: 1rem;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.product-card:hover {
+  transform: translateY(-4px);
+}
+.product-card .product-img {
+  position: relative;
+  overflow: hidden;
+}
+.product-card .product-img img {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.group:hover .product-card .product-img img,
+.product-card:hover .product-img img {
+  transform: scale(1.05);
+}
