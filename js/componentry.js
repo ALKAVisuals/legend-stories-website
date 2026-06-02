@@ -226,7 +226,7 @@ void main() {
   }
 
   const palettes = {
-    default: { dA: '#0a1a10', dB: '#0d2a1a', dC: '#2a8a4a', lA: '#f0f2f7', lB: '#d7ece0', lC: '#a0d8b8' },
+    default: { dA: '#0a1a10', dB: '#0d2a1a', dC: '#2a8a4a', lA: '#fff8ee', lB: '#f0dcc0', lC: '#c9a84c' },
     neon:    { dA: '#050708', dB: '#0a2a1a', dC: '#2a8a4a', lA: '#f0f2f7', lB: '#d7dceb', lC: '#bcc5e0' },
     sunset:  { dA: '#1a0a2e', dB: '#3c141e', dC: '#ff6b6b', lA: '#fff0e6', lB: '#ffc8b4', lC: '#ffaa96' },
     ocean:   { dA: '#0a1628', dB: '#143250', dC: '#4facfe', lA: '#e6f0ff', lB: '#c8dcfa', lC: '#aaf0f0' },
@@ -368,6 +368,26 @@ void main() {
       animFrame = requestAnimationFrame(render);
     }
   });
+
+  // Sync with site theme toggle
+  function syncTheme() {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light'
+      || document.documentElement.classList.contains('light-mode');
+    setTheme(isLight ? 'light' : 'dark');
+  }
+
+  // Listen for theme changes via MutationObserver
+  const themeObserver = new MutationObserver(function(mutations) {
+    mutations.forEach(function(m) {
+      if (m.type === 'attributes' && (m.attributeName === 'data-theme' || m.attributeName === 'class')) {
+        syncTheme();
+      }
+    });
+  });
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+
+  // Also sync on init
+  syncTheme();
 
   } // end initComponentry
 
