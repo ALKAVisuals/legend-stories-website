@@ -228,21 +228,13 @@
     const zone = SHIPPING_ZONES[state.shippingCountry] || SHIPPING_ZONES.OTHER;
 
     dom.cartItems.innerHTML =
-      '<div class="mb-4 relative"><label class="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5 block">Shipping to</label>' +
-      '<div class="relative">' +
-      '<input type="text" id="cart-country-search" class="w-full p-2.5 pr-8 rounded-lg bg-surface border border-surface-border/30 text-sm text-text-primary focus:border-mint/40 focus:outline-none" placeholder="Search country..." value="' + (COUNTRY_OPTIONS.find(c => c.code === state.shippingCountry)?.flag + ' ' + (COUNTRY_OPTIONS.find(c => c.code === state.shippingCountry)?.name || '')) + '" autocomplete="off" />' +
-      '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>' +
-      '<div id="cart-country-list" class="absolute z-50 top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-lg bg-surface border border-surface-border/30 shadow-xl hidden"></div>' +
-      '<input type="hidden" id="cart-country-select" value="' + state.shippingCountry + '">' +
-      '</div></div>' +
       state.cart.map((item, i) => '<div class="flex gap-4 mb-3 p-3 rounded-xl bg-surface-light/50 border border-surface-border/30"><div class="w-16 h-16 rounded-lg bg-surface flex items-center justify-center text-2xl shrink-0">' + item.image + '</div><div class="flex-1 min-w-0"><p class="text-sm font-medium text-text-primary truncate">' + item.name + '</p><div class="flex items-center justify-between mt-2"><div class="flex items-center gap-2"><button onclick="window.legendApp.updateQty(' + i + ',-1)" class="w-6 h-6 rounded bg-surface flex items-center justify-center text-text-secondary hover:text-mint transition-colors">−</button><span class="text-sm text-text-primary min-w-[20px] text-center">' + item.quantity + '</span><button onclick="window.legendApp.updateQty(' + i + ',1)" class="w-6 h-6 rounded bg-surface flex items-center justify-center text-text-secondary hover:text-mint transition-colors">+</button></div><div class="flex items-center gap-3"><span class="text-sm font-medium text-mint">' + formatPrice(item.price * item.quantity) + '</span><button onclick="window.legendApp.removeItem(' + i + ')" class="text-text-muted hover:text-red-400 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div></div></div></div>').join('') +
-      '<div class="border-t border-surface-border/30 pt-3 mt-3 space-y-1.5">' +
-      '<div class="flex justify-between text-sm"><span class="text-text-muted">Subtotal</span><span class="text-text-secondary">' + formatPrice(cartSubtotal) + '</span></div>' +
-      '<div class="flex justify-between text-sm"><span class="text-text-muted">Shipping' + (zone.freeFrom ? ' <span class="text-[10px]">(free over ' + formatPrice(zone.freeFrom) + ')</span>' : '') + '</span><span class="text-mint font-medium">' + (shippingCost === 0 ? 'Free' : formatPrice(shippingCost)) + '</span></div>' +
-      (shippingCost > 0 ? '<div class="text-[10px] text-text-muted text-right">Add ' + formatPrice(zone.freeFrom - cartSubtotal) + ' more for free shipping</div>' : '') +
+      '<div class="border-t border-surface-border/30 pt-3 mt-3">' +
+      '<div class="flex justify-between text-sm"><span class="text-text-muted">Subtotal</span><span class="text-text-primary font-medium">' + formatPrice(cartSubtotal) + '</span></div>' +
+      '<p class="text-[11px] text-text-muted mt-1.5">🚚 Shipping calculated at checkout based on your country. Free shipping available from €50+ (NL) / €75+ (EU) / €150+ (World)</p>' +
       '</div>';
 
-    if (dom.cartTotal) dom.cartTotal.textContent = formatPrice(cartSubtotal + shippingCost);
+    if (dom.cartTotal) dom.cartTotal.textContent = formatPrice(cartSubtotal);
   }
 
   // ==========================================
@@ -618,7 +610,6 @@
     initCarousel();
     initVideoPlayer();
     initThemeToggle();
-    initCountrySearch();
     updateCartCount();
   }
 
@@ -627,60 +618,7 @@
     updateQty: updateCartQuantity,
     removeItem: removeFromCart,
     addProduct: addToCart,
-    setCountry: setShippingCountry,
   };
-
-  // Country search functionality
-  function initCountrySearch() {
-    const searchInput = document.getElementById('cart-country-search');
-    const countryList = document.getElementById('cart-country-list');
-    const hiddenSelect = document.getElementById('cart-country-select');
-    if (!searchInput || !countryList) return;
-
-    function renderList(filter) {
-      const filtered = COUNTRY_OPTIONS.filter(c =>
-        c.name.toLowerCase().includes(filter.toLowerCase()) ||
-        c.code.toLowerCase().includes(filter.toLowerCase())
-      );
-      if (filtered.length === 0) {
-        countryList.innerHTML = '<div class="p-3 text-sm text-text-muted text-center">No country found</div>';
-      } else {
-        countryList.innerHTML = filtered.map(c =>
-          '<div class="country-option px-3 py-2.5 text-sm cursor-pointer hover:bg-surface-light/50 transition-colors flex items-center gap-2" data-code="' + c.code + '">' +
-          '<span class="text-base">' + c.flag + '</span>' +
-          '<span class="text-text-primary">' + c.name + '</span>' +
-          (state.shippingCountry === c.code ? '<span class="ml-auto text-mint text-xs">✓</span>' : '') +
-          '</div>'
-        ).join('');
-      }
-      countryList.classList.remove('hidden');
-    }
-
-    searchInput.addEventListener('focus', function() {
-      renderList(this.value.replace(/^[^\s]+\s/, ''));
-    });
-
-    searchInput.addEventListener('input', function() {
-      renderList(this.value.replace(/^[^\s]+\s/, ''));
-    });
-
-    searchInput.addEventListener('blur', function() {
-      setTimeout(() => countryList.classList.add('hidden'), 200);
-    });
-
-    countryList.addEventListener('click', function(e) {
-      const option = e.target.closest('.country-option');
-      if (!option) return;
-      const code = option.getAttribute('data-code');
-      const country = COUNTRY_OPTIONS.find(c => c.code === code);
-      if (country) {
-        searchInput.value = country.flag + ' ' + country.name;
-        hiddenSelect.value = code;
-        setShippingCountry(code);
-      }
-      countryList.classList.add('hidden');
-    });
-  }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
