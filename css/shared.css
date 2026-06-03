@@ -594,3 +594,9 @@ html:not([data-theme="light"]) .focus\:border-mint\/40:focus { border-color: rgb
 html:not([data-theme="light"]) .group:hover .group-hover\:text-mint { color: #2a8a4a !important; }
 html:not([data-theme="light"]) .after\:bg-mint::after { background-color: #2a8a4a !important; }
 
+/* Light mode: text-mint → darker gold for readability on cream bg */
+[data-theme="light"] .text-mint,
+.light-mode .text-mint {
+  color: #8a6d3b !important;
+}
+
