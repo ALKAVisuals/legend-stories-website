@@ -16,7 +16,64 @@
     mobileMenuOpen: false,
     testimonialIndex: 0,
     totalTestimonials: 4,
+    shippingCountry: 'NL',
+    shippingCost: 0,
   };
+
+  // ==========================================
+  // SHIPPING CONFIG
+  // ==========================================
+  const SHIPPING_ZONES = {
+    NL:  { name: 'Netherlands',     cost: 3.95, freeFrom: 50,  currency: 'EUR' },
+    BE:  { name: 'Belgium',         cost: 5.95, freeFrom: 75,  currency: 'EUR' },
+    DE:  { name: 'Germany',         cost: 5.95, freeFrom: 75,  currency: 'EUR' },
+    FR:  { name: 'France',          cost: 5.95, freeFrom: 75,  currency: 'EUR' },
+    LU:  { name: 'Luxembourg',      cost: 5.95, freeFrom: 75,  currency: 'EUR' },
+    AT:  { name: 'Austria',         cost: 5.95, freeFrom: 75,  currency: 'EUR' },
+    DK:  { name: 'Denmark',         cost: 9.95, freeFrom: 100, currency: 'EUR' },
+    SE:  { name: 'Sweden',          cost: 9.95, freeFrom: 100, currency: 'EUR' },
+    ES:  { name: 'Spain',           cost: 9.95, freeFrom: 100, currency: 'EUR' },
+    IT:  { name: 'Italy',           cost: 9.95, freeFrom: 100, currency: 'EUR' },
+    PT:  { name: 'Portugal',        cost: 9.95, freeFrom: 100, currency: 'EUR' },
+    IE:  { name: 'Ireland',         cost: 9.95, freeFrom: 100, currency: 'EUR' },
+    FI:  { name: 'Finland',         cost: 9.95, freeFrom: 100, currency: 'EUR' },
+    PL:  { name: 'Poland',          cost: 9.95, freeFrom: 100, currency: 'EUR' },
+    CZ:  { name: 'Czech Republic',  cost: 9.95, freeFrom: 100, currency: 'EUR' },
+    CH:  { name: 'Switzerland',     cost: 9.95, freeFrom: 100, currency: 'EUR' },
+    NO:  { name: 'Norway',          cost: 9.95, freeFrom: 100, currency: 'EUR' },
+    GB:  { name: 'United Kingdom',  cost: 9.95, freeFrom: 100, currency: 'EUR' },
+    US:  { name: 'United States',   cost: 14.95,freeFrom: 150, currency: 'EUR' },
+    CA:  { name: 'Canada',          cost: 14.95,freeFrom: 150, currency: 'EUR' },
+    AU:  { name: 'Australia',       cost: 14.95,freeFrom: 150, currency: 'EUR' },
+    JP:  { name: 'Japan',           cost: 14.95,freeFrom: 150, currency: 'EUR' },
+    OTHER: { name: 'Rest of World', cost: 14.95,freeFrom: 150, currency: 'EUR' },
+  };
+
+  const COUNTRY_OPTIONS = [
+    { code: 'NL', flag: '🇳🇱', name: 'Netherlands' },
+    { code: 'BE', flag: '🇧🇪', name: 'Belgium' },
+    { code: 'DE', flag: '🇩🇪', name: 'Germany' },
+    { code: 'FR', flag: '🇫🇷', name: 'France' },
+    { code: 'LU', flag: '🇱🇺', name: 'Luxembourg' },
+    { code: 'AT', flag: '🇦🇹', name: 'Austria' },
+    { code: 'GB', flag: '🇬🇧', name: 'United Kingdom' },
+    { code: 'IE', flag: '🇮🇪', name: 'Ireland' },
+    { code: 'DK', flag: '🇩🇰', name: 'Denmark' },
+    { code: 'SE', flag: '🇸🇪', name: 'Sweden' },
+    { code: 'FI', flag: '🇫🇮', name: 'Finland' },
+    { code: 'ES', flag: '🇪🇸', name: 'Spain' },
+    { code: 'PT', flag: '🇵🇹', name: 'Portugal' },
+    { code: 'IT', flag: '🇮🇹', name: 'Italy' },
+    { code: 'PL', flag: '🇵🇱', name: 'Poland' },
+    { code: 'CZ', flag: '🇨🇿', name: 'Czech Republic' },
+    { code: 'CH', flag: '🇨🇭', name: 'Switzerland' },
+    { code: 'NO', flag: '🇳🇴', name: 'Norway' },
+    { code: 'US', flag: '🇺🇸', name: 'United States' },
+    { code: 'CA', flag: '🇨🇦', name: 'Canada' },
+    { code: 'AU', flag: '🇦🇺', name: 'Australia' },
+    { code: 'JP', flag: '🇯🇵', name: 'Japan' },
+    { code: 'OTHER', flag: '🌍', name: 'Rest of World' },
+  ];
 
   // ==========================================
   // DOM REFERENCES
@@ -114,6 +171,25 @@
     return state.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }
 
+  function getShippingCost() {
+    if (state.cart.length === 0) { state.shippingCost = 0; return 0; }
+    const zone = SHIPPING_ZONES[state.shippingCountry] || SHIPPING_ZONES.OTHER;
+    const cartTotal = getCartTotal();
+    if (cartTotal >= zone.freeFrom) { state.shippingCost = 0; return 0; }
+    state.shippingCost = zone.cost;
+    return zone.cost;
+  }
+
+  function getGrandTotal() {
+    return getCartTotal() + getShippingCost();
+  }
+
+  function setShippingCountry(code) {
+    state.shippingCountry = code;
+    getShippingCost();
+    renderCart();
+  }
+
   function renderCart() {
     if (!dom.cartItems) return;
     if (state.cart.length === 0) {
@@ -125,10 +201,30 @@
       return;
     }
     if (dom.checkoutBtn) dom.checkoutBtn.disabled = false;
-    if (dom.cartTotal) dom.cartTotal.textContent = formatPrice(getCartTotal());
     const upsell = document.getElementById('cart-upsell');
     if (upsell) upsell.classList.remove('hidden');
-    dom.cartItems.innerHTML = state.cart.map((item, i) => '<div class="flex gap-4 mb-4 p-3 rounded-xl bg-surface-light/50 border border-surface-border/30"><div class="w-16 h-16 rounded-lg bg-surface flex items-center justify-center text-2xl shrink-0">' + item.image + '</div><div class="flex-1 min-w-0"><p class="text-sm font-medium text-text-primary truncate">' + item.name + '</p><div class="flex items-center justify-between mt-2"><div class="flex items-center gap-2"><button onclick="window.legendApp.updateQty(' + i + ',-1)" class="w-6 h-6 rounded bg-surface flex items-center justify-center text-text-secondary hover:text-mint transition-colors">−</button><span class="text-sm text-text-primary min-w-[20px] text-center">' + item.quantity + '</span><button onclick="window.legendApp.updateQty(' + i + ',1)" class="w-6 h-6 rounded bg-surface flex items-center justify-center text-text-secondary hover:text-mint transition-colors">+</button></div><div class="flex items-center gap-3"><span class="text-sm font-medium text-mint">' + formatPrice(item.price * item.quantity) + '</span><button onclick="window.legendApp.removeItem(' + i + ')" class="text-text-muted hover:text-red-400 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div></div></div></div>').join('');
+
+    // Country selector HTML
+    const countryOptions = COUNTRY_OPTIONS.map(c =>
+      '<option value="' + c.code + '"' + (state.shippingCountry === c.code ? ' selected' : '') + '>' + c.flag + ' ' + c.name + '</option>'
+    ).join('');
+
+    const cartSubtotal = getCartTotal();
+    const shippingCost = getShippingCost();
+    const zone = SHIPPING_ZONES[state.shippingCountry] || SHIPPING_ZONES.OTHER;
+
+    dom.cartItems.innerHTML =
+      '<div class="mb-4"><label class="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5 block">Shipping to</label>' +
+      '<select id="cart-country-select" class="w-full p-2.5 rounded-lg bg-surface border border-surface-border/30 text-sm text-text-primary appearance-none cursor-pointer focus:border-mint/40 focus:outline-none" onchange="window.legendApp.setCountry(this.value)">' +
+      countryOptions + '</select></div>' +
+      state.cart.map((item, i) => '<div class="flex gap-4 mb-3 p-3 rounded-xl bg-surface-light/50 border border-surface-border/30"><div class="w-16 h-16 rounded-lg bg-surface flex items-center justify-center text-2xl shrink-0">' + item.image + '</div><div class="flex-1 min-w-0"><p class="text-sm font-medium text-text-primary truncate">' + item.name + '</p><div class="flex items-center justify-between mt-2"><div class="flex items-center gap-2"><button onclick="window.legendApp.updateQty(' + i + ',-1)" class="w-6 h-6 rounded bg-surface flex items-center justify-center text-text-secondary hover:text-mint transition-colors">−</button><span class="text-sm text-text-primary min-w-[20px] text-center">' + item.quantity + '</span><button onclick="window.legendApp.updateQty(' + i + ',1)" class="w-6 h-6 rounded bg-surface flex items-center justify-center text-text-secondary hover:text-mint transition-colors">+</button></div><div class="flex items-center gap-3"><span class="text-sm font-medium text-mint">' + formatPrice(item.price * item.quantity) + '</span><button onclick="window.legendApp.removeItem(' + i + ')" class="text-text-muted hover:text-red-400 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div></div></div></div>').join('') +
+      '<div class="border-t border-surface-border/30 pt-3 mt-3 space-y-1.5">' +
+      '<div class="flex justify-between text-sm"><span class="text-text-muted">Subtotal</span><span class="text-text-secondary">' + formatPrice(cartSubtotal) + '</span></div>' +
+      '<div class="flex justify-between text-sm"><span class="text-text-muted">Shipping' + (zone.freeFrom ? ' <span class="text-[10px]">(free over ' + formatPrice(zone.freeFrom) + ')</span>' : '') + '</span><span class="text-mint font-medium">' + (shippingCost === 0 ? 'Free' : formatPrice(shippingCost)) + '</span></div>' +
+      (shippingCost > 0 ? '<div class="text-[10px] text-text-muted text-right">Add ' + formatPrice(zone.freeFrom - cartSubtotal) + ' more for free shipping</div>' : '') +
+      '</div>';
+
+    if (dom.cartTotal) dom.cartTotal.textContent = formatPrice(cartSubtotal + shippingCost);
   }
 
   // ==========================================
@@ -512,6 +608,7 @@
     updateQty: updateCartQuantity,
     removeItem: removeFromCart,
     addProduct: addToCart,
+    setCountry: setShippingCountry,
   };
 
   if (document.readyState === 'loading') {
