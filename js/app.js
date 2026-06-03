@@ -248,6 +248,8 @@
     modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
 
+    validatedAddress = null;
+
     // Populate country dropdown
     const countrySelect = document.getElementById('checkout-country');
     if (countrySelect && countrySelect.options.length === 0) {
@@ -307,6 +309,8 @@
     }
   }
 
+  let validatedAddress = null;
+
   function handleCheckoutPay() {
     const firstname = document.getElementById('checkout-firstname')?.value.trim();
     const lastname = document.getElementById('checkout-lastname')?.value.trim();
@@ -318,6 +322,19 @@
 
     if (!firstname || !lastname || !email || !street || !zip || !city) {
       alert('Please fill in all required fields.');
+      return;
+    }
+
+    // Email format check
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+
+    // Address must be selected from Google Places
+    if (!validatedAddress) {
+      alert('Please select an address from the suggestions. Start typing your street and choose from the dropdown that appears.');
+      document.getElementById('checkout-street').focus();
       return;
     }
 
@@ -333,7 +350,7 @@
         quantity: item.quantity,
         image: item.image,
       })),
-      customer: { firstname, lastname, email, street, zip, city, country },
+      customer: { firstname, lastname, email, street: validatedAddress.street, zip: validatedAddress.postal_code, city: validatedAddress.city, country: validatedAddress.country, formatted: validatedAddress.formatted },
       shipping: { zone: zone.name, cost: shipping },
       subtotal: subtotal,
       total: subtotal + shipping,
@@ -519,6 +536,99 @@
   }
 
   // ==========================================
+  // GOOGLE PLACES AUTOCOMPLETE
+  // ==========================================
+  let placeAutocomplete = null;
+  let placeAutocompleteInitialized = false;
+
+  const GP_API_KEY = 'V5yqGyVnJ1IFk3fpZojBuvxMAic=';
+
+  function loadGooglePlaces() {
+    if (placeAutocompleteInitialized) return;
+
+    // Create script element
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GP_API_KEY}&libraries=places&callback=initGooglePlacesAutocomplete`;
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+  }
+
+  function initGooglePlacesAutocomplete() {
+    const streetInput = document.getElementById('checkout-street');
+    if (!streetInput) return;
+
+    placeAutocomplete = new google.maps.places.Autocomplete(streetInput, {
+      types: ['address'],
+      fields: ['address_components', 'formatted_address', 'geometry', 'name'],
+    });
+
+    placeAutocompleteInitialized = true;
+
+    placeAutocomplete.addListener('place_changed', function() {
+      const place = placeAutocomplete.getPlace();
+      if (!place || !place.address_components) return;
+
+      parseAndFillAddress(place);
+    });
+  }
+
+  function parseAndFillAddress(place) {
+    const components = place.address_components;
+    let street_number = '';
+    let route = '';
+    let postal_code = '';
+      let city = '';
+    let country_code = '';
+
+    for (const comp of components) {
+      const types = comp.types;
+      if (types.includes('street_number')) street_number = comp.long_name;
+      if (types.includes('route')) route = comp.long_name;
+      if (types.includes('postal_code')) postal_code = comp.long_name;
+      if (types.includes('locality') || types.includes('postal_town')) city = comp.long_name;
+      if (types.includes('country')) country_code = comp.short_name.toLowerCase();
+    }
+
+    // Fill street
+    const streetInput = document.getElementById('checkout-street');
+    if (streetInput) streetInput.value = (route + ' ' + street_number).trim();
+
+    // Fill postal code
+    const zipInput = document.getElementById('checkout-zip');
+    if (zipInput) zipInput.value = postal_code;
+
+    // Fill city
+    const cityInput = document.getElementById('checkout-city');
+    if (cityInput) cityInput.value = city;
+
+    // Fill country
+    const countryInput = document.getElementById('checkout-country');
+    if (countryInput) {
+      // Try to find matching country in dropdown
+      const codeUpper = country_code.toUpperCase();
+      const match = Array.from(countryInput.options).find(o => o.value === codeUpper);
+      if (match) {
+        countryInput.value = codeUpper;
+        if (state) state.shippingCountry = codeUpper;
+        updateCheckoutTotals();
+      }
+    }
+
+    // Mark as validated
+    validatedAddress = {
+      street: (route + ' ' + street_number).trim(),
+      postal_code: postal_code,
+      city: city,
+      country: country_code.toUpperCase(),
+      formatted: place.formatted_address || '',
+    };
+  }
+
+  // Global callback for Google script
+  window.initGooglePlacesAutocomplete = initGooglePlacesAutocomplete;
+
+  // ==========================================
   // EVENT LISTENERS
   // ==========================================
   function initEventListeners() {
@@ -539,9 +649,11 @@
       }
     });
 
-    // Checkout modal
     const checkoutBtn = document.getElementById('checkout-btn');
-    if (checkoutBtn) checkoutBtn.addEventListener('click', openCheckoutModal);
+    if (checkoutBtn) checkoutBtn.addEventListener('click', function() {
+      openCheckoutModal();
+      loadGooglePlaces();
+    });
 
     const checkoutCloseBtn = document.getElementById('checkout-modal-close');
     if (checkoutCloseBtn) checkoutCloseBtn.addEventListener('click', closeCheckoutModal);
