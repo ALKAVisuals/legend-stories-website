@@ -238,6 +238,116 @@
   }
 
   // ==========================================
+  // CHECKOUT MODAL
+  // ==========================================
+  function openCheckoutModal() {
+    if (state.cart.length === 0) return;
+    const modal = document.getElementById('checkout-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    // Populate country dropdown
+    const countrySelect = document.getElementById('checkout-country');
+    if (countrySelect && countrySelect.options.length === 0) {
+      COUNTRY_OPTIONS.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.code;
+        opt.textContent = c.flag + ' ' + c.name;
+        if (c.code === 'NL') opt.selected = true;
+        countrySelect.appendChild(opt);
+      });
+    }
+
+    // Set saved country
+    if (countrySelect) {
+      countrySelect.value = state.shippingCountry || 'NL';
+    }
+
+    updateCheckoutTotals();
+
+    // Country change listener
+    if (countrySelect) {
+      countrySelect.onchange = function() {
+        state.shippingCountry = this.value;
+        updateCheckoutTotals();
+      };
+    }
+  }
+
+  function closeCheckoutModal() {
+    const modal = document.getElementById('checkout-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  function updateCheckoutTotals() {
+    const subtotal = getCartTotal();
+    const zone = SHIPPING_ZONES[state.shippingCountry] || SHIPPING_ZONES.OTHER;
+    const shipping = subtotal >= zone.freeFrom ? 0 : zone.cost;
+    const grandTotal = subtotal + shipping;
+
+    const subtotalEl = document.getElementById('checkout-subtotal');
+    const shippingEl = document.getElementById('checkout-shipping');
+    const grandTotalEl = document.getElementById('checkout-grandtotal');
+    const noteEl = document.getElementById('checkout-shipping-note');
+
+    if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
+    if (shippingEl) shippingEl.textContent = shipping === 0 ? 'Free' : formatPrice(shipping);
+    if (grandTotalEl) grandTotalEl.textContent = formatPrice(grandTotal);
+    if (noteEl) {
+      if (shipping === 0) {
+        noteEl.textContent = '✓ Free shipping to ' + zone.name;
+      } else {
+        noteEl.textContent = 'Add ' + formatPrice(zone.freeFrom - subtotal) + ' more for free shipping to ' + zone.name;
+      }
+    }
+  }
+
+  function handleCheckoutPay() {
+    const firstname = document.getElementById('checkout-firstname')?.value.trim();
+    const lastname = document.getElementById('checkout-lastname')?.value.trim();
+    const email = document.getElementById('checkout-email')?.value.trim();
+    const street = document.getElementById('checkout-street')?.value.trim();
+    const zip = document.getElementById('checkout-zip')?.value.trim();
+    const city = document.getElementById('checkout-city')?.value.trim();
+    const country = document.getElementById('checkout-country')?.value;
+
+    if (!firstname || !lastname || !email || !street || !zip || !city) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+
+    // Save order data for Stripe
+    const zone = SHIPPING_ZONES[country] || SHIPPING_ZONES.OTHER;
+    const subtotal = getCartTotal();
+    const shipping = subtotal >= zone.freeFrom ? 0 : zone.cost;
+
+    const orderData = {
+      items: state.cart.map(item => ({
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image,
+      })),
+      customer: { firstname, lastname, email, street, zip, city, country },
+      shipping: { zone: zone.name, cost: shipping },
+      subtotal: subtotal,
+      total: subtotal + shipping,
+    };
+
+    // Store for Stripe redirect
+    sessionStorage.setItem('legendOrder', JSON.stringify(orderData));
+
+    // Redirect to Stripe Checkout (placeholder — replace with real Stripe URL)
+    // For now, show confirmation
+    alert('Order ready! In production this redirects to Stripe Checkout.\n\nTotal: ' + formatPrice(subtotal + shipping) + '\nShipping to: ' + zone.name);
+  }
+
+  // ==========================================
   // MOBILE MENU
   // ==========================================
   function toggleMobileMenu() {
@@ -425,8 +535,22 @@
       if (e.key === 'Escape') {
         if (state.cartOpen) closeCart();
         if (state.mobileMenuOpen) closeMobileMenu();
+        closeCheckoutModal();
       }
     });
+
+    // Checkout modal
+    const checkoutBtn = document.getElementById('checkout-btn');
+    if (checkoutBtn) checkoutBtn.addEventListener('click', openCheckoutModal);
+
+    const checkoutCloseBtn = document.getElementById('checkout-modal-close');
+    if (checkoutCloseBtn) checkoutCloseBtn.addEventListener('click', closeCheckoutModal);
+
+    const checkoutOverlay = document.getElementById('checkout-modal-overlay');
+    if (checkoutOverlay) checkoutOverlay.addEventListener('click', closeCheckoutModal);
+
+    const checkoutPayBtn = document.getElementById('checkout-pay-btn');
+    if (checkoutPayBtn) checkoutPayBtn.addEventListener('click', handleCheckoutPay);
   }
 
   // ==========================================
