@@ -276,6 +276,22 @@
         updateCheckoutTotals();
       };
     }
+
+    // Watch for street field being cleared — re-enable fields
+    const streetField = document.getElementById('checkout-street');
+    if (streetField) {
+      streetField.addEventListener('input', function() {
+        if (this.value.trim() === '') {
+          validatedAddress = null;
+          const countryEl = document.getElementById('checkout-country');
+          if (countryEl) { countryEl.disabled = false; countryEl.title = ''; }
+          const zipEl = document.getElementById('checkout-zip');
+          const cityEl = document.getElementById('checkout-city');
+          if (zipEl) zipEl.dataset.validated = '';
+          if (cityEl) cityEl.dataset.validated = '';
+        }
+      });
+    }
   }
 
   function closeCheckoutModal() {
@@ -339,7 +355,9 @@
     }
 
     // Save order data for Stripe
-    const zone = SHIPPING_ZONES[country] || SHIPPING_ZONES.OTHER;
+    // Use validated address country — NOT the dropdown (which could be tampered with)
+    const validatedCountry = validatedAddress.country;
+    const zone = SHIPPING_ZONES[validatedCountry] || SHIPPING_ZONES.OTHER;
     const subtotal = getCartTotal();
     const shipping = subtotal >= zone.freeFrom ? 0 : zone.cost;
 
@@ -350,7 +368,7 @@
         quantity: item.quantity,
         image: item.image,
       })),
-      customer: { firstname, lastname, email, street: validatedAddress.street, zip: validatedAddress.postal_code, city: validatedAddress.city, country: validatedAddress.country, formatted: validatedAddress.formatted },
+      customer: { firstname, lastname, email, street: validatedAddress.street, zip: validatedAddress.postal_code, city: validatedAddress.city, country: validatedCountry, formatted: validatedAddress.formatted },
       shipping: { zone: zone.name, cost: shipping },
       subtotal: subtotal,
       total: subtotal + shipping,
@@ -605,7 +623,6 @@
     // Fill country
     const countryInput = document.getElementById('checkout-country');
     if (countryInput) {
-      // Try to find matching country in dropdown
       const codeUpper = country_code.toUpperCase();
       const match = Array.from(countryInput.options).find(o => o.value === codeUpper);
       if (match) {
@@ -613,7 +630,15 @@
         if (state) state.shippingCountry = codeUpper;
         updateCheckoutTotals();
       }
+      // Lock country field — it's determined by the validated address
+      countryInput.disabled = true;
+      countryInput.title = 'Country is set based on your address. Clear the street field to change.';
     }
+
+    // Lock street, zip, city — they come from the validated address
+    if (streetInput) { streetInput.dataset.validated = 'true'; }
+    if (zipInput) { zipInput.dataset.validated = 'true'; }
+    if (cityInput) { cityInput.dataset.validated = 'true'; }
 
     // Mark as validated
     validatedAddress = {
