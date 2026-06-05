@@ -450,7 +450,7 @@
           observer.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+    }, { threshold: 0.01, rootMargin: '0px 0px 0px 0px' });
 
     reveals.forEach((el) => observer.observe(el));
   }
@@ -865,17 +865,23 @@
   // INITIALIZATION
   // ==========================================
   function init() {
-    initEventListeners();
-    initBeforeAfter();
-    initScrollAnimations();
-    initTestimonials();
-    initFilters();
-    initAddToCart();
-    initParticleCanvas();
-    initScrollReveal();
-    initCarousel();
-    initVideoPlayer();
-    initThemeToggle();
+    const fns = [
+      initEventListeners,
+      initBeforeAfter,
+      initScrollAnimations,
+      initTestimonials,
+      initFilters,
+      initAddToCart,
+      initParticleCanvas,
+      initScrollReveal,
+      initCarousel,
+      initVideoPlayer,
+      initThemeToggle,
+      initHoverExpandMobile,
+    ];
+    fns.forEach(function(fn) {
+      try { fn(); } catch(e) { console.error('init error:', fn.name, e); }
+    });
     updateCartCount();
   }
 
