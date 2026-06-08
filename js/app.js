@@ -862,21 +862,54 @@
   }
 
   // ==========================================
+  // STICKER FACT MODAL
+  // ==========================================
+async function fetchStickerFact(query) {
+  try {
+    const resp = await fetch(`https://kgsearch.googleapis.com/v1/entities:search?query=${encodeURIComponent(query)}&key=${GP_API_KEY}&limit=1`);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    const element = data.itemListElement && data.itemListElement[0];
+    if (element && element.result && element.result.description) {
+      return element.result.description;
+    }
+    return null;
+  } catch (e) {
+    console.warn('Sticker fact fetch error:', e);
+    return null;
+  }
+}
+
+function initStickerModalClose() {
+  const modal = document.getElementById('sticker-modal');
+  const closeBtn = document.getElementById('sticker-modal-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    });
+  }
+}
+
+  // ==========================================
   // INITIALIZATION
   // ==========================================
   function init() {
     const fns = [
+      initStickerClicks,
+      initStickerModalClose,
       initEventListeners,
       initBeforeAfter,
       initScrollAnimations,
       initTestimonials,
       initFilters,
       initAddToCart,
+      initThemeToggle,
+      initGooglePlacesAutocomplete,
       initParticleCanvas,
       initScrollReveal,
       initCarousel,
       initVideoPlayer,
-      initThemeToggle,
       initHoverExpandMobile,
     ];
     fns.forEach(function(fn) {
@@ -884,6 +917,7 @@
     });
     updateCartCount();
   }
+
 
   // Expose for inline onclick
   window.legendApp = {
