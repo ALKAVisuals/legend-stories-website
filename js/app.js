@@ -880,6 +880,31 @@ async function fetchStickerFact(query) {
   }
 }
 
+function initHoverExpandMobile() {
+  // Hover expand gallery for mobile — tap to expand
+  // Placeholder: no-op if no gallery elements found
+}
+
+function initStickerClicks() {
+  // Sticker click handlers — attach to sticker cards with data-sticker-name
+  const stickers = document.querySelectorAll('[data-sticker-name]');
+  stickers.forEach(function(sticker) {
+    sticker.addEventListener('click', async function() {
+      const name = this.dataset.stickerName;
+      const modal = document.getElementById('sticker-modal');
+      const title = document.getElementById('sticker-modal-title');
+      const content = document.getElementById('sticker-modal-content');
+      if (!modal || !title || !content) return;
+      title.textContent = name;
+      content.textContent = 'Loading...';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      const fact = await fetchStickerFact(name);
+      content.textContent = fact || 'No fact found for this sticker.';
+    });
+  });
+}
+
 function initStickerModalClose() {
   const modal = document.getElementById('sticker-modal');
   const closeBtn = document.getElementById('sticker-modal-close');
