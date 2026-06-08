@@ -880,6 +880,17 @@ async function fetchStickerFact(query) {
   }
 }
 
+function toggleVideo(overlay) {
+  const card = overlay.closest('.social-video-card');
+  if (!card) return;
+  const isActive = card.dataset.active === 'true';
+  if (isActive) {
+    card.dataset.active = 'false';
+  } else {
+    card.dataset.active = 'true';
+  }
+}
+
 function initHoverExpandMobile() {
   // Hover expand gallery for mobile — tap to expand
   // Placeholder: no-op if no gallery elements found
