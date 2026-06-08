@@ -880,15 +880,52 @@ async function fetchStickerFact(query) {
   }
 }
 
+function switchVideo(index, url, platform) {
+  const featured = document.getElementById('social-featured');
+  const wrap = featured.querySelector('.social-featured__wrap');
+  const overlay = featured.querySelector('.social-featured__overlay');
+  const badge = featured.querySelector('.social-featured__badge');
+
+  // Build new embed
+  let embedHTML = '';
+  if (platform === 'tiktok') {
+    embedHTML = `<blockquote class="tiktok-embed" cite="${url}" data-video-id="${url.match(/video\/(\d+)/)?.[1] || ''}" data-embed-from="oembed"><section></section></blockquote>`;
+    badge.className = 'social-featured__badge social-featured__badge--tiktok';
+    badge.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.73a8.19 8.19 0 004.76 1.52V6.8a4.84 4.84 0 01-1-.11z"/></svg><span>TikTok</span>';
+  } else {
+    embedHTML = `<blockquote class="instagram-media" data-instgrm-permalink="${url}" data-instgrm-version="14"><section></section></blockquote>`;
+    badge.className = 'social-featured__badge social-featured__badge--instagram';
+    badge.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 5.775.131 4.66.347 3.726.726c-.934.38-1.738.904-2.532 1.698C.4 3.218-.124 4.022-.504 4.956c-.38.934-.595 2.05-.654 3.327C.014 8.333 0 8.741 0 12s.014 3.667.072 4.947c.059 1.277.275 2.393.654 3.327.38.934.904 1.738 1.698 2.532.794.794 1.598 1.318 2.532 1.698.934.38 2.05.595 3.327.654C8.333 23.986 8.741 24 12 24s3.667-.014 4.947-.072c1.277-.059 2.393-.275 3.327-.654.934-.38 1.738-.904 2.532-1.698.794-.794 1.318-1.598 1.698-2.532.38-.934.595-2.05.654-3.327C23.986 15.667 24 15.259 24 12s-.014-3.667-.072-4.947c-.059-1.277-.275-2.393-.654-3.327-.38-.934-.904-1.738-1.698-2.532-.794-.794-1.598-1.318-2.532-1.698-.934-.38-2.05-.595-3.327-.654C15.667.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg><span>Instagram</span>';
+  }
+
+  wrap.innerHTML = embedHTML;
+  overlay.classList.remove('is-hidden');
+
+  // Update active thumbnail
+  document.querySelectorAll('.social-thumb').forEach(function(t, i) {
+    t.classList.toggle('social-thumb--active', i === index);
+  });
+
+  // Re-load platform scripts
+  if (platform === 'tiktok' && window.tiktokEmbed) {
+    window.tiktokEmbed.lib.render(wrap.querySelector('.tiktok-embed'));
+  } else if (window.instgrm) {
+    window.instgrm.Embeds.process();
+  }
+}
+
+function activateFeatured() {
+  const overlay = document.querySelector('.social-featured__overlay');
+  if (overlay) {
+    overlay.classList.add('is-hidden');
+  }
+}
+
 function toggleVideo(overlay) {
   const card = overlay.closest('.social-video-card');
   if (!card) return;
   const isActive = card.dataset.active === 'true';
-  if (isActive) {
-    card.dataset.active = 'false';
-  } else {
-    card.dataset.active = 'true';
-  }
+  card.dataset.active = isActive ? 'false' : 'true';
 }
 
 function initHoverExpandMobile() {
