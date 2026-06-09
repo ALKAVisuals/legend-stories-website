@@ -1,20 +1,20 @@
 /* ═══════════════════════════════════════════════════════════════
-   Legend Stories — Social Proof / Video Showcase
-   Featured video + side thumbnails, luxury dark style
+   Legend Stories — Social Proof / Video Showcase v2
+   Luxury dark style, proper thumbnails, clean layout
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── Layout ── */
 .social-showcase {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.5rem;
-  max-width: 900px;
+  gap: 1.25rem;
+  max-width: 820px;
   margin: 0 auto;
 }
 @media (min-width: 768px) {
   .social-showcase {
-    grid-template-columns: 1fr 100px;
-    gap: 2rem;
+    grid-template-columns: 1fr 110px;
+    gap: 1.5rem;
     align-items: start;
   }
 }
@@ -22,11 +22,11 @@
 /* ── Featured Video ── */
 .social-featured {
   position: relative;
-  border-radius: 16px;
+  border-radius: 18px;
   overflow: hidden;
-  background: rgba(22, 22, 24, 0.6);
-  border: 1px solid rgba(42, 42, 48, 0.4);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(14, 14, 16, 0.8);
+  border: 1px solid rgba(42, 42, 48, 0.5);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
 }
 .social-featured::before {
   content: '';
@@ -35,26 +35,28 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(42, 138, 74, 0.3), transparent);
-  z-index: 2;
+  background: linear-gradient(90deg, transparent, rgba(42, 138, 74, 0.35), transparent);
+  z-index: 10;
+  pointer-events: none;
 }
 .social-featured:hover {
-  border-color: rgba(42, 138, 74, 0.25);
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+  border-color: rgba(42, 138, 74, 0.3);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
 }
 
 .social-featured__wrap {
   position: relative;
   width: 100%;
   aspect-ratio: 9 / 16;
-  background: #000;
+  background: #0a0a0c;
   overflow: hidden;
 }
-.social-featured__wrap blockquote {
+.social-featured__wrap blockquote,
+.social-featured__wrap .instagram-media {
   margin: 0 !important;
   width: 100% !important;
   height: 100% !important;
-  position: absolute;
+  position: absolute !important;
   inset: 0;
   z-index: 1;
 }
@@ -72,12 +74,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.35);
-  transition: opacity 0.3s ease, background 0.3s ease;
+  background: rgba(0, 0, 0, 0.4);
+  transition: opacity 0.35s ease, background 0.35s ease;
   cursor: pointer;
 }
 .social-featured:hover .social-featured__overlay {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.25);
 }
 .social-featured__overlay.is-hidden {
   opacity: 0;
@@ -86,68 +88,73 @@
 
 /* ── Play Button ── */
 .social-featured__play {
-  width: 72px;
-  height: 72px;
+  width: 68px;
+  height: 68px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
-  transition: transform 0.25s ease, opacity 0.3s ease;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 .social-featured__overlay:hover .social-featured__play {
-  transform: scale(1.08);
+  transform: scale(1.1);
 }
 .social-featured__play svg {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   color: #111;
   margin-left: 3px;
 }
 
-/* ── Platform Badge ── */
+/* ── Platform Badge (inside overlay) ── */
 .social-featured__badge {
   position: absolute;
-  top: 14px;
-  left: 14px;
+  top: 12px;
+  left: 12px;
   z-index: 6;
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 6px 12px;
+  gap: 6px;
+  padding: 5px 11px;
   border-radius: 8px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #fff;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
   transition: opacity 0.3s ease;
 }
 .social-featured__badge svg {
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
 }
 .social-featured__badge--tiktok {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.65);
 }
 .social-featured__badge--instagram {
-  background: rgba(120, 20, 120, 0.5);
+  background: rgba(140, 30, 140, 0.55);
 }
 
 /* ── Side Thumbnails ── */
 .social-thumbs {
   display: flex;
   flex-direction: row;
-  gap: 0.75rem;
+  gap: 0.625rem;
   overflow-x: auto;
   padding-bottom: 0.5rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.social-thumbs::-webkit-scrollbar {
+  display: none;
 }
 @media (min-width: 768px) {
   .social-thumbs {
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.625rem;
     overflow-x: visible;
     padding-bottom: 0;
   }
@@ -156,46 +163,70 @@
 .social-thumb {
   position: relative;
   flex-shrink: 0;
-  width: 80px;
-  height: 140px;
-  border-radius: 10px;
+  width: 72px;
+  height: 128px;
+  border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-  border: 2px solid transparent;
-  transition: all 0.3s ease;
-  background: #111;
+  border: 2px solid rgba(255, 255, 255, 0.06);
+  transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 @media (min-width: 768px) {
   .social-thumb {
-    width: 100px;
-    height: 100px;
+    width: 110px;
+    height: 110px;
   }
 }
 .social-thumb:hover {
-  border-color: rgba(42, 138, 74, 0.3);
+  border-color: rgba(42, 138, 74, 0.35);
+  transform: scale(1.03);
 }
 .social-thumb--active {
-  border-color: rgba(42, 138, 74, 0.6);
-  box-shadow: 0 0 12px rgba(42, 138, 74, 0.15);
+  border-color: rgba(42, 138, 74, 0.7);
+  box-shadow: 0 0 16px rgba(42, 138, 74, 0.18);
 }
 
+/* Thumbnail background — gradient placeholder */
 .social-thumb__img {
   width: 100%;
   height: 100%;
-  background-size: cover;
-  background-position: center;
-  opacity: 0.7;
+  position: relative;
+  overflow: hidden;
+}
+.social-thumb__img::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--thumb-bg);
+  opacity: 0.85;
   transition: opacity 0.3s ease;
 }
-.social-thumb:hover .social-thumb__img,
-.social-thumb--active .social-thumb__img {
+.social-thumb:hover .social-thumb__img::before,
+.social-thumb--active .social-thumb__img::before {
   opacity: 1;
+}
+/* Video number label on thumbnail */
+.social-thumb__num {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.15);
+  font-family: system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.02em;
+  pointer-events: none;
+}
+.social-thumb--active .social-thumb__num {
+  color: rgba(255, 255, 255, 0.25);
 }
 
 .social-thumb__platform {
   position: absolute;
-  bottom: 4px;
-  right: 4px;
+  bottom: 5px;
+  right: 5px;
   z-index: 2;
   width: 22px;
   height: 22px;
@@ -203,37 +234,40 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
 }
 .social-thumb__platform svg {
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
   color: #fff;
 }
 .social-thumb__platform--tiktok {
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.6);
 }
 .social-thumb__platform--instagram {
-  background: rgba(120, 20, 120, 0.45);
+  background: rgba(140, 30, 140, 0.5);
 }
 
 /* ── Light Mode ── */
 [data-theme="light"] .social-featured {
-  background: #FFFFFF;
+  background: #fff;
   border-color: rgba(0, 0, 0, 0.06);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
 }
 [data-theme="light"] .social-featured:hover {
-  border-color: rgba(181, 148, 91, 0.25);
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+  border-color: rgba(181, 148, 91, 0.3);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.08);
 }
 [data-theme="light"] .social-featured::before {
-  background: linear-gradient(90deg, transparent, rgba(181, 148, 91, 0.15), transparent);
+  background: linear-gradient(90deg, transparent, rgba(181, 148, 91, 0.2), transparent);
+}
+[data-theme="light"] .social-thumb {
+  border-color: rgba(0, 0, 0, 0.08);
 }
 [data-theme="light"] .social-thumb:hover {
-  border-color: rgba(181, 148, 91, 0.3);
+  border-color: rgba(181, 148, 91, 0.35);
 }
 [data-theme="light"] .social-thumb--active {
-  border-color: rgba(181, 148, 91, 0.6);
-  box-shadow: 0 0 12px rgba(181, 148, 91, 0.12);
+  border-color: rgba(181, 148, 91, 0.7);
+  box-shadow: 0 0 16px rgba(181, 148, 91, 0.15);
 }
