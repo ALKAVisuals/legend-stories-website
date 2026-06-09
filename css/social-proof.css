@@ -47,12 +47,29 @@
 .social-featured__wrap {
   position: relative;
   width: 100%;
-  /* aspect-ratio set dynamically via JS per platform */
   background: #0a0a0c;
   overflow: hidden;
-  transition: aspect-ratio 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.social-featured__wrap[data-ratio="9/16"] { aspect-ratio: 9 / 16; }
+/* TikTok: video + stats visible. Overlay only covers the video portion. */
+.social-featured__wrap[data-ratio="9/16"] { aspect-ratio: auto; }
+.social-featured__wrap[data-ratio="9/16"] iframe {
+  position: relative !important;
+  width: 100% !important;
+  height: auto !important;
+  display: block;
+}
+.social-featured__wrap[data-ratio="9/16"] .social-featured__overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 0;
+  padding-bottom: 177.78%; /* 16/9 = video-only overlay zone */
+  pointer-events: none;
+}
+.social-featured__wrap[data-ratio="9/16"] .social-featured__overlay > * {
+  pointer-events: auto;
+}
+/* Instagram: fixed ratios, iframe fills container */
 .social-featured__wrap[data-ratio="4/5"]  { aspect-ratio: 4 / 5; }
 .social-featured__wrap[data-ratio="1/1"]  { aspect-ratio: 1 / 1; }
 .social-featured__wrap[data-ratio="16/9"] { aspect-ratio: 16 / 9; }
@@ -79,6 +96,20 @@
   background: rgba(0, 0, 0, 0.4);
   transition: opacity 0.35s ease, background 0.35s ease;
   cursor: pointer;
+}
+/* TikTok overlay: content centered in the video zone */
+.social-featured__wrap[data-ratio="9/16"] .social-featured__play,
+.social-featured__wrap[data-ratio="9/16"] .social-featured__badge {
+  position: absolute;
+  z-index: 6;
+}
+.social-featured__wrap[data-ratio="9/16"] .social-featured__play {
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+.social-featured__wrap[data-ratio="9/16"] .social-featured__badge {
+  top: 12px; left: 12px;
+  position: absolute;
 }
 .social-featured:hover .social-featured__overlay {
   background: rgba(0, 0, 0, 0.25);
