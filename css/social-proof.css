@@ -51,19 +51,16 @@
   background: #0a0a0c;
   overflow: hidden;
 }
-.social-featured__wrap blockquote,
-.social-featured__wrap .instagram-media {
+.social-featured__wrap .social-embed,
+.social-featured__wrap iframe {
   margin: 0 !important;
   width: 100% !important;
   height: 100% !important;
   position: absolute !important;
   inset: 0;
   z-index: 1;
-}
-.social-featured__wrap iframe {
-  width: 100% !important;
-  height: 100% !important;
   border: none !important;
+  display: block;
 }
 
 /* ── Featured Overlay ── */
