@@ -17,21 +17,34 @@ function switchVideo(thumb) {
     iframe.src = buildEmbedURL(video);
   }
 
-  // 2. Update platform badge
+  // 2. Update container aspect ratio per platform
+  var wrap = document.getElementById('social-featured__wrap');
+  if (wrap) {
+    wrap.setAttribute('data-ratio', getVideoRatio(video.platform));
+  }
+
+  // 3. Update platform badge
   updateBadge(video.platform);
 
-  // 3. Show overlay (user can click to unmute / interact)
+  // 4. Show overlay (user can click to unmute / interact)
   var overlay = document.getElementById('social-overlay');
   if (overlay) overlay.classList.remove('is-hidden');
 
-  // 4. Update active thumbnail
+  // 5. Update active thumbnail
   document.querySelectorAll('.social-thumb').forEach(function(t) {
     t.classList.remove('social-thumb--active');
   });
   thumb.classList.add('social-thumb--active');
 
-  // 5. Reset auto-advance
+  // 6. Reset auto-advance
   resetAutoAdvance();
+}
+
+// Return aspect ratio per platform
+function getVideoRatio(platform) {
+  if (platform === 'tiktok') return '9/16';
+  if (platform === 'instagram') return '4/5';  // most IG reels/posts are 4:5 or 9:16
+  return '9/16';
 }
 
 function activateFeatured() {
@@ -128,6 +141,14 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!sc) return;
   sc.addEventListener('touchstart', stopAutoAdvance, { passive: true });
   sc.addEventListener('touchend', function() { setTimeout(function() { if (!socialIsPlaying) startAutoAdvance(); }, 3000); });
+
+  // Set initial container ratio based on first (active) thumbnail
+  var activeThumb = document.querySelector('.social-thumb--active');
+  if (activeThumb) {
+    var ratio = activeThumb.getAttribute('data-ratio') || '9/16';
+    var wrap = document.getElementById('social-featured__wrap');
+    if (wrap) wrap.setAttribute('data-ratio', ratio);
+  }
 });
 
 function initHoverExpandMobile() {}

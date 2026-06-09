@@ -47,10 +47,15 @@
 .social-featured__wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 9 / 16;
+  /* aspect-ratio set dynamically via JS per platform */
   background: #0a0a0c;
   overflow: hidden;
+  transition: aspect-ratio 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
+.social-featured__wrap[data-ratio="9/16"] { aspect-ratio: 9 / 16; }
+.social-featured__wrap[data-ratio="4/5"]  { aspect-ratio: 4 / 5; }
+.social-featured__wrap[data-ratio="1/1"]  { aspect-ratio: 1 / 1; }
+.social-featured__wrap[data-ratio="16/9"] { aspect-ratio: 16 / 9; }
 .social-featured__wrap .social-embed,
 .social-featured__wrap iframe {
   margin: 0 !important;
@@ -168,10 +173,20 @@
   border: 2px solid rgba(255, 255, 255, 0.06);
   transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
+/* Thumbnail aspect ratios — 1:1 instagram posts get a shorter thumb */
+.social-thumb[data-ratio="1/1"] {
+  height: 72px;
+}
 @media (min-width: 768px) {
   .social-thumb {
     width: 110px;
+    height: 176px;
+  }
+  .social-thumb[data-ratio="1/1"] {
     height: 110px;
+  }
+  .social-thumb[data-ratio="4/5"] {
+    height: 138px;
   }
 }
 .social-thumb:hover {
