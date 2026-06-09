@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
-   Legend Stories — Social Proof / Video Showcase v2
-   Luxury dark style, proper thumbnails, clean layout
+   Legend Stories — Social Proof / Video Showcase
+   Single adaptive layout — iframe fills container, overlay on top
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── Layout ── */
@@ -19,7 +19,7 @@
   }
 }
 
-/* ── Featured Video ── */
+/* ── Featured Video Container ── */
 .social-featured {
   position: relative;
   border-radius: 18px;
@@ -31,9 +31,7 @@
 .social-featured::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 0; left: 0; right: 0;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(42, 138, 74, 0.35), transparent);
   z-index: 10;
@@ -44,48 +42,31 @@
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
 }
 
+/* ── Video Wrap — iframe fills this ── */
 .social-featured__wrap {
   position: relative;
   width: 100%;
+  /* aspect-ratio set per platform via JS */
   background: #0a0a0c;
   overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: aspect-ratio 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-/* TikTok: video + stats visible. Overlay only covers the video portion. */
-.social-featured__wrap[data-ratio="9/16"] { aspect-ratio: auto; }
-.social-featured__wrap[data-ratio="9/16"] iframe {
-  position: relative !important;
-  width: 100% !important;
-  height: auto !important;
-  display: block;
-}
-.social-featured__wrap[data-ratio="9/16"] .social-featured__overlay {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 0;
-  padding-bottom: 177.78%; /* 16/9 = video-only overlay zone */
-  pointer-events: none;
-}
-.social-featured__wrap[data-ratio="9/16"] .social-featured__overlay > * {
-  pointer-events: auto;
-}
-/* Instagram: fixed ratios, iframe fills container */
-.social-featured__wrap[data-ratio="4/5"]  { aspect-ratio: 4 / 5; }
-.social-featured__wrap[data-ratio="1/1"]  { aspect-ratio: 1 / 1; }
-.social-featured__wrap[data-ratio="16/9"] { aspect-ratio: 16 / 9; }
-.social-featured__wrap .social-embed,
+.social-featured__wrap[data-ar="9/16"]  { aspect-ratio: 9 / 16; }
+.social-featured__wrap[data-ar="4/5"]   { aspect-ratio: 4 / 5; }
+.social-featured__wrap[data-ar="1/1"]   { aspect-ratio: 1 / 1; }
+.social-featured__wrap[data-ar="16/9"]  { aspect-ratio: 16 / 9; }
+
 .social-featured__wrap iframe {
-  margin: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  position: absolute !important;
+  position: absolute;
   inset: 0;
-  z-index: 1;
-  border: none !important;
+  width: 100%;
+  height: 100%;
+  border: none;
   display: block;
+  z-index: 1;
 }
 
-/* ── Featured Overlay ── */
+/* ── Overlay (play button + badge) ── */
 .social-featured__overlay {
   position: absolute;
   inset: 0;
@@ -96,20 +77,6 @@
   background: rgba(0, 0, 0, 0.4);
   transition: opacity 0.35s ease, background 0.35s ease;
   cursor: pointer;
-}
-/* TikTok overlay: content centered in the video zone */
-.social-featured__wrap[data-ratio="9/16"] .social-featured__play,
-.social-featured__wrap[data-ratio="9/16"] .social-featured__badge {
-  position: absolute;
-  z-index: 6;
-}
-.social-featured__wrap[data-ratio="9/16"] .social-featured__play {
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-}
-.social-featured__wrap[data-ratio="9/16"] .social-featured__badge {
-  top: 12px; left: 12px;
-  position: absolute;
 }
 .social-featured:hover .social-featured__overlay {
   background: rgba(0, 0, 0, 0.25);
@@ -129,7 +96,7 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 32px rgba(0, 0, 0, 0.5);
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition: transform 0.3s ease;
 }
 .social-featured__overlay:hover .social-featured__play {
   transform: scale(1.1);
@@ -141,7 +108,7 @@
   margin-left: 3px;
 }
 
-/* ── Platform Badge (inside overlay) ── */
+/* ── Platform Badge ── */
 .social-featured__badge {
   position: absolute;
   top: 12px;
@@ -158,18 +125,10 @@
   text-transform: uppercase;
   color: #fff;
   backdrop-filter: blur(12px);
-  transition: opacity 0.3s ease;
 }
-.social-featured__badge svg {
-  width: 14px;
-  height: 14px;
-}
-.social-featured__badge--tiktok {
-  background: rgba(0, 0, 0, 0.65);
-}
-.social-featured__badge--instagram {
-  background: rgba(140, 30, 140, 0.55);
-}
+.social-featured__badge svg { width: 14px; height: 14px; }
+.social-featured__badge--tiktok     { background: rgba(0, 0, 0, 0.65); }
+.social-featured__badge--instagram  { background: rgba(140, 30, 140, 0.55); }
 
 /* ── Side Thumbnails ── */
 .social-thumbs {
@@ -181,9 +140,7 @@
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
-.social-thumbs::-webkit-scrollbar {
-  display: none;
-}
+.social-thumbs::-webkit-scrollbar { display: none; }
 @media (min-width: 768px) {
   .social-thumbs {
     flex-direction: column;
@@ -204,22 +161,6 @@
   border: 2px solid rgba(255, 255, 255, 0.06);
   transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
-/* Thumbnail aspect ratios — 1:1 instagram posts get a shorter thumb */
-.social-thumb[data-ratio="1/1"] {
-  height: 72px;
-}
-@media (min-width: 768px) {
-  .social-thumb {
-    width: 110px;
-    height: 176px;
-  }
-  .social-thumb[data-ratio="1/1"] {
-    height: 110px;
-  }
-  .social-thumb[data-ratio="4/5"] {
-    height: 138px;
-  }
-}
 .social-thumb:hover {
   border-color: rgba(42, 138, 74, 0.35);
   transform: scale(1.03);
@@ -229,7 +170,6 @@
   box-shadow: 0 0 16px rgba(42, 138, 74, 0.18);
 }
 
-/* Thumbnail background — gradient placeholder */
 .social-thumb__img {
   width: 100%;
   height: 100%;
@@ -245,10 +185,8 @@
   transition: opacity 0.3s ease;
 }
 .social-thumb:hover .social-thumb__img::before,
-.social-thumb--active .social-thumb__img::before {
-  opacity: 1;
-}
-/* Video number label on thumbnail */
+.social-thumb--active .social-thumb__img::before { opacity: 1; }
+
 .social-thumb__num {
   position: absolute;
   inset: 0;
@@ -259,12 +197,9 @@
   font-weight: 800;
   color: rgba(255, 255, 255, 0.15);
   font-family: system-ui, -apple-system, sans-serif;
-  letter-spacing: -0.02em;
   pointer-events: none;
 }
-.social-thumb--active .social-thumb__num {
-  color: rgba(255, 255, 255, 0.25);
-}
+.social-thumb--active .social-thumb__num { color: rgba(255, 255, 255, 0.25); }
 
 .social-thumb__platform {
   position: absolute;
@@ -279,17 +214,9 @@
   justify-content: center;
   backdrop-filter: blur(8px);
 }
-.social-thumb__platform svg {
-  width: 11px;
-  height: 11px;
-  color: #fff;
-}
-.social-thumb__platform--tiktok {
-  background: rgba(0, 0, 0, 0.6);
-}
-.social-thumb__platform--instagram {
-  background: rgba(140, 30, 140, 0.5);
-}
+.social-thumb__platform svg { width: 11px; height: 11px; color: #fff; }
+.social-thumb__platform--tiktok     { background: rgba(0, 0, 0, 0.6); }
+.social-thumb__platform--instagram  { background: rgba(140, 30, 140, 0.5); }
 
 /* ── Light Mode ── */
 [data-theme="light"] .social-featured {
@@ -304,12 +231,8 @@
 [data-theme="light"] .social-featured::before {
   background: linear-gradient(90deg, transparent, rgba(181, 148, 91, 0.2), transparent);
 }
-[data-theme="light"] .social-thumb {
-  border-color: rgba(0, 0, 0, 0.08);
-}
-[data-theme="light"] .social-thumb:hover {
-  border-color: rgba(181, 148, 91, 0.35);
-}
+[data-theme="light"] .social-thumb { border-color: rgba(0, 0, 0, 0.08); }
+[data-theme="light"] .social-thumb:hover { border-color: rgba(181, 148, 91, 0.35); }
 [data-theme="light"] .social-thumb--active {
   border-color: rgba(181, 148, 91, 0.7);
   box-shadow: 0 0 16px rgba(181, 148, 91, 0.15);
