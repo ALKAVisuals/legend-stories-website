@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    Legend Stories — Social Proof / Video Showcase
-   Single adaptive layout — iframe fills container, overlay on top
+   Adaptive layout — TikTok shows video + stats below
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── Layout ── */
@@ -28,6 +28,10 @@
   border: 1px solid rgba(42, 42, 48, 0.5);
   transition: border-color 0.4s ease, box-shadow 0.4s ease;
 }
+/* TikTok: allow stats below video to show */
+.social-featured:has(.social-featured__wrap[data-ar="9/16"]) {
+  overflow: visible;
+}
 .social-featured::before {
   content: '';
   position: absolute;
@@ -42,20 +46,33 @@
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
 }
 
-/* ── Video Wrap — iframe fills this ── */
+/* ── Video Wrap ── */
 .social-featured__wrap {
   position: relative;
   width: 100%;
-  /* aspect-ratio set per platform via JS */
   background: #0a0a0c;
   overflow: hidden;
-  transition: aspect-ratio 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.social-featured__wrap[data-ar="9/16"]  { aspect-ratio: 9 / 16; }
-.social-featured__wrap[data-ar="4/5"]   { aspect-ratio: 4 / 5; }
-.social-featured__wrap[data-ar="1/1"]   { aspect-ratio: 1 / 1; }
-.social-featured__wrap[data-ar="16/9"]  { aspect-ratio: 16 / 9; }
 
+/* Instagram / square: fixed aspect ratio, iframe fills container */
+.social-featured__wrap[data-ar="4/5"]  { aspect-ratio: 4 / 5; }
+.social-featured__wrap[data-ar="1/1"]  { aspect-ratio: 1 / 1; }
+.social-featured__wrap[data-ar="16/9"] { aspect-ratio: 16 / 9; }
+
+/* TikTok 9/16: auto height so video + stats both visible */
+.social-featured__wrap[data-ar="9/16"] {
+  aspect-ratio: auto;
+  overflow: visible;
+}
+.social-featured__wrap[data-ar="9/16"] iframe {
+  position: relative !important;
+  width: 100% !important;
+  height: auto !important;
+  display: block;
+}
+
+/* Default iframe: absolute fill (Instagram, square, landscape) */
 .social-featured__wrap iframe {
   position: absolute;
   inset: 0;
@@ -84,6 +101,27 @@
 .social-featured__overlay.is-hidden {
   opacity: 0;
   pointer-events: none;
+}
+
+/* TikTok: overlay only covers video zone, not stats below */
+.social-featured__wrap[data-ar="9/16"] ~ .social-featured__overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 0;
+  padding-bottom: 177.78%; /* 16/9 inverted = 9/16 video zone */
+  pointer-events: none;
+}
+.social-featured__wrap[data-ar="9/16"] ~ .social-featured__overlay > * {
+  pointer-events: auto;
+}
+.social-featured__wrap[data-ar="9/16"] ~ .social-featured__overlay .social-featured__play {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+.social-featured__wrap[data-ar="9/16"] ~ .social-featured__overlay .social-featured__badge {
+  position: absolute;
+  top: 12px; left: 12px;
 }
 
 /* ── Play Button ── */
@@ -127,8 +165,8 @@
   backdrop-filter: blur(12px);
 }
 .social-featured__badge svg { width: 14px; height: 14px; }
-.social-featured__badge--tiktok     { background: rgba(0, 0, 0, 0.65); }
-.social-featured__badge--instagram  { background: rgba(140, 30, 140, 0.55); }
+.social-featured__badge--tiktok    { background: rgba(0, 0, 0, 0.65); }
+.social-featured__badge--instagram { background: rgba(140, 30, 140, 0.55); }
 
 /* ── Side Thumbnails ── */
 .social-thumbs {
@@ -215,8 +253,8 @@
   backdrop-filter: blur(8px);
 }
 .social-thumb__platform svg { width: 11px; height: 11px; color: #fff; }
-.social-thumb__platform--tiktok     { background: rgba(0, 0, 0, 0.6); }
-.social-thumb__platform--instagram  { background: rgba(140, 30, 140, 0.5); }
+.social-thumb__platform--tiktok    { background: rgba(0, 0, 0, 0.6); }
+.social-thumb__platform--instagram { background: rgba(140, 30, 140, 0.5); }
 
 /* ── Light Mode ── */
 [data-theme="light"] .social-featured {
