@@ -682,8 +682,27 @@
     const checkoutBtn = document.getElementById('checkout-btn');
     if (checkoutBtn) checkoutBtn.addEventListener('click', function() {
       openCheckoutModal();
-      loadGooglePlaces();
+      // Google Places will be loaded lazily when the user focuses the street field after filling required info.
     });
+    // Add lazy loading for Google Places Autocomplete on street field focus
+    const streetInput = document.getElementById('checkout-street');
+    if (streetInput) {
+      streetInput.addEventListener('focus', function() {
+        const fn = document.getElementById('checkout-firstname')?.value.trim();
+        const ln = document.getElementById('checkout-lastname')?.value.trim();
+        const email = document.getElementById('checkout-email')?.value.trim();
+        if (fn && ln && email) {
+          loadGooglePlaces();
+        } else {
+          // Prompt user to fill missing fields before address autocomplete
+          alert('Vul eerst uw voornaam, achternaam en e‑mail in voordat u het adres invult.');
+          // Optionally focus the first missing field
+          if (!fn) document.getElementById('checkout-firstname')?.focus();
+          else if (!ln) document.getElementById('checkout-lastname')?.focus();
+          else if (!email) document.getElementById('checkout-email')?.focus();
+        }
+      }, { once: true });
+    }
 
     const checkoutCloseBtn = document.getElementById('checkout-modal-close');
     if (checkoutCloseBtn) checkoutCloseBtn.addEventListener('click', closeCheckoutModal);
@@ -927,7 +946,7 @@ function initStickerModalClose() {
       initFilters,
       initAddToCart,
       initThemeToggle,
-      initGooglePlacesAutocomplete,
+
       initParticleCanvas,
       initScrollReveal,
       initCarousel,
