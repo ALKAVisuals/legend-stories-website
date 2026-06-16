@@ -247,6 +247,7 @@
   // ==========================================
   function openCheckoutModal() {
     if (state.cart.length === 0) return;
+    closeCart();
     const modal = document.getElementById('checkout-modal');
     if (!modal) return;
     modal.classList.remove('hidden');
