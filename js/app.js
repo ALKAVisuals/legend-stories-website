@@ -341,7 +341,7 @@
     const city = document.getElementById('checkout-city')?.value.trim();
     const country = document.getElementById('checkout-country')?.value;
 
-    if (!firstname || !lastname || !email || !street || !zip || !city) {
+    if (!firstname || !lastname || !email || !street || !zip || !city || !country) {
       alert('Please fill in all required fields.');
       return;
     }
@@ -352,16 +352,19 @@
       return;
     }
 
-    // Address must be selected from Google Places
-    if (!validatedAddress) {
-      alert('Please select an address from the suggestions. Start typing your street and choose from the dropdown that appears.');
-      document.getElementById('checkout-street').focus();
-      return;
-    }
+    // Build address object — use Google Places validated address if available,
+    // otherwise fall back to manual field values
+    const address = validatedAddress || {
+      street: street,
+      postal_code: zip,
+      city: city,
+      country: country.toUpperCase(),
+      formatted: street + ', ' + zip + ' ' + city + ', ' + country.toUpperCase(),
+    };
 
     // Save order data for Stripe
     // Use validated address country — NOT the dropdown (which could be tampered with)
-    const validatedCountry = validatedAddress.country;
+    const validatedCountry = address.country;
     const zone = SHIPPING_ZONES[validatedCountry] || SHIPPING_ZONES.OTHER;
     const subtotal = getCartTotal();
     const shipping = subtotal >= zone.freeFrom ? 0 : zone.cost;
@@ -373,7 +376,7 @@
         quantity: item.quantity,
         image: item.image,
       })),
-      customer: { firstname, lastname, email, street: validatedAddress.street, zip: validatedAddress.postal_code, city: validatedAddress.city, country: validatedCountry, formatted: validatedAddress.formatted },
+      customer: { firstname, lastname, email, street: address.street, zip: address.postal_code, city: address.city, country: validatedCountry, formatted: address.formatted },
       shipping: { zone: zone.name, cost: shipping },
       subtotal: subtotal,
       total: subtotal + shipping,
