@@ -353,18 +353,105 @@
       return;
     }
 
-    // Build address object — use Google Places validated address if available,
-    // otherwise fall back to manual field values
-    const address = validatedAddress || {
-      street: street,
-      postal_code: zip,
-      city: city,
-      country: country.toUpperCase(),
-      formatted: street + ', ' + zip + ' ' + city + ', ' + country.toUpperCase(),
-    };
+    // Address validation: use Google Places validated address if available,
+    // otherwise validate manually entered address via Google Places API
+    if (validatedAddress) {
+      processOrder(validatedAddress, firstname, lastname, email);
+    } else {
+      // Show loading state
+      const payBtn = document.getElementById('checkout-pay-btn');
+      const originalBtnText = payBtn ? payBtn.textContent : 'Continue to payment';
+      if (payBtn) { payBtn.disabled = true; payBtn.textContent = 'Validating address...'; }
 
-    // Save order data for Stripe
-    // Use validated address country — NOT the dropdown (which could be tampered with)
+      validateAddressWithGoogle(street, zip, city, country, function(err, googleAddress) {
+        if (payBtn) { payBtn.disabled = false; payBtn.textContent = originalBtnText; }
+        if (err) {
+          alert(err);
+          document.getElementById('checkout-street').focus();
+          return;
+        }
+        processOrder(googleAddress, firstname, lastname, email);
+      });
+    }
+  }
+
+  function validateAddressWithGoogle(street, zip, city, country, callback) {
+    // Ensure Google Places is loaded
+    if (!window.google || !window.google.maps || !window.google.maps.places) {
+      // Google API not loaded yet — load it first, then retry
+      loadGooglePlaces();
+      // Wait for API to load, then retry
+      var retryInterval = setInterval(function() {
+        if (window.google && window.google.maps && window.google.maps.places) {
+          clearInterval(retryInterval);
+          doGoogleValidation(street, zip, city, country, callback);
+        }
+      }, 500);
+      // Timeout after 10s
+      setTimeout(function() { clearInterval(retryInterval); }, 10000);
+      return;
+    }
+    doGoogleValidation(street, zip, city, country, callback);
+  }
+
+  function doGoogleValidation(street, zip, city, country, callback) {
+    var service = new google.maps.places.PlacesService(document.createElement('div'));
+    var query = street + ', ' + zip + ' ' + city + ', ' + country.toUpperCase();
+
+    service.findPlaceFromQuery({
+      query: query,
+      fields: ['address_components', 'formatted_address', 'geometry', 'name']
+    }, function(results, status) {
+      if (status !== google.maps.places.PlacesServiceStatus.OK || !results || results.length === 0) {
+        callback('Address not found. Please check your street, postal code, city and country, or select an address from the suggestions.');
+        return;
+      }
+
+      var place = results[0];
+      if (!place.address_components) {
+        callback('Address not found. Please check your street, postal code, city and country, or select an address from the suggestions.');
+        return;
+      }
+
+      // Parse the Google result into our address format
+      var components = place.address_components;
+      var gStreetNumber = '';
+      var gRoute = '';
+      var gPostalCode = '';
+      var gCity = '';
+      var gCountryCode = '';
+
+      for (var i = 0; i < components.length; i++) {
+        var types = components[i].types;
+        if (types.includes('street_number')) gStreetNumber = components[i].long_name;
+        if (types.includes('route')) gRoute = components[i].long_name;
+        if (types.includes('postal_code')) gPostalCode = components[i].long_name;
+        if (types.includes('locality') || types.includes('postal_town')) gCity = components[i].long_name;
+        if (types.includes('country')) gCountryCode = components[i].short_name.toUpperCase();
+      }
+
+      var gStreet = (gRoute + ' ' + gStreetNumber).trim();
+
+      // Verify the returned address roughly matches what the user entered
+      // (Google may return a nearby match — we check postal code match)
+      var normalizedInputZip = zip.replace(/\s/g, '').toUpperCase();
+      var normalizedGoogleZip = gPostalCode.replace(/\s/g, '').toUpperCase();
+      if (normalizedInputZip && normalizedGoogleZip && normalizedInputZip !== normalizedGoogleZip) {
+        callback('Address verification failed. The postal code does not match the street and city. Please check your address or select one from the suggestions.');
+        return;
+      }
+
+      callback(null, {
+        street: gStreet,
+        postal_code: gPostalCode,
+        city: gCity,
+        country: gCountryCode,
+        formatted: place.formatted_address || query,
+      });
+    });
+  }
+
+  function processOrder(address, firstname, lastname, email) {
     const validatedCountry = address.country;
     const zone = SHIPPING_ZONES[validatedCountry] || SHIPPING_ZONES.OTHER;
     const subtotal = getCartTotal();
