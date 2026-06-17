@@ -101,6 +101,8 @@
     cartCount: document.getElementById('cart-count'),
     cartTotal: document.getElementById('cart-total'),
     checkoutBtn: document.getElementById('checkout-btn'),
+    checkoutDrawer: document.getElementById('checkout-drawer'),
+    checkoutOverlay: document.getElementById('checkout-overlay'),
     mobileMenuBtn: document.getElementById('mobile-menu-btn'),
     mobileMenu: document.getElementById('mobile-menu'),
     baSlider: document.getElementById('ba-slider'),
@@ -248,10 +250,13 @@
   function openCheckoutModal() {
     if (state.cart.length === 0) return;
     closeCart();
-    const modal = document.getElementById('checkout-modal');
-    if (!modal) return;
-    modal.classList.remove('hidden');
-    modal.setAttribute('aria-hidden', 'false');
+    const drawer = dom.checkoutDrawer;
+    const overlay = dom.checkoutOverlay;
+    if (!drawer || !overlay) return;
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+    drawer.classList.remove('translate-x-full');
+    drawer.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
 
     validatedAddress = null;
@@ -301,10 +306,16 @@
   }
 
   function closeCheckoutModal() {
-    const modal = document.getElementById('checkout-modal');
-    if (!modal) return;
-    modal.classList.add('hidden');
-    modal.setAttribute('aria-hidden', 'true');
+    const drawer = dom.checkoutDrawer;
+    const overlay = dom.checkoutOverlay;
+    if (drawer) {
+      drawer.classList.add('translate-x-full');
+      drawer.setAttribute('aria-hidden', 'true');
+    }
+    if (overlay) {
+      overlay.classList.add('hidden');
+      overlay.setAttribute('aria-hidden', 'true');
+    }
     document.body.style.overflow = '';
   }
 
@@ -795,11 +806,11 @@
       }, { once: true });
     }
 
-    const checkoutCloseBtn = document.getElementById('checkout-modal-close');
+    const checkoutCloseBtn = document.getElementById('checkout-close');
     if (checkoutCloseBtn) checkoutCloseBtn.addEventListener('click', closeCheckoutModal);
 
-    const checkoutOverlay = document.getElementById('checkout-modal-overlay');
-    if (checkoutOverlay) checkoutOverlay.addEventListener('click', closeCheckoutModal);
+    const checkoutOverlayEl = document.getElementById('checkout-overlay');
+    if (checkoutOverlayEl) checkoutOverlayEl.addEventListener('click', closeCheckoutModal);
 
     const checkoutPayBtn = document.getElementById('checkout-pay-btn');
     if (checkoutPayBtn) checkoutPayBtn.addEventListener('click', handleCheckoutPay);
