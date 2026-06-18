@@ -248,16 +248,22 @@
   // CHECKOUT MODAL
   // ==========================================
   function openCheckoutModal() {
-    if (state.cart.length === 0) return;
+    console.log('[DEBUG] openCheckoutModal called');
+    // Removed early return based on cart length to always open checkout drawer
     closeCart();
     const drawer = dom.checkoutDrawer;
     const overlay = dom.checkoutOverlay;
-    if (!drawer || !overlay) return;
+    console.log('[DEBUG] drawer:', drawer, 'overlay:', overlay);
+    if (!drawer || !overlay) {
+      console.log('[DEBUG] drawer or overlay not found!');
+      return;
+    }
     overlay.classList.remove('hidden');
     overlay.setAttribute('aria-hidden', 'false');
     drawer.classList.remove('translate-x-full');
     drawer.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
+    console.log('[DEBUG] checkout drawer opened');
 
     validatedAddress = null;
 
