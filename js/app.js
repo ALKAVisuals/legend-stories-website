@@ -277,10 +277,13 @@
       }).join('') +
       '<div class="border-t border-surface-border/30 pt-3 mt-3">' +
       '<div class="flex justify-between text-sm"><span class="text-text-muted">Subtotal</span><span class="text-text-primary font-medium">' + formatPrice(cartSubtotal) + '</span></div>' +
+      (state.discountPercent > 0 ? '<div class="flex justify-between text-sm"><span class="text-text-muted">Discount (' + state.discountPercent + '%)</span><span class="text-red-400 font-medium">-' + formatPrice(getDiscountAmount(cartSubtotal)) + '</span></div>' : '') +
       '<p class="text-[11px] text-text-muted mt-1.5">🚚 Shipping calculated at checkout based on your country. Free shipping available from €50+ (NL) / €75+ (EU) / €150+ (World)</p>' +
       '</div>';
 
-    if (dom.cartTotal) dom.cartTotal.textContent = formatPrice(cartSubtotal);
+    // Update cart total to show discounted total
+    const discountedTotal = cartSubtotal - (state.discountPercent > 0 ? getDiscountAmount(cartSubtotal) : 0);
+    if (dom.cartTotal) dom.cartTotal.textContent = formatPrice(discountedTotal);
   }
 
   // ==========================================
