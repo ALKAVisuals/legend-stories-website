@@ -194,6 +194,7 @@
       state.cart.push(product);
     }
     saveCart();
+    renderCart();
     updateCartCount();
     openCart();
   }
@@ -785,6 +786,45 @@
     });
   }
 
+  // Product card navigation (click anywhere on card except add-to-cart button)
+  function initProductCards() {
+    const cards = document.querySelectorAll('.legend-card-swiper article.group');
+    cards.forEach((card) => {
+      card.style.cursor = 'pointer';
+      card.addEventListener('click', (e) => {
+        // Don't navigate if clicking add-to-cart button
+        if (e.target.closest('.add-to-cart-btn')) return;
+        const name = card.querySelector('h3')?.textContent;
+        if (name) {
+          const pageMap = {
+            'The Grind Cycle': 'combat-grind-cycle.html',
+            'Unstoppable Will': 'combat-unstoppable-will.html',
+            'Unstoppable Will Sport': 'sport-unstoppable-will.html',
+            'Dream Reality': 'combat-dream-reality.html',
+            'Courageous Risk': 'combat-courageous-risk.html',
+            'Greatest Courage': 'combat-greatest-courage.html',
+            'The Free Spirit': 'music-free-spirit.html',
+            'Eternal Smile': 'music-eternal-smile.html',
+            'Constant Evolution': 'music-constant-evolution.html',
+            'Lyric Mastery': 'music-lyric-mastery.html',
+            'Pure Confidence': 'music-pure-confidence.html',
+            'The Style Code': 'music-style-code.html',
+            'The Style Prophet': 'music-style-prophet.html',
+            'The Truth Seeker': 'wisdom-legends.html',
+            "The Lion's Pride": 'sport-lions-pride.html',
+            'The Luxury Standard': 'sport-luxury-standard.html',
+            'The Peak Performer': 'sport-peak-performer.html',
+            'Pursuit of Greatness': 'sport-pursuit-greatness.html',
+            'Unforgettable Roots': 'sport-unforgettable-roots.html',
+            'Mamba Mindset': 'music-mamba-mindset.html',
+          };
+          const page = pageMap[name] || pageMap[name.replace(/^The /, '')] || pageMap[name.replace(/ Legend$/, '')] || pageMap[name.replace(/ Legend$/, '')];
+          if (page) window.location.href = page;
+        }
+      });
+    });
+  }
+
   // ==========================================
   // DAY / NIGHT TOGGLE
   // ==========================================
@@ -1201,6 +1241,7 @@ function initStickerModalClose() {
       initTestimonials,
       initFilters,
       initAddToCart,
+      initProductCards,
       initThemeToggle,
       initParticleCanvas,
       initScrollReveal,
