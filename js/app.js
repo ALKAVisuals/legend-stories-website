@@ -442,6 +442,18 @@
     return subtotal * (state.discountPercent / 100);
   }
 
+  // Dynamically inject discount UI into cart drawers that don't have it
+  function injectCartDiscount() {
+    const cartFooters = document.querySelectorAll('[id^="cart-drawer"], .cart-footer, #cart-footer');
+    cartFooters.forEach(function(footer) {
+      let totalDiv = footer.querySelector('#cart-total')?.parentElement;
+      if (totalDiv && !totalDiv.previousElementSibling?.id?.includes('discount')) {
+        const discountHtml = '<div class="mb-3"><label class="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5 block">Discount code</label><div class="flex gap-2"><input type="text" id="cart-discount" class="flex-1 p-2 rounded-lg bg-void border border-surface-border/30 text-xs text-text-primary focus:border-mint/40 focus:outline-none" placeholder="LEGEND10" /><button type="button" id="cart-apply-discount" class="px-2.5 py-1 rounded-lg bg-surface-light text-text-secondary text-xs hover:bg-surface-border transition-colors">Apply</button></div><p id="cart-discount-message" class="text-[10px] mt-1 hidden"></p></div>';
+        totalDiv.insertAdjacentHTML('beforebegin', discountHtml);
+      }
+    });
+  }
+
   function initDiscountCode() {
     // Checkout discount
     const applyBtn = document.getElementById('apply-discount-btn');
@@ -1183,6 +1195,7 @@ function initStickerModalClose() {
       initFilters,
       initAddToCart,
       initThemeToggle,
+      injectCartDiscount,
       initDiscountCode,
 
       initParticleCanvas,
