@@ -28,11 +28,15 @@
   function saveCart() {
     localStorage.setItem('legendCart', JSON.stringify(state.cart));
     localStorage.setItem('legendShippingCountry', state.shippingCountry);
+    localStorage.setItem('legendDiscountCode', state.discountCode);
+    localStorage.setItem('legendDiscountPercent', state.discountPercent);
   }
 
   function loadCart() {
     const savedCart = localStorage.getItem('legendCart');
     const savedCountry = localStorage.getItem('legendShippingCountry');
+    const savedDiscountCode = localStorage.getItem('legendDiscountCode');
+    const savedDiscountPercent = localStorage.getItem('legendDiscountPercent');
     if (savedCart) {
       try {
         state.cart = JSON.parse(savedCart);
@@ -42,6 +46,12 @@
     }
     if (savedCountry) {
       state.shippingCountry = savedCountry;
+    }
+    if (savedDiscountCode) {
+      state.discountCode = savedDiscountCode;
+    }
+    if (savedDiscountPercent) {
+      state.discountPercent = parseInt(savedDiscountPercent) || 0;
     }
   }
 
@@ -395,8 +405,8 @@
   };
 
   function applyDiscount(code) {
-    const messageEl = document.getElementById('discount-message');
-    const discountInput = document.getElementById('checkout-discount');
+    const messageEl = document.getElementById('discount-message') || document.getElementById('cart-discount-message');
+    const discountInput = document.getElementById('checkout-discount') || document.getElementById('cart-discount');
     
     code = code.trim().toUpperCase();
     const percent = VALID_DISCOUNT_CODES[code];
@@ -410,6 +420,7 @@
         messageEl.classList.remove('hidden');
       }
       updateCheckoutTotals();
+      renderCart();
       return true;
     } else {
       state.discountCode = '';
@@ -429,6 +440,7 @@
   }
 
   function initDiscountCode() {
+    // Checkout discount
     const applyBtn = document.getElementById('apply-discount-btn');
     const discountInput = document.getElementById('checkout-discount');
     if (applyBtn && discountInput) {
@@ -436,6 +448,20 @@
         applyDiscount(discountInput.value);
       });
       discountInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          applyDiscount(this.value);
+        }
+      });
+    }
+    // Cart discount
+    const cartApplyBtn = document.getElementById('cart-apply-discount');
+    const cartDiscountInput = document.getElementById('cart-discount');
+    if (cartApplyBtn && cartDiscountInput) {
+      cartApplyBtn.addEventListener('click', function() {
+        applyDiscount(cartDiscountInput.value);
+      });
+      cartDiscountInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
           e.preventDefault();
           applyDiscount(this.value);
