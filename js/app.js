@@ -451,6 +451,16 @@
     }
   }
 
+  // Inject discount row in checkout drawer if missing
+  function injectCheckoutDiscount() {
+    const subtotalRow = document.getElementById('checkout-subtotal')?.parentElement;
+    const discountRow = document.getElementById('discount-row');
+    if (subtotalRow && !discountRow) {
+      const html = '<div class="flex justify-between text-sm hidden" id="discount-row"><span class="text-text-muted">Discount</span><span class="text-red-400" id="checkout-discount-amount">€0,00</span></div>';
+      subtotalRow.insertAdjacentHTML('afterend', html);
+    }
+  }
+
   function initDiscountCode() {
     // Checkout discount
     const applyBtn = document.getElementById('apply-discount-btn');
@@ -1200,6 +1210,7 @@ function initStickerModalClose() {
     ];
     // Inject discount UI and init after DOM is ready
     injectCartDiscount();
+    injectCheckoutDiscount();
     initDiscountCode();
     fns.forEach(function(fn) {
       try { fn(); } catch(e) { console.error('init error:', fn.name, e); }
