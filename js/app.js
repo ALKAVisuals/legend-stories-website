@@ -21,6 +21,29 @@
   };
 
   // ==========================================
+  // LOCAL STORAGE - Cart Persistence
+  // ==========================================
+  function saveCart() {
+    localStorage.setItem('legendCart', JSON.stringify(state.cart));
+    localStorage.setItem('legendShippingCountry', state.shippingCountry);
+  }
+
+  function loadCart() {
+    const savedCart = localStorage.getItem('legendCart');
+    const savedCountry = localStorage.getItem('legendShippingCountry');
+    if (savedCart) {
+      try {
+        state.cart = JSON.parse(savedCart);
+      } catch (e) {
+        state.cart = [];
+      }
+    }
+    if (savedCountry) {
+      state.shippingCountry = savedCountry;
+    }
+  }
+
+  // ==========================================
   // SHIPPING CONFIG
   // ==========================================
   const SHIPPING_ZONES = {
@@ -158,12 +181,14 @@
     } else {
       state.cart.push(product);
     }
+    saveCart();
     updateCartCount();
     openCart();
   }
 
   function removeFromCart(index) {
     state.cart.splice(index, 1);
+    saveCart();
     updateCartCount();
     renderCart();
   }
@@ -171,6 +196,7 @@
   function updateCartQuantity(index, delta) {
     state.cart[index].quantity += delta;
     if (state.cart[index].quantity <= 0) { removeFromCart(index); return; }
+    saveCart();
     renderCart();
     updateCartCount();
   }
@@ -203,6 +229,7 @@
   function setShippingCountry(code) {
     state.shippingCountry = code;
     getShippingCost();
+    saveCart();
     renderCart();
   }
 
@@ -1044,6 +1071,7 @@ function initStickerModalClose() {
   // INITIALIZATION
   // ==========================================
   function init() {
+    loadCart();  // Restore cart from localStorage
     const fns = [
       initStickerClicks,
       initStickerModalClose,
