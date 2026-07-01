@@ -349,9 +349,17 @@
         <select id="checkout-country" class="w-full p-2.5 rounded-lg bg-void border border-surface-border/30 text-sm text-text-primary appearance-none cursor-pointer focus:border-mint/40 focus:outline-none"></select>
         <p id="checkout-shipping-note" class="text-[11px] text-mint mt-1.5"></p>
       </div>
+      <div><label class="text-[11px] text-text-muted uppercase tracking-wide font-medium mb-1.5 block">Discount code</label>
+        <div class="flex gap-2">
+          <input type="text" id="checkout-discount" class="flex-1 p-2.5 rounded-lg bg-void border border-surface-border/30 text-sm text-text-primary focus:border-mint/40 focus:outline-none" placeholder="LEGEND10" />
+          <button type="button" id="apply-discount-btn" class="px-3 py-1.5 rounded-lg bg-surface-light text-text-secondary text-sm hover:bg-surface-border transition-colors">Apply</button>
+        </div>
+        <p id="discount-message" class="text-[11px] mt-1.5 hidden"></p>
+      </div>
     </div>
     <div class="p-5 border-t border-surface-border/30 shrink-0 space-y-3">
       <div class="flex justify-between text-sm"><span class="text-text-muted">Subtotal</span><span class="text-text-secondary" id="checkout-subtotal">€0,00</span></div>
+      <div class="flex justify-between text-sm hidden" id="discount-row"><span class="text-text-muted">Discount</span><span class="text-red-400" id="checkout-discount-amount">€0,00</span></div>
       <div class="flex justify-between text-sm"><span class="text-text-muted">Shipping</span><span class="text-mint font-medium" id="checkout-shipping">€0,00</span></div>
       <div class="flex justify-between text-base font-bold border-t border-surface-border/30 pt-2"><span class="text-text-primary">Total</span><span class="text-text-primary" id="checkout-grandtotal">€0,00</span></div>
       <button class="btn-primary w-full py-3 text-sm" id="checkout-pay-btn">Continue to payment</button>

@@ -18,6 +18,8 @@
     totalTestimonials: 4,
     shippingCountry: 'NL',
     shippingCost: 0,
+    discountCode: '',
+    discountPercent: 0,
   };
 
   // ==========================================
@@ -354,28 +356,93 @@
 
   function updateCheckoutTotals() {
     const subtotal = getCartTotal();
+    const discount = getDiscountAmount(subtotal);
+    const discountedSubtotal = subtotal - discount;
     const zone = SHIPPING_ZONES[state.shippingCountry] || SHIPPING_ZONES.OTHER;
-    const shipping = subtotal >= zone.freeFrom ? 0 : zone.cost;
-    const grandTotal = subtotal + shipping;
+    const shipping = discountedSubtotal >= zone.freeFrom ? 0 : zone.cost;
+    const grandTotal = discountedSubtotal + shipping;
 
     const subtotalEl = document.getElementById('checkout-subtotal');
     const shippingEl = document.getElementById('checkout-shipping');
     const grandTotalEl = document.getElementById('checkout-grandtotal');
+    const discountEl = document.getElementById('checkout-discount-amount');
     const noteEl = document.getElementById('checkout-shipping-note');
 
     if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
+    if (discountEl) {
+      discountEl.textContent = discount > 0 ? '-' + formatPrice(discount) : '€0,00';
+      discountEl.parentElement.classList.toggle('hidden', discount === 0);
+    }
     if (shippingEl) shippingEl.textContent = shipping === 0 ? 'Free' : formatPrice(shipping);
     if (grandTotalEl) grandTotalEl.textContent = formatPrice(grandTotal);
     if (noteEl) {
       if (shipping === 0) {
         noteEl.textContent = '✓ Free shipping to ' + zone.name;
       } else {
-        noteEl.textContent = 'Add ' + formatPrice(zone.freeFrom - subtotal) + ' more for free shipping to ' + zone.name;
+        noteEl.textContent = 'Add ' + formatPrice(zone.freeFrom - discountedSubtotal) + ' more for free shipping to ' + zone.name;
       }
     }
   }
 
   let validatedAddress = null;
+
+  // ==========================================
+  // DISCOUNT CODE
+  // ==========================================
+  const VALID_DISCOUNT_CODES = {
+    'LEGEND10': 10,
+    'WELCOME15': 15,
+  };
+
+  function applyDiscount(code) {
+    const messageEl = document.getElementById('discount-message');
+    const discountInput = document.getElementById('checkout-discount');
+    
+    code = code.trim().toUpperCase();
+    const percent = VALID_DISCOUNT_CODES[code];
+    
+    if (percent) {
+      state.discountCode = code;
+      state.discountPercent = percent;
+      if (messageEl) {
+        messageEl.textContent = '✓ ' + percent + '% discount applied!';
+        messageEl.className = 'text-[11px] mt-1.5 text-mint';
+        messageEl.classList.remove('hidden');
+      }
+      updateCheckoutTotals();
+      return true;
+    } else {
+      state.discountCode = '';
+      state.discountPercent = 0;
+      if (messageEl) {
+        messageEl.textContent = 'Invalid discount code';
+        messageEl.className = 'text-[11px] mt-1.5 text-red-400';
+        messageEl.classList.remove('hidden');
+      }
+      updateCheckoutTotals();
+      return false;
+    }
+  }
+
+  function getDiscountAmount(subtotal) {
+    return subtotal * (state.discountPercent / 100);
+  }
+
+  function initDiscountCode() {
+    const applyBtn = document.getElementById('apply-discount-btn');
+    const discountInput = document.getElementById('checkout-discount');
+    if (applyBtn && discountInput) {
+      applyBtn.addEventListener('click', function() {
+        applyDiscount(discountInput.value);
+      });
+      discountInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          applyDiscount(this.value);
+        }
+      });
+    }
+  }
 
   function handleCheckoutPay() {
     const firstname = document.getElementById('checkout-firstname')?.value.trim();
@@ -499,7 +566,10 @@
     const validatedCountry = address.country;
     const zone = SHIPPING_ZONES[validatedCountry] || SHIPPING_ZONES.OTHER;
     const subtotal = getCartTotal();
-    const shipping = subtotal >= zone.freeFrom ? 0 : zone.cost;
+    const discount = getDiscountAmount(subtotal);
+    const discountedSubtotal = subtotal - discount;
+    const shipping = discountedSubtotal >= zone.freeFrom ? 0 : zone.cost;
+    const total = discountedSubtotal + shipping;
 
     const orderData = {
       items: state.cart.map(item => ({
@@ -511,7 +581,9 @@
       customer: { firstname, lastname, email, street: address.street, zip: address.postal_code, city: address.city, country: validatedCountry, formatted: address.formatted },
       shipping: { zone: zone.name, cost: shipping },
       subtotal: subtotal,
-      total: subtotal + shipping,
+      discount: discount,
+      discountCode: state.discountCode,
+      total: total,
     };
 
     // Store for Stripe redirect
@@ -519,7 +591,7 @@
 
     // Redirect to Stripe Checkout (placeholder — replace with real Stripe URL)
     // For now, show confirmation
-    alert('Order ready! In production this redirects to Stripe Checkout.\n\nTotal: ' + formatPrice(subtotal + shipping) + '\nShipping to: ' + zone.name);
+    alert('Order ready! In production this redirects to Stripe Checkout.\n\nSubtotal: ' + formatPrice(subtotal) + '\nDiscount (' + state.discountPercent + '%): -' + formatPrice(discount) + '\nShipping to ' + zone.name + ': ' + (shipping === 0 ? 'Free' : formatPrice(shipping)) + '\nTotal: ' + formatPrice(total));
   }
 
   // ==========================================
@@ -1082,6 +1154,7 @@ function initStickerModalClose() {
       initFilters,
       initAddToCart,
       initThemeToggle,
+      initDiscountCode,
 
       initParticleCanvas,
       initScrollReveal,
