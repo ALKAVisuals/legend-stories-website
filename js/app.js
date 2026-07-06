@@ -1183,11 +1183,20 @@
     }
     if (related.length === 0) return;
 
+    // Inject responsive CSS for carousel items
+    var styleId = 'related-carousel-style';
+    if (!document.getElementById(styleId)) {
+      var style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = '.related-carousel-item{width:45%;flex:0 0 45%}@media(min-width:640px){.related-carousel-item{width:30%;flex:0 0 30%}}@media(min-width:1024px){.related-carousel-item{width:22%;flex:0 0 22%}}';
+      document.head.appendChild(style);
+    }
+
     // Build HTML
     var html = '';
     for (var k = 0; k < related.length; k++) {
       var p = related[k];
-      html += '<a href="' + p.page + '" class="inline-block flex-none w-[45%] sm:w-[30%] lg:w-[22%] snap-start group">';
+      html += '<a href="' + p.page + '" class="inline-block flex-none snap-start group related-carousel-item">';
       html += '<div class="aspect-[4/3] rounded-xl overflow-hidden border border-surface-border/30 mb-2 bg-neutral-200">';
       html += '<img src="' + p.img + '" alt="' + p.name + '" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" loading="lazy">';
       html += '</div>';
