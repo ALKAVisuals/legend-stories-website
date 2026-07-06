@@ -1220,6 +1220,25 @@
       '</div>' +
       '</div>';
 
+    // ---- Smooth scroll helper with easing ----
+    function smoothScrollTo(targetX, duration) {
+      if (!track) return;
+      duration = duration || 800;
+      var start = track.scrollLeft;
+      var distance = targetX - start;
+      if (Math.abs(distance) < 1) return;
+      var startTime = null;
+      function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; } // easeInOutQuad
+      function step(ts) {
+        if (!startTime) startTime = ts;
+        var elapsed = ts - startTime;
+        var progress = Math.min(elapsed / duration, 1);
+        track.scrollLeft = start + distance * ease(progress);
+        if (progress < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
     // Wire up scroll buttons
     var track = el.querySelector('.related-track');
     var prev = el.querySelector('.related-prev');
@@ -1227,46 +1246,52 @@
     if (track && prev) {
       prev.addEventListener('click', function(e) {
         e.stopPropagation();
-        track.scrollBy({ left: -track.clientWidth * 0.66, behavior: 'smooth' });
+        var target = track.scrollLeft - track.clientWidth * 0.66;
+        smoothScrollTo(target, 600);
       });
     }
     if (track && next) {
       next.addEventListener('click', function(e) {
         e.stopPropagation();
-        track.scrollBy({ left: track.clientWidth * 0.66, behavior: 'smooth' });
+        var target = track.scrollLeft + track.clientWidth * 0.66;
+        smoothScrollTo(target, 600);
       });
     }
 
-    // Auto-scroll: animate every 4 seconds (delayed until images load)
+    // ---- Auto-scroll with requestAnimationFrame ----
     var autoTimer = null;
-    function doScroll() {
-      if (!track) return;
+    var autoActive = false;
+    function doAutoScroll() {
+      if (!track || !autoActive) return;
       var maxScroll = track.scrollWidth - track.clientWidth;
-      if (maxScroll <= 1) return; // nothing to scroll
+      if (maxScroll <= 1) { autoActive = false; return; }
+      
       var target = track.scrollLeft + track.clientWidth * 0.66;
-      if (target >= maxScroll - 10) {
-        track.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        track.scrollBy({ left: track.clientWidth * 0.66, behavior: 'smooth' });
-      }
+      if (target >= maxScroll - 5) target = 0;
+      
+      smoothScrollTo(target, 900);
+      
+      // Schedule next after scroll duration + idle time
+      setTimeout(function() { doAutoScroll(); }, 900 + 3000);
     }
     function startAutoScroll() {
-      if (autoTimer) clearInterval(autoTimer);
-      autoTimer = setInterval(doScroll, 4000);
-      // Also trigger once after images likely loaded
-      setTimeout(doScroll, 800);
+      if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+      autoActive = true;
+      // First scroll after a small delay
+      autoTimer = setTimeout(function() { doAutoScroll(); }, 1500);
     }
     function stopAutoScroll() {
-      if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+      autoActive = false;
+      if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
     }
-    // Start auto-scroll after a delay to let images load & layout settle
-    setTimeout(startAutoScroll, 500);
+    // Start auto-scroll after layout settles
+    setTimeout(startAutoScroll, 600);
     // Pause on hover/touch
     track.addEventListener('mouseenter', stopAutoScroll);
     track.addEventListener('mouseleave', startAutoScroll);
-    track.addEventListener('touchstart', stopAutoScroll);
+    track.addEventListener('touchstart', stopAutoScroll, {passive:true});
     track.addEventListener('touchend', startAutoScroll);
-    // Pause on manual arrow click - wrap in null check
+    // Pause on manual arrow click
     if (prev) prev.addEventListener('click', stopAutoScroll);
     if (next) next.addEventListener('click', stopAutoScroll);
   }
