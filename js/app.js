@@ -1189,9 +1189,9 @@
       var style = document.createElement('style');
       style.id = styleId;
       style.textContent = '.related-carousel-item{width:45%;flex:0 0 45%}@media(min-width:640px){.related-carousel-item{width:30%;flex:0 0 30%}}@media(min-width:1024px){.related-carousel-item{width:22%;flex:0 0 22%}}' +
-        '.related-track{scrollbar-width:none;-ms-overflow-style:none}.related-track::-webkit-scrollbar{display:none}' +
-        '.related-arrow{z-index:10;pointer-events:auto}.related-arrow-wrap{pointer-events:none}' +
-        '.related-track-wrap{position:relative;max-width:100%}';
+              '.related-track{scrollbar-width:none;-ms-overflow-style:none;pointer-events:auto}.related-track::-webkit-scrollbar{display:none}' +
+              '.related-arrow{z-index:20;pointer-events:auto}' +
+              '.related-track-wrap{position:relative;max-width:100%;pointer-events:none}';
       document.head.appendChild(style);
     }
 
@@ -1237,35 +1237,38 @@
       });
     }
 
-    // Auto-scroll: animate every 4 seconds
+    // Auto-scroll: animate every 4 seconds (delayed until images load)
     var autoTimer = null;
+    function doScroll() {
+      if (!track) return;
+      var maxScroll = track.scrollWidth - track.clientWidth;
+      if (maxScroll <= 1) return; // nothing to scroll
+      var target = track.scrollLeft + track.clientWidth * 0.66;
+      if (target >= maxScroll - 10) {
+        track.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        track.scrollBy({ left: track.clientWidth * 0.66, behavior: 'smooth' });
+      }
+    }
     function startAutoScroll() {
       if (autoTimer) clearInterval(autoTimer);
-      autoTimer = setInterval(function() {
-        // Scroll to next "page"
-        var maxScroll = track.scrollWidth - track.clientWidth;
-        var target = track.scrollLeft + track.clientWidth * 0.66;
-        if (target >= maxScroll) {
-          // Loop back to start
-          track.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          track.scrollBy({ left: track.clientWidth * 0.66, behavior: 'smooth' });
-        }
-      }, 4000);
+      autoTimer = setInterval(doScroll, 4000);
+      // Also trigger once after images likely loaded
+      setTimeout(doScroll, 800);
     }
     function stopAutoScroll() {
       if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
     }
-    // Start auto-scroll
-    startAutoScroll();
+    // Start auto-scroll after a delay to let images load & layout settle
+    setTimeout(startAutoScroll, 500);
     // Pause on hover/touch
     track.addEventListener('mouseenter', stopAutoScroll);
     track.addEventListener('mouseleave', startAutoScroll);
     track.addEventListener('touchstart', stopAutoScroll);
     track.addEventListener('touchend', startAutoScroll);
-    // Also pause when user manually clicks arrows
-    prev.addEventListener('click', stopAutoScroll);
-    next.addEventListener('click', stopAutoScroll);
+    // Pause on manual arrow click - wrap in null check
+    if (prev) prev.addEventListener('click', stopAutoScroll);
+    if (next) next.addEventListener('click', stopAutoScroll);
   }
 
   function initCarousel() {
