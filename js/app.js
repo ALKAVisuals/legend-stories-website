@@ -1436,7 +1436,27 @@ function initStickerModalClose() {
       initCarousel,
       initVideoPlayer,
       initHoverExpandMobile,
-    ];
+        {name:'Iron Soul', page:'combat-iron-soul-combat-legend-mural.html', img:'media/stikkers/2026/Batch2/combat Legends/iron-soul-combat-legend-mural.png', cat:'Combat Legends'},
+    {name:'Dreamers\' Reality', page:'music-dreamers-reality-music-legend-mural.html', img:'media/stikkers/2026/Batch2/Music Legends/dreamers-reality-music-legend-mural.png', cat:'Music Legends'},
+    {name:'The Hidden Truth', page:'music-hidden-truth-music-legend-mural.html', img:'media/stikkers/2026/Batch2/Music Legends/hidden-truth-music-legend-mural.png', cat:'Music Legends'},
+    {name:'The Eternal Bond', page:'music-homie-bond-music-legend-mural.html', img:'media/stikkers/2026/Batch2/Music Legends/homie-bond-music-legend-mural.png', cat:'Music Legends'},
+    {name:'The Hustler\'s Mindset', page:'music-hustler-mind-music-legend-mural.html', img:'media/stikkers/2026/Batch2/Music Legends/hustler-mind-music-legend-mural.png', cat:'Music Legends'},
+    {name:'The Royal Groove', page:'music-kings-groove-music-legend-mural.html', img:'media/stikkers/2026/Batch2/Music Legends/kings-groove-music-legend-mural.png', cat:'Music Legends'},
+    {name:'The Living Truth', page:'music-living-truth-music-legend-mural.html', img:'media/stikkers/2026/Batch2/Music Legends/living-truth-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Mental Liberation', page:'music-mental-liberation-reggae-legend-mural.html', img:'media/stikkers/2026/Batch2/Music Legends/mental-liberation-reggae-legend-mural.png', cat:'Music Legends'},
+    {name:'The Timeless Icon', page:'music-timeless-icon-music-legend-mural.html', img:'media/stikkers/2026/Batch2/Music Legends/timeless-icon-music-legend-mural.png', cat:'Music Legends'},
+    {name:'The Unbothered Mind', page:'music-unbothered-mind-music-legend-mural.html', img:'media/stikkers/2026/Batch2/Music Legends/unbothered-mind-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Beyond Possible', page:'sport-beyond-possible-sport-legend-mural.html', img:'media/stikkers/2026/Batch2/Sport Legends/beyond-possible-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Court Dominance', page:'sport-court-dominance-sport-legend-mural.html', img:'media/stikkers/2026/Batch2/Sport Legends/court-dominance-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'The Divine Touch', page:'sport-divine-touch-sport-legend-mural.html', img:'media/stikkers/2026/Batch2/Sport Legends/divine-touch-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Hand of Destiny', page:'sport-hand-of-destiny-sport-legend-mural.html', img:'media/stikkers/2026/Batch2/Sport Legends/hand-of-destiny-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Relentless Spirit', page:'sport-relentless-spirit-sport-legend-mural.html', img:'media/stikkers/2026/Batch2/Sport Legends/relentless-spirit-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'The Silent Answer', page:'sport-silent-answer-sport-legend-mural.html', img:'media/stikkers/2026/Batch2/Sport Legends/silent-answer-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Absolute Freedom', page:'wisdom-absolute-freedom-wisdom-legend-mural.html', img:'media/stikkers/2026/Batch2/Wisdom Legends/absolute-freedom-wisdom-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Chaos Theory', page:'wisdom-chaos-theory-wisdom-legend-mural.html', img:'media/stikkers/2026/Batch2/Wisdom Legends/chaos-theory-wisdom-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Total Liberation', page:'wisdom-total-liberation-mindset-legend-mural.html', img:'media/stikkers/2026/Batch2/Wisdom Legends/total-liberation-mindset-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'True Freedom', page:'wisdom-true-freedom-mindset-legend-mural.html', img:'media/stikkers/2026/Batch2/Wisdom Legends/true-freedom-mindset-legend-mural.png', cat:'Wisdom Legends'},
+];
     // Inject discount UI and init after DOM is ready
     injectCartDiscount();
     injectCheckoutDiscount();
