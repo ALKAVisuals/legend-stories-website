@@ -1188,7 +1188,10 @@
     if (!document.getElementById(styleId)) {
       var style = document.createElement('style');
       style.id = styleId;
-      style.textContent = '.related-carousel-item{width:45%;flex:0 0 45%}@media(min-width:640px){.related-carousel-item{width:30%;flex:0 0 30%}}@media(min-width:1024px){.related-carousel-item{width:22%;flex:0 0 22%}}';
+      style.textContent = '.related-carousel-item{width:45%;flex:0 0 45%}@media(min-width:640px){.related-carousel-item{width:30%;flex:0 0 30%}}@media(min-width:1024px){.related-carousel-item{width:22%;flex:0 0 22%}}' +
+        '.related-track{scrollbar-width:none;-ms-overflow-style:none}.related-track::-webkit-scrollbar{display:none}' +
+        '.related-arrow{z-index:10;pointer-events:auto}.related-arrow-wrap{pointer-events:none}' +
+        '.related-track-wrap{position:relative;max-width:100%}';
       document.head.appendChild(style);
     }
 
@@ -1205,14 +1208,14 @@
     }
 
     el.innerHTML = 
-      '<div class="relative">' +
-      '<button class="related-prev absolute left-0 top-[40%] z-10 w-10 h-10 rounded-full bg-surface/80 backdrop-blur-sm border border-surface-border/30 flex items-center justify-center text-text-secondary hover:text-mint hover:bg-surface transition-all shadow-md" aria-label="Previous">' +
+      '<div class="related-track-wrap">' +
+      '<button class="related-arrow related-prev absolute left-0 top-[40%] -translate-y-1/2 w-10 h-10 rounded-full bg-surface/90 backdrop-blur-sm border border-surface-border/30 flex items-center justify-center text-text-secondary hover:text-mint hover:bg-surface transition-all shadow-lg z-20" aria-label="Previous">' +
       '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>' +
       '</button>' +
-      '<button class="related-next absolute right-0 top-[40%] z-10 w-10 h-10 rounded-full bg-surface/80 backdrop-blur-sm border border-surface-border/30 flex items-center justify-center text-text-secondary hover:text-mint hover:bg-surface transition-all shadow-md" aria-label="Next">' +
+      '<button class="related-arrow related-next absolute right-0 top-[40%] -translate-y-1/2 w-10 h-10 rounded-full bg-surface/90 backdrop-blur-sm border border-surface-border/30 flex items-center justify-center text-text-secondary hover:text-mint hover:bg-surface transition-all shadow-lg z-20" aria-label="Next">' +
       '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>' +
       '</button>' +
-      '<div class="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-2 related-track" style="-webkit-overflow-scrolling:touch;scrollbar-width:none;">' +
+      '<div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 related-track" style="-webkit-overflow-scrolling:touch;overflow-y:hidden">' +
       html +
       '</div>' +
       '</div>';
@@ -1222,15 +1225,47 @@
     var prev = el.querySelector('.related-prev');
     var next = el.querySelector('.related-next');
     if (track && prev) {
-      prev.addEventListener('click', function() {
+      prev.addEventListener('click', function(e) {
+        e.stopPropagation();
         track.scrollBy({ left: -track.clientWidth * 0.66, behavior: 'smooth' });
       });
     }
     if (track && next) {
-      next.addEventListener('click', function() {
+      next.addEventListener('click', function(e) {
+        e.stopPropagation();
         track.scrollBy({ left: track.clientWidth * 0.66, behavior: 'smooth' });
       });
     }
+
+    // Auto-scroll: animate every 4 seconds
+    var autoTimer = null;
+    function startAutoScroll() {
+      if (autoTimer) clearInterval(autoTimer);
+      autoTimer = setInterval(function() {
+        // Scroll to next "page"
+        var maxScroll = track.scrollWidth - track.clientWidth;
+        var target = track.scrollLeft + track.clientWidth * 0.66;
+        if (target >= maxScroll) {
+          // Loop back to start
+          track.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          track.scrollBy({ left: track.clientWidth * 0.66, behavior: 'smooth' });
+        }
+      }, 4000);
+    }
+    function stopAutoScroll() {
+      if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+    }
+    // Start auto-scroll
+    startAutoScroll();
+    // Pause on hover/touch
+    track.addEventListener('mouseenter', stopAutoScroll);
+    track.addEventListener('mouseleave', startAutoScroll);
+    track.addEventListener('touchstart', stopAutoScroll);
+    track.addEventListener('touchend', startAutoScroll);
+    // Also pause when user manually clicks arrows
+    prev.addEventListener('click', stopAutoScroll);
+    next.addEventListener('click', stopAutoScroll);
   }
 
   function initCarousel() {
