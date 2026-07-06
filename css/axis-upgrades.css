@@ -13,18 +13,16 @@
    ============================================================ */
 
 /* --- AXIS: Refined Color Palette --- */
-@layer base {
-  :root {
-    /* Axis gebruikt een zachtere dark mode — niet puur zwart */
-    --axis-bg: #0a0a0b;
-    --axis-surface: #141416;
-    --axis-surface-hover: #1a1a1e;
-    --axis-border: rgba(255, 255, 255, 0.08);
-    --axis-border-hover: rgba(255, 255, 255, 0.14);
-    --axis-muted: #1c1c20;
-    --axis-text-secondary: #8a8a93;
-    --axis-text-muted: #5c5c64;
-  }
+/* Axis gebruikt een zachtere dark mode — niet puur zwart */
+:root {
+  --axis-bg: #0a0a0b;
+  --axis-surface: #141416;
+  --axis-surface-hover: #1a1a1e;
+  --axis-border: rgba(255, 255, 255, 0.08);
+  --axis-border-hover: rgba(255, 255, 255, 0.14);
+  --axis-muted: #1c1c20;
+  --axis-text-secondary: #8a8a93;
+  --axis-text-muted: #5c5c64;
 }
 
 /* --- AXIS: Glass Navigation (backdrop-blur) --- */
