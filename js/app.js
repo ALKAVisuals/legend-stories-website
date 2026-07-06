@@ -1109,6 +1109,121 @@
   // ==========================================
   // SKIPER48: Card Swipe Carousel
   // ==========================================
+  // ==========================================
+  // PRODUCT DATABASE - Used for related products carousel
+  // ==========================================
+  var PRODUCTS = [
+    {name:'The Unfazed Fighter', page:'combat-unfazed-fighter.html', img:'media/stikkers/2026/batch1/combat Legends/unfazed-fighter-combat-legend-mural.png', cat:'Combat Legends'},
+    {name:'Iron Discipline', page:'combat-iron-discipline.html', img:'media/stikkers/2026/batch1/combat Legends/iron-discipline-boxing-legend-mural.png', cat:'Combat Legends'},
+    {name:'The Beast Within', page:'combat-beast-within.html', img:'media/stikkers/2026/batch1/combat Legends/power-beast-boxing-legend-mural.png', cat:'Combat Legends'},
+    {name:'The Stone Face', page:'combat-stone-face.html', img:'media/stikkers/2026/batch1/combat Legends/stone-face-chama-combat-legend-mural.png', cat:'Combat Legends'},
+    {name:'The Grind Cycle', page:'combat-grind-cycle.html', img:'media/stikkers/2026/batch 3/Combat Legends/grind-cycle-combat-legend-mural.png', cat:'Combat Legends'},
+    {name:'Unstoppable Will', page:'combat-unstoppable-will.html', img:'media/stikkers/2026/batch 3/Combat Legends/unstoppable-will-combat-legend-mural.png', cat:'Combat Legends'},
+    {name:'Dream Reality', page:'combat-dream-reality.html', img:'media/stikkers/2026/batch 3/Combat Legends/dream-reality-combat-legend-mural.png', cat:'Combat Legends'},
+    {name:'Courageous Risk', page:'combat-courageous-risk.html', img:'media/stikkers/2026/batch 3/Combat Legends/courageous-risk-combat-legend-mural.png', cat:'Combat Legends'},
+    {name:'The Greatest Courage', page:'combat-greatest-courage.html', img:'media/stikkers/2026/batch 3/Combat Legends/greatest-courage-combat-legend-mural.png', cat:'Combat Legends'},
+    {name:'Beyond Pop Music', page:'music-beyond-pop-music.html', img:'media/stikkers/2026/batch1/Music Legends/beyond-pop-music-icon-legend-mural.png', cat:'Music Legends'},
+    {name:'Creative Vision', page:'music-creative-vision.html', img:'media/stikkers/2026/batch1/Music Legends/creative-vision-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Eternal Will', page:'music-eternal-will.html', img:'media/stikkers/2026/batch1/Music Legends/eternal-will-rap-legend-mural.png', cat:'Music Legends'},
+    {name:'Mental Freedom', page:'music-mental-freedom.html', img:'media/stikkers/2026/batch1/Music Legends/mental-freedom-reggae-legend-mural.png', cat:'Music Legends'},
+    {name:'Pure Soul', page:'music-pure-soul.html', img:'media/stikkers/2026/batch1/Music Legends/pure-soul-purple-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Rebel Spirit', page:'music-rebel-spirit.html', img:'media/stikkers/2026/batch1/Music Legends/rebel-spirit-music-icon-legend-mural.png', cat:'Music Legends'},
+    {name:'Respect Code', page:'music-respect-code.html', img:'media/stikkers/2026/batch1/Music Legends/respect-code-color-legend-mural.png', cat:'Music Legends'},
+    {name:'Respect Code Green', page:'music-respect-code-green.html', img:'media/stikkers/2026/batch1/Music Legends/respect-code-green-legend-mural.jpg.png', cat:'Music Legends'},
+    {name:'West Coast Loyalty', page:'music-west-coast-loyalty.html', img:'media/stikkers/2026/batch1/Music Legends/west-coast-loyalty-color-legend-mural.png', cat:'Music Legends'},
+    {name:'West Coast Loyalty Grey', page:'music-west-coast-loyalty-grey.html', img:'media/stikkers/2026/batch1/Music Legends/west-coast-loyalty-grey-legend-mural.png', cat:'Music Legends'},
+    {name:'Constant Evolution', page:'music-constant-evolution.html', img:'media/stikkers/2026/batch 3/Music Legends/constant-evolution-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Eternal Smile', page:'music-eternal-smile.html', img:'media/stikkers/2026/batch 3/Music Legends/eternal-smile-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Lyric Mastery', page:'music-lyric-mastery.html', img:'media/stikkers/2026/batch 3/Music Legends/lyric-mastery-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Pure Confidence', page:'music-pure-confidence.html', img:'media/stikkers/2026/batch 3/Music Legends/pure-confidence-music-legend-mural.png', cat:'Music Legends'},
+    {name:'The Style Code', page:'music-style-code.html', img:'media/stikkers/2026/batch 3/Music Legends/style-code-music-legend-mural.png', cat:'Music Legends'},
+    {name:'The Free Spirit', page:'music-free-spirit.html', img:'media/stikkers/2026/batch 3/Music Legends/free-spirit-music-legend-mural.png', cat:'Music Legends'},
+    {name:'The Truth Seeker', page:'music-truth-seeker.html', img:'media/stikkers/2026/batch 3/Music Legends/truth-seeker-music-legend-mural.png', cat:'Music Legends'},
+    {name:'The Style Prophet', page:'music-style-prophet.html', img:'media/stikkers/2026/batch 3/Music Legends/style-prophet-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Clutch Player', page:'sport-clutch-player.html', img:'media/stikkers/2026/batch1/Sport Legends/clutch-player-basketball-legend-mural.png', cat:'Sport Legends'},
+    {name:'Game Changer', page:'sport-game-changer.html', img:'media/stikkers/2026/batch1/Sport Legends/game-changer-art-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'King of Pitch', page:'sport-king-of-pitch.html', img:'media/stikkers/2026/batch1/Sport Legends/king-of-pitch-football-legend-mural.png', cat:'Sport Legends'},
+    {name:'Winners Mindset', page:'sport-winners-mindset.html', img:'media/stikkers/2026/batch1/Sport Legends/winners-mindset-basketball-legend-mural.png', cat:'Sport Legends'},
+    {name:'Unstoppable Will Sport', page:'sport-unstoppable-will.html', img:'media/stikkers/2026/batch 3/Sport Legends/unstoppable-will-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'The Peak Performer', page:'sport-peak-performer.html', img:'media/stikkers/2026/batch 3/Sport Legends/peak-performer-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:"The Lion's Pride", page:'sport-lions-pride.html', img:'media/stikkers/2026/batch 3/Sport Legends/lions-pride-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'The Luxury Standard', page:'sport-luxury-standard.html', img:'media/stikkers/2026/batch 3/Sport Legends/football-luxury-performance-legend-mural.png', cat:'Sport Legends'},
+    {name:'Mamba Mindset', page:'sport-mamba-mindset.html', img:'media/stikkers/2026/batch 3/Sport Legends/mamba-mindset-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Pursuit of Greatness', page:'sport-pursuit-greatness.html', img:'media/stikkers/2026/batch 3/Sport Legends/pursuit-greatness-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Unforgettable Roots', page:'sport-unforgettable-roots.html', img:'media/stikkers/2026/batch 3/Sport Legends/unforgettable-roots-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Material Illusion', page:'wisdom-material-illusion.html', img:'media/stikkers/2026/batch1/Wisdom Legends/material-illusion-mindset-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Rule Breaker', page:'wisdom-rule-breaker.html', img:'media/stikkers/2026/batch1/Wisdom Legends/rule-breaker-mindset-legend-mural.png', cat:'Wisdom Legends'},
+  ];
+
+  // ==========================================
+  // RELATED PRODUCTS CAROUSEL
+  // ==========================================
+  function initRelatedProducts() {
+    var el = document.getElementById('related-carousel');
+    if (!el) return;
+    var currentName = el.dataset.currentProduct;
+    if (!currentName) return;
+
+    // Find current product's category
+    var currentCat = '';
+    for (var i = 0; i < PRODUCTS.length; i++) {
+      if (PRODUCTS[i].name === currentName) {
+        currentCat = PRODUCTS[i].cat;
+        break;
+      }
+    }
+    if (!currentCat) return;
+
+    // Collect other products from same category
+    var related = [];
+    for (var j = 0; j < PRODUCTS.length; j++) {
+      if (PRODUCTS[j].cat === currentCat && PRODUCTS[j].name !== currentName) {
+        related.push(PRODUCTS[j]);
+      }
+    }
+    if (related.length === 0) return;
+
+    // Build HTML
+    var html = '';
+    for (var k = 0; k < related.length; k++) {
+      var p = related[k];
+      html += '<a href="' + p.page + '" class="inline-block flex-none w-[45%] sm:w-[30%] lg:w-[22%] snap-start group">';
+      html += '<div class="aspect-[4/3] rounded-xl overflow-hidden border border-surface-border/30 mb-2 bg-neutral-200">';
+      html += '<img src="' + p.img + '" alt="' + p.name + '" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" loading="lazy">';
+      html += '</div>';
+      html += '<p class="text-sm text-text-secondary group-hover:text-mint transition-colors truncate">' + p.name + '</p>';
+      html += '</a>';
+    }
+
+    el.innerHTML = 
+      '<div class="relative">' +
+      '<button class="related-prev absolute left-0 top-[40%] z-10 w-10 h-10 rounded-full bg-surface/80 backdrop-blur-sm border border-surface-border/30 flex items-center justify-center text-text-secondary hover:text-mint hover:bg-surface transition-all shadow-md" aria-label="Previous">' +
+      '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>' +
+      '</button>' +
+      '<button class="related-next absolute right-0 top-[40%] z-10 w-10 h-10 rounded-full bg-surface/80 backdrop-blur-sm border border-surface-border/30 flex items-center justify-center text-text-secondary hover:text-mint hover:bg-surface transition-all shadow-md" aria-label="Next">' +
+      '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>' +
+      '</button>' +
+      '<div class="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-2 related-track" style="-webkit-overflow-scrolling:touch;scrollbar-width:none;">' +
+      html +
+      '</div>' +
+      '</div>';
+
+    // Wire up scroll buttons
+    var track = el.querySelector('.related-track');
+    var prev = el.querySelector('.related-prev');
+    var next = el.querySelector('.related-next');
+    if (track && prev) {
+      prev.addEventListener('click', function() {
+        track.scrollBy({ left: -track.clientWidth * 0.66, behavior: 'smooth' });
+      });
+    }
+    if (track && next) {
+      next.addEventListener('click', function() {
+        track.scrollBy({ left: track.clientWidth * 0.66, behavior: 'smooth' });
+      });
+    }
+  }
+
   function initCarousel() {
     const carousels = document.querySelectorAll('.skiper-carousel');
     carousels.forEach((carousel) => {
@@ -1245,6 +1360,7 @@ function initStickerModalClose() {
       initThemeToggle,
       initParticleCanvas,
       initScrollReveal,
+      initRelatedProducts,
       initCarousel,
       initVideoPlayer,
       initHoverExpandMobile,
