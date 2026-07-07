@@ -73,27 +73,21 @@
   </header>
 
   <main>
-    <!-- HERO -->
-    <section class="py-16 md:py-24 relative overflow-hidden">
-      <div class="absolute inset-0 bg-gradient-to-br from-void via-surface to-void"></div>
-      <div class="absolute top-1/4 -left-32 w-96 h-96 bg-mint/5 rounded-full blur-3xl"></div>
-      <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div class="flex justify-center mb-6">
-          <div class="dmx-root dmx-bloom dmx-bloom-halo" style="--dmx-dot-fill:#2a8a4a;--dmx-cycle:2000ms;--dmx-speed:0.8;--dmx-dot-size:3px;width:60px;height:60px;">
-            <div class="dmx-grid">
-              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:0"></div><div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:1"></div><div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div><div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div><div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div>
-              <div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:1"></div><div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:2"></div><div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:3"></div><div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:4"></div><div class="dmx-dot dmx-ripple" style="--dmx-ripple-ring:5"></div>
-            </div>
-          </div>
-        </div>
+        <!-- HERO -->
+    <section class="relative overflow-hidden bg-void min-h-[60vh] flex items-center justify-center">
+      <!-- Video background -->
+      <div class="absolute inset-0 w-full h-full">
+        <video class="w-full h-full object-cover" autoplay muted loop playsinline preload="metadata">
+          <source src="media/welcome/LM%20Welcome%20video%20%20mobile%20%20%20(3).mp4" type="video/mp4">
+        </video>
+        <!-- Dark overlay for readability -->
+        <div class="absolute inset-0 bg-gradient-to-t from-void/90 via-void/60 to-void/80"></div>
+      </div>
+      <!-- Content over video -->
+      <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-20">
         <h1 class="section-heading mb-4">Music <span class="text-gradient-mint">Legends</span></h1>
-                <p class="section-subheading mx-auto">57 designs. One mindset.</p>
-                <div class="mt-6 max-w-lg mx-auto rounded-xl overflow-hidden border border-surface-border/20 shadow-lg">
-                  <video class="w-full h-auto" autoplay muted loop playsinline preload="metadata">
-                    <source src="media/welcome/LM%20Welcome%20video%20%20mobile%20%20%20(2).mp4" type="video/mp4">
-                  </video>
-                </div>
-              </div>
+        <p class="section-subheading mx-auto">57 designs. One mindset.</p>
+      </div>
     </section>
 
     <!-- PRODUCTS -->
