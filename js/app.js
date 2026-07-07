@@ -1495,6 +1495,18 @@ function initStickerModalClose() {
     {name:'Unyielding Drive', page:'wisdom-unyielding-drive-combat-legend-mural.html', img:'media/stikkers/2026/Batch 5/Wisdom Legends/unyielding-drive-combat-legend-mural.png', cat:'Wisdom Legends'},
     {name:'Relentless Power', page:'wisdom-relentless-power-combat-legend-mural.html', img:'media/stikkers/2026/Batch 5/Wisdom Legends/relentless-power-combat-legend-mural.png', cat:'Wisdom Legends'},
     {name:'Consistent Excellence', page:'wisdom-consistent-excellence-combat-legend-mural.html', img:'media/stikkers/2026/Batch 5/Wisdom Legends/consistent-excellence-combat-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Living Your Truth', page:'music-living-your-truth-music-legend-mural.html', img:'media/stikkers/2026/Batch 6/Music Legends/living-your-truth-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Authentic Connection', page:'music-authentic-connection-music-legend-mural.html', img:'media/stikkers/2026/Batch 6/Music Legends/authentic-connection-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Resilient Spirit', page:'music-resilient-spirit-music-legend-mural.html', img:'media/stikkers/2026/Batch 6/Music Legends/resilient-spirit-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Inner Circle', page:'music-inner-circle-music-legend-mural.html', img:'media/stikkers/2026/Batch 6/Music Legends/inner-circle-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Unapologetic Self', page:'music-unapologetic-self-music-legend-mural.html', img:'media/stikkers/2026/Batch 6/Music Legends/unapologetic-self-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Unapologetic Self', page:'music-unapologetic-self-music-legend-mural-bleu.html', img:'media/stikkers/2026/Batch 6/Music Legends/unapologetic-self-music-legend-mural-bleu.png', cat:'Music Legends'},
+    {name:'Singular Grace', page:'music-singular-grace-music-legend-mural.html', img:'media/stikkers/2026/Batch 6/Music Legends/singular-grace-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Simple Belief', page:'sport-simple-belief-sport-legend-mural.html', img:'media/stikkers/2026/Batch 6/Sport Legends/simple-belief-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'The Undying Contender', page:'wisdom-contender-spirit-combat-legend-mural.html', img:'media/stikkers/2026/Batch 6/Wisdom Legends/contender-spirit-combat-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Evolving Warrior', page:'wisdom-evolving-warrior-combat-legend-mural.html', img:'media/stikkers/2026/Batch 6/Wisdom Legends/evolving-warrior-combat-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Unstoppable Drive', page:'wisdom-unstoppable-drive-combat-legend-mural.html', img:'media/stikkers/2026/Batch 6/Wisdom Legends/unstoppable-drive-combat-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Relentless Will', page:'wisdom-relentless-will-combat-legend-mural.html', img:'media/stikkers/2026/Batch 6/Wisdom Legends/relentless-will-combat-legend-mural.png', cat:'Wisdom Legends'},
 ];
     // Inject discount UI and init after DOM is ready
     injectCartDiscount();
