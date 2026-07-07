@@ -1112,7 +1112,7 @@
   // ==========================================
   // PRODUCT DATABASE - Used for related products carousel
   // ==========================================
-    var PRODUCTS = [
+  var PRODUCTS = [
     {name:'The Unfazed Fighter', page:'combat-unfazed-fighter.html', img:'media/stikkers/2026/batch1/combat Legends/unfazed-fighter-combat-legend-mural.png', cat:'Combat Legends'},
     {name:'Iron Discipline', page:'combat-iron-discipline.html', img:'media/stikkers/2026/batch1/combat Legends/iron-discipline-boxing-legend-mural.png', cat:'Combat Legends'},
     {name:'The Beast Within', page:'combat-beast-within.html', img:'media/stikkers/2026/batch1/combat Legends/power-beast-boxing-legend-mural.png', cat:'Combat Legends'},
@@ -1226,28 +1226,10 @@
     {name:'Relentless Will', page:'wisdom-relentless-will-combat-legend-mural.html', img:'media/stikkers/2026/Batch 6/Wisdom Legends/relentless-will-combat-legend-mural.png', cat:'Wisdom Legends'},
   ];
 
-// RELATED PRODUCTS CAROUSEL
+
+
   // ==========================================
-  function initRelatedProducts() {
-    var el = document.getElementById('related-carousel');
-    if (!el) return;
-    var currentName = el.dataset.currentProduct;
-    if (!currentName) return;
-
-    // Find current product's category
-    var currentCat = '';
-    for (var i = 0; i < PRODUCTS.length; i++) {
-      if (PRODUCTS[i].name === currentName) {
-        currentCat = PRODUCTS[i].cat;
-        break;
-      }
-    }
-    if (!currentCat) return;
-
-    // Collect other products from same category
-    var related = [];
-
-// RELATED PRODUCTS CAROUSEL
+  // RELATED PRODUCTS CAROUSEL
   // ==========================================
   function initRelatedProducts() {
     var el = document.getElementById('related-carousel');
@@ -1527,6 +1509,78 @@ function initStickerModalClose() {
       initCarousel,
       initVideoPlayer,
       initHoverExpandMobile,
+        {name:'Iron Soul', page:'combat-iron-soul-combat-legend-mural.html', img:'media/stikkers/2026/Batch2/combat Legends/iron-soul-combat-legend-mural.png', cat:'Combat Legends'},
+    {name:'Dreamers\' Reality', page:'music-dreamers-reality-music-legend-mural.html', img:'media/stikkers/2026/Batch2/Music Legends/dreamers-reality-music-legend-mural.png', cat:'Music Legends'},
+    {name:'The Hidden Truth', page:'music-hidden-truth-music-legend-mural.html', img:'media/stikkers/2026/Batch2/Music Legends/hidden-truth-music-legend-mural.png', cat:'Music Legends'},
+    {name:'The Eternal Bond', page:'music-homie-bond-music-legend-mural.html', img:'media/stikkers/2026/Batch2/Music Legends/homie-bond-music-legend-mural.png', cat:'Music Legends'},
+    {name:'The Hustler\'s Mindset', page:'music-hustler-mind-music-legend-mural.html', img:'media/stikkers/2026/Batch2/Music Legends/hustler-mind-music-legend-mural.png', cat:'Music Legends'},
+    {name:'The Royal Groove', page:'music-kings-groove-music-legend-mural.html', img:'media/stikkers/2026/Batch2/Music Legends/kings-groove-music-legend-mural.png', cat:'Music Legends'},
+    {name:'The Living Truth', page:'music-living-truth-music-legend-mural.html', img:'media/stikkers/2026/Batch2/Music Legends/living-truth-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Mental Liberation', page:'music-mental-liberation-reggae-legend-mural.html', img:'media/stikkers/2026/Batch2/Music Legends/mental-liberation-reggae-legend-mural.png', cat:'Music Legends'},
+    {name:'The Timeless Icon', page:'music-timeless-icon-music-legend-mural.html', img:'media/stikkers/2026/Batch2/Music Legends/timeless-icon-music-legend-mural.png', cat:'Music Legends'},
+    {name:'The Unbothered Mind', page:'music-unbothered-mind-music-legend-mural.html', img:'media/stikkers/2026/Batch2/Music Legends/unbothered-mind-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Beyond Possible', page:'sport-beyond-possible-sport-legend-mural.html', img:'media/stikkers/2026/Batch2/Sport Legends/beyond-possible-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Court Dominance', page:'sport-court-dominance-sport-legend-mural.html', img:'media/stikkers/2026/Batch2/Sport Legends/court-dominance-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'The Divine Touch', page:'sport-divine-touch-sport-legend-mural.html', img:'media/stikkers/2026/Batch2/Sport Legends/divine-touch-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Hand of Destiny', page:'sport-hand-of-destiny-sport-legend-mural.html', img:'media/stikkers/2026/Batch2/Sport Legends/hand-of-destiny-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Relentless Spirit', page:'sport-relentless-spirit-sport-legend-mural.html', img:'media/stikkers/2026/Batch2/Sport Legends/relentless-spirit-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'The Silent Answer', page:'sport-silent-answer-sport-legend-mural.html', img:'media/stikkers/2026/Batch2/Sport Legends/silent-answer-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Absolute Freedom', page:'wisdom-absolute-freedom-wisdom-legend-mural.html', img:'media/stikkers/2026/Batch2/Wisdom Legends/absolute-freedom-wisdom-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Chaos Theory', page:'wisdom-chaos-theory-wisdom-legend-mural.html', img:'media/stikkers/2026/Batch2/Wisdom Legends/chaos-theory-wisdom-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Total Liberation', page:'wisdom-total-liberation-mindset-legend-mural.html', img:'media/stikkers/2026/Batch2/Wisdom Legends/total-liberation-mindset-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'True Freedom', page:'wisdom-true-freedom-mindset-legend-mural.html', img:'media/stikkers/2026/Batch2/Wisdom Legends/true-freedom-mindset-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Total Ownership', page:'combat-total-ownership-combat-legend-mural.html', img:'media/stikkers/2026/Batch 4/combat Legends/total-ownership-combat-legend-mural.png', cat:'Combat Legends'},
+    {name:'The Fearless Challenger', page:'combat-fearless-challenger-combat-legend-mural.html', img:'media/stikkers/2026/Batch 4/combat Legends/fearless-challenger-combat-legend-mural.png', cat:'Combat Legends'},
+    {name:'Inner Vision', page:'combat-inner-vision-combat-legend-mural.html', img:'media/stikkers/2026/Batch 4/combat Legends/inner-vision-combat-legend-mural.png', cat:'Combat Legends'},
+    {name:'The Balanced Mind', page:'combat-balanced-mind-combat-legend-mural.html', img:'media/stikkers/2026/Batch 4/combat Legends/balanced-mind-combat-legend-mural.png', cat:'Combat Legends'},
+    {name:'Daily Blessing', page:'music-daily-blessing-music-legend-mural.html', img:'media/stikkers/2026/Batch 4/Music Legends/daily-blessing-music-legend-mural.png', cat:'Music Legends'},
+    {name:'The Beautiful Choice', page:'music-beautiful-world-music-legend-mural.html', img:'media/stikkers/2026/Batch 4/Music Legends/beautiful-world-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Grateful Spirit', page:'music-grateful-spirit-music-legend-mural.html', img:'media/stikkers/2026/Batch 4/Music Legends/grateful-spirit-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Eternal Respect', page:'sport-respect-and-dignity-sport-legend-mural.html', img:'media/stikkers/2026/Batch 4/Sport Legends/respect-and-dignity-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Pure Instinct', page:'sport-intuitive-wisdom-sport-legend-mural.html', img:'media/stikkers/2026/Batch 4/Sport Legends/intuitive-wisdom-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'The Reward of Effort', page:'sport-hard-work-reward-sport-legend-mural.html', img:'media/stikkers/2026/Batch 4/Sport Legends/hard-work-reward-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Rising from Failure', page:'sport-failure-into-triumph-sport-legend-mural.html', img:'media/stikkers/2026/Batch 4/Sport Legends/failure-into-triumph-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Pressure into Power', page:'sport-pressure-into-power-sport-legend-mural.html', img:'media/stikkers/2026/Batch 4/Sport Legends/pressure-into-power-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Fearless Respect', page:'sport-fearless-respect-sport-legend-mural.html', img:'media/stikkers/2026/Batch 4/Sport Legends/fearless-respect-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'The Dreamer\'s Sacrifice', page:'sport-sacrifice-for-dreams-sport-legend-mural.html', img:'media/stikkers/2026/Batch 4/Sport Legends/sacrifice-for-dreams-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Silent Confidence', page:'sport-supreme-confidence-sport-legend-mural.html', img:'media/stikkers/2026/Batch 4/Sport Legends/supreme-confidence-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Beyond Fear', page:'sport-overcoming-fear-sport-legend-mural.html', img:'media/stikkers/2026/Batch 4/Sport Legends/overcoming-fear-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Unstoppable Will', page:'sport-unstoppable-will-sport-legend-mural.html', img:'media/stikkers/2026/Batch 4/Sport Legends/unstoppable-will-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'The Height of Success', page:'sport-height-of-success-sport-legend-mural.html', img:'media/stikkers/2026/Batch 4/Sport Legends/height-of-success-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Dedicated Vision', page:'sport-dedicated-vision-sport-legend-mural.html', img:'media/stikkers/2026/Batch 4/Sport Legends/dedicated-vision-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Timeless Truth', page:'music-truth-runs-marathons-music-legend-mural.html', img:'media/stikkers/2026/Batch 5/Music Legends/truth-runs-marathons-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Visionary Reality', page:'music-making-dreams-real-music-legend-mural.html', img:'media/stikkers/2026/Batch 5/Music Legends/making-dreams-real-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Dreaming in Motion', page:'music-dreaming-in-motion-music-legend-mural.html', img:'media/stikkers/2026/Batch 5/Music Legends/dreaming-in-motion-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Natural Integrity', page:'music-natural-integrity-music-legend-mural.html', img:'media/stikkers/2026/Batch 5/Music Legends/natural-integrity-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Heart of Gold', page:'music-heart-of-gold-music-legend-mural.html', img:'media/stikkers/2026/Batch 5/Music Legends/heart-of-gold-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Unwavering Spirit', page:'music-unwavering-spirit-music-legend-mural.html', img:'media/stikkers/2026/Batch 5/Music Legends/unwavering-spirit-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Eternal Blessing', page:'music-eternal-blessing-music-legend-mural.html', img:'media/stikkers/2026/Batch 5/Music Legends/eternal-blessing-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Quiet Wisdom', page:'music-quiet-wisdom-music-legend-mural.html', img:'media/stikkers/2026/Batch 5/Music Legends/quiet-wisdom-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Radiant Autonomy', page:'music-radiant-autonomy-music-legend-mural.html', img:'media/stikkers/2026/Batch 5/Music Legends/radiant-autonomy-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Noble Legacy', page:'music-noble-legacy-music-legend-mural.html', img:'media/stikkers/2026/Batch 5/Music Legends/noble-legacy-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Unstoppable Resilience', page:'sport-unstoppable-resilience-sport-legend-mural.html', img:'media/stikkers/2026/Batch 5/Sport Legends/unstoppable-resilience-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Simple Wisdom', page:'sport-simple-wisdom-sport-legend-mural.html', img:'media/stikkers/2026/Batch 5/Sport Legends/simple-wisdom-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Pure Ambition', page:'sport-pure-ambition-sport-legend-mural.html', img:'media/stikkers/2026/Batch 5/Sport Legends/pure-ambition-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'Independent Spirit', page:'wisdom-independent-spirit-wisdom-legend-mural.html', img:'media/stikkers/2026/Batch 5/Wisdom Legends/independent-spirit-wisdom-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Boundless Ambition', page:'wisdom-boundless-ambition-wisdom-legend-mural.html', img:'media/stikkers/2026/Batch 5/Wisdom Legends/boundless-ambition-wisdom-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Creative Integrity', page:'wisdom-creative-integrity-wisdom-legend-mural.html', img:'media/stikkers/2026/Batch 5/Wisdom Legends/creative-integrity-wisdom-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Original Vision', page:'wisdom-original-vision-wisdom-legend-mural.html', img:'media/stikkers/2026/Batch 5/Wisdom Legends/original-vision-wisdom-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Unyielding Drive', page:'wisdom-unyielding-drive-combat-legend-mural.html', img:'media/stikkers/2026/Batch 5/Wisdom Legends/unyielding-drive-combat-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Relentless Power', page:'wisdom-relentless-power-combat-legend-mural.html', img:'media/stikkers/2026/Batch 5/Wisdom Legends/relentless-power-combat-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Consistent Excellence', page:'wisdom-consistent-excellence-combat-legend-mural.html', img:'media/stikkers/2026/Batch 5/Wisdom Legends/consistent-excellence-combat-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Living Your Truth', page:'music-living-your-truth-music-legend-mural.html', img:'media/stikkers/2026/Batch 6/Music Legends/living-your-truth-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Authentic Connection', page:'music-authentic-connection-music-legend-mural.html', img:'media/stikkers/2026/Batch 6/Music Legends/authentic-connection-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Resilient Spirit', page:'music-resilient-spirit-music-legend-mural.html', img:'media/stikkers/2026/Batch 6/Music Legends/resilient-spirit-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Inner Circle', page:'music-inner-circle-music-legend-mural.html', img:'media/stikkers/2026/Batch 6/Music Legends/inner-circle-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Unapologetic Self', page:'music-unapologetic-self-music-legend-mural.html', img:'media/stikkers/2026/Batch 6/Music Legends/unapologetic-self-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Unapologetic Self', page:'music-unapologetic-self-music-legend-mural-bleu.html', img:'media/stikkers/2026/Batch 6/Music Legends/unapologetic-self-music-legend-mural-bleu.png', cat:'Music Legends'},
+    {name:'Singular Grace', page:'music-singular-grace-music-legend-mural.html', img:'media/stikkers/2026/Batch 6/Music Legends/singular-grace-music-legend-mural.png', cat:'Music Legends'},
+    {name:'Simple Belief', page:'sport-simple-belief-sport-legend-mural.html', img:'media/stikkers/2026/Batch 6/Sport Legends/simple-belief-sport-legend-mural.png', cat:'Sport Legends'},
+    {name:'The Undying Contender', page:'wisdom-contender-spirit-combat-legend-mural.html', img:'media/stikkers/2026/Batch 6/Wisdom Legends/contender-spirit-combat-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Evolving Warrior', page:'wisdom-evolving-warrior-combat-legend-mural.html', img:'media/stikkers/2026/Batch 6/Wisdom Legends/evolving-warrior-combat-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Unstoppable Drive', page:'wisdom-unstoppable-drive-combat-legend-mural.html', img:'media/stikkers/2026/Batch 6/Wisdom Legends/unstoppable-drive-combat-legend-mural.png', cat:'Wisdom Legends'},
+    {name:'Relentless Will', page:'wisdom-relentless-will-combat-legend-mural.html', img:'media/stikkers/2026/Batch 6/Wisdom Legends/relentless-will-combat-legend-mural.png', cat:'Wisdom Legends'},
+];
     // Inject discount UI and init after DOM is ready
     injectCartDiscount();
     injectCheckoutDiscount();
