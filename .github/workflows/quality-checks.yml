@@ -32,6 +32,10 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Generate Sprint 2C dependency lockfile
+        if: github.event_name == 'pull_request' && github.head_ref == 'chore/sprint-2c-build-security'
+        run: npm install --package-lock-only --ignore-scripts
+
       - name: Install dependencies
         run: npm ci
 
@@ -43,6 +47,8 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: repository-audits
-          path: reports/
+          path: |
+            reports/
+            package-lock.json
           if-no-files-found: warn
           retention-days: 14
