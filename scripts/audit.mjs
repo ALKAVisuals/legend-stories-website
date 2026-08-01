@@ -4,7 +4,8 @@ import { extname, join, dirname, relative, resolve, sep } from 'node:path';
 const ROOT = process.cwd();
 const REPORT_DIR = join(ROOT, 'reports');
 const STRICT = process.argv.includes('--strict');
-const IGNORED_DIRS = new Set(['.git', 'node_modules', 'dist', 'reports']);
+const IGNORED_DIRS = new Set(['.git', 'node_modules', 'dist', 'reports', 'generated']);
+const NON_SITE_HTML_DIRS = new Set(['templates']);
 const HTML_ATTR_PATTERN = /\b(?:href|src|poster)=(["'])(.*?)\1/gi;
 const EXTERNAL_PATTERN = /^(?:https?:|mailto:|tel:|data:|javascript:|#|\/\/)/i;
 const LARGE_FILE_THRESHOLD = 1_000_000;
@@ -26,6 +27,12 @@ async function walk(directory) {
   }
 
   return files;
+}
+
+function isSiteHtml(file) {
+  if (extname(file).toLowerCase() !== '.html') return false;
+  const page = posix(relative(ROOT, file));
+  return ![...NON_SITE_HTML_DIRS].some((directory) => page.startsWith(`${directory}/`));
 }
 
 function stripQueryAndHash(value) {
@@ -73,7 +80,7 @@ function bytes(value) {
 
 async function main() {
   const files = await walk(ROOT);
-  const htmlFiles = files.filter((file) => extname(file).toLowerCase() === '.html');
+  const htmlFiles = files.filter(isSiteHtml);
   const inventory = [];
   const missingReferences = [];
   const placeholderLinks = [];
@@ -116,7 +123,7 @@ async function main() {
       canonical,
       h1Count: h1s.length,
       h1s,
-      legacyOrigin: content.includes('https://alkavisuals.github.io/legend-stories-website')
+      legacyOrigin: content.includes('https://alkavisuals.github.io/legend-stories-website'),
     });
   }
 
@@ -131,7 +138,7 @@ async function main() {
       groups[item.title] ??= [];
       groups[item.title].push(item.page);
       return groups;
-    }, {})
+    }, {}),
   ).filter(([, pages]) => pages.length > 1).map(([title, pages]) => ({ title, pages }));
 
   const report = {
@@ -147,7 +154,7 @@ async function main() {
       duplicateTitles: duplicateTitles.length,
       largeFiles: largeFiles.length,
       veryLargeFiles: veryLargeFiles.length,
-      legacyOriginPages: metadata.filter((item) => item.legacyOrigin).length
+      legacyOriginPages: metadata.filter((item) => item.legacyOrigin).length,
     },
     missingReferences,
     placeholderLinks,
@@ -156,7 +163,7 @@ async function main() {
     largestFiles: inventory.slice(0, 50),
     largeFiles,
     veryLargeFiles,
-    pages: metadata
+    pages: metadata,
   };
 
   await mkdir(REPORT_DIR, { recursive: true });
@@ -209,7 +216,7 @@ async function main() {
     ...(duplicateTitles.length
       ? duplicateTitles.map((item) => `- **${item.title}**: ${item.pages.map((page) => `\`${page}\``).join(', ')}`)
       : ['None detected.']),
-    ''
+    '',
   ].join('\n');
 
   await writeFile(join(REPORT_DIR, 'audit-report.md'), markdown);
