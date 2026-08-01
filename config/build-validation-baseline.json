@@ -1,0 +1,9 @@
+{
+  "allowedMissingReferences": [
+    {
+      "page": "index.html",
+      "reference": "portfolio.html",
+      "reason": "Existing pre-audit placeholder destination. Remove this exception when the portfolio page or replacement destination is implemented."
+    }
+  ]
+}
