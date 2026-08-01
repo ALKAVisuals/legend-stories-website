@@ -7,22 +7,17 @@ const ROOT = process.cwd();
 const REPORT_DIR = join(ROOT, 'reports');
 const EXTERNAL_REFERENCE = /^(?:https?:|\/\/|data:|javascript:|mailto:|tel:|#)/i;
 const NON_EXECUTABLE_TYPES = new Set(['application/ld+json', 'application/json']);
+const BROWSER_PROVIDED_GLOBALS = new Set(['location']);
 
-function posix(value) {
-  return value.split(sep).join('/');
-}
-
-function stripQueryAndHash(value = '') {
-  return value.split('#')[0].split('?')[0];
-}
+const posix = (value) => value.split(sep).join('/');
+const stripQueryAndHash = (value = '') => value.split('#')[0].split('?')[0];
 
 function parseAttributes(source = '') {
   const attributes = {};
   const pattern = /([^\s=/>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
   let match;
   while ((match = pattern.exec(source))) {
-    const name = match[1].toLowerCase();
-    attributes[name] = match[2] ?? match[3] ?? match[4] ?? true;
+    attributes[match[1].toLowerCase()] = match[2] ?? match[3] ?? match[4] ?? true;
   }
   return attributes;
 }
@@ -48,12 +43,11 @@ export function extractScriptTags(html = '') {
 }
 
 export function extractInlineHandlers(html = '') {
-  const handlers = [];
   const markupOnly = html
     .replace(/<script\b[\s\S]*?<\/script>/gi, '')
     .replace(/<style\b[\s\S]*?<\/style>/gi, '');
-  const tags = markupOnly.match(/<[a-z][^>]*>/gi) || [];
-  for (const tag of tags) {
+  const handlers = [];
+  for (const tag of markupOnly.match(/<[a-z][^>]*>/gi) || []) {
     const attributes = parseAttributes(tag.replace(/^<[a-z0-9:-]+/i, '').replace(/>$/, ''));
     for (const [name, value] of Object.entries(attributes)) {
       if (/^on[a-z]+$/i.test(name) && typeof value === 'string') {
@@ -101,23 +95,18 @@ export function extractHtmlReferencesFromJs(source = '') {
 }
 
 export function validateAppInitializer(source = '') {
-  const errors = [];
   const startMarker = 'const fns = [';
   const endMarker = '];\n    // Inject discount UI and init after DOM is ready';
   const start = source.indexOf(startMarker);
   const end = source.indexOf(endMarker, start);
+  if (start < 0 || end < 0) return ['js/app.js: initialization function list could not be located.'];
 
-  if (start < 0 || end < 0) {
-    return ['js/app.js: initialization function list could not be located.'];
-  }
-
-  const bodyStart = start + startMarker.length;
-  const body = source.slice(bodyStart, end);
-  const entries = body
+  const entries = source
+    .slice(start + startMarker.length, end)
     .split(',')
     .map((entry) => entry.replace(/\/\/.*$/gm, '').trim())
     .filter(Boolean);
-
+  const errors = [];
   if (entries.length === 0) errors.push('js/app.js: initialization function list is empty.');
   for (const entry of entries) {
     if (!/^[A-Za-z_$][\w$]*$/.test(entry)) {
@@ -128,9 +117,8 @@ export function validateAppInitializer(source = '') {
 }
 
 async function walk(directory) {
-  const entries = await readdir(directory, { withFileTypes: true });
   const files = [];
-  for (const entry of entries) {
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
     const path = join(directory, entry.name);
     if (entry.isDirectory()) files.push(...await walk(path));
     else files.push(path);
@@ -148,19 +136,19 @@ async function exists(path) {
 }
 
 function localReferencePath(reference) {
-  const cleaned = stripQueryAndHash(reference).replace(/^\.\//, '').replace(/^\//, '');
-  return resolve(ROOT, cleaned);
+  const clean = stripQueryAndHash(reference).replace(/^\.\//, '').replace(/^\//, '');
+  return resolve(ROOT, clean);
 }
 
-function sequenceLabel(scripts) {
+function scriptSequence(scripts) {
   const local = scripts
     .filter((script) => script.src && !EXTERNAL_REFERENCE.test(script.src))
     .map((script) => `${script.module ? 'module' : 'classic'}:${stripQueryAndHash(script.src)}`);
   return local.length ? local.join(' → ') : '(no local scripts)';
 }
 
-function markdown(report) {
-  const lines = [
+function toMarkdown(report) {
+  return [
     '# Browser Runtime Contract Audit',
     '',
     `Generated: ${report.generatedAt}`,
@@ -183,7 +171,7 @@ function markdown(report) {
     '',
     '| Pages | Sequence |',
     '|---:|---|',
-    ...report.scriptOrderVariants.map((variant) => `| ${variant.pages.length} | ${variant.sequence.replaceAll('|', '\\|')} |`),
+    ...report.scriptOrderVariants.map((item) => `| ${item.pages.length} | ${item.sequence.replaceAll('|', '\\|')} |`),
     '',
     '## Exported browser globals',
     '',
@@ -191,19 +179,17 @@ function markdown(report) {
     '',
     '## Errors',
     '',
-    ...(report.errors.length ? report.errors.map((entry) => `- ${entry}`) : ['None detected.']),
+    ...(report.errors.length ? report.errors.map((error) => `- ${error}`) : ['None detected.']),
     '',
     '## Warnings',
     '',
-    ...(report.warnings.length ? report.warnings.map((entry) => `- ${entry}`) : ['None detected.']),
+    ...(report.warnings.length ? report.warnings.map((warning) => `- ${warning}`) : ['None detected.']),
     '',
-  ];
-  return lines.join('\n');
+  ].join('\n');
 }
 
 export async function buildRuntimeAudit(root = ROOT) {
-  const rootEntries = await readdir(root, { withFileTypes: true });
-  const htmlFiles = rootEntries
+  const htmlFiles = (await readdir(root, { withFileTypes: true }))
     .filter((entry) => entry.isFile() && extname(entry.name).toLowerCase() === '.html')
     .map((entry) => join(root, entry.name))
     .sort();
@@ -214,28 +200,27 @@ export async function buildRuntimeAudit(root = ROOT) {
   const errors = [];
   const warnings = [];
   const pages = [];
-  const sequenceGroups = new Map();
+  const sequences = new Map();
   const exportedGlobals = new Set();
-  const dynamicHandlerRoots = new Set();
+  const requiredHandlerGlobals = new Set();
+  const jsSources = new Map();
   let localScriptReferences = 0;
   let classicScriptReferences = 0;
   let moduleScriptReferences = 0;
   let inlineExecutableScripts = 0;
-  let inlineHandlerCount = 0;
+  let inlineHandlers = 0;
 
-  const jsSources = new Map();
   for (const file of browserJsFiles) {
     const source = await readFile(file, 'utf8');
     const fileName = posix(relative(root, file));
     jsSources.set(fileName, source);
-    for (const name of extractGlobalAssignments(source)) exportedGlobals.add(name);
-    for (const name of extractDynamicHandlerGlobalRoots(source)) dynamicHandlerRoots.add(name);
+    extractGlobalAssignments(source).forEach((name) => exportedGlobals.add(name));
+    extractDynamicHandlerGlobalRoots(source).forEach((name) => requiredHandlerGlobals.add(name));
 
     const syntax = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
     if (syntax.status !== 0) {
       errors.push(`${fileName}: JavaScript syntax check failed: ${(syntax.stderr || syntax.stdout).trim()}`);
     }
-
     for (const reference of extractHtmlReferencesFromJs(source)) {
       if (!(await exists(localReferencePath(reference)))) {
         errors.push(`${fileName}: static HTML route does not exist: ${reference}`);
@@ -244,9 +229,8 @@ export async function buildRuntimeAudit(root = ROOT) {
   }
 
   const appSource = jsSources.get('js/app.js');
-  if (!appSource) {
-    errors.push('js/app.js: browser runtime entry is missing.');
-  } else {
+  if (!appSource) errors.push('js/app.js: browser runtime entry is missing.');
+  else {
     errors.push(...validateAppInitializer(appSource));
     if (/console\.log\(\s*["']\[DEBUG\]/.test(appSource)) {
       errors.push('js/app.js: checkout debug logging remains in the production runtime.');
@@ -259,53 +243,42 @@ export async function buildRuntimeAudit(root = ROOT) {
     const scripts = extractScriptTags(html);
     const handlers = extractInlineHandlers(html);
     const localScripts = scripts.filter((script) => script.src && !EXTERNAL_REFERENCE.test(script.src));
-    const duplicateSources = localScripts
-      .map((script) => stripQueryAndHash(script.src))
-      .filter((src, index, all) => all.indexOf(src) !== index);
+    const localSources = localScripts.map((script) => stripQueryAndHash(script.src));
 
     localScriptReferences += localScripts.length;
     classicScriptReferences += localScripts.filter((script) => !script.module).length;
     moduleScriptReferences += localScripts.filter((script) => script.module).length;
     inlineExecutableScripts += scripts.filter((script) => !script.src && script.executable && script.inlineBytes > 0).length;
-    inlineHandlerCount += handlers.length;
+    inlineHandlers += handlers.length;
 
-    for (const duplicate of new Set(duplicateSources)) {
+    for (const duplicate of new Set(localSources.filter((src, index) => localSources.indexOf(src) !== index))) {
       errors.push(`${page}: duplicate local script reference ${duplicate}.`);
     }
-
     for (const script of localScripts) {
-      const sourcePath = localReferencePath(script.src);
-      if (!(await exists(sourcePath))) errors.push(`${page}: local script not found: ${script.src}.`);
+      if (!(await exists(localReferencePath(script.src)))) {
+        errors.push(`${page}: local script not found: ${script.src}.`);
+      }
     }
+    handlers.forEach((handler) => windowRoots(handler.code).forEach((name) => requiredHandlerGlobals.add(name)));
 
-    for (const handler of handlers) {
-      for (const rootName of windowRoots(handler.code)) dynamicHandlerRoots.add(rootName);
-    }
-
-    const sequence = sequenceLabel(scripts);
-    const group = sequenceGroups.get(sequence) || [];
-    group.push(page);
-    sequenceGroups.set(sequence, group);
+    const sequence = scriptSequence(scripts);
+    const sequencePages = sequences.get(sequence) || [];
+    sequencePages.push(page);
+    sequences.set(sequence, sequencePages);
     pages.push({ page, scripts, inlineHandlers: handlers });
   }
 
-  for (const rootName of dynamicHandlerRoots) {
-    if (!exportedGlobals.has(rootName)) {
-      errors.push(`Runtime handler requires window.${rootName}, but no local browser script exports it.`);
+  for (const name of requiredHandlerGlobals) {
+    if (!exportedGlobals.has(name) && !BROWSER_PROVIDED_GLOBALS.has(name)) {
+      errors.push(`Runtime handler requires window.${name}, but no local browser script exports it.`);
     }
   }
 
-  if (classicScriptReferences > 0) {
-    warnings.push(`${classicScriptReferences} classic local script references remain on the compatibility runtime path.`);
-  }
-  if (inlineExecutableScripts > 0) {
-    warnings.push(`${inlineExecutableScripts} executable inline script blocks remain and require migration before a strict CSP.`);
-  }
-  if (inlineHandlerCount > 0) {
-    warnings.push(`${inlineHandlerCount} inline event handlers remain and require a documented global contract.`);
-  }
+  if (classicScriptReferences) warnings.push(`${classicScriptReferences} classic local script references remain on the compatibility runtime path.`);
+  if (inlineExecutableScripts) warnings.push(`${inlineExecutableScripts} executable inline script blocks remain and require migration before a strict CSP.`);
+  if (inlineHandlers) warnings.push(`${inlineHandlers} inline event handlers remain and require a documented global contract.`);
 
-  const scriptOrderVariants = [...sequenceGroups.entries()]
+  const scriptOrderVariants = [...sequences.entries()]
     .map(([sequence, variantPages]) => ({ sequence, pages: variantPages.sort() }))
     .sort((a, b) => b.pages.length - a.pages.length || a.sequence.localeCompare(b.sequence));
 
@@ -318,14 +291,15 @@ export async function buildRuntimeAudit(root = ROOT) {
       classicScriptReferences,
       moduleScriptReferences,
       inlineExecutableScripts,
-      inlineHandlers: inlineHandlerCount,
+      inlineHandlers,
       scriptOrderVariants: scriptOrderVariants.length,
       exportedGlobals: exportedGlobals.size,
       errors: errors.length,
       warnings: warnings.length,
     },
     exportedGlobals: [...exportedGlobals].sort(),
-    requiredHandlerGlobals: [...dynamicHandlerRoots].sort(),
+    requiredHandlerGlobals: [...requiredHandlerGlobals].sort(),
+    browserProvidedGlobals: [...BROWSER_PROVIDED_GLOBALS].sort(),
     scriptOrderVariants,
     pages,
     errors,
@@ -337,14 +311,10 @@ async function main() {
   const report = await buildRuntimeAudit(ROOT);
   await mkdir(REPORT_DIR, { recursive: true });
   await writeFile(join(REPORT_DIR, 'runtime-audit.json'), `${JSON.stringify(report, null, 2)}\n`, 'utf8');
-  await writeFile(join(REPORT_DIR, 'runtime-audit.md'), `${markdown(report)}\n`, 'utf8');
-
-  console.log(
-    `Runtime audit completed: ${report.summary.pages} pages, ${report.summary.browserJsFiles} browser scripts, ${report.summary.errors} errors, ${report.summary.warnings} warnings.`,
-  );
+  await writeFile(join(REPORT_DIR, 'runtime-audit.md'), `${toMarkdown(report)}\n`, 'utf8');
+  console.log(`Runtime audit completed: ${report.summary.pages} pages, ${report.summary.browserJsFiles} browser scripts, ${report.summary.errors} errors, ${report.summary.warnings} warnings.`);
   report.errors.forEach((error) => console.error(`- ${error}`));
   report.warnings.forEach((warning) => console.warn(`- ${warning}`));
-
   if (report.summary.errors > 0) process.exit(1);
 }
 
