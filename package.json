@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "audit": "node scripts/audit.mjs",
+    "audit:strict": "node scripts/audit.mjs --strict"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.18",
