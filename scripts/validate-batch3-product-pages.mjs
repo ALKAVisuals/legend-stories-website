@@ -1,5 +1,6 @@
 import { access, readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { loadBatch3ProductData } from './batch3-product-data.mjs';
 import { extractProductFromHtml } from './product-inventory.mjs';
 import {
   extractProductPresentation,
@@ -9,13 +10,12 @@ import {
 } from './product-page-template.mjs';
 
 const ROOT = process.cwd();
-const DATA_FILE = join(ROOT, 'data', 'products', '2026-batch-3.json');
 const PRESENTATION_FILE = join(ROOT, 'data', 'products', '2026-batch-3-presentation.json');
 const TEMPLATE_FILE = join(ROOT, 'templates', 'product-page.html');
 const OUTPUT_DIR = join(ROOT, 'generated', 'product-pages', 'batch-3');
 const REQUIRE_LIVE_MATCH = process.argv.includes('--live');
 
-const { batch, products } = JSON.parse(await readFile(DATA_FILE, 'utf8'));
+const { batch, products } = await loadBatch3ProductData(ROOT);
 const presentationData = JSON.parse(await readFile(PRESENTATION_FILE, 'utf8'));
 const template = await readFile(TEMPLATE_FILE, 'utf8');
 const normalizedTemplate = normalizeTemplateStructure(template);
@@ -76,12 +76,13 @@ for (const product of products) {
       ['price', extracted.price, product.price],
       ['currency', extracted.currency, product.currency],
       ['availability', extracted.availability, product.availability],
+      ['canonical', extracted.canonical, product.canonical],
       ['collection', extracted.collection, product.collection],
       ['category', extracted.category, product.category],
       ['batch', extracted.batchId, product.batchId],
     ];
     for (const [field, actual, expected] of comparisons) {
-      if (actual !== expected) errors.push(`${product.page}: generated ${field} differs from central product data.`);
+      if (actual !== expected) errors.push(`${product.page}: generated ${field} differs from full central product data.`);
     }
     if (extracted.errors.length) errors.push(...extracted.errors);
   }
@@ -106,7 +107,7 @@ if (errors.length) {
   process.exitCode = 1;
 } else {
   console.log(
-    `Batch 3 product page validation passed for ${products.length} pages using one template` +
+    `Batch 3 product page validation passed for ${products.length} pages using one template and the full catalog` +
     `${REQUIRE_LIVE_MATCH ? ', with byte-identical live output' : ''}.`,
   );
 }
