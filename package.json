@@ -10,6 +10,7 @@
     "audit": "node scripts/audit.mjs",
     "audit:strict": "node scripts/audit.mjs --strict",
     "audit:css": "node scripts/css-audit.mjs",
+    "audit:dependencies": "node scripts/dependency-audit.mjs",
     "audit:media": "node scripts/media-audit.mjs",
     "audit:media:strict": "node scripts/media-audit.mjs --strict",
     "inventory:products": "node scripts/product-inventory.mjs",
@@ -17,13 +18,13 @@
     "validate:build": "node scripts/validate-build.mjs",
     "validate:catalog": "node scripts/validate-product-catalog.mjs",
     "test": "node --test tests/*.test.mjs",
-    "quality": "npm run audit && npm run audit:css && npm run audit:media && npm run inventory:products && npm run generate:product-previews && npm run validate:catalog && npm test && npm run build"
+    "quality": "npm run audit && npm run audit:css && npm run audit:dependencies && npm run audit:media && npm run inventory:products && npm run generate:product-previews && npm run validate:catalog && npm test && npm run build"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.18",
-    "postcss": "^8.4.35",
+    "postcss": "8.5.23",
     "tailwindcss": "^3.4.1",
     "terser": "^5.48.0",
-    "vite": "^5.1.4"
+    "vite": "6.4.3"
   }
 }
