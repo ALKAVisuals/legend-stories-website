@@ -87,15 +87,15 @@ test('catalog batch loader resolves exactly 20 complete Batch 3 products', async
   assert.ok(products.every((product) => product.batchId === batch.id));
 });
 
-test('managed page config resolves Batches 3, 4, 5 and 6 as 71 products', async () => {
+test('managed page config resolves Batches 2 through 6 as 91 products', async () => {
   const managed = await loadManagedProductPageBatches(process.cwd());
   assert.deepEqual(
     managed.batches.map((entry) => entry.id),
-    ['2026-batch-3', '2026-batch-4', '2026-batch-5', '2026-batch-6'],
+    ['2026-batch-2', '2026-batch-3', '2026-batch-4', '2026-batch-5', '2026-batch-6'],
   );
   assert.equal(
     managed.batches.reduce((total, entry) => total + entry.products.length, 0),
-    71,
+    91,
   );
   assert.ok(managed.batches.every((entry) => entry.products.length === entry.expectedProductCount));
 });
