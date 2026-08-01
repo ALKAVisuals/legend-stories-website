@@ -128,7 +128,7 @@ function normalizeKnownIconVectors(input) {
     '<svg data-template-icon="empty-cart"></svg>',
   );
 
-  for (const label of ['Instagram', 'Facebook', 'TikTok']) {
+  for (const label of ['Instagram', 'Facebook', 'TikTok', 'WhatsApp']) {
     const pattern = new RegExp(
       `(<a[^>]*aria-label="${label}"[^>]*>)\\s*<svg[\\s\\S]*?<\\/svg>`,
     );
