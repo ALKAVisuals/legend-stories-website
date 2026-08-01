@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "audit": "node scripts/audit.mjs",
     "audit:strict": "node scripts/audit.mjs --strict",
-    "validate:build": "node scripts/validate-build.mjs"
+    "validate:build": "node scripts/validate-build.mjs",
+    "test": "node --test tests/*.test.mjs"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.18",
