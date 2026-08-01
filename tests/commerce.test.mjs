@@ -1,14 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateDiscount, calculateGrandTotal, calculateSubtotal } from '../js/commerce/pricing.mjs';
+import {
+  calculateDiscount,
+  calculateGrandTotal,
+  calculateSubtotal,
+  roundMoney,
+} from '../js/commerce/pricing.mjs';
 import { calculateShipping, getShippingZone, SHIPPING_ZONES } from '../js/commerce/shipping.mjs';
 import { calculateCommerceTotals } from '../js/commerce/totals.mjs';
 
-test('pricing calculations are deterministic', () => {
+test('pricing calculations are deterministic at euro-cent precision', () => {
   const items = [{ price: 49.95, quantity: 2 }, { price: 20, quantity: 1 }];
   assert.equal(calculateSubtotal(items), 119.9);
   assert.equal(calculateDiscount(100, 10), 10);
+  assert.equal(calculateDiscount(49.95, 10), 5);
   assert.equal(calculateGrandTotal({ items, shipping: 5.95, discountPercent: 10 }), 113.86);
+  assert.equal(roundMoney(0.1 + 0.2), 0.3);
 });
 
 test('invalid pricing input cannot create negative totals', () => {
@@ -48,7 +55,7 @@ test('canonical totals apply discount before the free-shipping threshold', () =>
   assert.equal(totals.qualifiesForFreeShipping, false);
 });
 
-test('canonical totals are identical for cart and checkout consumers', () => {
+test('canonical totals are identical and reconcile exactly for cart and checkout consumers', () => {
   const input = {
     items: [{ price: 49.95, quantity: 2 }],
     countryCode: 'DE',
@@ -58,8 +65,29 @@ test('canonical totals are identical for cart and checkout consumers', () => {
   const cartTotals = calculateCommerceTotals(input);
   const checkoutTotals = calculateCommerceTotals(input);
   assert.deepEqual(cartTotals, checkoutTotals);
+  assert.equal(cartTotals.discount, 14.99);
+  assert.equal(cartTotals.discountedSubtotal, 84.91);
   assert.equal(cartTotals.shipping, 0);
-  assert.equal(cartTotals.grandTotal, 84.915);
+  assert.equal(cartTotals.grandTotal, 84.91);
+  assert.equal(
+    roundMoney(cartTotals.subtotal - cartTotals.discount + cartTotals.shipping),
+    cartTotals.grandTotal,
+  );
+});
+
+test('fractional discounts remain internally consistent to the cent', () => {
+  const totals = calculateCommerceTotals({
+    items: [{ price: 49.95, quantity: 1 }],
+    countryCode: 'NL',
+    discountPercent: 10,
+  });
+
+  assert.equal(totals.subtotal, 49.95);
+  assert.equal(totals.discount, 5);
+  assert.equal(totals.discountedSubtotal, 44.95);
+  assert.equal(totals.shipping, 3.95);
+  assert.equal(totals.grandTotal, 48.9);
+  assert.equal(totals.freeShippingRemaining, 5.05);
 });
 
 test('canonical totals normalize unknown countries and empty carts', () => {

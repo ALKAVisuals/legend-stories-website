@@ -22,10 +22,13 @@
     discountPercent: 0,
   };
 
+  const CART_SCHEMA_VERSION = '2';
+
   // ==========================================
   // LOCAL STORAGE - Cart Persistence
   // ==========================================
   function saveCart() {
+    localStorage.setItem('legendCartVersion', CART_SCHEMA_VERSION);
     localStorage.setItem('legendCart', JSON.stringify(state.cart));
     localStorage.setItem('legendShippingCountry', state.shippingCountry);
     localStorage.setItem('legendDiscountCode', state.discountCode);
@@ -34,15 +37,23 @@
 
   function loadCart() {
     const savedCart = localStorage.getItem('legendCart');
+    const savedCartVersion = localStorage.getItem('legendCartVersion');
     const savedCountry = localStorage.getItem('legendShippingCountry');
     const savedDiscountCode = localStorage.getItem('legendDiscountCode');
     const savedDiscountPercent = localStorage.getItem('legendDiscountPercent');
-    if (savedCart) {
+    if (savedCart && savedCartVersion === CART_SCHEMA_VERSION) {
       try {
-        state.cart = JSON.parse(savedCart);
+        const parsedCart = JSON.parse(savedCart);
+        state.cart = Array.isArray(parsedCart)
+          ? parsedCart.filter((item) => item && item.page && Number(item.quantity) > 0)
+          : [];
       } catch (e) {
         state.cart = [];
       }
+    } else if (savedCart) {
+      localStorage.removeItem('legendCart');
+      localStorage.setItem('legendCartVersion', CART_SCHEMA_VERSION);
+      state.cart = [];
     }
     if (savedCountry) {
       state.shippingCountry = savedCountry;
@@ -63,9 +74,13 @@
 
   function loadCommerceModule() {
     if (!commerceModulePromise) {
-      commerceModulePromise = import('./commerce/totals.mjs').then((module) => {
-        commerceModule = module;
-        return module;
+      commerceModulePromise = Promise.all([
+        import('./commerce/totals.mjs'),
+        import('./commerce/discounts.mjs'),
+        import('./commerce/order-request.mjs'),
+      ]).then(([totals, discounts, orderRequest]) => {
+        commerceModule = Object.freeze({ ...totals, ...discounts, ...orderRequest });
+        return commerceModule;
       });
     }
     return commerceModulePromise;
@@ -122,6 +137,29 @@
     { code: 'OTHER', flag: '🌍', name: 'Rest of World' },
   ];
 
+  const PRODUCT_PAGE_BY_NAME = Object.freeze({
+    'The Grind Cycle': 'combat-grind-cycle.html',
+    'Unstoppable Will': 'combat-unstoppable-will.html',
+    'Unstoppable Will Sport': 'sport-unstoppable-will.html',
+    'Dream Reality': 'combat-dream-reality.html',
+    'Courageous Risk': 'combat-courageous-risk.html',
+    'Greatest Courage': 'combat-greatest-courage.html',
+    'The Free Spirit': 'music-free-spirit.html',
+    'Eternal Smile': 'music-eternal-smile.html',
+    'Constant Evolution': 'music-constant-evolution.html',
+    'Lyric Mastery': 'music-lyric-mastery.html',
+    'Pure Confidence': 'music-pure-confidence.html',
+    'The Style Code': 'music-style-code.html',
+    'The Style Prophet': 'music-style-prophet.html',
+    'The Truth Seeker': 'music-truth-seeker.html',
+    "The Lion's Pride": 'sport-lions-pride.html',
+    'The Luxury Standard': 'sport-luxury-standard.html',
+    'The Peak Performer': 'sport-peak-performer.html',
+    'Pursuit of Greatness': 'sport-pursuit-greatness.html',
+    'Unforgettable Roots': 'sport-unforgettable-roots.html',
+    'Mamba Mindset': 'sport-mamba-mindset.html',
+  });
+
   // ==========================================
   // DOM REFERENCES
   // ==========================================
@@ -177,9 +215,13 @@
     return '€' + price.toFixed(2).replace('.', ',');
   }
 
-  function addToCart(name, price, image) {
+  function addToCart(page, name, price, image) {
+    if (!page) {
+      throw new Error('A stable product page is required before adding an item to the cart.');
+    }
     const product = {
-      id: name.toLowerCase().replace(/\s+/g, '-'),
+      id: page,
+      page: page,
       name: name,
       price: parseFloat(price),
       quantity: 1,
@@ -388,20 +430,16 @@
   // ==========================================
   // DISCOUNT CODE
   // ==========================================
-  const VALID_DISCOUNT_CODES = {
-    'LEGEND10': 10,
-    'WELCOME15': 15,
-  };
-
   function applyDiscount(code) {
     const messageEl = document.getElementById('discount-message') || document.getElementById('cart-discount-message');
     const discountInput = document.getElementById('checkout-discount') || document.getElementById('cart-discount');
     
-    code = code.trim().toUpperCase();
-    const percent = VALID_DISCOUNT_CODES[code];
+    const discount = commerceModule.resolveDiscount(code);
+    const percent = discount.percent;
     
-    if (percent) {
-      state.discountCode = code;
+    if (discount.valid) {
+      code = discount.code;
+      state.discountCode = discount.code;
       state.discountPercent = percent;
       if (messageEl) {
         messageEl.textContent = '✓ ' + percent + '% discount applied!';
@@ -599,8 +637,21 @@
   function processOrder(address, firstname, lastname, email) {
     const validatedCountry = address.country;
     const totals = getCommerceTotals(validatedCountry);
+    let orderRequest;
+    try {
+      orderRequest = commerceModule.createOrderRequest({
+        items: state.cart,
+        countryCode: validatedCountry,
+        discountCode: state.discountCode,
+      });
+    } catch (error) {
+      console.error('Cannot create trusted order request:', error);
+      alert('Your saved cart uses an outdated product format. Please clear the cart and add the products again.');
+      return;
+    }
 
     const orderData = {
+      request: orderRequest,
       items: state.cart.map(item => ({
         name: item.name,
         price: item.price,
@@ -615,8 +666,9 @@
       total: totals.grandTotal,
     };
 
-    // Store for Stripe redirect
+    // Store display data separately from the minimal future server request.
     sessionStorage.setItem('legendOrder', JSON.stringify(orderData));
+    sessionStorage.setItem('legendOrderRequest', JSON.stringify(orderRequest));
 
     // Redirect to Stripe Checkout (placeholder — replace with real Stripe URL)
     // For now, show confirmation
@@ -750,14 +802,30 @@
   // ==========================================
   // ADD TO CART BUTTONS
   // ==========================================
+  function resolveCartProductPage(button, name) {
+    return commerceModule.resolveProductPage({
+      explicitPage: button.dataset.page || '',
+      containerPage: button.closest('[data-page]')?.dataset.page || '',
+      currentPath: window.location.pathname,
+      name,
+      pageByName: PRODUCT_PAGE_BY_NAME,
+    });
+  }
+
   function initAddToCart() {
     const btns = document.querySelectorAll('.add-to-cart-btn');
     btns.forEach((btn) => {
       btn.addEventListener('click', () => {
         const name = btn.dataset.name;
         const price = btn.dataset.price;
-        const emoji = btn.dataset.emoji || btn.dataset.img;
-        addToCart(name, price, emoji);
+        const image = btn.dataset.emoji || btn.dataset.img;
+        const page = resolveCartProductPage(btn, name);
+        if (!page) {
+          console.error('Cannot add product without a stable catalog page:', name);
+          alert('This product could not be added safely. Please open its product page and try again.');
+          return;
+        }
+        addToCart(page, name, price, image);
         const originalText = btn.innerHTML;
         btn.innerHTML = '✅ Added!';
         btn.style.background = '#16a34a';
@@ -776,29 +844,9 @@
         if (e.target.closest('.add-to-cart-btn')) return;
         const name = card.querySelector('h3')?.textContent;
         if (name) {
-          const pageMap = {
-            'The Grind Cycle': 'combat-grind-cycle.html',
-            'Unstoppable Will': 'combat-unstoppable-will.html',
-            'Unstoppable Will Sport': 'sport-unstoppable-will.html',
-            'Dream Reality': 'combat-dream-reality.html',
-            'Courageous Risk': 'combat-courageous-risk.html',
-            'Greatest Courage': 'combat-greatest-courage.html',
-            'The Free Spirit': 'music-free-spirit.html',
-            'Eternal Smile': 'music-eternal-smile.html',
-            'Constant Evolution': 'music-constant-evolution.html',
-            'Lyric Mastery': 'music-lyric-mastery.html',
-            'Pure Confidence': 'music-pure-confidence.html',
-            'The Style Code': 'music-style-code.html',
-            'The Style Prophet': 'music-style-prophet.html',
-            'The Truth Seeker': 'music-truth-seeker.html',
-            "The Lion's Pride": 'sport-lions-pride.html',
-            'The Luxury Standard': 'sport-luxury-standard.html',
-            'The Peak Performer': 'sport-peak-performer.html',
-            'Pursuit of Greatness': 'sport-pursuit-greatness.html',
-            'Unforgettable Roots': 'sport-unforgettable-roots.html',
-            'Mamba Mindset': 'sport-mamba-mindset.html',
-          };
-          const page = pageMap[name] || pageMap[name.replace(/^The /, '')] || pageMap[name.replace(/ Legend$/, '')] || pageMap[name.replace(/ Legend$/, '')];
+          const page = PRODUCT_PAGE_BY_NAME[name]
+            || PRODUCT_PAGE_BY_NAME[name.replace(/^The /, '')]
+            || PRODUCT_PAGE_BY_NAME[name.replace(/ Legend$/, '')];
           if (page) window.location.href = page;
         }
       });
