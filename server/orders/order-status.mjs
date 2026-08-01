@@ -20,6 +20,14 @@ function fail(code, message, details) {
   throw new OrderStatusError(code, message, details);
 }
 
+function normalizeTimestamp(value, field, fallback = 0) {
+  const timestamp = Number(value ?? fallback);
+  if (!Number.isInteger(timestamp) || timestamp < 0) {
+    fail('INVALID_ORDER', `The stored order ${field} is invalid.`);
+  }
+  return timestamp;
+}
+
 function normalizeOrder(order = {}) {
   const reference = String(order.reference || '').trim().toLowerCase();
   if (!REFERENCE_PATTERN.test(reference)) {
@@ -46,6 +54,20 @@ function normalizeOrder(order = {}) {
     fail('INVALID_ORDER', 'The stored order version is invalid.');
   }
 
+  const paymentSessionId = String(order.paymentSessionId || '').trim();
+  const expectedSessionPrefix = mode === 'live' ? 'cs_live_' : 'cs_test_';
+  if (paymentSessionId && !paymentSessionId.startsWith(expectedSessionPrefix)) {
+    fail('INVALID_ORDER', 'The stored Checkout Session does not match the order mode.');
+  }
+
+  const createdAt = normalizeTimestamp(order.createdAt, 'creation timestamp');
+  const updatedAt = normalizeTimestamp(order.updatedAt, 'updated timestamp', createdAt);
+  const lastStripeEventCreated = normalizeTimestamp(
+    order.lastStripeEventCreated,
+    'last Stripe event timestamp',
+    0,
+  );
+
   return {
     ...order,
     reference,
@@ -54,7 +76,10 @@ function normalizeOrder(order = {}) {
     currency,
     mode,
     version,
-    paymentSessionId: String(order.paymentSessionId || '').trim(),
+    paymentSessionId,
+    createdAt,
+    updatedAt,
+    lastStripeEventCreated,
   };
 }
 
@@ -108,20 +133,29 @@ export function createOrderStatusUpdate(orderInput, paymentEvent = {}) {
   const eventId = String(paymentEvent.eventId || '').trim();
   const eventType = String(paymentEvent.eventType || '').trim();
   const eventCreated = Number(paymentEvent.created);
-  if (!eventId.startsWith('evt_') || !eventType || !Number.isInteger(eventCreated)) {
+  if (!eventId.startsWith('evt_') || !eventType || !Number.isInteger(eventCreated) || eventCreated < 1) {
     fail('INVALID_PAYMENT_EVENT', 'The Stripe event identity is invalid.');
   }
 
-  const status = resolveNextStatus(order.status, paymentEvent.status);
+  const latestKnownEventTime = Math.max(order.lastStripeEventCreated, order.updatedAt);
+  const eventIsOlder = eventCreated < latestKnownEventTime;
+  const paidEventIsAuthoritative = paymentEvent.status === 'paid';
+  const status = eventIsOlder && !paidEventIsAuthoritative
+    ? order.status
+    : resolveNextStatus(order.status, paymentEvent.status);
+  const replaceLastEvent = !eventIsOlder || paidEventIsAuthoritative;
+
   return Object.freeze({
     ...order,
     status,
     paymentSessionId: sessionId,
-    lastStripeEventId: eventId,
-    lastStripeEventType: eventType,
-    lastStripeEventCreated: eventCreated,
+    lastStripeEventId: replaceLastEvent ? eventId : (order.lastStripeEventId || ''),
+    lastStripeEventType: replaceLastEvent ? eventType : (order.lastStripeEventType || ''),
+    lastStripeEventCreated: replaceLastEvent
+      ? Math.max(order.lastStripeEventCreated, eventCreated)
+      : order.lastStripeEventCreated,
     paidAt: status === 'paid' ? (order.paidAt || eventCreated) : (order.paidAt || null),
-    updatedAt: eventCreated,
+    updatedAt: Math.max(order.updatedAt, eventCreated),
     version: order.version + 1,
   });
 }
@@ -143,6 +177,7 @@ export function createPendingOrderRecord({
     paymentSessionId,
     createdAt,
     updatedAt: createdAt,
+    lastStripeEventCreated: 0,
     paidAt: null,
     version: 0,
   }));
