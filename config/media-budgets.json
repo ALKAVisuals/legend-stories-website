@@ -1,0 +1,22 @@
+{
+  "deliveryBudgets": {
+    "imageBytes": 1048576,
+    "heroImageBytes": 1572864,
+    "videoBytes": 8388608
+  },
+  "repositoryWarnings": {
+    "largeFileBytes": 1048576,
+    "criticalFileBytes": 5242880
+  },
+  "preferredFormats": {
+    "images": ["avif", "webp", "jpg", "jpeg", "png", "svg"],
+    "video": ["webm", "mp4"]
+  },
+  "policy": [
+    "Preserve the existing year and batch metadata when deriving web assets.",
+    "Do not overwrite print/source assets with compressed web derivatives.",
+    "New large media must be justified in the pull request.",
+    "Product pages should eventually use responsive AVIF/WebP derivatives with an original fallback.",
+    "Autoplay video must have a poster image, muted playback and a reduced-motion fallback."
+  ]
+}
