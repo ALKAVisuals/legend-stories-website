@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: quality-${{ github.workflow }}-${{ github.ref }}
@@ -25,8 +25,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -36,43 +34,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Externalize homepage Swiper and enforce the inline-script gate
-        run: |
-          node <<'NODE'
-          const { readFileSync, writeFileSync } = require('node:fs');
-
-          function replaceOnce(path, pattern, replacement, label) {
-            const source = readFileSync(path, 'utf8');
-            if (typeof replacement === 'string' && source.includes(replacement)) return;
-            const matches = source.match(pattern);
-            if (!matches) throw new Error(`${path}: ${label} was not found.`);
-            if (pattern.global && matches.length !== 1) {
-              throw new Error(`${path}: ${label} matched ${matches.length} times.`);
-            }
-            writeFileSync(path, source.replace(pattern, replacement));
-          }
-
-          replaceOnce(
-            'index.html',
-            /  <!-- Swiper JS -->\n  <script src="https:\/\/cdn\.jsdelivr\.net\/npm\/swiper@11\/swiper-bundle\.min\.js"><\/script>\n  <script>[\s\S]*?document\.addEventListener\('DOMContentLoaded'[\s\S]*?  <\/script>\n<\/body>/,
-            '  <!-- Swiper JS -->\n  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>\n  <script src="js/home-swiper.js"></script>\n</body>',
-            'homepage inline Swiper block',
-          );
-
-          replaceOnce(
-            'scripts/runtime-audit.mjs',
-            /  if \(inlineExecutableScripts\) warnings\.push\(`\$\{inlineExecutableScripts\} executable inline script blocks remain and require migration before a strict CSP\.`\);/,
-            '  if (inlineExecutableScripts) errors.push(`${inlineExecutableScripts} executable inline script blocks are not allowed.`);',
-            'inline-script warning contract',
-          );
-          NODE
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- index.html scripts/runtime-audit.mjs js/home-swiper.js
-          git diff --cached --quiet || git commit -m "refactor: externalize homepage Swiper runtime"
-          git push
 
       - name: Run repository audits
         run: |
