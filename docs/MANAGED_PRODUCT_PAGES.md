@@ -32,13 +32,14 @@ A generated root product page is never an independent source of truth.
 
 ## Current managed scope
 
+- `2026-batch-2`: 20 pages
 - `2026-batch-3`: 20 pages
 - `2026-batch-4`: 19 pages
 - `2026-batch-5`: 20 pages
 - `2026-batch-6`: 12 pages
-- Total: 71 live generated product pages
+- Total: 91 live generated product pages
 
-Batches 1 and 2 are audited as compatible but stay unmanaged until their presentation manifest and live migration complete the same guarded process.
+Batch 1 is audited as compatible but stays unmanaged until its presentation manifest and live migration complete the same guarded process.
 
 ## Normal commands
 
