@@ -37,9 +37,9 @@
 <body class="bg-void text-text-primary font-body">
 
   <!-- ANNOUNCEMENT BAR -->
-  $1
+  <div class="w-full bg-gradient-mint text-void text-center py-2 px-4 text-xs sm:text-sm font-semibold tracking-wide" role="banner">
     <p>{{ANNOUNCEMENT_HTML}}</p>
-  $2
+  </div>
 
   <!-- NAVIGATION -->
   <header class="sticky top-0 z-50 glass border-b border-surface-border/20" role="banner">
@@ -86,7 +86,10 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid lg:grid-cols-2 gap-10 lg:gap-16">
 
-          $1src="{{IMAGE}}" alt="{{IMAGE_ALT}}"$2
+          <!-- IMAGE -->
+          <div class="relative">
+            <div class="aspect-square rounded-2xl overflow-hidden border border-surface-border/30 bg-neutral-200">
+              <img src="{{IMAGE}}" alt="{{IMAGE_ALT}}" class="w-full h-full object-contain">
             </div>
           </div>
 
@@ -95,7 +98,9 @@
             <p class="text-mint text-xs font-medium uppercase tracking-widest mb-2">{{COLLECTION}}</p>
             <h1 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{{NAME}}</h1>
 
-            $1{{STORY}}$2
+            <!-- FACT -->
+            <div class="border-l-2 border-mint/40 pl-4 mb-6">
+              <p class="text-text-secondary text-base md:text-lg leading-relaxed italic">{{STORY}}</p>
             </div>
 
             <!-- PRICE + CTA -->
@@ -105,7 +110,7 @@
               <span class="px-2 py-0.5 rounded bg-mint/10 text-mint text-xs font-bold">{{DISCOUNT_LABEL}}</span>
             </div>
 
-            <button class="$1" data-name="{{NAME}}" data-price="{{PRICE_RAW}}" data-img="{{IMAGE}}">
+            <button class="btn-primary w-full sm:w-auto text-base !px-8 !py-3 add-to-cart-btn" data-name="{{NAME}}" data-price="{{PRICE_RAW}}" data-img="{{IMAGE}}">
               Add to cart — {{PRICE_FORMATTED}}
             </button>
 

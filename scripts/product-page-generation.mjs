@@ -9,14 +9,19 @@ const CATEGORY_LINKS = [
 
 function replaceRequired(source, pattern, replacement, label, expectedCount = 1) {
   let count = 0;
-  const output = source.replace(pattern, (...args) => {
-    count += 1;
-    return typeof replacement === 'function' ? replacement(...args) : replacement;
-  });
+  if (pattern.global) {
+    pattern.lastIndex = 0;
+    count = [...source.matchAll(pattern)].length;
+    pattern.lastIndex = 0;
+  } else {
+    pattern.lastIndex = 0;
+    count = pattern.test(source) ? 1 : 0;
+    pattern.lastIndex = 0;
+  }
   if (count !== expectedCount) {
     throw new Error(`${label}: expected ${expectedCount} match(es), found ${count}.`);
   }
-  return output;
+  return source.replace(pattern, replacement);
 }
 
 function matchRequired(source, pattern, label, group = 1) {
@@ -195,10 +200,14 @@ export function templatizeProductPage(input) {
 }
 
 function navClass(category, activeCategory, mobile) {
-  const base = mobile ? 'text-sm font-medium py-2' : 'text-sm font-medium';
-  return category === activeCategory
-    ? `${base.replace(' font-medium', '')} text-mint font-medium${mobile ? ' py-2' : ''}`.replace(' py-2 py-2', ' py-2')
-    : `${mobile ? 'text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2' : 'text-sm text-text-secondary hover:text-mint transition-colors font-medium'}`;
+  if (category === activeCategory) {
+    return mobile
+      ? 'text-sm text-mint font-medium py-2'
+      : 'text-sm text-mint font-medium';
+  }
+  return mobile
+    ? 'text-sm text-text-secondary hover:text-mint transition-colors font-medium py-2'
+    : 'text-sm text-text-secondary hover:text-mint transition-colors font-medium';
 }
 
 function breadcrumb(product) {
