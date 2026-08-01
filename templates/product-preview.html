@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="{{description}}">
+  <title>{{name}} — {{collection}} | Legend Stories Preview</title>
+  <meta property="og:title" content="{{name}} — {{collection}} | Legend Stories">
+  <meta property="og:description" content="{{description}}">
+  <meta property="og:image" content="{{image}}">
+  <meta property="og:type" content="product">
+  <script type="application/ld+json">{{structuredData}}</script>
+</head>
+<body data-product-slug="{{slug}}" data-batch-id="{{batchId}}" data-category="{{category}}">
+  <main>
+    <article>
+      <img src="{{image}}" alt="{{name}} — {{collection}} Wall Sticker">
+      <p>{{collection}}</p>
+      <h1>{{name}}</h1>
+      <p>{{description}}</p>
+      <p><strong>€{{priceFormatted}}</strong></p>
+      <button
+        type="button"
+        class="add-to-cart-btn"
+        data-name="{{name}}"
+        data-price="{{price}}"
+        data-img="{{image}}"
+      >Add to cart — €{{priceFormatted}}</button>
+    </article>
+  </main>
+</body>
+</html>
