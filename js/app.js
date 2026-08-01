@@ -32,7 +32,6 @@
     localStorage.setItem('legendCart', JSON.stringify(state.cart));
     localStorage.setItem('legendShippingCountry', state.shippingCountry);
     localStorage.setItem('legendDiscountCode', state.discountCode);
-    localStorage.setItem('legendDiscountPercent', state.discountPercent);
   }
 
   function loadCart() {
@@ -40,7 +39,6 @@
     const savedCartVersion = localStorage.getItem('legendCartVersion');
     const savedCountry = localStorage.getItem('legendShippingCountry');
     const savedDiscountCode = localStorage.getItem('legendDiscountCode');
-    const savedDiscountPercent = localStorage.getItem('legendDiscountPercent');
     if (savedCart && savedCartVersion === CART_SCHEMA_VERSION) {
       try {
         const parsedCart = JSON.parse(savedCart);
@@ -58,11 +56,12 @@
     if (savedCountry) {
       state.shippingCountry = savedCountry;
     }
-    if (savedDiscountCode) {
-      state.discountCode = savedDiscountCode;
-    }
-    if (savedDiscountPercent) {
-      state.discountPercent = parseInt(savedDiscountPercent) || 0;
+    const savedDiscount = commerceModule.resolveDiscount(savedDiscountCode || '');
+    state.discountCode = savedDiscount.code;
+    state.discountPercent = savedDiscount.percent;
+    localStorage.removeItem('legendDiscountPercent');
+    if (savedDiscountCode && !savedDiscount.valid) {
+      localStorage.removeItem('legendDiscountCode');
     }
   }
 
@@ -441,6 +440,8 @@
       code = discount.code;
       state.discountCode = discount.code;
       state.discountPercent = percent;
+      saveCart();
+      saveCart();
       if (messageEl) {
         messageEl.textContent = '✓ ' + percent + '% discount applied!';
         messageEl.className = 'text-[11px] mt-1.5 text-mint';
@@ -452,6 +453,8 @@
     } else {
       state.discountCode = '';
       state.discountPercent = 0;
+      saveCart();
+      saveCart();
       if (messageEl) {
         messageEl.textContent = 'Invalid discount code';
         messageEl.className = 'text-[11px] mt-1.5 text-red-400';
@@ -1409,8 +1412,8 @@ function initStickerModalClose() {
   // INITIALIZATION
   // ==========================================
   async function init() {
-    loadCart();  // Restore cart from localStorage
     await loadCommerceModule();
+    loadCart();  // Restore cart after commerce policies are available
     const fns = [
       initStickerClicks,
       initStickerModalClose,
