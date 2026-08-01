@@ -85,6 +85,9 @@ jobs:
       - name: Validate signed Stripe webhook boundary
         run: npm run validate:stripe-webhook
 
+      - name: Validate verified order return flow
+        run: npm run validate:order-return
+
       - name: Generate Batch 3 previews
         run: npm run generate:product-previews
 
