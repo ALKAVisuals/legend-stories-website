@@ -5,9 +5,16 @@ let source = await readFile(target, 'utf8');
 
 const oldReplaceHelper = /function replaceRequired\(source, pattern, replacement, label, expectedCount = 1\) \{[\s\S]*?\n\}\n\nfunction matchRequired/;
 const newReplaceHelper = `function replaceRequired(source, pattern, replacement, label, expectedCount = 1) {
-  const flags = pattern.flags.includes('g') ? pattern.flags : \`${'${pattern.flags}'}g\`;
-  const counter = new RegExp(pattern.source, flags);
-  const count = [...source.matchAll(counter)].length;
+  let count = 0;
+  if (pattern.global) {
+    pattern.lastIndex = 0;
+    count = [...source.matchAll(pattern)].length;
+    pattern.lastIndex = 0;
+  } else {
+    pattern.lastIndex = 0;
+    count = pattern.test(source) ? 1 : 0;
+    pattern.lastIndex = 0;
+  }
   if (count !== expectedCount) {
     throw new Error(\`${'${label}'}: expected ${'${expectedCount}'} match(es), found ${'${count}'}.\`);
   }
