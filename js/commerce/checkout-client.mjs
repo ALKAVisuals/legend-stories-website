@@ -123,7 +123,7 @@ export async function requestHostedCheckout({
   const controller = typeof AbortController === 'function' ? new AbortController() : null;
   const safeTimeout = Math.min(60_000, Math.max(1_000, Number(timeoutMs) || DEFAULT_TIMEOUT_MS));
   const timer = controller
-    ? setTimeout(() => controller.abort(new Error('Checkout request timed out.')), safeTimeout)
+    ? setTimeout(() => controller.abort(), safeTimeout)
     : null;
 
   try {
@@ -158,7 +158,7 @@ export async function requestHostedCheckout({
     return parseHostedCheckoutResponse(responsePayload);
   } catch (error) {
     if (error instanceof HostedCheckoutClientError) throw error;
-    if (error?.name === 'AbortError') {
+    if (controller?.signal.aborted || error?.name === 'AbortError') {
       fail('CHECKOUT_TIMEOUT', 'The checkout request took too long. Please try again.');
     }
     fail('CHECKOUT_NETWORK_ERROR', 'The checkout service could not be reached. Please try again.');
