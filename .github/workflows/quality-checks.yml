@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   audit-and-build:
-    name: Audit and production build
+    name: Audit, tests and production build
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -34,6 +34,9 @@ jobs:
 
       - name: Run repository audit
         run: npm run audit
+
+      - name: Run unit tests
+        run: npm test
 
       - name: Build production bundle
         run: npm run build
