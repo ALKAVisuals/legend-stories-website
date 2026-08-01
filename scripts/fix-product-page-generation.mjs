@@ -3,8 +3,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 const target = new URL('./product-page-generation.mjs', import.meta.url);
 let source = await readFile(target, 'utf8');
 
-const oldReplaceHelper = /function replaceRequired\(source, pattern, replacement, label, expectedCount = 1\) \{[\s\S]*?\n\}\n\nfunction matchRequired/;
-const newReplaceHelper = `function replaceRequired(source, pattern, replacement, label, expectedCount = 1) {
+const replaceHelper = /function replaceRequired\(source, pattern, replacement, label, expectedCount = 1\) \{[\s\S]*?\n\}\n\nfunction matchRequired/;
+const correctReplaceHelper = `function replaceRequired(source, pattern, replacement, label, expectedCount = 1) {
   let count = 0;
   if (pattern.global) {
     pattern.lastIndex = 0;
@@ -23,8 +23,8 @@ const newReplaceHelper = `function replaceRequired(source, pattern, replacement,
 
 function matchRequired`;
 
-const oldNavClass = /function navClass\(category, activeCategory, mobile\) \{[\s\S]*?\n\}\n\nfunction breadcrumb/;
-const newNavClass = `function navClass(category, activeCategory, mobile) {
+const navClass = /function navClass\(category, activeCategory, mobile\) \{[\s\S]*?\n\}\n\nfunction breadcrumb/;
+const correctNavClass = `function navClass(category, activeCategory, mobile) {
   if (category === activeCategory) {
     return mobile
       ? 'text-sm text-mint font-medium py-2'
@@ -38,15 +38,24 @@ const newNavClass = `function navClass(category, activeCategory, mobile) {
 function breadcrumb`;
 
 for (const [label, pattern, replacement] of [
-  ['replaceRequired helper', oldReplaceHelper, newReplaceHelper],
-  ['navClass helper', oldNavClass, newNavClass],
+  ['replaceRequired helper', replaceHelper, correctReplaceHelper],
+  ['navClass helper', navClass, correctNavClass],
 ]) {
   if (!pattern.test(source)) throw new Error(`${label} was not found.`);
   source = source.replace(pattern, replacement);
 }
 
+const apostropheEscape = `.replaceAll('"', '&quot;')\n    .replaceAll("'", '&#039;');`;
+const contextSafeEscape = `.replaceAll('"', '&quot;');`;
+if (source.includes(apostropheEscape)) {
+  source = source.replace(apostropheEscape, contextSafeEscape);
+}
+
 if (source.includes("return typeof replacement === 'function' ? replacement(...args) : replacement")) {
   throw new Error('The broken string replacement callback remains in the generator.');
+}
+if (source.includes(".replaceAll(\"'\", '&#039;')")) {
+  throw new Error('Apostrophes are still unnecessarily escaped in generated product content.');
 }
 
 await writeFile(target, source, 'utf8');
