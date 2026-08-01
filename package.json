@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/validate-build.mjs",
+    "build": "vite build && node scripts/copy-static-js.mjs && node scripts/validate-build.mjs",
     "preview": "vite preview",
     "audit": "node scripts/audit.mjs",
     "audit:strict": "node scripts/audit.mjs --strict",
