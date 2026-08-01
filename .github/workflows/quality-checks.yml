@@ -39,11 +39,11 @@ jobs:
 
       - name: Bootstrap and commit Batch 6 presentation data
         run: |
-          npm run bootstrap:product-page-batch -- --batch=2026-batch-6 --expected=12
+          npm run bootstrap:product-page-batch -- --batch=2026-batch-6 --expected=12 --normalize-legacy-presentation
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/products/2026-batch-6-presentation.json
-          git diff --cached --quiet || git commit -m "data: bootstrap Batch 6 page presentation"
+          git diff --cached --quiet || git commit -m "data: normalize Batch 6 page presentation"
           git push
 
       - name: Run repository audits
