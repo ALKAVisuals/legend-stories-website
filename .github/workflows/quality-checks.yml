@@ -85,6 +85,9 @@ jobs:
       - name: Validate Neon order store architecture
         run: npm run validate:neon-order-store
 
+      - name: Validate Neon integration harness
+        run: npm run validate:neon-integration
+
       - name: Validate durable pending Checkout records
         run: npm run validate:checkout-persistence
 
