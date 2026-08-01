@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { extractProductFromHtml } from './product-inventory.mjs';
 import {
   extractProductPresentation,
+  normalizeTemplateStructure,
   templatizeProductPage,
   templateHash,
 } from './product-page-template.mjs';
@@ -17,6 +18,7 @@ const REQUIRE_LIVE_MATCH = process.argv.includes('--live');
 const { batch, products } = JSON.parse(await readFile(DATA_FILE, 'utf8'));
 const presentationData = JSON.parse(await readFile(PRESENTATION_FILE, 'utf8'));
 const template = await readFile(TEMPLATE_FILE, 'utf8');
+const normalizedTemplate = normalizeTemplateStructure(template);
 const presentationByPage = new Map(presentationData.products.map((entry) => [entry.page, entry]));
 const errors = [];
 
@@ -53,10 +55,10 @@ for (const product of products) {
   const live = await readFile(join(ROOT, product.page), 'utf8');
 
   try {
-    if (templatizeProductPage(generated) !== template) {
+    if (normalizeTemplateStructure(templatizeProductPage(generated)) !== normalizedTemplate) {
       errors.push(`${product.page}: generated static structure differs from the shared template.`);
     }
-    if (templatizeProductPage(live) !== template) {
+    if (normalizeTemplateStructure(templatizeProductPage(live)) !== normalizedTemplate) {
       errors.push(`${product.page}: existing live static structure differs from the shared template.`);
     }
   } catch (error) {
