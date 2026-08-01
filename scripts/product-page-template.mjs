@@ -13,6 +13,7 @@ const CATEGORY_LINKS = [
   ['combat', 'Combat Legends'],
   ['wisdom', 'Wisdom Legends'],
 ];
+const FOOTER_LINK_CLASS = 'text-sm text-text-secondary hover:text-mint transition-colors';
 
 export {
   escapeHtml,
@@ -47,6 +48,9 @@ export function normalizeLegacyProductPageMarkup(input) {
     const mobile = new RegExp(
       `<a href="[^"]*" class="([^"]*\\bpy-2\\b[^"]*)">${escapedLabel}<\\/a>`,
     );
+    const footer = new RegExp(
+      `<li>\\s*<a href="[^"]*" class="[^"]*">${escapedLabel}<\\/a>\\s*<\\/li>`,
+    );
 
     html = html.replace(
       desktop,
@@ -55,6 +59,10 @@ export function normalizeLegacyProductPageMarkup(input) {
     html = html.replace(
       mobile,
       `<a href="${category}-legends.html" class="$1">${label}</a>`,
+    );
+    html = html.replace(
+      footer,
+      `<li><a href="${category}-legends.html" class="${FOOTER_LINK_CLASS}">${label}</a></li>`,
     );
   }
 
