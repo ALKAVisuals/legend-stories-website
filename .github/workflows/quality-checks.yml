@@ -87,11 +87,8 @@ jobs:
           );
           replaceOnce(
             'tests/product-page-generation.test.mjs',
-            `  const presentation = {
-    story: "Don't stop believing.",`,
-            `  const presentation = {
-    pageTitle: "The Lion's Pride — Limited Edition | Legend Stories",
-    story: "Don't stop believing.",`,
+            "  const presentation = {\n    story: \"Don't stop believing.\",",
+            "  const presentation = {\n    pageTitle: \"The Lion's Pride — Limited Edition | Legend Stories\",\n    story: \"Don't stop believing.\",",
           );
           replaceOnce(
             'tests/product-page-generation.test.mjs',
