@@ -76,6 +76,9 @@ jobs:
       - name: Validate Stripe test Checkout boundary
         run: npm run validate:stripe-checkout
 
+      - name: Validate browser Checkout integration
+        run: npm run validate:browser-checkout
+
       - name: Generate Batch 3 previews
         run: npm run generate:product-previews
 
