@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "batchId": "2026-batch-6",
+  "template": {
+    "path": "templates/product-page.html",
+    "referencePage": "music-authentic-connection-music-legend-mural.html",
+    "sha256": "a21bb24d9c6e08e571d45bb461003acf53f8a1a785f06dbc72862a36d492e71d"
+  },
+  "products": [
+    {
+      "page": "music-authentic-connection-music-legend-mural.html",
+      "story": "A profound insight into the human condition, encouraging us to embrace our vulnerabilities and seek genuine connection.",
+      "imageAlt": "Iron Discipline — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-inner-circle-music-legend-mural.html",
+      "story": "A powerful truth about the influence of our surroundings and the importance of surrounding ourselves with authenticity.",
+      "imageAlt": "Iron Discipline — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-living-your-truth-music-legend-mural.html",
+      "story": "A soulful reminder that the true impact of a life is measured by one's actions rather than mere words.",
+      "imageAlt": "Iron Discipline — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-resilient-spirit-music-legend-mural.html",
+      "story": "A beacon of hope that teaches us to find strength in the face of change and keep moving forward.",
+      "imageAlt": "Iron Discipline — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-singular-grace-music-legend-mural.html",
+      "story": "A beautiful affirmation that being true to oneself is the ultimate form of success and grace.",
+      "imageAlt": "Iron Discipline — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-unapologetic-self-music-legend-mural-bleu.html",
+      "story": "An empowering call to embrace your own uniqueness and realize that your truest self is your greatest strength.",
+      "imageAlt": "Iron Discipline — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-unapologetic-self-music-legend-mural.html",
+      "story": "An empowering call to embrace your own uniqueness and realize that your truest self is your greatest strength.",
+      "imageAlt": "Iron Discipline — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "sport-simple-belief-sport-legend-mural.html",
+      "story": "A legend who proves that true greatness is built on the small, meaningful moments of everyday life.",
+      "imageAlt": "Iron Discipline — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "wisdom-contender-spirit-combat-legend-mural.html",
+      "story": "A testament to the truth that greatness is earned by those who simply refuse to surrender.",
+      "imageAlt": "Iron Discipline — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "wisdom-evolving-warrior-combat-legend-mural.html",
+      "story": "An icon who proves that true mastery requires the courage to constantly evolve.",
+      "imageAlt": "Iron Discipline — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "wisdom-relentless-will-combat-legend-mural.html",
+      "story": "An embodiment of pure determination, teaching us that strength is found in the refusal to quit.",
+      "imageAlt": "Iron Discipline — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "wisdom-unstoppable-drive-combat-legend-mural.html",
+      "story": "A powerhouse who views every setback not as a defeat, but as a vital step toward victory.",
+      "imageAlt": "Iron Discipline — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    }
+  ]
+}
