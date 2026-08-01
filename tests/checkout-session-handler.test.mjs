@@ -45,6 +45,7 @@ function fakeStripeClient(capture = {}) {
   return {
     mode: 'test',
     async createCheckoutSession(stripePayload, options) {
+      capture.called = true;
       capture.payload = stripePayload;
       capture.options = options;
       return {
@@ -56,14 +57,32 @@ function fakeStripeClient(capture = {}) {
   };
 }
 
-test('endpoint creates a test Checkout Session from the authoritative catalog', async () => {
-  const capture = {};
+function fakeCheckoutStore(capture = {}, implementation = null) {
+  return {
+    async persistPendingCheckout(order) {
+      capture.called = true;
+      capture.order = order;
+      if (implementation) return implementation(order);
+      return { created: true, order };
+    },
+  };
+}
+
+const endpointOptions = Object.freeze({
+  successUrl: 'https://shop.example/order-success.html',
+  cancelUrl: 'https://shop.example/order-cancelled.html',
+  allowedOrigins: 'https://shop.example',
+});
+
+test('endpoint returns Checkout only after the pending order is durably stored', async () => {
+  const stripeCapture = {};
+  const storeCapture = {};
   const response = await handleCreateCheckoutSession(requestFor(), {
     catalogProducts: catalog,
-    stripeClient: fakeStripeClient(capture),
-    successUrl: 'https://shop.example/order-success.html',
-    cancelUrl: 'https://shop.example/order-cancelled.html',
-    allowedOrigins: 'https://shop.example',
+    stripeClient: fakeStripeClient(stripeCapture),
+    checkoutStore: fakeCheckoutStore(storeCapture),
+    createdAt: 1_800_000_000,
+    ...endpointOptions,
   });
   const result = await response.json();
 
@@ -72,8 +91,67 @@ test('endpoint creates a test Checkout Session from the authoritative catalog', 
   assert.equal(result.sessionId, 'cs_test_handler');
   assert.equal(result.mode, 'test');
   assert.match(result.url, /^https:\/\/checkout\.stripe\.com\//);
-  assert.equal(capture.payload.line_items[0].price_data.unit_amount > 1, true);
-  assert.match(capture.options.idempotencyKey, /^legend-checkout-[a-f0-9]{64}$/);
+  assert.equal(stripeCapture.payload.line_items[0].price_data.unit_amount > 1, true);
+  assert.match(stripeCapture.options.idempotencyKey, /^legend-checkout-[a-f0-9]{64}$/);
+  assert.equal(storeCapture.called, true);
+  assert.equal(storeCapture.order.reference, result.reference);
+  assert.equal(storeCapture.order.paymentSessionId, result.sessionId);
+  assert.equal(storeCapture.order.status, 'payment_pending');
+  assert.equal(storeCapture.order.amountTotal > 1, true);
+  assert.equal(storeCapture.order.customer.email, payload.customer.email);
+  assert.equal(storeCapture.order.items[0].name, product.name);
+});
+
+test('endpoint fails before contacting Stripe when durable storage is missing', async () => {
+  const stripeCapture = {};
+  const response = await handleCreateCheckoutSession(requestFor(), {
+    catalogProducts: catalog,
+    stripeClient: fakeStripeClient(stripeCapture),
+    ...endpointOptions,
+  });
+  const result = await response.json();
+
+  assert.equal(response.status, 503);
+  assert.equal(result.error.code, 'CHECKOUT_STORE_NOT_CONFIGURED');
+  assert.equal(stripeCapture.called, undefined);
+  assert.equal(JSON.stringify(result).includes('checkout.stripe.com'), false);
+});
+
+test('endpoint never returns a Checkout URL when pending-order persistence fails', async () => {
+  const stripeCapture = {};
+  const response = await handleCreateCheckoutSession(requestFor(), {
+    catalogProducts: catalog,
+    stripeClient: fakeStripeClient(stripeCapture),
+    checkoutStore: fakeCheckoutStore({}, async () => {
+      const error = new Error('database unavailable');
+      error.code = 'DATABASE_UNAVAILABLE';
+      throw error;
+    }),
+    ...endpointOptions,
+  });
+  const result = await response.json();
+
+  assert.equal(stripeCapture.called, true);
+  assert.equal(response.status, 503);
+  assert.equal(result.error.code, 'CHECKOUT_PERSISTENCE_FAILED');
+  assert.equal(JSON.stringify(result).includes('checkout.stripe.com'), false);
+});
+
+test('endpoint rejects conflicting idempotent order records', async () => {
+  const response = await handleCreateCheckoutSession(requestFor(), {
+    catalogProducts: catalog,
+    stripeClient: fakeStripeClient(),
+    checkoutStore: fakeCheckoutStore({}, async (order) => ({
+      created: false,
+      order: { ...order, amountTotal: order.amountTotal + 1 },
+    })),
+    ...endpointOptions,
+  });
+  const result = await response.json();
+
+  assert.equal(response.status, 409);
+  assert.equal(result.error.code, 'CHECKOUT_STORE_CONFLICT');
+  assert.equal(JSON.stringify(result).includes('checkout.stripe.com'), false);
 });
 
 test('endpoint rejects unapproved cross-origin requests', async () => {
@@ -82,9 +160,8 @@ test('endpoint rejects unapproved cross-origin requests', async () => {
   }), {
     catalogProducts: catalog,
     stripeClient: fakeStripeClient(),
-    successUrl: 'https://shop.example/success',
-    cancelUrl: 'https://shop.example/cancel',
-    allowedOrigins: 'https://shop.example',
+    checkoutStore: fakeCheckoutStore(),
+    ...endpointOptions,
   });
   const result = await response.json();
 
@@ -105,9 +182,8 @@ test('endpoint rejects unsupported methods and content types', async () => {
   }), {
     catalogProducts: catalog,
     stripeClient: fakeStripeClient(),
-    successUrl: 'https://shop.example/success',
-    cancelUrl: 'https://shop.example/cancel',
-    allowedOrigins: 'https://shop.example',
+    checkoutStore: fakeCheckoutStore(),
+    ...endpointOptions,
   });
   const result = await contentTypeResponse.json();
   assert.equal(contentTypeResponse.status, 400);
@@ -130,9 +206,8 @@ test('endpoint does not start Stripe when the order request is invalid', async (
         called = true;
       },
     },
-    successUrl: 'https://shop.example/success',
-    cancelUrl: 'https://shop.example/cancel',
-    allowedOrigins: 'https://shop.example',
+    checkoutStore: fakeCheckoutStore(),
+    ...endpointOptions,
   });
   const result = await response.json();
 
@@ -145,9 +220,8 @@ test('endpoint reports unavailable Stripe configuration without exposing secrets
   const response = await handleCreateCheckoutSession(requestFor(), {
     env: {},
     catalogProducts: catalog,
-    successUrl: 'https://shop.example/success',
-    cancelUrl: 'https://shop.example/cancel',
-    allowedOrigins: 'https://shop.example',
+    checkoutStore: fakeCheckoutStore(),
+    ...endpointOptions,
   });
   const result = await response.json();
 
