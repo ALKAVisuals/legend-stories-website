@@ -70,10 +70,10 @@ async function validateRuntimeArtifacts(errors) {
 
   try {
     const moduleSource = await readFile(RELATED_PRODUCTS_MODULE, 'utf8');
-    if (!moduleSource.includes('export function loadProductRegistry')) {
+    if (!/export\s+(?:async\s+)?function\s+loadProductRegistry\b/.test(moduleSource)) {
       errors.push('js/catalog/related-products.mjs: expected registry loader export is missing.');
     }
-    if (!moduleSource.includes('export function selectRelatedProducts')) {
+    if (!/export\s+(?:async\s+)?function\s+selectRelatedProducts\b/.test(moduleSource)) {
       errors.push('js/catalog/related-products.mjs: expected related-product selector export is missing.');
     }
   } catch (error) {
