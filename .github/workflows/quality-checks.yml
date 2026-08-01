@@ -52,11 +52,11 @@ jobs:
       - name: Audit product page template compatibility
         run: npm run audit:product-page-templates
 
-      - name: Generate Batch 3 product pages
-        run: npm run generate:batch3-pages
+      - name: Generate managed product pages
+        run: npm run generate:managed-product-pages
 
-      - name: Validate live Batch 3 product pages
-        run: npm run validate:batch3-pages:live
+      - name: Validate live managed product pages
+        run: npm run validate:managed-product-pages:live
 
       - name: Generate runtime product registry
         run: npm run generate:runtime-products
