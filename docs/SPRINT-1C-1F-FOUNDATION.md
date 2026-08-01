@@ -79,7 +79,7 @@ No source artwork or batch folder is moved or overwritten. Actual AVIF/WebP/vide
 6. commerce unit tests;
 7. production build and output validation.
 
-GitHub Actions runs this command on every pull request to `main` and uploads the reports as artifacts.
+GitHub Actions runs this command on every pull request to `main` and uploads the reports as artifacts. A pull request is not merged until this gate has completed successfully on its latest head commit.
 
 ## Sprint 1 exit criteria
 
