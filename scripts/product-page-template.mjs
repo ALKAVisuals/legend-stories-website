@@ -50,6 +50,13 @@ export function normalizeLegacyProductPageMarkup(input) {
     '</aside>$1',
   );
 
+  html = html.replace('<!-- FLOATING CTA -->', '');
+
+  html = html.replace(
+    /<div>\s*<label[^>]*>Discount code<\/label>\s*<div class="flex gap-2">[\s\S]*?<input[^>]*id="checkout-discount"[\s\S]*?<button[^>]*id="apply-discount-btn"[\s\S]*?<\/button>\s*<\/div>\s*<p[^>]*id="discount-message"[^>]*><\/p>\s*<\/div>/,
+    '',
+  );
+
   for (const [category, label] of CATEGORY_LINKS) {
     const escapedLabel = escapeRegExp(label);
     const desktop = new RegExp(
