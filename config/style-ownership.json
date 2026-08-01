@@ -1,0 +1,28 @@
+{
+  "principles": {
+    "tailwind": "layout, spacing, responsive utilities and simple state utilities",
+    "tokens": "brand colors, typography scales, spacing scales, radii, shadows and motion values",
+    "components": "semantic reusable storefront components only",
+    "effects": "isolated visual effects loaded only by pages that use them"
+  },
+  "files": {
+    "css/tokens.css": "tokens",
+    "css/components.css": "components-and-legacy-utilities",
+    "css/shared.css": "shared-layout-and-legacy-components",
+    "css/matrix.css": "effects",
+    "css/metal-fx.css": "effects",
+    "css/skipper.css": "effects",
+    "css/axis.css": "effects",
+    "css/componentry.css": "legacy-components",
+    "css/axis-patterns.css": "effects",
+    "css/axis-upgrades.css": "legacy-patches",
+    "css/skiper-upgrades.css": "legacy-patches"
+  },
+  "rules": [
+    "Do not add new Tailwind-like utility classes to custom CSS.",
+    "Do not add new upgrade or patch stylesheets.",
+    "New reusable UI must have one documented owner.",
+    "Effect styles must not redefine global layout or typography.",
+    "Legacy files are consolidated only with visual-regression evidence."
+  ]
+}
