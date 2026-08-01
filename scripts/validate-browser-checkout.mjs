@@ -80,8 +80,11 @@ for (const [name, source, title, heading] of [
     errors.push(`${name} must remain excluded from search indexing.`);
   }
 }
-if (!successPage.includes('must still be confirmed by the server')) {
-  errors.push('The success return page must not claim payment is verified before webhook support exists.');
+if (!successPage.includes('has not been confirmed by the server yet')) {
+  errors.push('The success return page must state that payment is unverified until the server confirms it.');
+}
+if (!successPage.includes('<script type="module" src="js/order-return.js"></script>')) {
+  errors.push('The success return page must load the verified order-status module.');
 }
 if (!cancelledPage.includes('Your cart remains saved in this browser')) {
   errors.push('The cancellation page must explain that the browser cart remains available.');
