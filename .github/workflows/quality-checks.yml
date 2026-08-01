@@ -43,6 +43,7 @@ jobs:
           npm run audit:media
           npm run audit:media:references
           npm run validate:media-references
+          npm run audit:video:metadata
           npm run audit:runtime
 
       - name: Build product inventory
