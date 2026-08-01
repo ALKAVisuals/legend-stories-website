@@ -35,8 +35,34 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run full quality gate
-        run: npm run quality
+      - name: Run repository audits
+        run: |
+          npm run audit
+          npm run audit:css
+          npm run audit:dependencies
+          npm run audit:media
+          npm run audit:runtime
+
+      - name: Build product inventory
+        run: npm run inventory:products
+
+      - name: Generate runtime product registry
+        run: npm run generate:runtime-products
+
+      - name: Validate runtime product registry
+        run: npm run validate:runtime-products
+
+      - name: Generate Batch 3 previews
+        run: npm run generate:product-previews
+
+      - name: Validate Batch 3 catalog
+        run: npm run validate:catalog
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Build production output
+        run: npm run build
 
       - name: Upload audit reports
         if: always()
