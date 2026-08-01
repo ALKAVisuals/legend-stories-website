@@ -53,6 +53,21 @@ test('legacy product chrome normalizes without touching presentation content', (
   assert.match(normalized, /<p>Keep this story unchanged\.<\/p>/);
 });
 
+test('known UI vector variants do not create false template differences', () => {
+  const current = [
+    '<button id="cart-btn" class="cart"><svg viewBox="0 0 24 24"><path d="current-cart" /></svg></button>',
+    '<a href="#" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="current-tiktok" /></svg></a>',
+  ].join('');
+  const legacy = [
+    '<button id="cart-btn" class="cart"><svg viewBox="0 0 24 24"><path d="legacy-cart" /></svg></button>',
+    '<a href="#" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="legacy-tiktok" /></svg></a>',
+  ].join('');
+
+  assert.equal(normalizeTemplateStructure(current), normalizeTemplateStructure(legacy));
+  assert.match(normalizeTemplateStructure(current), /data-template-icon="cart"/);
+  assert.match(normalizeTemplateStructure(current), /data-template-icon="tiktok"/);
+});
+
 test('template structure ignores formatting-only whitespace between tags', () => {
   assert.equal(
     normalizeTemplateStructure('<main>\n  <section>Test</section>\n</main>'),
