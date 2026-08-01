@@ -1,0 +1,52 @@
+name: Video optimization evaluation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'media/welcome/**'
+      - 'scripts/evaluate-video-optimization.mjs'
+      - '.github/workflows/video-optimization-evaluation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: video-evaluation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evaluate:
+    name: Objective video comparison
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends ffmpeg
+
+      - name: Generate and compare candidates
+        run: node scripts/evaluate-video-optimization.mjs
+
+      - name: Upload evaluation report and comparisons
+        uses: actions/upload-artifact@v7
+        with:
+          name: video-optimization-evaluation
+          path: |
+            reports/video-optimization-evaluation.json
+            reports/video-optimization-evaluation.md
+            generated/video-optimization/
+          if-no-files-found: error
+          retention-days: 14
