@@ -92,6 +92,36 @@ test('hosted Checkout Session uses authoritative totals, shipping and customer d
   assert.equal(checkout.mode, 'test');
 });
 
+test('rest-of-world countries retain their ISO delivery country in Stripe', async () => {
+  const capture = {};
+  const greekCustomer = {
+    ...customer,
+    street: 'Ermou 10',
+    zip: '10563',
+    city: 'Athens',
+    country: 'GR',
+  };
+
+  await createHostedCheckoutSession({
+    request: {
+      items: [{ page: firstProduct.page, quantity: 1 }],
+      countryCode: 'GR',
+    },
+    customer: greekCustomer,
+    catalogProducts: catalog,
+    stripeClient: createFakeStripeClient(capture),
+    successUrl: 'https://example.com/success',
+    cancelUrl: 'https://example.com/cancel',
+  });
+
+  assert.equal(capture.payload.metadata.delivery_country, 'GR');
+  assert.equal(capture.payload.metadata.shipping_zone_code, 'OTHER');
+  assert.equal(capture.payload.payment_intent_data.shipping.address.country, 'GR');
+  const shippingLine = capture.payload.line_items.at(-1);
+  assert.equal(shippingLine.price_data.product_data.metadata.delivery_country, 'GR');
+  assert.equal(shippingLine.price_data.product_data.metadata.shipping_zone_code, 'OTHER');
+});
+
 test('identical checkout requests produce stable idempotency references', async () => {
   const input = {
     request: {
@@ -115,7 +145,31 @@ test('identical checkout requests produce stable idempotency references', async 
   assert.equal(first.reference, second.reference);
 });
 
-test('customer country must match the authoritative shipping quote', async () => {
+test('idempotency reference changes when Stripe request parameters change', async () => {
+  const input = {
+    request: {
+      items: [{ page: firstProduct.page, quantity: 1 }],
+      countryCode: 'NL',
+    },
+    customer,
+    catalogProducts: catalog,
+    cancelUrl: 'https://example.com/cancel',
+  };
+
+  const first = await createHostedCheckoutSession({
+    ...input,
+    successUrl: 'https://example.com/success-a',
+    stripeClient: createFakeStripeClient(),
+  });
+  const second = await createHostedCheckoutSession({
+    ...input,
+    successUrl: 'https://example.com/success-b',
+    stripeClient: createFakeStripeClient(),
+  });
+  assert.notEqual(first.reference, second.reference);
+});
+
+test('customer country must match the requested shipping country', async () => {
   await assert.rejects(
     () => createHostedCheckoutSession({
       request: {
