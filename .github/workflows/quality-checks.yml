@@ -10,11 +10,11 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: quality-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   quality:
@@ -25,8 +25,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -36,42 +34,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Remove audited orphaned media
-        shell: bash
-        run: |
-          files=(
-            "media/welcome/LM Welcome video  mobile   (2).mp4"
-            "media/welcome/LM Welcome video  mobile   (4).mp4"
-            "media/welcome/LM Welcome video  mobile   (6).mp4"
-            "media/Muur/Arnold S.png"
-            "media/Muur/Fightclub.png"
-            "media/Muur/Ibrahimovic.png"
-            "media/Muur/Ice Cube.png"
-            "media/Muur/Mike T..png"
-            "media/Muur/Tupac_bedroom.png"
-          )
-
-          existing=0
-          for file in "${files[@]}"; do
-            [[ -f "$file" ]] && existing=$((existing + 1))
-          done
-
-          if [[ "$existing" -ne 0 && "$existing" -ne "${#files[@]}" ]]; then
-            echo "::error::Only $existing of ${#files[@]} audited orphaned files exist; refusing a partial cleanup."
-            exit 1
-          fi
-
-          if [[ "$existing" -eq "${#files[@]}" ]]; then
-            rm -- "${files[@]}"
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -u -- "${files[@]}"
-            git commit -m "perf: remove audited orphaned media"
-            git push
-          else
-            echo "Audited orphaned media is already removed."
-          fi
 
       - name: Run repository audits
         run: |
