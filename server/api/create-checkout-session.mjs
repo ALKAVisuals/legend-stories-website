@@ -68,6 +68,42 @@ function resolveCorsOrigin(request, configuredOrigins) {
   return origin;
 }
 
+function validateConfiguredUrl(value, label) {
+  const source = String(value || '').trim();
+  if (!source) {
+    throw new StripeConfigurationError(
+      'MISSING_CHECKOUT_URL',
+      `${label} is required in the server environment.`,
+    );
+  }
+
+  let url;
+  try {
+    url = new URL(source);
+  } catch {
+    throw new StripeConfigurationError(
+      'INVALID_CHECKOUT_URL',
+      `${label} must be a valid absolute URL.`,
+    );
+  }
+
+  const localDevelopment = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+  if (url.protocol !== 'https:' && !(localDevelopment && url.protocol === 'http:')) {
+    throw new StripeConfigurationError(
+      'INVALID_CHECKOUT_URL',
+      `${label} must use HTTPS.`,
+    );
+  }
+  if (url.username || url.password) {
+    throw new StripeConfigurationError(
+      'INVALID_CHECKOUT_URL',
+      `${label} must not contain embedded credentials.`,
+    );
+  }
+
+  return url.toString();
+}
+
 async function parseJsonRequest(request) {
   const contentType = request.headers.get('content-type') || '';
   if (!contentType.toLowerCase().startsWith('application/json')) {
@@ -134,10 +170,13 @@ export async function handleCreateCheckoutSession(request, {
   }
 
   try {
+    const configuredSuccessUrl = validateConfiguredUrl(successUrl, 'CHECKOUT_SUCCESS_URL');
+    const configuredCancelUrl = validateConfiguredUrl(cancelUrl, 'CHECKOUT_CANCEL_URL');
     const payload = await parseJsonRequest(request);
     const products = catalogProducts || await loadCatalogProducts();
     const client = stripeClient || stripeClientFactory({
       secretKey: env.STRIPE_SECRET_KEY,
+      apiBase: env.STRIPE_API_BASE,
       apiVersion: env.STRIPE_API_VERSION,
       allowLive: env.STRIPE_ALLOW_LIVE === 'true',
     });
@@ -147,8 +186,8 @@ export async function handleCreateCheckoutSession(request, {
       customer: payload?.customer,
       catalogProducts: products,
       stripeClient: client,
-      successUrl,
-      cancelUrl,
+      successUrl: configuredSuccessUrl,
+      cancelUrl: configuredCancelUrl,
     });
 
     return jsonResponse(201, {
