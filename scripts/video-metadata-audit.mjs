@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { open, readFile, writeFile, mkdir } from 'node:fs/promises';
-import { basename, extname, join, relative, resolve } from 'node:path';
+import { basename, extname, join, resolve } from 'node:path';
 
 const ROOT = process.cwd();
 const REPORT_DIR = join(ROOT, 'reports');
@@ -101,20 +101,25 @@ async function discoverActiveVideos() {
     for (const match of source.matchAll(/<video\b([^>]*)>([\s\S]*?)<\/video>/gi)) {
       const attributes = match[1];
       const body = match[2];
-      const sourceMatch = body.match(/<source\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/i);
+      const sourceMatch = body.match(/<source\b[^>]*\b(data-src|src)=["']([^"']+)["'][^>]*>/i);
       if (!sourceMatch) continue;
-      const decoded = decodeURIComponent(sourceMatch[1]);
+      const decoded = decodeURIComponent(sourceMatch[2]);
       const path = normalizePath(decoded.replace(/^\.\//, ''));
       const record = videos.get(path) || {
         path,
         pages: [],
+        deferred: sourceMatch[1].toLowerCase() === 'data-src',
         autoplay: /\bautoplay\b/i.test(attributes),
         loop: /\bloop\b/i.test(attributes),
         muted: /\bmuted\b/i.test(attributes),
         playsinline: /\bplaysinline\b/i.test(attributes),
         preload: attributes.match(/\bpreload=["']([^"']+)["']/i)?.[1] || 'browser-default',
         poster: attributes.match(/\bposter=["']([^"']+)["']/i)?.[1] || '',
+        policyId: attributes.match(/\bdata-collection-video=["']([^"']+)["']/i)?.[1] || '',
       };
+      if (record.deferred !== (sourceMatch[1].toLowerCase() === 'data-src')) {
+        throw new Error(`${page}: collection video loading mode is inconsistent for ${path}.`);
+      }
       record.pages.push(page);
       videos.set(path, record);
     }
@@ -182,6 +187,7 @@ const report = {
     activeVideoFiles: records.length,
     collectionPages: COLLECTION_PAGES.length,
     totalBytes: records.reduce((sum, record) => sum + record.bytes, 0),
+    deferredFiles: records.filter((record) => record.deferred).length,
     autoplayFiles: records.filter((record) => record.autoplay).length,
     filesWithoutPoster: records.filter((record) => !record.poster).length,
     filesWithoutFastStart: records.filter((record) => !record.mp4.fastStart).length,
@@ -200,18 +206,21 @@ const markdown = [
   `- Active video files: ${report.summary.activeVideoFiles}`,
   `- Collection pages: ${report.summary.collectionPages}`,
   `- Total active video size: ${formatBytes(report.summary.totalBytes)}`,
-  `- Autoplay files: ${report.summary.autoplayFiles}`,
+  `- Deferred source files: ${report.summary.deferredFiles}`,
+  `- Declarative autoplay files: ${report.summary.autoplayFiles}`,
   `- Files without poster: ${report.summary.filesWithoutPoster}`,
   `- Files without MP4 fast start: ${report.summary.filesWithoutFastStart}`,
   `- Files with audio streams: ${report.summary.filesWithAudio}`,
   '',
   '## Files',
   '',
-  '| File | Pages | Size | Duration | Video | FPS | Bitrate | Audio | Fast start |',
-  '|---|---|---:|---:|---|---:|---:|---|---|',
+  '| File | Pages | Delivery | Preload | Size | Duration | Video | FPS | Bitrate | Audio | Fast start |',
+  '|---|---|---|---|---:|---:|---|---:|---:|---|---|',
   ...records.map((record) => [
     `\`${record.path}\``,
     record.pages.map((page) => `\`${page}\``).join('<br>'),
+    record.deferred ? `Deferred (${record.policyId || 'policy missing'})` : 'Immediate',
+    record.preload,
     formatBytes(record.bytes),
     `${record.durationSeconds.toFixed(2)} s`,
     `${record.video.codec} ${record.video.width}×${record.video.height} ${record.video.pixelFormat}`,
@@ -221,13 +230,13 @@ const markdown = [
     record.mp4.fastStart ? 'Yes' : 'No',
   ].join(' | ')).map((row) => `| ${row} |`),
   '',
-  '## Optimization constraints',
+  '## Delivery constraints',
   '',
-  '- Preserve source resolution, display aspect ratio, duration, and average frame rate.',
-  '- Remove audio only when the source is permanently muted and the visual timeline remains unchanged.',
-  '- Keep an MP4 fallback and place the `moov` atom before `mdat` for progressive playback.',
-  '- Generate poster images from representative frames before changing autoplay delivery.',
-  '- Accept optimized files only after structural checks and objective frame-comparison metrics pass.',
+  '- Preserve source resolution, display aspect ratio, duration, average frame rate, and approved hashes.',
+  '- Keep audio removed while every active usage is permanently muted.',
+  '- Keep MP4 fast start and the approved WebP posters.',
+  '- Keep source URLs deferred until the browser policy allows motion and data usage.',
+  '- Keep declarative autoplay removed; controller playback must respect viewport and user preferences.',
   '',
 ].join('\n');
 
@@ -238,10 +247,10 @@ await Promise.all([
 ]);
 
 console.log(
-  `Video metadata audit completed for ${records.length} active files (${formatBytes(report.summary.totalBytes)}).`,
+  `Video metadata audit completed for ${records.length} active files (${formatBytes(report.summary.totalBytes)}), deferred=${report.summary.deferredFiles}, autoplay=${report.summary.autoplayFiles}.`,
 );
 for (const record of records) {
   console.log(
-    `- ${record.path}: ${record.video.codec} ${record.video.width}x${record.video.height} @ ${record.video.averageFrameRate.toFixed(3)} fps, ${formatBytes(record.bytes)}, ${record.durationSeconds.toFixed(2)}s, audio=${record.audio ? 'yes' : 'no'}, fastStart=${record.mp4.fastStart ? 'yes' : 'no'}`,
+    `- ${record.path}: ${record.video.codec} ${record.video.width}x${record.video.height} @ ${record.video.averageFrameRate.toFixed(3)} fps, ${formatBytes(record.bytes)}, ${record.durationSeconds.toFixed(2)}s, deferred=${record.deferred ? 'yes' : 'no'}, preload=${record.preload}, audio=${record.audio ? 'yes' : 'no'}, fastStart=${record.mp4.fastStart ? 'yes' : 'no'}`,
   );
 }
