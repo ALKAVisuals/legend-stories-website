@@ -74,8 +74,29 @@ export function templatizeProductPage(input) {
   );
 }
 
+function normalizeKnownIconVectors(input) {
+  let html = String(input);
+
+  html = html.replace(
+    /(<button\s+id="cart-btn"[^>]*>)\s*<svg[\s\S]*?<\/svg>/,
+    '$1<svg data-template-icon="cart"></svg>',
+  );
+
+  for (const label of ['Instagram', 'Facebook', 'TikTok']) {
+    const pattern = new RegExp(
+      `(<a[^>]*aria-label="${label}"[^>]*>)\\s*<svg[\\s\\S]*?<\\/svg>`,
+    );
+    html = html.replace(
+      pattern,
+      `$1<svg data-template-icon="${label.toLowerCase()}"></svg>`,
+    );
+  }
+
+  return html;
+}
+
 export function normalizeTemplateStructure(template) {
-  return String(template)
+  return normalizeKnownIconVectors(template)
     .replace(/>\s+</g, '><')
     .trim();
 }
