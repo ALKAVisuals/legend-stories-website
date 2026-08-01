@@ -50,9 +50,15 @@ test('resolves products by slug and validates discount codes centrally', () => {
   assert.equal(quote.discount.code, 'LEGEND10');
   assert.equal(quote.discount.percent, 10);
   assert.equal(quote.discount.amount, 5);
-  assert.equal(quote.totals.discountedSubtotal, 44.96);
-  assert.equal(quote.totals.grandTotal, 48.91);
-  assert.equal(quote.amountInCents.grandTotal, 4891);
+  assert.equal(quote.totals.discountedSubtotal, 44.95);
+  assert.equal(quote.totals.grandTotal, 48.9);
+  assert.equal(quote.amountInCents.grandTotal, 4890);
+  assert.equal(
+    quote.amountInCents.subtotal
+      - quote.amountInCents.discount
+      + quote.amountInCents.shipping,
+    quote.amountInCents.grandTotal,
+  );
 });
 
 test('aggregates duplicate product lines without trusting client totals', () => {
