@@ -49,7 +49,8 @@ if (!workflow.includes('permissions:\n  contents: read')) {
   errors.push('The Neon integration workflow must keep repository permissions read-only.');
 }
 for (const secret of ['NEON_TEST_DATABASE_URL', 'NEON_TEST_MIGRATION_URL']) {
-  if (!workflow.includes(`${secret}: ${{ secrets.${secret} }}`)) {
+  const secretExpression = `${secret}: $` + `{{ secrets.${secret} }}`;
+  if (!workflow.includes(secretExpression)) {
     errors.push(`The workflow must source ${secret} only from GitHub secrets.`);
   }
   if (new RegExp(`echo[^\\n]*\\$${secret}`).test(workflow)) {
