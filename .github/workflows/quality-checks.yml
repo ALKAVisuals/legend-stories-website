@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: quality-${{ github.workflow }}-${{ github.ref }}
@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -34,6 +36,15 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Generate and commit live Batch 6 pages
+        run: |
+          node scripts/generate-managed-product-pages.mjs --batch=2026-batch-6 --write-live
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          node -e "const {products}=require('./data/products/catalog.json'); process.stdout.write(products.filter(({batch})=>batch && batch.id==='2026-batch-6').map(({page})=>page).join('\\0')+'\\0')" | xargs -0 git add --
+          git diff --cached --quiet || git commit -m "refactor: generate Batch 6 product pages"
+          git push
 
       - name: Run repository audits
         run: |
@@ -55,11 +66,8 @@ jobs:
       - name: Generate managed product pages
         run: npm run generate:managed-product-pages
 
-      - name: Validate managed product page previews
-        run: npm run validate:managed-product-pages
-
-      - name: Validate live Batch 3 generated output
-        run: npm run validate:batch3-pages:live
+      - name: Validate live managed product pages
+        run: npm run validate:managed-product-pages:live
 
       - name: Generate runtime product registry
         run: npm run generate:runtime-products
