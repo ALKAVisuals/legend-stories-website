@@ -7,14 +7,11 @@ const TARGET = join(ROOT, 'dist/js');
 
 async function main() {
   await mkdir(TARGET, { recursive: true });
-  await cp(SOURCE, TARGET, {
-    recursive: true,
-    filter: (source) => !source.endsWith('.mjs')
-  });
-  console.log('Copied classic JavaScript runtime files to dist/js/.');
+  await cp(SOURCE, TARGET, { recursive: true });
+  console.log('Copied classic JavaScript and browser modules to dist/js/.');
 }
 
 main().catch((error) => {
-  console.error('Failed to copy classic JavaScript runtime files:', error);
+  console.error('Failed to copy browser runtime files:', error);
   process.exit(1);
 });

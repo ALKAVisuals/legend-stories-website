@@ -4,8 +4,9 @@
   "description": "Legend Murals — Premium wall stickers & murals inspired by epic stories, history, and mythology.",
   "private": true,
   "scripts": {
+    "predev": "npm run generate:runtime-products",
     "dev": "vite",
-    "build": "vite build && node scripts/copy-static-js.mjs && node scripts/validate-build.mjs",
+    "build": "npm run generate:runtime-products && vite build && node scripts/copy-static-js.mjs && node scripts/validate-build.mjs",
     "preview": "vite preview",
     "audit": "node scripts/audit.mjs",
     "audit:strict": "node scripts/audit.mjs --strict",
@@ -16,10 +17,13 @@
     "audit:runtime": "node scripts/runtime-audit.mjs",
     "inventory:products": "node scripts/product-inventory.mjs",
     "generate:product-previews": "node scripts/generate-product-previews.mjs",
+    "generate:runtime-products": "node scripts/generate-runtime-product-registry.mjs",
     "validate:build": "node scripts/validate-build.mjs",
     "validate:catalog": "node scripts/validate-product-catalog.mjs",
+    "validate:related-products": "node scripts/validate-related-products-runtime.mjs",
+    "validate:runtime-products": "node scripts/validate-runtime-product-registry.mjs",
     "test": "node --test tests/*.test.mjs",
-    "quality": "npm run audit && npm run audit:css && npm run audit:dependencies && npm run audit:media && npm run audit:runtime && npm run inventory:products && npm run generate:product-previews && npm run validate:catalog && npm test && npm run build"
+    "quality": "npm run audit && npm run audit:css && npm run audit:dependencies && npm run audit:media && npm run audit:runtime && npm run inventory:products && npm run generate:runtime-products && npm run validate:runtime-products && npm run validate:related-products && npm run generate:product-previews && npm run validate:catalog && npm test && npm run build"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.18",
