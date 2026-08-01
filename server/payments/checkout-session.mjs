@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto';
 
 import { createAuthoritativeOrderQuote } from '../commerce/order-quote.mjs';
 
+const REFERENCE_VERSION = 1;
+
 export class CheckoutSessionError extends Error {
   constructor(code, message, details = {}) {
     super(message);
@@ -15,18 +17,39 @@ function fail(code, message, details) {
   throw new CheckoutSessionError(code, message, details);
 }
 
+function hasControlCharacters(value) {
+  return /[\u0000-\u001F\u007F]/.test(value);
+}
+
 function requiredText(value, field, maxLength) {
   const normalized = String(value || '').trim();
   if (!normalized) fail('INVALID_CUSTOMER', `${field} is required.`, { field });
   if (normalized.length > maxLength) {
     fail('INVALID_CUSTOMER', `${field} is too long.`, { field, maxLength });
   }
+  if (hasControlCharacters(normalized)) {
+    fail('INVALID_CUSTOMER', `${field} contains invalid characters.`, { field });
+  }
   return normalized;
 }
 
-function optionalText(value, maxLength) {
+function optionalText(value, field, maxLength) {
   const normalized = String(value || '').trim();
-  return normalized.slice(0, maxLength);
+  if (normalized.length > maxLength) {
+    fail('INVALID_CUSTOMER', `${field} is too long.`, { field, maxLength });
+  }
+  if (hasControlCharacters(normalized)) {
+    fail('INVALID_CUSTOMER', `${field} contains invalid characters.`, { field });
+  }
+  return normalized;
+}
+
+function normalizeCountryCode(value, field = 'Country') {
+  const country = String(value || '').trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(country)) {
+    fail('INVALID_COUNTRY', `${field} must be a two-letter country code.`, { field });
+  }
+  return country;
 }
 
 function normalizeUrl(value, label) {
@@ -40,13 +63,17 @@ function normalizeUrl(value, label) {
   if (url.protocol !== 'https:' && !(localDevelopment && url.protocol === 'http:')) {
     fail('INVALID_CHECKOUT_URL', `${label} must use HTTPS.`);
   }
+  if (url.username || url.password) {
+    fail('INVALID_CHECKOUT_URL', `${label} must not contain embedded credentials.`);
+  }
   return url.toString();
 }
 
 function successUrlWithSessionId(value) {
-  const normalized = normalizeUrl(value, 'Checkout success URL');
-  const separator = normalized.includes('?') ? '&' : '?';
-  return `${normalized}${separator}session_id={CHECKOUT_SESSION_ID}`;
+  const url = new URL(normalizeUrl(value, 'Checkout success URL'));
+  const placeholder = 'LEGEND_CHECKOUT_SESSION_ID';
+  url.searchParams.set('session_id', placeholder);
+  return url.toString().replace(placeholder, '{CHECKOUT_SESSION_ID}');
 }
 
 export function normalizeCheckoutCustomer(customer = {}) {
@@ -57,20 +84,15 @@ export function normalizeCheckoutCustomer(customer = {}) {
     fail('INVALID_CUSTOMER', 'Email address is invalid.', { field: 'email' });
   }
 
-  const country = requiredText(customer.country, 'Country', 2).toUpperCase();
-  if (!/^[A-Z]{2}$/.test(country)) {
-    fail('INVALID_CUSTOMER', 'Country must be a two-letter country code.', { field: 'country' });
-  }
-
   return Object.freeze({
     firstname,
     lastname,
     email,
     street: requiredText(customer.street, 'Street', 160),
-    line2: optionalText(customer.line2, 160),
+    line2: optionalText(customer.line2, 'Address line 2', 160),
     zip: requiredText(customer.zip, 'Postal code', 32),
     city: requiredText(customer.city, 'City', 100),
-    country,
+    country: normalizeCountryCode(customer.country),
   });
 }
 
@@ -101,7 +123,7 @@ export function allocateDiscountCents(quote) {
     allocated += line.allocation;
   }
 
-  let remaining = discount - allocated;
+  const remaining = discount - allocated;
   const ranked = [...lines].sort((left, right) => {
     if (right.remainder !== left.remainder) return right.remainder - left.remainder;
     return left.page.localeCompare(right.page);
@@ -113,7 +135,7 @@ export function allocateDiscountCents(quote) {
   return Object.freeze(lines.map((line) => Object.freeze(line)));
 }
 
-function buildStripeLineItems(quote) {
+function buildStripeLineItems(quote, deliveryCountry) {
   const allocations = new Map(
     allocateDiscountCents(quote).map((line) => [line.page, line.allocation]),
   );
@@ -154,7 +176,8 @@ function buildStripeLineItems(quote) {
           name: `Shipping — ${quote.shipping.zone}`,
           metadata: {
             type: 'shipping',
-            country: quote.shipping.countryCode,
+            delivery_country: deliveryCountry,
+            shipping_zone_code: quote.shipping.countryCode,
           },
         },
       },
@@ -176,19 +199,30 @@ function buildStripeLineItems(quote) {
   return lineItems;
 }
 
-function createReference(quote, customer) {
+function createReference({ quote, customer, successUrl, cancelUrl, deliveryCountry }) {
   const canonical = JSON.stringify({
-    items: quote.items.map((item) => ({ page: item.page, quantity: item.quantity })),
-    country: quote.shipping.countryCode,
-    discount: quote.discount.code,
-    customer: {
-      email: customer.email,
-      street: customer.street,
-      line2: customer.line2,
-      zip: customer.zip,
-      city: customer.city,
-      country: customer.country,
+    version: REFERENCE_VERSION,
+    currency: quote.currency,
+    items: quote.items.map((item) => ({
+      page: item.page,
+      slug: item.slug,
+      name: item.name,
+      unitPrice: item.unitPrice,
+      quantity: item.quantity,
+      lineTotal: item.lineTotal,
+    })),
+    discount: quote.discount,
+    shipping: {
+      deliveryCountry,
+      zoneCode: quote.shipping.countryCode,
+      zone: quote.shipping.zone,
+      cost: quote.shipping.cost,
+      freeFrom: quote.shipping.freeFrom,
     },
+    totals: quote.amountInCents,
+    customer,
+    successUrl,
+    cancelUrl,
   });
   return createHash('sha256').update(canonical).digest('hex');
 }
@@ -199,10 +233,14 @@ export function buildStripeCheckoutSessionPayload({
   successUrl,
   cancelUrl,
   reference,
+  deliveryCountry = customer.country,
 }) {
+  const normalizedSuccessUrl = normalizeUrl(successUrl, 'Checkout success URL');
+  const normalizedCancelUrl = normalizeUrl(cancelUrl, 'Checkout cancel URL');
   const metadata = {
     order_reference: reference,
-    country_code: quote.shipping.countryCode,
+    delivery_country: deliveryCountry,
+    shipping_zone_code: quote.shipping.countryCode,
     currency: quote.currency,
     item_count: String(quote.items.length),
     quantity_total: String(quote.items.reduce((sum, item) => sum + item.quantity, 0)),
@@ -213,9 +251,9 @@ export function buildStripeCheckoutSessionPayload({
     mode: 'payment',
     customer_email: customer.email,
     client_reference_id: reference,
-    success_url: successUrlWithSessionId(successUrl),
-    cancel_url: normalizeUrl(cancelUrl, 'Checkout cancel URL'),
-    line_items: buildStripeLineItems(quote),
+    success_url: successUrlWithSessionId(normalizedSuccessUrl),
+    cancel_url: normalizedCancelUrl,
+    line_items: buildStripeLineItems(quote, deliveryCountry),
     metadata,
     payment_intent_data: {
       metadata,
@@ -226,7 +264,7 @@ export function buildStripeCheckoutSessionPayload({
           ...(customer.line2 ? { line2: customer.line2 } : {}),
           postal_code: customer.zip,
           city: customer.city,
-          country: customer.country,
+          country: deliveryCountry,
         },
       },
     },
@@ -237,11 +275,14 @@ function validateStripeSession(session, mode) {
   if (!session?.id || !session?.url) {
     fail('INVALID_STRIPE_SESSION', 'Stripe returned an incomplete Checkout Session.');
   }
-  if (mode === 'test' && !String(session.id).startsWith('cs_test_')) {
+  if (!['test', 'live'].includes(mode)) {
+    fail('INVALID_STRIPE_CLIENT', 'Stripe client mode must be test or live.');
+  }
+  if (mode === 'test' && (!String(session.id).startsWith('cs_test_') || session.livemode)) {
     fail('INVALID_STRIPE_SESSION', 'Test mode requires a Stripe test Checkout Session.');
   }
-  if (mode === 'test' && session.livemode) {
-    fail('INVALID_STRIPE_SESSION', 'Stripe returned a live session while test mode is active.');
+  if (mode === 'live' && (!String(session.id).startsWith('cs_live_') || !session.livemode)) {
+    fail('INVALID_STRIPE_SESSION', 'Live mode requires a Stripe live Checkout Session.');
   }
 
   let checkoutUrl;
@@ -267,19 +308,29 @@ export async function createHostedCheckoutSession({
     fail('INVALID_STRIPE_CLIENT', 'A configured Stripe client is required.');
   }
 
+  const deliveryCountry = normalizeCountryCode(request?.countryCode || 'NL', 'Shipping country');
   const quote = createAuthoritativeOrderQuote(request, catalogProducts);
   const customer = normalizeCheckoutCustomer(customerInput);
-  if (customer.country !== quote.shipping.countryCode) {
-    fail('COUNTRY_MISMATCH', 'Customer country does not match the quoted shipping country.');
+  if (customer.country !== deliveryCountry) {
+    fail('COUNTRY_MISMATCH', 'Customer country does not match the requested shipping country.');
   }
 
-  const reference = createReference(quote, customer);
+  const normalizedSuccessUrl = normalizeUrl(successUrl, 'Checkout success URL');
+  const normalizedCancelUrl = normalizeUrl(cancelUrl, 'Checkout cancel URL');
+  const reference = createReference({
+    quote,
+    customer,
+    successUrl: normalizedSuccessUrl,
+    cancelUrl: normalizedCancelUrl,
+    deliveryCountry,
+  });
   const payload = buildStripeCheckoutSessionPayload({
     quote,
     customer,
-    successUrl,
-    cancelUrl,
+    successUrl: normalizedSuccessUrl,
+    cancelUrl: normalizedCancelUrl,
     reference,
+    deliveryCountry,
   });
   const session = await stripeClient.createCheckoutSession(payload, {
     idempotencyKey: `legend-checkout-${reference}`,
