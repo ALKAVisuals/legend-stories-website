@@ -16,6 +16,7 @@ This document establishes the technical baseline before storefront refactors or 
 - Recent changes were committed directly to `main`
 - No pull-request history existed before this audit
 - Phase 0 introduced the first draft-PR workflow on branch `audit/phase-0-baseline`
+- GitHub Actions now runs the repository audit and production build for pull requests into `main`
 
 ### Build architecture
 
@@ -25,7 +26,7 @@ This document establishes the technical baseline before storefront refactors or 
 - Vanilla JavaScript
 - Terser minification
 - No sourcemaps
-- No lint, test, validation or audit scripts in the current package configuration
+- Phase 0 adds report-only repository audit tooling
 
 ### Storefront architecture
 
@@ -64,16 +65,31 @@ This document establishes the technical baseline before storefront refactors or 
 
 | Area | Current status | Evidence required before exit |
 |---|---|---|
-| Build | Configuration inspected | Successful clean production build |
-| Internal links | Not yet automated | Link checker report |
-| Missing assets | Not yet automated | Asset-reference report |
-| SEO consistency | Manual issues confirmed | Metadata report across all HTML pages |
-| Repository media | High-level risk confirmed | Largest-file and unused-file inventory |
+| Build | GitHub Actions configured | Successful PR production build |
+| Internal links | Automated report added | Review generated report |
+| Missing assets | Automated report added | Review generated report |
+| SEO consistency | Automated report added | Review metadata findings |
+| Repository media | Automated size inventory added | Review largest-file findings |
 | Cart path | Code inspected | Repeatable functional test |
 | Checkout path | Browser-owned logic confirmed | Defined backend/payment validation strategy |
 | Mobile UX | Markup inspected | Real-device or browser emulation test |
 | Lighthouse | Deferred | Mobile and desktop reports on a preview |
 | Production headers | Deferred | Hosting-response inspection |
+
+## Automated pull-request checks
+
+The workflow `.github/workflows/quality-checks.yml` runs for pull requests into `main` and can also be started manually.
+
+It performs:
+
+1. repository checkout;
+2. Node.js 20 setup;
+3. deterministic `npm ci` installation;
+4. `npm run audit`;
+5. `npm run build`;
+6. audit-report artifact upload.
+
+Strict audit mode is intentionally not yet a required check because the current baseline contains known issues. Once those issues are resolved, `npm run audit:strict` can replace report-only mode.
 
 ## Phase 0 exit criteria
 
@@ -86,7 +102,8 @@ Phase 0 is complete when:
 5. the largest media assets and categories are known;
 6. the cart and checkout risks are documented;
 7. implementation work is ordered by risk and dependency;
-8. all future work proceeds through branches and pull requests.
+8. all future work proceeds through branches and pull requests;
+9. the pull-request quality workflow completes successfully.
 
 ## Current priority order
 
