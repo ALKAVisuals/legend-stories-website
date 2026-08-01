@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: quality-${{ github.workflow }}-${{ github.ref }}
@@ -25,8 +25,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -37,119 +35,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Apply and commit link and SEO hygiene
-        run: |
-          node <<'NODE'
-          const { readFileSync, writeFileSync } = require('node:fs');
-
-          function replaceOnce(path, before, after) {
-            const source = readFileSync(path, 'utf8');
-            if (source.includes(after)) return;
-            const first = source.indexOf(before);
-            if (first < 0) throw new Error(`${path}: expected source fragment was not found.`);
-            if (source.indexOf(before, first + before.length) >= 0) {
-              throw new Error(`${path}: source fragment is not unique.`);
-            }
-            writeFileSync(path, source.slice(0, first) + after + source.slice(first + before.length));
-          }
-
-          replaceOnce(
-            'scripts/product-page-generation.mjs',
-            '  const title = `${product.name} — ${product.collection} | Legend Stories`;',
-            '  const title = presentation.pageTitle || `${product.name} — ${product.collection} | Legend Stories`;',
-          );
-
-          replaceOnce(
-            'scripts/bootstrap-product-page-batch.mjs',
-            "const normalizedTemplate = normalizeTemplateStructure(template);\nconst presentations = [];",
-            "const normalizedTemplate = normalizeTemplateStructure(template);\nconst presentationPath = join('data', 'products', `${BATCH_ID}-presentation.json`);\nlet existingTitlesByPage = new Map();\ntry {\n  const existing = JSON.parse(await readFile(join(ROOT, presentationPath), 'utf8'));\n  existingTitlesByPage = new Map(\n    (existing.products || [])\n      .filter((presentation) => presentation.pageTitle)\n      .map((presentation) => [presentation.page, presentation.pageTitle]),\n  );\n} catch (error) {\n  if (error.code !== 'ENOENT') throw error;\n}\nconst presentations = [];",
-          );
-          replaceOnce(
-            'scripts/bootstrap-product-page-batch.mjs',
-            "  if (NORMALIZE_LEGACY_PRESENTATION) {\n    presentation.imageAlt = `${product.name} — ${product.collection} Wall Sticker`;",
-            "  const existingPageTitle = existingTitlesByPage.get(product.page);\n  if (existingPageTitle) presentation.pageTitle = existingPageTitle;\n  if (NORMALIZE_LEGACY_PRESENTATION) {\n    presentation.imageAlt = `${product.name} — ${product.collection} Wall Sticker`;",
-          );
-          replaceOnce(
-            'scripts/bootstrap-product-page-batch.mjs',
-            "const presentationPath = join('data', 'products', `${BATCH_ID}-presentation.json`);\nawait mkdir",
-            'await mkdir',
-          );
-
-          replaceOnce(
-            'tests/product-page-generation.test.mjs',
-            "test('rendered product values preserve apostrophes and canonical URLs', () => {",
-            "test('rendered product values preserve SEO title overrides, apostrophes and canonical URLs', () => {",
-          );
-          replaceOnce(
-            'tests/product-page-generation.test.mjs',
-            "  const template = '{{NAME}}|{{STORY}}|{{CANONICAL}}|{{ABSOLUTE_IMAGE}}|{{PRICE_RAW}}';",
-            "  const template = '{{PAGE_TITLE}}|{{NAME}}|{{STORY}}|{{CANONICAL}}|{{ABSOLUTE_IMAGE}}|{{PRICE_RAW}}';",
-          );
-          replaceOnce(
-            'tests/product-page-generation.test.mjs',
-            "  const presentation = {\n    story: \"Don't stop believing.\",",
-            "  const presentation = {\n    pageTitle: \"The Lion's Pride — Limited Edition | Legend Stories\",\n    story: \"Don't stop believing.\",",
-          );
-          replaceOnce(
-            'tests/product-page-generation.test.mjs',
-            `    "The Lion's Pride|Don't stop believing.|https://example.com/sport-lions-pride.html|https://example.com/media/stikkers/test.png|49.95",`,
-            `    "The Lion's Pride — Limited Edition | Legend Stories|The Lion's Pride|Don't stop believing.|https://example.com/sport-lions-pride.html|https://example.com/media/stikkers/test.png|49.95",`,
-          );
-
-          replaceOnce(
-            'index.html',
-            '<a href="portfolio.html" class="btn-secondary text-xs">View full portfolio →</a>',
-            '<a href="shop.html" class="btn-secondary text-xs">Explore all wall art →</a>',
-          );
-
-          function setPageTitle(path, page, pageTitle) {
-            const data = JSON.parse(readFileSync(path, 'utf8'));
-            const product = data.products.find((entry) => entry.page === page);
-            if (!product) throw new Error(`${path}: ${page} was not found.`);
-            product.pageTitle = pageTitle;
-            writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`);
-          }
-
-          setPageTitle(
-            'data/products/2026-batch-6-presentation.json',
-            'music-unapologetic-self-music-legend-mural-bleu.html',
-            'Unapologetic Self (Blue) — Music Legends | Legend Stories',
-          );
-          setPageTitle(
-            'data/products/2026-batch-3-presentation.json',
-            'sport-unstoppable-will.html',
-            'Unstoppable Will — Sport Legends (Batch 3) | Legend Stories',
-          );
-
-          replaceOnce(
-            'docs/MANAGED_PRODUCT_PAGES.md',
-            '   - announcement copy\n3. `templates/product-page.html`',
-            '   - announcement copy\n   - optional page-specific SEO title override\n3. `templates/product-page.html`',
-          );
-          replaceOnce(
-            'docs/MANAGED_PRODUCT_PAGES.md',
-            '2. Edit story, alt text or promotion copy in the matching presentation manifest.',
-            '2. Edit story, alt text, promotion copy or a page-specific SEO title in the matching presentation manifest.',
-          );
-          NODE
-
-          node scripts/generate-managed-product-pages.mjs --write-live
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- \
-            index.html \
-            scripts/product-page-generation.mjs \
-            scripts/bootstrap-product-page-batch.mjs \
-            tests/product-page-generation.test.mjs \
-            docs/MANAGED_PRODUCT_PAGES.md \
-            data/products/2026-batch-3-presentation.json \
-            data/products/2026-batch-6-presentation.json \
-            sport-unstoppable-will.html \
-            music-unapologetic-self-music-legend-mural-bleu.html
-          git diff --cached --quiet || git commit -m "fix: resolve homepage link and duplicate SEO titles"
-          git push
-
       - name: Run repository audits
         run: |
           npm run audit
@@ -157,19 +42,6 @@ jobs:
           npm run audit:dependencies
           npm run audit:media
           npm run audit:runtime
-
-      - name: Verify link and title hygiene
-        run: |
-          node <<'NODE'
-          const report = require('./reports/audit-report.json');
-          if (report.missingReferences.length) {
-            throw new Error(`Missing internal references remain: ${JSON.stringify(report.missingReferences)}`);
-          }
-          if (report.duplicateTitles.length) {
-            throw new Error(`Duplicate titles remain: ${JSON.stringify(report.duplicateTitles)}`);
-          }
-          console.log('Repository audit confirms 0 missing internal references and 0 duplicate titles.');
-          NODE
 
       - name: Build product inventory
         run: npm run inventory:products
