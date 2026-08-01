@@ -79,6 +79,9 @@ jobs:
       - name: Validate browser Checkout integration
         run: npm run validate:browser-checkout
 
+      - name: Validate order store conformance contract
+        run: npm run validate:order-store
+
       - name: Validate durable pending Checkout records
         run: npm run validate:checkout-persistence
 
