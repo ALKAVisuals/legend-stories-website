@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 const ROOT = process.cwd();
 const DATA_FILE = join(ROOT, 'data/products/2026-batch-3-poc.json');
+const GENERATED_DIR = join(ROOT, 'generated/product-poc');
 const REQUIRED_PRODUCT_FIELDS = [
   'slug', 'name', 'category', 'collection', 'batchId', 'price',
   'currency', 'status', 'page', 'image', 'description'
@@ -42,9 +43,20 @@ async function main() {
 
     await access(join(ROOT, product.page));
     await access(join(ROOT, product.image));
+
+    const generatedPath = join(GENERATED_DIR, product.page);
+    const generated = await readFile(generatedPath, 'utf8');
+    const expectedTitle = `<title>${product.name} — ${product.collection} | Legend Stories</title>`;
+    const expectedBatch = `data-batch-id="${product.batchId}"`;
+    const expectedSlug = `data-product-slug="${product.slug}"`;
+
+    if (!generated.includes(expectedTitle)) fail(`${product.slug} generated title does not match product data.`);
+    if (!generated.includes(expectedBatch)) fail(`${product.slug} generated batch metadata is missing.`);
+    if (!generated.includes(expectedSlug)) fail(`${product.slug} generated slug metadata is missing.`);
+    if (!generated.includes(product.image)) fail(`${product.slug} generated image path does not match product data.`);
   }
 
-  console.log(`Product data validation passed for ${products.length} products in ${batch.id}.`);
+  console.log(`Product data and generated output validation passed for ${products.length} products in ${batch.id}.`);
 }
 
 main().catch((error) => {
