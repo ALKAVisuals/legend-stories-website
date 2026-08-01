@@ -49,6 +49,12 @@ jobs:
       - name: Validate full product catalog
         run: npm run validate:full-catalog
 
+      - name: Generate Batch 3 product pages
+        run: npm run generate:batch3-pages
+
+      - name: Validate live Batch 3 product pages
+        run: npm run validate:batch3-pages:live
+
       - name: Generate runtime product registry
         run: npm run generate:runtime-products
 
