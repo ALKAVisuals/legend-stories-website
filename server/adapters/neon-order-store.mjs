@@ -1,5 +1,12 @@
 const REFERENCE_PATTERN = /^[a-f0-9]{64}$/;
 const STRIPE_EVENT_PATTERN = /^evt_[A-Za-z0-9_-]+$/;
+const ORDER_STATUSES = new Set([
+  'payment_pending',
+  'payment_processing',
+  'payment_failed',
+  'expired',
+  'paid',
+]);
 const IMMUTABLE_ORDER_FIELDS = Object.freeze([
   'reference',
   'amountTotal',
@@ -126,49 +133,78 @@ export async function createDefaultNeonClient(connectionString) {
   return new neonModule.Client({ connectionString });
 }
 
-function rowToOrder(row) {
-  if (!row || typeof row !== 'object') return null;
+function normalizePendingOrder(orderInput) {
+  const source = clone(orderInput || {});
+  const status = String(source.status || '');
+  if (!ORDER_STATUSES.has(status)) {
+    fail('INVALID_ORDER_STORE_RECORD', 'Pending order status is invalid.', { status });
+  }
+
   const order = {
-    reference: validateReference(row.reference),
-    status: String(row.status || ''),
-    amountTotal: integer(row.amount_total, 'amount total'),
-    currency: String(row.currency || '').toUpperCase(),
-    mode: String(row.mode || ''),
-    paymentSessionId: String(row.payment_session_id || ''),
-    createdAt: integer(row.created_at, 'created timestamp'),
-    updatedAt: integer(row.updated_at, 'updated timestamp'),
-    paidAt: integer(row.paid_at, 'paid timestamp', { nullable: true }),
+    reference: validateReference(source.reference),
+    status,
+    amountTotal: integer(source.amountTotal, 'amount total'),
+    currency: String(source.currency || '').toUpperCase(),
+    mode: String(source.mode || ''),
+    paymentSessionId: String(source.paymentSessionId || ''),
+    createdAt: integer(source.createdAt, 'created timestamp'),
+    updatedAt: integer(source.updatedAt, 'updated timestamp'),
+    paidAt: integer(source.paidAt, 'paid timestamp', { nullable: true }),
     lastStripeEventCreated: integer(
-      row.last_stripe_event_created ?? 0,
+      source.lastStripeEventCreated ?? 0,
       'last Stripe event timestamp',
     ),
-    version: integer(row.version, 'version'),
-    customer: clone(row.customer),
-    items: clone(row.items),
-    discount: clone(row.discount),
-    shipping: clone(row.shipping),
-    totals: clone(row.totals),
+    version: integer(source.version, 'version'),
+    customer: clone(source.customer),
+    items: clone(source.items),
+    discount: clone(source.discount),
+    shipping: clone(source.shipping),
+    totals: clone(source.totals),
   };
-  if (row.last_stripe_event_id) order.lastStripeEventId = String(row.last_stripe_event_id);
-  if (row.last_stripe_event_type) order.lastStripeEventType = String(row.last_stripe_event_type);
+  if (source.lastStripeEventId) order.lastStripeEventId = String(source.lastStripeEventId);
+  if (source.lastStripeEventType) order.lastStripeEventType = String(source.lastStripeEventType);
   return order;
+}
+
+function rowToOrder(row) {
+  if (!row || typeof row !== 'object') return null;
+  return normalizePendingOrder({
+    reference: row.reference,
+    status: row.status,
+    amountTotal: row.amount_total,
+    currency: row.currency,
+    mode: row.mode,
+    paymentSessionId: row.payment_session_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    paidAt: row.paid_at,
+    lastStripeEventId: row.last_stripe_event_id || undefined,
+    lastStripeEventType: row.last_stripe_event_type || undefined,
+    lastStripeEventCreated: row.last_stripe_event_created ?? 0,
+    version: row.version,
+    customer: row.customer,
+    items: row.items,
+    discount: row.discount,
+    shipping: row.shipping,
+    totals: row.totals,
+  });
 }
 
 function pendingOrderValues(order) {
   return [
-    validateReference(order.reference),
+    order.reference,
     order.status,
-    integer(order.amountTotal, 'amount total'),
-    String(order.currency || '').toUpperCase(),
+    order.amountTotal,
+    order.currency,
     order.mode,
     order.paymentSessionId,
-    integer(order.createdAt, 'created timestamp'),
-    integer(order.updatedAt, 'updated timestamp'),
-    integer(order.paidAt, 'paid timestamp', { nullable: true }),
+    order.createdAt,
+    order.updatedAt,
+    order.paidAt,
     order.lastStripeEventId || null,
     order.lastStripeEventType || null,
-    integer(order.lastStripeEventCreated ?? 0, 'last Stripe event timestamp'),
-    integer(order.version, 'version'),
+    order.lastStripeEventCreated,
+    order.version,
     clone(order.customer),
     clone(order.items),
     clone(order.discount),
@@ -195,6 +231,9 @@ function assertSafeUpdate(current, updated) {
     if (!sameValue(updated[field], current[field])) {
       fail('INVALID_ORDER_UPDATE', `The order update changed immutable ${field}.`, { field });
     }
+  }
+  if (!ORDER_STATUSES.has(updated.status)) {
+    fail('INVALID_ORDER_UPDATE', 'The order update status is invalid.');
   }
   if (updated.version !== current.version + 1) {
     fail('INVALID_ORDER_UPDATE', 'The order update must increment version exactly once.');
@@ -341,7 +380,7 @@ export function createNeonOrderStore({
 
   return Object.freeze({
     async persistPendingCheckout(orderInput) {
-      const expected = clone(orderInput);
+      const expected = normalizePendingOrder(orderInput);
       return withSerializableTransaction(clientFactory, databaseUrl, async (client) => {
         const inserted = await client.query(INSERT_PENDING_ORDER, pendingOrderValues(expected));
         if (inserted.rows?.length === 1) {
@@ -352,7 +391,7 @@ export function createNeonOrderStore({
 
         const existingResult = await client.query(
           SELECT_ORDER_FOR_UPDATE,
-          [validateReference(expected.reference)],
+          [expected.reference],
         );
         const existing = rowToOrder(existingResult.rows?.[0]);
         if (!existing) {
