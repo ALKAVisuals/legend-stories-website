@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "batchId": "2026-batch-1",
+  "template": {
+    "path": "templates/product-page.html",
+    "referencePage": "combat-beast-within.html",
+    "sha256": "a21bb24d9c6e08e571d45bb461003acf53f8a1a785f06dbc72862a36d492e71d"
+  },
+  "products": [
+    {
+      "page": "combat-beast-within.html",
+      "story": "Unleash the power you never knew you had. Raw strength, raw talent. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "The Beast Within — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "combat-iron-discipline.html",
+      "story": "Strength forged through relentless training. Every rep builds character. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "Iron Discipline — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "combat-stone-face.html",
+      "story": "Calm under pressure, deadly when challenged. The warrior's mask of focus. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "The Stone Face — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "combat-unfazed-fighter.html",
+      "story": "Never flinch, never break. The champion's mindset in matte vinyl. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "The Unfazed Fighter — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-beyond-pop-music.html",
+      "story": "Music that transcends trends. A celebration of artistry over algorithm. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "Beyond Pop Music — Music Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-creative-vision.html",
+      "story": "Seeing the future of sound through creative eyes. Innovation in every note. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "Creative Vision — Music Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-eternal-will.html",
+      "story": "The unbreakable spirit that keeps the music alive. Rap anthem of resilience. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "Eternal Will — Music Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-mental-freedom.html",
+      "story": "Breaking mental chains through reggae rhythms. Freedom is a state of mind. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "Mental Freedom — Music Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-pure-soul.html",
+      "story": "The soul laid bare in purple hues. Music for the heart, not the mind. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "Pure Soul — Music Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-rebel-spirit.html",
+      "story": "Breaking norms, one beat at a time. The icon of nonconformity. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "The Rebel Spirit — Music Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-respect-code-green.html",
+      "story": "The respect code in a fresh green hue. Growth through respect. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "The Respect Code (Green) — Music Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-respect-code.html",
+      "story": "Earning respect through skill and dedication. The foundation of greatness. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "The Respect Code — Music Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-west-coast-loyalty-grey.html",
+      "story": "The same loyalty, in monochrome. Timeless style for the modern artist. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "West Coast Loyalty (Grey) — Music Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-west-coast-loyalty.html",
+      "story": "Where the sun sets on loyalty. Hip-hop anthem of the coast. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "West Coast Loyalty — Music Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "sport-clutch-player.html",
+      "story": "When the game's on the line, the clutch player delivers. That's you. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "The Clutch Player — Sport Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "sport-game-changer.html",
+      "story": "Art meets sport in this unique fusion. Changing the game one stroke at a time. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "The Game Changer — Sport Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "sport-king-of-pitch.html",
+      "story": "Football royalty in your wall. Command the beautiful game. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "The King of Pitch — Sport Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "sport-winners-mindset.html",
+      "story": "Basketball greatness starts in the mind. Every champion believes they can. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "The Winner's Mindset — Sport Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "wisdom-material-illusion.html",
+      "story": "Understanding that what you see is not always what you get. The mind sees deeper than eyes. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "Material Illusion — Wisdom Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "wisdom-rule-breaker.html",
+      "story": "Breaking barriers to create new paths. Progress comes from those who defy convention. Premium matte vinyl, sharp details, easy peel-and-stick.",
+      "imageAlt": "Rule Breaker — Wisdom Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 1 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    }
+  ]
+}
