@@ -7,6 +7,12 @@
       "expectedProductCount": 20,
       "presentationFile": "data/products/2026-batch-3-presentation.json",
       "outputDirectory": "generated/product-pages/batch-3"
+    },
+    {
+      "id": "2026-batch-6",
+      "expectedProductCount": 12,
+      "presentationFile": "data/products/2026-batch-6-presentation.json",
+      "outputDirectory": "generated/product-pages/batch-6"
     }
   ]
 }
