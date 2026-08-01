@@ -73,6 +73,9 @@ jobs:
       - name: Validate authoritative order quotes
         run: npm run validate:order-security
 
+      - name: Validate Stripe test Checkout boundary
+        run: npm run validate:stripe-checkout
+
       - name: Generate Batch 3 previews
         run: npm run generate:product-previews
 
