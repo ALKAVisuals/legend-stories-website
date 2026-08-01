@@ -1,0 +1,245 @@
+import { createAuthoritativeOrderQuote } from '../commerce/order-quote.mjs';
+import {
+  createHostedCheckoutSession,
+  normalizeCheckoutCustomer,
+} from '../payments/checkout-session.mjs';
+import { createPendingOrderRecord } from './order-status.mjs';
+
+const REFERENCE_PATTERN = /^[a-f0-9]{64}$/;
+
+export class CheckoutPersistenceError extends Error {
+  constructor(code, message, details = {}) {
+    super(message);
+    this.name = 'CheckoutPersistenceError';
+    this.code = code;
+    this.details = details;
+  }
+}
+
+function fail(code, message, details) {
+  throw new CheckoutPersistenceError(code, message, details);
+}
+
+function requireCheckoutStore(checkoutStore) {
+  if (!checkoutStore || typeof checkoutStore.persistPendingCheckout !== 'function') {
+    fail(
+      'CHECKOUT_STORE_NOT_CONFIGURED',
+      'Durable pending-order storage is not configured.',
+    );
+  }
+  return checkoutStore;
+}
+
+function normalizeDeliveryCountry(value) {
+  const country = String(value || '').trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(country)) {
+    fail('INVALID_CHECKOUT_RECORD', 'The delivery country is invalid.');
+  }
+  return country;
+}
+
+function canonicalize(value) {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [key, canonicalize(value[key])]),
+    );
+  }
+  return value;
+}
+
+function sameImmutableValue(left, right) {
+  return JSON.stringify(canonicalize(left)) === JSON.stringify(canonicalize(right));
+}
+
+function validateCheckoutResult(checkout) {
+  if (!REFERENCE_PATTERN.test(String(checkout?.reference || ''))) {
+    fail('INVALID_CHECKOUT_RECORD', 'The Checkout reference is invalid.');
+  }
+  if (!['test', 'live'].includes(checkout?.mode)) {
+    fail('INVALID_CHECKOUT_RECORD', 'The Checkout mode is invalid.');
+  }
+
+  const expectedPrefix = checkout.mode === 'live' ? 'cs_live_' : 'cs_test_';
+  if (!String(checkout?.sessionId || '').startsWith(expectedPrefix)) {
+    fail('INVALID_CHECKOUT_RECORD', 'The Checkout Session does not match the Checkout mode.');
+  }
+
+  let checkoutUrl;
+  try {
+    checkoutUrl = new URL(String(checkout?.url || ''));
+  } catch {
+    fail('INVALID_CHECKOUT_RECORD', 'The Stripe Checkout URL is invalid.');
+  }
+  if (checkoutUrl.protocol !== 'https:' || checkoutUrl.hostname !== 'checkout.stripe.com') {
+    fail('INVALID_CHECKOUT_RECORD', 'The Stripe Checkout URL is not trusted.');
+  }
+
+  const grandTotal = Number(checkout?.quote?.grandTotal);
+  if (!Number.isInteger(grandTotal) || grandTotal < 0) {
+    fail('INVALID_CHECKOUT_RECORD', 'The Checkout total is invalid.');
+  }
+  if (String(checkout?.quote?.currency || '').toUpperCase() !== 'EUR') {
+    fail('INVALID_CHECKOUT_RECORD', 'The Checkout currency is invalid.');
+  }
+}
+
+function createPendingCheckoutRecord({
+  checkout,
+  quote,
+  customer,
+  deliveryCountry,
+  createdAt,
+}) {
+  if (checkout.quote.grandTotal !== quote.amountInCents.grandTotal) {
+    fail('CHECKOUT_AMOUNT_MISMATCH', 'The Checkout result does not match the authoritative quote.');
+  }
+  if (checkout.quote.currency !== quote.currency) {
+    fail('CHECKOUT_CURRENCY_MISMATCH', 'The Checkout result currency does not match the quote.');
+  }
+
+  const pending = createPendingOrderRecord({
+    reference: checkout.reference,
+    amountTotal: checkout.quote.grandTotal,
+    currency: checkout.quote.currency,
+    mode: checkout.mode,
+    paymentSessionId: checkout.sessionId,
+    createdAt,
+  });
+
+  return Object.freeze({
+    ...pending,
+    customer: Object.freeze({ ...customer }),
+    items: Object.freeze(quote.items.map((item) => Object.freeze({
+      slug: item.slug,
+      page: item.page,
+      name: item.name,
+      image: item.image,
+      unitPrice: item.unitPrice,
+      quantity: item.quantity,
+      lineTotal: item.lineTotal,
+    }))),
+    discount: Object.freeze({ ...quote.discount }),
+    shipping: Object.freeze({
+      deliveryCountry,
+      zoneCode: quote.shipping.countryCode,
+      zone: quote.shipping.zone,
+      cost: quote.shipping.cost,
+      freeFrom: quote.shipping.freeFrom,
+      qualifiesForFreeShipping: quote.shipping.qualifiesForFreeShipping,
+    }),
+    totals: Object.freeze({ ...quote.amountInCents }),
+  });
+}
+
+function validatePersistedOrder(order, expected) {
+  if (!order || typeof order !== 'object') {
+    fail('INVALID_CHECKOUT_STORE_RESULT', 'The checkout store returned no order.');
+  }
+
+  for (const [field, expectedValue] of [
+    ['reference', expected.reference],
+    ['status', 'payment_pending'],
+    ['amountTotal', expected.amountTotal],
+    ['currency', expected.currency],
+    ['mode', expected.mode],
+    ['paymentSessionId', expected.paymentSessionId],
+  ]) {
+    if (order[field] !== expectedValue) {
+      fail('CHECKOUT_STORE_CONFLICT', `The persisted order has a conflicting ${field}.`, {
+        field,
+      });
+    }
+  }
+
+  for (const field of ['customer', 'items', 'discount', 'shipping', 'totals']) {
+    if (!sameImmutableValue(order[field], expected[field])) {
+      fail(
+        'CHECKOUT_STORE_CONFLICT',
+        `The persisted order has conflicting or incomplete ${field}.`,
+        { field },
+      );
+    }
+  }
+
+  if (!Number.isInteger(order.version) || order.version < 0) {
+    fail('INVALID_CHECKOUT_STORE_RESULT', 'The persisted order version is invalid.');
+  }
+}
+
+export async function persistPendingHostedCheckout({
+  checkout,
+  request,
+  customer: customerInput,
+  catalogProducts,
+  checkoutStore,
+  createdAt = Math.floor(Date.now() / 1000),
+}) {
+  const store = requireCheckoutStore(checkoutStore);
+  validateCheckoutResult(checkout);
+
+  const deliveryCountry = normalizeDeliveryCountry(request?.countryCode || 'NL');
+  const quote = createAuthoritativeOrderQuote(request, catalogProducts);
+  const customer = normalizeCheckoutCustomer(customerInput);
+  if (customer.country !== deliveryCountry) {
+    fail('COUNTRY_MISMATCH', 'Customer country does not match the delivery country.');
+  }
+
+  const record = createPendingCheckoutRecord({
+    checkout,
+    quote,
+    customer,
+    deliveryCountry,
+    createdAt,
+  });
+
+  let result;
+  try {
+    result = await store.persistPendingCheckout(record);
+  } catch (error) {
+    if (error instanceof CheckoutPersistenceError) throw error;
+    fail('CHECKOUT_PERSISTENCE_FAILED', 'The pending order could not be stored.', {
+      causeCode: error?.code || error?.name || 'UNKNOWN',
+    });
+  }
+
+  if (!result || typeof result.created !== 'boolean') {
+    fail(
+      'INVALID_CHECKOUT_STORE_RESULT',
+      'The checkout store returned an invalid persistence result.',
+    );
+  }
+  validatePersistedOrder(result.order, record);
+
+  return Object.freeze({
+    checkout,
+    order: Object.freeze({ ...result.order }),
+    reservationCreated: result.created,
+  });
+}
+
+export async function createDurableHostedCheckoutSession({
+  checkoutStore,
+  createdAt = Math.floor(Date.now() / 1000),
+  ...checkoutInput
+}) {
+  requireCheckoutStore(checkoutStore);
+
+  const checkout = await createHostedCheckoutSession(checkoutInput);
+  const persisted = await persistPendingHostedCheckout({
+    checkout,
+    request: checkoutInput.request,
+    customer: checkoutInput.customer,
+    catalogProducts: checkoutInput.catalogProducts,
+    checkoutStore,
+    createdAt,
+  });
+
+  return Object.freeze({
+    ...checkout,
+    orderVersion: persisted.order.version,
+    reservationCreated: persisted.reservationCreated,
+  });
+}

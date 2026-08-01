@@ -2,9 +2,10 @@ import { readFile } from 'node:fs/promises';
 
 import { OrderQuoteError } from '../commerce/order-quote.mjs';
 import {
-  CheckoutSessionError,
-  createHostedCheckoutSession,
-} from '../payments/checkout-session.mjs';
+  CheckoutPersistenceError,
+  createDurableHostedCheckoutSession,
+} from '../orders/checkout-persistence.mjs';
+import { CheckoutSessionError } from '../payments/checkout-session.mjs';
 import {
   StripeApiError,
   StripeConfigurationError,
@@ -134,6 +135,10 @@ function mapError(error, origin) {
   if (error instanceof OrderQuoteError || error instanceof CheckoutSessionError) {
     return errorResponse(400, error.code, error.message, origin);
   }
+  if (error instanceof CheckoutPersistenceError) {
+    const status = error.code === 'CHECKOUT_STORE_CONFLICT' ? 409 : 503;
+    return errorResponse(status, error.code, error.message, origin);
+  }
   if (error instanceof StripeConfigurationError) {
     return errorResponse(503, error.code, 'Stripe test checkout is not configured.', origin);
   }
@@ -150,9 +155,11 @@ export async function handleCreateCheckoutSession(request, {
   catalogProducts = null,
   stripeClient = null,
   stripeClientFactory = createStripeApiClient,
+  checkoutStore = null,
   successUrl = env.CHECKOUT_SUCCESS_URL,
   cancelUrl = env.CHECKOUT_CANCEL_URL,
   allowedOrigins = env.CHECKOUT_ALLOWED_ORIGINS || '',
+  createdAt = Math.floor(Date.now() / 1000),
 } = {}) {
   const corsOrigin = resolveCorsOrigin(request, allowedOrigins);
   if (corsOrigin === null) {
@@ -181,13 +188,15 @@ export async function handleCreateCheckoutSession(request, {
       allowLive: env.STRIPE_ALLOW_LIVE === 'true',
     });
 
-    const checkout = await createHostedCheckoutSession({
+    const checkout = await createDurableHostedCheckoutSession({
       request: payload?.request,
       customer: payload?.customer,
       catalogProducts: products,
       stripeClient: client,
+      checkoutStore,
       successUrl: configuredSuccessUrl,
       cancelUrl: configuredCancelUrl,
+      createdAt,
     });
 
     return jsonResponse(201, {

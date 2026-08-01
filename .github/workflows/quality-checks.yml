@@ -79,6 +79,9 @@ jobs:
       - name: Validate browser Checkout integration
         run: npm run validate:browser-checkout
 
+      - name: Validate durable pending Checkout records
+        run: npm run validate:checkout-persistence
+
       - name: Validate signed Stripe webhook boundary
         run: npm run validate:stripe-webhook
 

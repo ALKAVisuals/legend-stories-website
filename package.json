@@ -33,6 +33,7 @@
     "validate:build": "node scripts/validate-build.mjs",
     "validate:browser-checkout": "node scripts/validate-browser-checkout.mjs",
     "validate:catalog": "node scripts/validate-product-catalog.mjs",
+    "validate:checkout-persistence": "node scripts/validate-checkout-persistence.mjs",
     "validate:commerce-runtime": "node scripts/validate-commerce-runtime.mjs",
     "validate:order-security": "node scripts/validate-order-security.mjs",
     "validate:stripe-checkout": "node scripts/validate-stripe-checkout.mjs",
@@ -41,7 +42,7 @@
     "validate:related-products": "node scripts/validate-related-products-runtime.mjs",
     "validate:runtime-products": "node scripts/validate-runtime-product-registry.mjs",
     "test": "node --test tests/*.test.mjs",
-    "quality": "npm run audit && npm run audit:css && npm run audit:dependencies && npm run audit:media && npm run audit:runtime && npm run inventory:products && npm run validate:full-catalog && npm run audit:product-page-templates && npm run generate:managed-product-pages && npm run validate:managed-product-pages:live && npm run generate:runtime-products && npm run validate:runtime-products && npm run validate:related-products && npm run validate:commerce-runtime && npm run validate:order-security && npm run validate:stripe-checkout && npm run validate:browser-checkout && npm run validate:stripe-webhook && npm run generate:product-previews && npm run validate:catalog && npm test && npm run build"
+    "quality": "npm run audit && npm run audit:css && npm run audit:dependencies && npm run audit:media && npm run audit:runtime && npm run inventory:products && npm run validate:full-catalog && npm run audit:product-page-templates && npm run generate:managed-product-pages && npm run validate:managed-product-pages:live && npm run generate:runtime-products && npm run validate:runtime-products && npm run validate:related-products && npm run validate:commerce-runtime && npm run validate:order-security && npm run validate:stripe-checkout && npm run validate:browser-checkout && npm run validate:checkout-persistence && npm run validate:stripe-webhook && npm run generate:product-previews && npm run validate:catalog && npm test && npm run build"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.18",
