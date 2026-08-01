@@ -29,7 +29,7 @@
     "validate:managed-product-pages": "node scripts/validate-managed-product-pages.mjs",
     "validate:managed-product-pages:live": "node scripts/validate-managed-product-pages.mjs --live",
     "validate:batch3-pages": "node scripts/validate-managed-product-pages.mjs --batch=2026-batch-3",
-    "validate:batch3-pages:live": "node scripts/validate-managed-product-pages.mjs --batch=2026-batch-3 --write-live",
+    "validate:batch3-pages:live": "node scripts/validate-managed-product-pages.mjs --batch=2026-batch-3 --live",
     "validate:build": "node scripts/validate-build.mjs",
     "validate:browser-checkout": "node scripts/validate-browser-checkout.mjs",
     "validate:catalog": "node scripts/validate-product-catalog.mjs",
