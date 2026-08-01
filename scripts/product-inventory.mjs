@@ -10,6 +10,14 @@ function normalizeWhitespace(value = '') {
   return String(value).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+function normalizeCollection(value = '') {
+  return normalizeWhitespace(value)
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
 function decodePath(value) {
   try {
     return decodeURIComponent(value);
@@ -40,10 +48,10 @@ export function normalizeLocalAsset(value = '') {
 
 export function extractBatchMetadata(imagePath = '') {
   const normalized = normalizeLocalAsset(imagePath);
-  const match = normalized.match(/^media\/stikkers\/(\d{4})\/batch\s+(\d+)\/([^/]+)\//i);
+  const match = normalized.match(/^media\/stikkers\/(\d{4})\/batch\s*(\d+)\/([^/]+)\//i);
   if (!match) return null;
 
-  const collection = normalizeWhitespace(match[3]);
+  const collection = normalizeCollection(match[3]);
   return {
     id: `${match[1]}-batch-${Number(match[2])}`,
     year: Number(match[1]),
@@ -93,8 +101,8 @@ function firstOffer(product) {
 }
 
 function extractAttribute(tag = '', name) {
-  const pattern = new RegExp(`\\b${name}=["']([^"']*)["']`, 'i');
-  return tag.match(pattern)?.[1] || '';
+  const pattern = new RegExp(`\\b${name}\\s*=\\s*(["'])(.*?)\\1`, 'i');
+  return tag.match(pattern)?.[2] || '';
 }
 
 function extractCartButton(html) {
