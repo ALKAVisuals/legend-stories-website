@@ -11,10 +11,13 @@ import {
 const ROOT = process.cwd();
 const BATCH_ID = getArgumentValue('batch');
 const EXPECTED_COUNT_VALUE = getArgumentValue('expected');
+const NORMALIZE_LEGACY_PRESENTATION = process.argv.includes('--normalize-legacy-presentation');
 const TEMPLATE_PATH = 'templates/product-page.html';
 
 if (!BATCH_ID) {
-  throw new Error('Usage: node scripts/bootstrap-product-page-batch.mjs --batch=<batch-id> [--expected=<count>]');
+  throw new Error(
+    'Usage: node scripts/bootstrap-product-page-batch.mjs --batch=<batch-id> [--expected=<count>] [--normalize-legacy-presentation]',
+  );
 }
 
 const { batch, products } = await loadCatalogBatch(ROOT, BATCH_ID);
@@ -37,7 +40,14 @@ for (const product of products) {
   if (candidate !== normalizedTemplate) {
     throw new Error(`${product.page}: live structure differs from the approved shared product template.`);
   }
-  presentations.push(extractProductPresentation(html, product));
+
+  const presentation = extractProductPresentation(html, product);
+  if (NORMALIZE_LEGACY_PRESENTATION) {
+    presentation.imageAlt = `${product.name} — ${product.collection} Wall Sticker`;
+    presentation.announcementHtml =
+      `🔥 Batch ${batch.number} collection — use <span class="font-bold">LEGEND10</span> for 10% off`;
+  }
+  presentations.push(presentation);
   referencePage ||= product.page;
 }
 
@@ -62,4 +72,7 @@ await writeFile(
 
 console.log(`Bootstrapped ${BATCH_ID} presentation data for ${products.length} products.`);
 console.log(`Presentation manifest: ${presentationPath}`);
+if (NORMALIZE_LEGACY_PRESENTATION) {
+  console.log('Normalized image alt text and announcement copy from central catalog batch data.');
+}
 console.log(`Template SHA-256: ${presentationData.template.sha256}`);
