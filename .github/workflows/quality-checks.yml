@@ -35,6 +35,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install video inspection tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends ffmpeg
+
       - name: Run repository audits
         run: |
           npm run audit
@@ -43,6 +48,7 @@ jobs:
           npm run audit:media
           npm run audit:media:references
           npm run validate:media-references
+          npm run audit:video:metadata
           npm run audit:runtime
 
       - name: Build product inventory
