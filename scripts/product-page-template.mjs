@@ -26,3 +26,9 @@ export function templatizeProductPage(input) {
     'More from <span class="text-gradient-mint">{{COLLECTION}}</span>',
   );
 }
+
+export function normalizeTemplateStructure(template) {
+  return String(template)
+    .replace(/>\s+</g, '><')
+    .trim();
+}
