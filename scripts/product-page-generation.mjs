@@ -220,7 +220,7 @@ function breadcrumb(product) {
 }
 
 export function renderProductPage(template, product, presentation) {
-  const title = `${product.name} — ${product.collection} | Legend Stories`;
+  const title = presentation.pageTitle || `${product.name} — ${product.collection} | Legend Stories`;
   const values = {
     META_DESCRIPTION: escapeHtml(product.description),
     PAGE_TITLE: escapeHtml(title),

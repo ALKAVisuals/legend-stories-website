@@ -10,8 +10,8 @@ import {
   normalizeTemplateStructure,
 } from '../scripts/product-page-template.mjs';
 
-test('rendered product values preserve apostrophes and canonical URLs', () => {
-  const template = '{{NAME}}|{{STORY}}|{{CANONICAL}}|{{ABSOLUTE_IMAGE}}|{{PRICE_RAW}}';
+test('rendered product values preserve SEO title overrides, apostrophes and canonical URLs', () => {
+  const template = '{{PAGE_TITLE}}|{{NAME}}|{{STORY}}|{{CANONICAL}}|{{ABSOLUTE_IMAGE}}|{{PRICE_RAW}}';
   const product = {
     page: 'sport-lions-pride.html',
     name: "The Lion's Pride",
@@ -25,6 +25,7 @@ test('rendered product values preserve apostrophes and canonical URLs', () => {
     category: 'sport',
   };
   const presentation = {
+    pageTitle: "The Lion's Pride — Limited Edition | Legend Stories",
     story: "Don't stop believing.",
     imageAlt: "The Lion's Pride wall sticker",
     compareAtPrice: 59.95,
@@ -35,7 +36,7 @@ test('rendered product values preserve apostrophes and canonical URLs', () => {
   const rendered = renderProductPage(template, product, presentation);
   assert.equal(
     rendered,
-    "The Lion's Pride|Don't stop believing.|https://example.com/sport-lions-pride.html|https://example.com/media/stikkers/test.png|49.95",
+    "The Lion's Pride — Limited Edition | Legend Stories|The Lion's Pride|Don't stop believing.|https://example.com/sport-lions-pride.html|https://example.com/media/stikkers/test.png|49.95",
   );
 });
 

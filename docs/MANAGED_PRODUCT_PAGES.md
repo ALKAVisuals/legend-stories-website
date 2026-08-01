@@ -19,6 +19,7 @@ The page generator uses these sources in this order:
    - comparison price
    - discount label
    - announcement copy
+   - optional page-specific SEO title override
 3. `templates/product-page.html`
    - shared HTML structure
    - navigation, product detail, cart and checkout markup
@@ -73,7 +74,7 @@ Legacy Batch 3 commands remain as compatibility aliases and use the same generic
 ## Editing an existing managed product
 
 1. Edit product and SEO fields in `data/products/catalog.json`.
-2. Edit story, alt text or promotion copy in the matching presentation manifest.
+2. Edit story, alt text, promotion copy or a page-specific SEO title in the matching presentation manifest.
 3. Edit shared markup only in `templates/product-page.html`.
 4. Generate the managed pages.
 5. Run the managed-page validator and the complete quality gate.
