@@ -6,6 +6,21 @@ import { createAuthoritativeOrderQuote } from '../server/commerce/order-quote.mj
 
 const ROOT = process.cwd();
 
+function validateCentReconciliation(quote, label, errors) {
+  const cents = quote.amountInCents;
+  for (const [field, value] of Object.entries(cents)) {
+    if (!Number.isInteger(value) || value < 0) {
+      errors.push(`${label}: ${field} is not a non-negative integer cent amount.`);
+    }
+  }
+  if (cents.subtotal - cents.discount + cents.shipping !== cents.grandTotal) {
+    errors.push(`${label}: cent totals do not reconcile exactly.`);
+  }
+  if (cents.subtotal - cents.discount !== cents.discountedSubtotal) {
+    errors.push(`${label}: discounted subtotal does not reconcile exactly.`);
+  }
+}
+
 export async function validateOrderSecurity(root = ROOT) {
   const catalog = JSON.parse(
     await readFile(resolve(root, 'data/products/catalog.json'), 'utf8'),
@@ -19,11 +34,22 @@ export async function validateOrderSecurity(root = ROOT) {
   for (const product of catalog.products) {
     try {
       const byPage = createAuthoritativeOrderQuote({
-        items: [{ page: product.page, quantity: 1, price: 0.01 }],
+        items: [{
+          page: product.page,
+          quantity: 1,
+          price: 0.01,
+          name: 'Tampered browser name',
+          lineTotal: 0.01,
+        }],
         countryCode: 'NL',
       }, catalog.products);
       const bySlug = createAuthoritativeOrderQuote({
-        items: [{ slug: product.slug, quantity: 1, price: 9999 }],
+        items: [{
+          slug: product.slug,
+          quantity: 1,
+          price: 9999,
+          lineTotal: 9999,
+        }],
         countryCode: 'DE',
         discountCode: 'LEGEND10',
       }, catalog.products);
@@ -31,12 +57,18 @@ export async function validateOrderSecurity(root = ROOT) {
       if (byPage.items[0].unitPrice !== product.price) {
         errors.push(`${product.page}: page quote did not use the catalog price.`);
       }
+      if (byPage.items[0].name !== product.name) {
+        errors.push(`${product.page}: page quote trusted the browser product name.`);
+      }
       if (bySlug.items[0].page !== product.page) {
         errors.push(`${product.page}: slug quote resolved to a different product.`);
       }
       if (bySlug.discount.code !== 'LEGEND10' || bySlug.discount.percent !== 10) {
         errors.push(`${product.page}: central discount policy was not applied.`);
       }
+
+      validateCentReconciliation(byPage, `${product.page} page quote`, errors);
+      validateCentReconciliation(bySlug, `${product.page} slug quote`, errors);
     } catch (error) {
       errors.push(`${product.page}: ${error.code || error.name}: ${error.message}`);
     }
@@ -57,7 +89,7 @@ async function main() {
     return;
   }
   console.log(
-    `Order security validation passed for ${result.productCount} products; client prices were ignored.`,
+    `Order security validation passed for ${result.productCount} products; client values were ignored and cent totals reconciled exactly.`,
   );
 }
 
