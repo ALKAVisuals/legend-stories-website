@@ -1,13 +1,6 @@
 name: Video optimization evaluation
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'media/welcome/**'
-      - 'scripts/evaluate-video-optimization.mjs'
-      - '.github/workflows/video-optimization-evaluation.yml'
   workflow_dispatch:
 
 permissions:
