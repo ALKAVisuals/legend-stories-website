@@ -130,6 +130,22 @@ test('browser surfaces sanitized endpoint errors without accepting a redirect', 
   );
 });
 
+test('browser classifies aborted endpoint requests as checkout timeouts', async () => {
+  await assert.rejects(
+    () => requestHostedCheckout({
+      endpoint: 'https://payments.example/api/checkout',
+      payload,
+      fetchImpl: async () => {
+        const error = new Error('aborted');
+        error.name = 'AbortError';
+        throw error;
+      },
+    }),
+    (error) => error instanceof HostedCheckoutClientError
+      && error.code === 'CHECKOUT_TIMEOUT',
+  );
+});
+
 test('browser rejects incomplete payloads before making a network request', async () => {
   let called = false;
   await assert.rejects(
