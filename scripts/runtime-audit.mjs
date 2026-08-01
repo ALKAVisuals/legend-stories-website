@@ -4,7 +4,6 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const ROOT = process.cwd();
-const JS_DIR = join(ROOT, 'js');
 const REPORT_DIR = join(ROOT, 'reports');
 const EXTERNAL_REFERENCE = /^(?:https?:|\/\/|data:|javascript:|mailto:|tel:|#)/i;
 const NON_EXECUTABLE_TYPES = new Set(['application/ld+json', 'application/json']);
@@ -50,7 +49,10 @@ export function extractScriptTags(html = '') {
 
 export function extractInlineHandlers(html = '') {
   const handlers = [];
-  const tags = html.match(/<[a-z][^>]*>/gi) || [];
+  const markupOnly = html
+    .replace(/<script\b[\s\S]*?<\/script>/gi, '')
+    .replace(/<style\b[\s\S]*?<\/style>/gi, '');
+  const tags = markupOnly.match(/<[a-z][^>]*>/gi) || [];
   for (const tag of tags) {
     const attributes = parseAttributes(tag.replace(/^<[a-z0-9:-]+/i, '').replace(/>$/, ''));
     for (const [name, value] of Object.entries(attributes)) {
