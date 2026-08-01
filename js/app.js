@@ -56,33 +56,31 @@
   }
 
   // ==========================================
-  // SHIPPING CONFIG
+  // COMMERCE RUNTIME - Single calculation authority
   // ==========================================
-  const SHIPPING_ZONES = {
-    NL:  { name: 'Netherlands',     cost: 3.95, freeFrom: 50,  currency: 'EUR' },
-    BE:  { name: 'Belgium',         cost: 5.95, freeFrom: 75,  currency: 'EUR' },
-    DE:  { name: 'Germany',         cost: 5.95, freeFrom: 75,  currency: 'EUR' },
-    FR:  { name: 'France',          cost: 5.95, freeFrom: 75,  currency: 'EUR' },
-    LU:  { name: 'Luxembourg',      cost: 5.95, freeFrom: 75,  currency: 'EUR' },
-    AT:  { name: 'Austria',         cost: 5.95, freeFrom: 75,  currency: 'EUR' },
-    DK:  { name: 'Denmark',         cost: 9.95, freeFrom: 100, currency: 'EUR' },
-    SE:  { name: 'Sweden',          cost: 9.95, freeFrom: 100, currency: 'EUR' },
-    ES:  { name: 'Spain',           cost: 9.95, freeFrom: 100, currency: 'EUR' },
-    IT:  { name: 'Italy',           cost: 9.95, freeFrom: 100, currency: 'EUR' },
-    PT:  { name: 'Portugal',        cost: 9.95, freeFrom: 100, currency: 'EUR' },
-    IE:  { name: 'Ireland',         cost: 9.95, freeFrom: 100, currency: 'EUR' },
-    FI:  { name: 'Finland',         cost: 9.95, freeFrom: 100, currency: 'EUR' },
-    PL:  { name: 'Poland',          cost: 9.95, freeFrom: 100, currency: 'EUR' },
-    CZ:  { name: 'Czech Republic',  cost: 9.95, freeFrom: 100, currency: 'EUR' },
-    CH:  { name: 'Switzerland',     cost: 9.95, freeFrom: 100, currency: 'EUR' },
-    NO:  { name: 'Norway',          cost: 9.95, freeFrom: 100, currency: 'EUR' },
-    GB:  { name: 'United Kingdom',  cost: 9.95, freeFrom: 100, currency: 'EUR' },
-    US:  { name: 'United States',   cost: 14.95,freeFrom: 150, currency: 'EUR' },
-    CA:  { name: 'Canada',          cost: 14.95,freeFrom: 150, currency: 'EUR' },
-    AU:  { name: 'Australia',       cost: 14.95,freeFrom: 150, currency: 'EUR' },
-    JP:  { name: 'Japan',           cost: 14.95,freeFrom: 150, currency: 'EUR' },
-    OTHER: { name: 'Rest of World', cost: 14.95,freeFrom: 150, currency: 'EUR' },
-  };
+  let commerceModule = null;
+  let commerceModulePromise = null;
+
+  function loadCommerceModule() {
+    if (!commerceModulePromise) {
+      commerceModulePromise = import('./commerce/totals.mjs').then((module) => {
+        commerceModule = module;
+        return module;
+      });
+    }
+    return commerceModulePromise;
+  }
+
+  function getCommerceTotals() {
+    if (!commerceModule) {
+      throw new Error('Commerce totals requested before the commerce module was loaded.');
+    }
+    return commerceModule.calculateCommerceTotals({
+      items: state.cart,
+      countryCode: state.shippingCountry,
+      discountPercent: state.discountPercent,
+    });
+  }
 
   const COUNTRY_OPTIONS = [
     { code: 'NL', flag: '🇳🇱', name: 'Netherlands' },
@@ -223,20 +221,17 @@
   }
 
   function getCartTotal() {
-    return state.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    return getCommerceTotals().subtotal;
   }
 
   function getShippingCost() {
-    if (state.cart.length === 0) { state.shippingCost = 0; return 0; }
-    const zone = SHIPPING_ZONES[state.shippingCountry] || SHIPPING_ZONES.OTHER;
-    const cartTotal = getCartTotal();
-    if (cartTotal >= zone.freeFrom) { state.shippingCost = 0; return 0; }
-    state.shippingCost = zone.cost;
-    return zone.cost;
+    const totals = getCommerceTotals();
+    state.shippingCost = totals.shipping;
+    return totals.shipping;
   }
 
   function getGrandTotal() {
-    return getCartTotal() + getShippingCost();
+    return getCommerceTotals().grandTotal;
   }
 
   function setShippingCountry(code) {
@@ -265,9 +260,10 @@
       '<option value="' + c.code + '"' + (state.shippingCountry === c.code ? ' selected' : '') + '>' + c.flag + ' ' + c.name + '</option>'
     ).join('');
 
-    const cartSubtotal = getCartTotal();
-    const shippingCost = getShippingCost();
-    const zone = SHIPPING_ZONES[state.shippingCountry] || SHIPPING_ZONES.OTHER;
+    const totals = getCommerceTotals();
+    const cartSubtotal = totals.subtotal;
+    const shippingCost = totals.shipping;
+    const zone = totals.zone;
 
     dom.cartItems.innerHTML =
       state.cart.map((item, i) => {
@@ -278,13 +274,12 @@
       }).join('') +
       '<div class="border-t border-surface-border/30 pt-3 mt-3">' +
       '<div class="flex justify-between text-sm"><span class="text-text-muted">Subtotal</span><span class="text-text-primary font-medium">' + formatPrice(cartSubtotal) + '</span></div>' +
-      (state.discountPercent > 0 ? '<div class="flex justify-between text-sm"><span class="text-text-muted">Discount (' + state.discountPercent + '%)</span><span class="text-red-400 font-medium">-' + formatPrice(getDiscountAmount(cartSubtotal)) + '</span></div>' : '') +
+      (state.discountPercent > 0 ? '<div class="flex justify-between text-sm"><span class="text-text-muted">Discount (' + state.discountPercent + '%)</span><span class="text-red-400 font-medium">-' + formatPrice(totals.discount) + '</span></div>' : '') +
       '<p class="text-[11px] text-text-muted mt-1.5">🚚 Shipping calculated at checkout based on your country. Free shipping available from €50+ (NL) / €75+ (EU) / €150+ (World)</p>' +
       '</div>';
 
-    // Update cart total to show discounted total
-    const discountedTotal = cartSubtotal - (state.discountPercent > 0 ? getDiscountAmount(cartSubtotal) : 0);
-    if (dom.cartTotal) dom.cartTotal.textContent = formatPrice(discountedTotal);
+    // Cart drawer total excludes shipping because shipping is shown at checkout.
+    if (dom.cartTotal) dom.cartTotal.textContent = formatPrice(totals.discountedSubtotal);
   }
 
   // ==========================================
@@ -365,31 +360,25 @@
   }
 
   function updateCheckoutTotals() {
-    const subtotal = getCartTotal();
-    const discount = getDiscountAmount(subtotal);
-    const discountedSubtotal = subtotal - discount;
-    const zone = SHIPPING_ZONES[state.shippingCountry] || SHIPPING_ZONES.OTHER;
-    const shipping = discountedSubtotal >= zone.freeFrom ? 0 : zone.cost;
-    const grandTotal = discountedSubtotal + shipping;
-
+    const totals = getCommerceTotals();
     const subtotalEl = document.getElementById('checkout-subtotal');
     const shippingEl = document.getElementById('checkout-shipping');
     const grandTotalEl = document.getElementById('checkout-grandtotal');
     const discountEl = document.getElementById('checkout-discount-amount');
     const noteEl = document.getElementById('checkout-shipping-note');
 
-    if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
+    if (subtotalEl) subtotalEl.textContent = formatPrice(totals.subtotal);
     if (discountEl) {
-      discountEl.textContent = discount > 0 ? '-' + formatPrice(discount) : '€0,00';
-      discountEl.parentElement.classList.toggle('hidden', discount === 0);
+      discountEl.textContent = totals.discount > 0 ? '-' + formatPrice(totals.discount) : '€0,00';
+      discountEl.parentElement.classList.toggle('hidden', totals.discount === 0);
     }
-    if (shippingEl) shippingEl.textContent = shipping === 0 ? 'Free' : formatPrice(shipping);
-    if (grandTotalEl) grandTotalEl.textContent = formatPrice(grandTotal);
+    if (shippingEl) shippingEl.textContent = totals.shipping === 0 ? 'Free' : formatPrice(totals.shipping);
+    if (grandTotalEl) grandTotalEl.textContent = formatPrice(totals.grandTotal);
     if (noteEl) {
-      if (shipping === 0) {
-        noteEl.textContent = '✓ Free shipping to ' + zone.name;
+      if (totals.qualifiesForFreeShipping) {
+        noteEl.textContent = '✓ Free shipping to ' + totals.zone.name;
       } else {
-        noteEl.textContent = 'Add ' + formatPrice(zone.freeFrom - discountedSubtotal) + ' more for free shipping to ' + zone.name;
+        noteEl.textContent = 'Add ' + formatPrice(totals.freeShippingRemaining) + ' more for free shipping to ' + totals.zone.name;
       }
     }
   }
@@ -435,8 +424,8 @@
     }
   }
 
-  function getDiscountAmount(subtotal) {
-    return subtotal * (state.discountPercent / 100);
+  function getDiscountAmount() {
+    return getCommerceTotals().discount;
   }
 
   // Dynamically inject discount UI into cart drawers that don't have it
@@ -1376,8 +1365,9 @@ function initStickerModalClose() {
   // ==========================================
   // INITIALIZATION
   // ==========================================
-  function init() {
+  async function init() {
     loadCart();  // Restore cart from localStorage
+    await loadCommerceModule();
     const fns = [
       initStickerClicks,
       initStickerModalClose,
@@ -1414,9 +1404,15 @@ function initStickerModalClose() {
     addProduct: addToCart,
   };
 
+  function startApp() {
+    init().catch((error) => {
+      console.error('LegendMural app initialization failed:', error);
+    });
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', startApp);
   } else {
-    init();
+    startApp();
   }
 })();
