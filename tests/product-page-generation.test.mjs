@@ -1,8 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { loadBatch3ProductData } from '../scripts/batch3-product-data.mjs';
+import {
+  loadCatalogBatch,
+  loadManagedProductPageBatches,
+} from '../scripts/managed-product-page-data.mjs';
 import { renderProductPage } from '../scripts/product-page-generation.mjs';
-import { normalizeTemplateStructure } from '../scripts/product-page-template.mjs';
+import {
+  normalizeLegacyProductPageMarkup,
+  normalizeTemplateStructure,
+} from '../scripts/product-page-template.mjs';
 
 test('rendered product values preserve apostrophes and canonical URLs', () => {
   const template = '{{NAME}}|{{STORY}}|{{CANONICAL}}|{{ABSOLUTE_IMAGE}}|{{PRICE_RAW}}';
@@ -33,6 +39,38 @@ test('rendered product values preserve apostrophes and canonical URLs', () => {
   );
 });
 
+test('legacy product chrome normalizes without touching presentation content', () => {
+  const legacy = [
+    '<a href="index.html" class="flex group logo-wrap" aria-label="Legend Stories Home">',
+    '<img src="media/LOGO/lm-logo-transparant.png" alt="Copied Product Name" class="logo-glow">',
+    '</a></a>',
+    '<a href="music-legends.html" class="text-sm font-medium">Combat Legends</a>',
+    '<a href="music-legends.html" class="text-sm font-medium py-2">Combat Legends</a>',
+    '<p>Keep this story unchanged.</p>',
+  ].join('');
+
+  const normalized = normalizeLegacyProductPageMarkup(legacy);
+  assert.match(normalized, /alt=""/);
+  assert.doesNotMatch(normalized, /<\/a><\/a>/);
+  assert.equal((normalized.match(/href="combat-legends\.html"/g) || []).length, 2);
+  assert.match(normalized, /<p>Keep this story unchanged\.<\/p>/);
+});
+
+test('known UI vector variants do not create false template differences', () => {
+  const current = [
+    '<button id="cart-btn" class="cart"><svg viewBox="0 0 24 24"><path d="current-cart" /></svg></button>',
+    '<a href="#" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="current-tiktok" /></svg></a>',
+  ].join('');
+  const legacy = [
+    '<button id="cart-btn" class="cart"><svg viewBox="0 0 24 24"><path d="legacy-cart" /></svg></button>',
+    '<a href="#" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="legacy-tiktok" /></svg></a>',
+  ].join('');
+
+  assert.equal(normalizeTemplateStructure(current), normalizeTemplateStructure(legacy));
+  assert.match(normalizeTemplateStructure(current), /data-template-icon="cart"/);
+  assert.match(normalizeTemplateStructure(current), /data-template-icon="tiktok"/);
+});
+
 test('template structure ignores formatting-only whitespace between tags', () => {
   assert.equal(
     normalizeTemplateStructure('<main>\n  <section>Test</section>\n</main>'),
@@ -40,11 +78,24 @@ test('template structure ignores formatting-only whitespace between tags', () =>
   );
 });
 
-test('Batch 3 resolves exactly 20 complete products from the full catalog', async () => {
-  const { batch, products } = await loadBatch3ProductData(process.cwd());
+test('catalog batch loader resolves exactly 20 complete Batch 3 products', async () => {
+  const { batch, products } = await loadCatalogBatch(process.cwd(), '2026-batch-3');
   assert.equal(batch.id, '2026-batch-3');
   assert.equal(products.length, 20);
   assert.ok(products.every((product) => product.canonical));
   assert.ok(products.every((product) => product.availability));
   assert.ok(products.every((product) => product.batchId === batch.id));
+});
+
+test('managed page config resolves Batch 3 and Batch 6 as 32 products', async () => {
+  const managed = await loadManagedProductPageBatches(process.cwd());
+  assert.deepEqual(
+    managed.batches.map((entry) => entry.id),
+    ['2026-batch-3', '2026-batch-6'],
+  );
+  assert.equal(
+    managed.batches.reduce((total, entry) => total + entry.products.length, 0),
+    32,
+  );
+  assert.ok(managed.batches.every((entry) => entry.products.length === entry.expectedProductCount));
 });
