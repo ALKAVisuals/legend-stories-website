@@ -77,8 +77,14 @@
         import('./commerce/totals.mjs'),
         import('./commerce/discounts.mjs'),
         import('./commerce/order-request.mjs'),
-      ]).then(([totals, discounts, orderRequest]) => {
-        commerceModule = Object.freeze({ ...totals, ...discounts, ...orderRequest });
+        import('./commerce/checkout-client.mjs'),
+      ]).then(([totals, discounts, orderRequest, checkoutClient]) => {
+        commerceModule = Object.freeze({
+          ...totals,
+          ...discounts,
+          ...orderRequest,
+          ...checkoutClient,
+        });
         return commerceModule;
       });
     }
@@ -635,7 +641,7 @@
     });
   }
 
-  function processOrder(address, firstname, lastname, email) {
+  async function processOrder(address, firstname, lastname, email) {
     const validatedCountry = address.country;
     const totals = getCommerceTotals(validatedCountry);
     let orderRequest;
@@ -651,6 +657,25 @@
       return;
     }
 
+    const displayCustomer = {
+      firstname,
+      lastname,
+      email,
+      street: address.street,
+      zip: address.postal_code,
+      city: address.city,
+      country: validatedCountry,
+      formatted: address.formatted,
+    };
+    const checkoutCustomer = {
+      firstname,
+      lastname,
+      email,
+      street: address.street,
+      zip: address.postal_code,
+      city: address.city,
+      country: validatedCountry,
+    };
     const orderData = {
       request: orderRequest,
       items: state.cart.map(item => ({
@@ -659,7 +684,7 @@
         quantity: item.quantity,
         image: item.image,
       })),
-      customer: { firstname, lastname, email, street: address.street, zip: address.postal_code, city: address.city, country: validatedCountry, formatted: address.formatted },
+      customer: displayCustomer,
       shipping: { zone: totals.zone.name, cost: totals.shipping },
       subtotal: totals.subtotal,
       discount: totals.discount,
@@ -667,15 +692,48 @@
       total: totals.grandTotal,
     };
 
-    // Store display data separately from the minimal future server request.
+    // Store display data separately from the minimal server request.
     sessionStorage.setItem('legendOrder', JSON.stringify(orderData));
     sessionStorage.setItem('legendOrderRequest', JSON.stringify(orderRequest));
 
-    // Redirect to Stripe Checkout (placeholder — replace with real Stripe URL)
-    // For now, show confirmation
-    alert('Order ready! In production this redirects to Stripe Checkout.\n\nSubtotal: ' + formatPrice(totals.subtotal) + '\nDiscount (' + state.discountPercent + '%): -' + formatPrice(totals.discount) + '\nShipping to ' + totals.zone.name + ': ' + (totals.shipping === 0 ? 'Free' : formatPrice(totals.shipping)) + '\nTotal: ' + formatPrice(totals.grandTotal));
-  }
+    const checkoutConfigured = commerceModule.isHostedCheckoutConfigured(
+      commerceModule.HOSTED_CHECKOUT_ENDPOINT,
+      window.location.origin,
+    );
+    if (!checkoutConfigured) {
+      alert('Order ready! Secure online payment is not enabled on this deployment yet.\n\nSubtotal: ' + formatPrice(totals.subtotal) + '\nDiscount (' + state.discountPercent + '%): -' + formatPrice(totals.discount) + '\nShipping to ' + totals.zone.name + ': ' + (totals.shipping === 0 ? 'Free' : formatPrice(totals.shipping)) + '\nTotal: ' + formatPrice(totals.grandTotal));
+      return;
+    }
 
+    const payBtn = document.getElementById('checkout-pay-btn');
+    const originalBtnText = payBtn ? payBtn.textContent : 'Continue to payment';
+    if (payBtn) {
+      payBtn.disabled = true;
+      payBtn.textContent = 'Starting secure payment...';
+    }
+
+    try {
+      const checkout = await commerceModule.requestHostedCheckout({
+        endpoint: commerceModule.HOSTED_CHECKOUT_ENDPOINT,
+        baseUrl: window.location.origin,
+        payload: {
+          request: orderRequest,
+          customer: checkoutCustomer,
+        },
+      });
+      sessionStorage.setItem('legendCheckoutReference', checkout.reference);
+      sessionStorage.setItem('legendCheckoutSessionId', checkout.sessionId);
+      window.location.assign(checkout.url);
+    } catch (error) {
+      console.error('Hosted checkout could not be started:', error);
+      alert('Secure payment could not be started. Your cart is still saved. Please try again.');
+    } finally {
+      if (payBtn) {
+        payBtn.disabled = false;
+        payBtn.textContent = originalBtnText;
+      }
+    }
+  }
   // ==========================================
   // MOBILE MENU
   // ==========================================
