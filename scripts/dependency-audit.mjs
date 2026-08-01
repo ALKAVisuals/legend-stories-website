@@ -63,6 +63,12 @@ const markdown = [
   '',
   `Generated: ${new Date().toISOString()}`,
   '',
+  '## Policy',
+  '',
+  '- Critical vulnerabilities allowed: 0',
+  '- High vulnerabilities allowed: 0',
+  '- Moderate, low and informational findings remain visible for planned maintenance.',
+  '',
   '## Summary',
   '',
   `- Total: ${summary.total}`,
@@ -96,6 +102,10 @@ if (result.error) {
   process.exit(1);
 }
 
-// npm audit exits non-zero when vulnerabilities exist. During this diagnostic
-// phase, the report is authoritative and policy enforcement is added only after
-// the vulnerable dependency path has been upgraded and validated.
+const blockedFindings = summary.critical + summary.high;
+if (blockedFindings > 0) {
+  console.error(
+    `Dependency audit failed policy: ${summary.critical} critical and ${summary.high} high vulnerability finding(s).`,
+  );
+  process.exit(1);
+}
