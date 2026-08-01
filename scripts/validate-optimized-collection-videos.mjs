@@ -6,6 +6,7 @@ import { join } from 'node:path';
 const ROOT = process.cwd();
 const MANIFEST_PATH = join(ROOT, 'data', 'video', 'collection-video-optimization.json');
 const EXPECTED_IDS = new Set(['collection-video-3', 'collection-video-5']);
+const CONTROLLER_SCRIPT = '<script type="module" src="js/collection-video.mjs"></script>';
 
 function run(command, args) {
   const result = spawnSync(command, args, {
@@ -130,24 +131,40 @@ for (const entry of manifest.videos || []) {
   for (const page of entry.pages || []) {
     const source = await readFile(join(ROOT, page), 'utf8');
     const block = source.match(new RegExp(
-      `<video\\b([^>]*)>\\s*<source\\b[^>]*src=["']${escapeRegExp(encodedVideoPath)}["'][^>]*>`,
+      `<video\\b([^>]*)>\\s*<source\\b([^>]*)data-src=["']${escapeRegExp(encodedVideoPath)}["']([^>]*)>`,
       'i',
     ));
     if (!block) {
-      errors.push(`${page}: optimized collection video block is missing.`);
+      errors.push(`${page}: deferred optimized collection video block is missing.`);
       continue;
     }
+
     const attributes = block[1];
-    for (const required of ['autoplay', 'muted', 'loop', 'playsinline']) {
+    for (const required of ['muted', 'loop', 'playsinline']) {
       if (!new RegExp(`\\b${required}\\b`, 'i').test(attributes)) {
         errors.push(`${page}: video is missing ${required}.`);
       }
     }
+    if (/\bautoplay\b/i.test(attributes)) {
+      errors.push(`${page}: declarative autoplay must remain removed.`);
+    }
+    if (!new RegExp(`\\bdata-collection-video=["']${escapeRegExp(entry.id)}["']`, 'i').test(attributes)) {
+      errors.push(`${page}: video loading policy ID does not match the manifest.`);
+    }
+    if (!/\baria-hidden=["']true["']/i.test(attributes) || !/\btabindex=["']-1["']/i.test(attributes)) {
+      errors.push(`${page}: decorative video accessibility attributes are missing.`);
+    }
     if (!new RegExp(`\\bposter=["']${escapeRegExp(entry.poster)}["']`, 'i').test(attributes)) {
       errors.push(`${page}: video poster does not match the manifest.`);
     }
-    if (!/\bpreload=["']metadata["']/i.test(attributes)) {
-      errors.push(`${page}: video preload must remain metadata.`);
+    if (!/\bpreload=["']none["']/i.test(attributes)) {
+      errors.push(`${page}: video preload must remain none.`);
+    }
+    if (/(?:^|\s)src=["']/i.test(`${block[2]} ${block[3]}`)) {
+      errors.push(`${page}: deferred video source must not expose a src attribute before policy approval.`);
+    }
+    if (!source.includes(CONTROLLER_SCRIPT)) {
+      errors.push(`${page}: collection video controller module is missing.`);
     }
   }
 }
@@ -171,5 +188,5 @@ if (errors.length) {
 }
 
 console.log(
-  `Optimized collection video validation passed: ${(calculatedSourceBytes / 1024 / 1024).toFixed(2)} MB -> ${(calculatedOutputBytes / 1024 / 1024).toFixed(2)} MB (${calculatedReduction.toFixed(1)}% reduction), no audio, posters present, all hashes verified.`,
+  `Optimized collection video validation passed: ${(calculatedSourceBytes / 1024 / 1024).toFixed(2)} MB -> ${(calculatedOutputBytes / 1024 / 1024).toFixed(2)} MB (${calculatedReduction.toFixed(1)}% reduction), deferred sources, no audio, posters present, all hashes verified.`,
 );
