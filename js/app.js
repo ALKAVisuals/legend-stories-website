@@ -32,7 +32,6 @@
     localStorage.setItem('legendCart', JSON.stringify(state.cart));
     localStorage.setItem('legendShippingCountry', state.shippingCountry);
     localStorage.setItem('legendDiscountCode', state.discountCode);
-    localStorage.setItem('legendDiscountPercent', state.discountPercent);
   }
 
   function loadCart() {
@@ -40,7 +39,6 @@
     const savedCartVersion = localStorage.getItem('legendCartVersion');
     const savedCountry = localStorage.getItem('legendShippingCountry');
     const savedDiscountCode = localStorage.getItem('legendDiscountCode');
-    const savedDiscountPercent = localStorage.getItem('legendDiscountPercent');
     if (savedCart && savedCartVersion === CART_SCHEMA_VERSION) {
       try {
         const parsedCart = JSON.parse(savedCart);
@@ -443,6 +441,7 @@
       state.discountCode = discount.code;
       state.discountPercent = percent;
       saveCart();
+      saveCart();
       if (messageEl) {
         messageEl.textContent = '✓ ' + percent + '% discount applied!';
         messageEl.className = 'text-[11px] mt-1.5 text-mint';
@@ -454,6 +453,7 @@
     } else {
       state.discountCode = '';
       state.discountPercent = 0;
+      saveCart();
       saveCart();
       if (messageEl) {
         messageEl.textContent = 'Invalid discount code';
