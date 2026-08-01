@@ -22,6 +22,9 @@ if (!clientSource.includes("credentials: 'omit'")) {
 if (!clientSource.includes("redirect: 'error'")) {
   errors.push('The checkout endpoint request must reject unexpected HTTP redirects.');
 }
+if (!clientSource.includes('setTimeout(() => controller.abort(), safeTimeout)')) {
+  errors.push('Hosted checkout must use a real abort signal for request timeouts.');
+}
 if (/STRIPE_SECRET_KEY|sk_(test|live)_/.test(clientSource)) {
   errors.push('The browser checkout module must never contain Stripe secret-key material.');
 }
@@ -72,6 +75,9 @@ for (const [name, source, title, heading] of [
   }
   if (!source.includes(`>${heading}</h1>`)) {
     errors.push(`${name} is missing its expected H1.`);
+  }
+  if (!source.includes('<meta name="robots" content="noindex, nofollow">')) {
+    errors.push(`${name} must remain excluded from search indexing.`);
   }
 }
 if (!successPage.includes('must still be confirmed by the server')) {
