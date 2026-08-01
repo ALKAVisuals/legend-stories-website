@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-01T22:45:11.712Z",
+  "encoder": {
+    "codec": "libx264",
+    "preset": "slow",
+    "crf": 26,
+    "pixelFormat": "yuv420p",
+    "color": "bt709",
+    "audio": "removed",
+    "fastStart": true
+  },
+  "thresholds": {
+    "minimumSsim": 0.985,
+    "minimumPsnr": 38,
+    "minimumReductionPercent": 60
+  },
+  "videos": [
+    {
+      "id": "collection-video-3",
+      "path": "media/welcome/LM Welcome video  mobile   (3).mp4",
+      "poster": "media/welcome/collection-video-3-poster.webp",
+      "pages": [
+        "combat-legends.html",
+        "music-legends.html"
+      ],
+      "source": {
+        "sha256": "b2fba480e66e1e51b410c27aedcf1a47b17e46a71067bba0153f2b7d8252648d",
+        "bytes": 9250350,
+        "durationSeconds": 70.26,
+        "frames": 2107,
+        "videoBitRate": 790674,
+        "audioBitRate": 253601
+      },
+      "output": {
+        "sha256": "8b604ce9a72542b17d981275547c35f81d2e81cfb5cb842c122f75a37c5b6d1a",
+        "bytes": 2853566,
+        "durationSeconds": 70.233333,
+        "frames": 2107,
+        "videoBitRate": 322171,
+        "ssim": 0.992625,
+        "psnr": 45.470617,
+        "reductionPercent": 69.15180506683531
+      },
+      "posterOutput": {
+        "sha256": "354fbb07dd7d8277ff275edd91f2c99838d90fa4d3ce62d48170424b106ec4c0",
+        "bytes": 3392
+      }
+    },
+    {
+      "id": "collection-video-5",
+      "path": "media/welcome/LM Welcome video  mobile   (5).mp4",
+      "poster": "media/welcome/collection-video-5-poster.webp",
+      "pages": [
+        "sport-legends.html",
+        "wisdom-legends.html"
+      ],
+      "source": {
+        "sha256": "57cac022f863c1c523362d893eae498e697fbffbfcb0142091616c30511dfb5b",
+        "bytes": 12980818,
+        "durationSeconds": 86.84,
+        "frames": 2605,
+        "videoBitRate": 933155,
+        "audioBitRate": 253596
+      },
+      "output": {
+        "sha256": "d401c719e4c5dc351d82176ad182f4134648acec54b5abef4b93bf05c51342ec",
+        "bytes": 4303201,
+        "durationSeconds": 86.833333,
+        "frames": 2605,
+        "videoBitRate": 393597,
+        "ssim": 0.99285,
+        "psnr": 45.191864,
+        "reductionPercent": 66.84953906602804
+      },
+      "posterOutput": {
+        "sha256": "faa4c24bc9aa7acc0e8997e4cde608ac50aed1318f11bf617abdf7f69233335f",
+        "bytes": 8696
+      }
+    }
+  ],
+  "summary": {
+    "sourceBytes": 22231168,
+    "outputBytes": 7156767,
+    "reductionPercent": 67.80750790961591
+  }
+}
