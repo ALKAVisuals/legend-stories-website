@@ -2,7 +2,7 @@
 
 ## Definition of done
 
-Sprint 1 establishes safe boundaries, repeatable audits and validated proofs of concept. It does not yet replace all 118 live HTML pages or rewrite the current cart UI. Those production migrations belong to Sprint 2.
+Sprint 1 established safe boundaries, repeatable audits and validated proofs of concept. It did not replace all 118 live HTML pages or rewrite the current cart UI. Those production migrations belong to Sprint 2.
 
 ## Sprint 1C — JavaScript boundaries
 
@@ -21,11 +21,15 @@ Browser calculations remain display estimates. A future payment backend must val
 
 ## Sprint 1E — Batch-aware product proof of concept
 
-- two real batch-3 products represented as structured data;
-- batch metadata remains separate from category and collection;
-- one shared static template generates proof-of-concept pages;
-- schema, source pages, media paths and generated output are validated;
-- existing live pages, URLs and batch media paths remain unchanged.
+At Sprint 1 completion:
+
+- two real Batch 3 products were represented as structured data;
+- batch metadata remained separate from category and collection;
+- one shared static template generated proof-of-concept pages;
+- schema, source pages, media paths and generated output were validated;
+- existing live pages, URLs and batch media paths remained unchanged.
+
+Sprint 2B promoted this proof of concept into the complete 20-product Batch 3 catalog. The current implementation is documented in `docs/SPRINT-2B-BATCH3-CATALOG.md`.
 
 ## Sprint 1F — Media observability and budgets
 
@@ -35,25 +39,26 @@ Browser calculations remain display estimates. A future payment backend must val
 - batch/year metadata is preserved;
 - no source artwork is moved or overwritten.
 
-## Full quality gate
+## Current full quality gate
 
 `npm run quality` performs:
 
 1. repository link, metadata and file audit;
 2. CSS audit;
 3. media inventory;
-4. product POC generation;
-5. product-data and generated-output validation;
-6. commerce unit tests;
-7. production build and output validation.
+4. complete product-page inventory and cart parity checks;
+5. Batch 3 preview generation;
+6. central Batch 3 catalog and live-page parity validation;
+7. commerce and parser unit tests;
+8. production build and output validation.
 
-GitHub Actions runs this command on every pull request to `main`. A pull request is not merged until the latest-head gate is green.
+GitHub Actions runs this command on every pull request to `main` and every push to `main`. A pull request is not merged until the latest-head gate is green.
 
-## Sprint 2 boundary
+## Remaining Sprint 2 boundary
 
-The following are intentionally Sprint 2 work:
+The following remain Sprint 2 work:
 
-- replacing live product pages with generated pages after parity testing;
+- replacing live product pages with generated pages after structural and visual parity testing;
 - wiring the pure commerce modules into the live cart runtime;
 - consolidating CSS with visual regression evidence;
 - generating and deploying optimized image/video derivatives;
