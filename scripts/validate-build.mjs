@@ -3,6 +3,8 @@ import { extname, join, relative } from 'node:path';
 
 const ROOT = process.cwd();
 const DIST = join(ROOT, 'dist');
+const RUNTIME_REGISTRY = join(DIST, 'data/product-registry.json');
+const RELATED_PRODUCTS_MODULE = join(DIST, 'js/catalog/related-products.mjs');
 const BASELINE = JSON.parse(
   await readFile(join(ROOT, 'config/build-validation-baseline.json'), 'utf8')
 );
@@ -50,6 +52,34 @@ function extractLocalReferences(html) {
   return references.filter(Boolean);
 }
 
+async function validateRuntimeArtifacts(errors) {
+  try {
+    const registry = JSON.parse(await readFile(RUNTIME_REGISTRY, 'utf8'));
+    if (registry.schemaVersion !== 1) errors.push('data/product-registry.json: unsupported schemaVersion.');
+    if (!Array.isArray(registry.products)) errors.push('data/product-registry.json: products must be an array.');
+    if (registry.productCount !== registry.products?.length) {
+      errors.push('data/product-registry.json: productCount differs from products array length.');
+    }
+    if ((registry.products?.length || 0) < 100) {
+      errors.push(`data/product-registry.json: expected at least 100 products, found ${registry.products?.length || 0}.`);
+    }
+  } catch (error) {
+    errors.push(`data/product-registry.json: missing or invalid (${error.message}).`);
+  }
+
+  try {
+    const moduleSource = await readFile(RELATED_PRODUCTS_MODULE, 'utf8');
+    if (!moduleSource.includes('export function loadProductRegistry')) {
+      errors.push('js/catalog/related-products.mjs: expected registry loader export is missing.');
+    }
+    if (!moduleSource.includes('export function selectRelatedProducts')) {
+      errors.push('js/catalog/related-products.mjs: expected related-product selector export is missing.');
+    }
+  } catch (error) {
+    errors.push(`js/catalog/related-products.mjs: missing or unreadable (${error.message}).`);
+  }
+}
+
 async function main() {
   await access(DIST);
   const files = await walk(DIST);
@@ -60,6 +90,8 @@ async function main() {
   if (htmlFiles.length < 100) {
     errors.push(`Expected at least 100 built HTML pages, found ${htmlFiles.length}.`);
   }
+
+  await validateRuntimeArtifacts(errors);
 
   for (const htmlFile of htmlFiles) {
     const html = await readFile(htmlFile, 'utf8');
