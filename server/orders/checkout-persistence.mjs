@@ -38,6 +38,22 @@ function normalizeDeliveryCountry(value) {
   return country;
 }
 
+function canonicalize(value) {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [key, canonicalize(value[key])]),
+    );
+  }
+  return value;
+}
+
+function sameImmutableValue(left, right) {
+  return JSON.stringify(canonicalize(left)) === JSON.stringify(canonicalize(right));
+}
+
 function validateCheckoutResult(checkout) {
   if (!REFERENCE_PATTERN.test(String(checkout?.reference || ''))) {
     fail('INVALID_CHECKOUT_RECORD', 'The Checkout reference is invalid.');
@@ -135,6 +151,16 @@ function validatePersistedOrder(order, expected) {
       fail('CHECKOUT_STORE_CONFLICT', `The persisted order has a conflicting ${field}.`, {
         field,
       });
+    }
+  }
+
+  for (const field of ['customer', 'items', 'discount', 'shipping', 'totals']) {
+    if (!sameImmutableValue(order[field], expected[field])) {
+      fail(
+        'CHECKOUT_STORE_CONFLICT',
+        `The persisted order has conflicting or incomplete ${field}.`,
+        { field },
+      );
     }
   }
 
