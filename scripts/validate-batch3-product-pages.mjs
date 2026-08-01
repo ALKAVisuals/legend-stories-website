@@ -5,7 +5,7 @@ import {
   extractProductPresentation,
   templatizeProductPage,
   templateHash,
-} from './product-page-generation.mjs';
+} from './product-page-template.mjs';
 
 const ROOT = process.cwd();
 const DATA_FILE = join(ROOT, 'data', 'products', '2026-batch-3.json');
