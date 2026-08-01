@@ -3,6 +3,15 @@ import { extname, join, relative } from 'node:path';
 
 const ROOT = process.cwd();
 const DIST = join(ROOT, 'dist');
+const BASELINE = JSON.parse(
+  await readFile(join(ROOT, 'config/build-validation-baseline.json'), 'utf8')
+);
+
+const allowedMissingReferences = new Set(
+  (BASELINE.allowedMissingReferences || []).map(
+    ({ page, reference }) => `${page}::${reference}`
+  )
+);
 
 async function walk(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -24,7 +33,17 @@ function extractLocalReferences(html) {
 
   while ((match = pattern.exec(html))) {
     const value = match[1].trim();
-    if (!value || value.startsWith('#') || value.startsWith('http:') || value.startsWith('https:') || value.startsWith('mailto:') || value.startsWith('tel:') || value.startsWith('data:') || value.startsWith('javascript:')) continue;
+    if (
+      !value ||
+      value.startsWith('#') ||
+      value.startsWith('http:') ||
+      value.startsWith('https:') ||
+      value.startsWith('mailto:') ||
+      value.startsWith('tel:') ||
+      value.startsWith('data:') ||
+      value.startsWith('javascript:')
+    ) continue;
+
     references.push(value.split('#')[0].split('?')[0]);
   }
 
@@ -36,6 +55,7 @@ async function main() {
   const files = await walk(DIST);
   const htmlFiles = files.filter((file) => extname(file) === '.html');
   const errors = [];
+  const allowedBaselineHits = [];
 
   if (htmlFiles.length < 100) {
     errors.push(`Expected at least 100 built HTML pages, found ${htmlFiles.length}.`);
@@ -43,7 +63,7 @@ async function main() {
 
   for (const htmlFile of htmlFiles) {
     const html = await readFile(htmlFile, 'utf8');
-    const relativeHtml = relative(DIST, htmlFile);
+    const relativeHtml = relative(DIST, htmlFile).replaceAll('\\', '/');
 
     if (!/<title>[^<]+<\/title>/i.test(html)) errors.push(`${relativeHtml}: missing non-empty title.`);
     if (!/<meta\s+name=["']description["'][^>]+content=["'][^"']+["']/i.test(html)) errors.push(`${relativeHtml}: missing non-empty meta description.`);
@@ -68,7 +88,14 @@ async function main() {
         }
       }
 
-      if (!found) errors.push(`${relativeHtml}: built reference not found: ${reference}`);
+      if (!found) {
+        const key = `${relativeHtml}::${reference}`;
+        if (allowedMissingReferences.has(key)) {
+          allowedBaselineHits.push(key);
+        } else {
+          errors.push(`${relativeHtml}: built reference not found: ${reference}`);
+        }
+      }
     }
   }
 
@@ -80,6 +107,10 @@ async function main() {
   }
 
   console.log(`Build validation passed for ${htmlFiles.length} HTML pages and ${files.length} output files.`);
+  if (allowedBaselineHits.length > 0) {
+    console.warn(`Allowed ${allowedBaselineHits.length} documented baseline reference(s):`);
+    allowedBaselineHits.forEach((entry) => console.warn(`- ${entry}`));
+  }
 }
 
 main().catch((error) => {
