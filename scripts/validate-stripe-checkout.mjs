@@ -9,6 +9,8 @@ const errors = [];
 
 for (const [index, product] of catalog.entries()) {
   let capturedPayload = null;
+  const deliveryCountry = index % 2 === 0 ? 'NL' : 'GR';
+  const expectedShippingZoneCode = deliveryCountry === 'NL' ? 'NL' : 'OTHER';
   const stripeClient = {
     mode: 'test',
     async createCheckoutSession(payload, { idempotencyKey }) {
@@ -33,17 +35,17 @@ for (const [index, product] of catalog.entries()) {
           price: 0.01,
           name: 'Tampered browser product',
         }],
-        countryCode: 'NL',
+        countryCode: deliveryCountry,
         discountCode: 'LEGEND10',
       },
       customer: {
         firstname: 'Validation',
         lastname: 'Buyer',
         email: `validation-${index}@example.com`,
-        street: 'Teststraat 10',
-        zip: '1234 AB',
-        city: 'Amsterdam',
-        country: 'NL',
+        street: deliveryCountry === 'NL' ? 'Teststraat 10' : 'Ermou 10',
+        zip: deliveryCountry === 'NL' ? '1234 AB' : '10563',
+        city: deliveryCountry === 'NL' ? 'Amsterdam' : 'Athens',
+        country: deliveryCountry,
       },
       catalogProducts: catalog,
       stripeClient,
@@ -61,6 +63,15 @@ for (const [index, product] of catalog.entries()) {
     if (capturedPayload.line_items[0].price_data.product_data.name !== product.name) {
       errors.push(`${product.page}: Stripe trusted a browser-supplied product name.`);
     }
+    if (capturedPayload.metadata.delivery_country !== deliveryCountry) {
+      errors.push(`${product.page}: Stripe lost the ISO delivery country.`);
+    }
+    if (capturedPayload.metadata.shipping_zone_code !== expectedShippingZoneCode) {
+      errors.push(`${product.page}: Stripe used the wrong shipping zone code.`);
+    }
+    if (capturedPayload.payment_intent_data.shipping.address.country !== deliveryCountry) {
+      errors.push(`${product.page}: Stripe shipping address used the wrong country.`);
+    }
     if (checkout.mode !== 'test' || !checkout.sessionId.startsWith('cs_test_')) {
       errors.push(`${product.page}: Checkout validation did not remain in test mode.`);
     }
@@ -76,5 +87,5 @@ if (errors.length) {
 }
 
 console.log(
-  `Stripe Checkout validation passed for ${catalog.length} products with test-only sessions and exact cent reconciliation.`,
+  `Stripe Checkout validation passed for ${catalog.length} products across explicit and fallback shipping zones with test-only sessions and exact cent reconciliation.`,
 );
