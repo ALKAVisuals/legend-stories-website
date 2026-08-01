@@ -90,6 +90,11 @@ function normalizeKnownIconVectors(input) {
     '$1<svg data-template-icon="cart"></svg>',
   );
 
+  html = html.replace(
+    /(<button[^>]*aria-label="Close cart"[^>]*>)\s*<svg[\s\S]*?<\/svg>/,
+    '$1<svg data-template-icon="close-cart"></svg>',
+  );
+
   for (const label of ['Instagram', 'Facebook', 'TikTok']) {
     const pattern = new RegExp(
       `(<a[^>]*aria-label="${label}"[^>]*>)\\s*<svg[\\s\\S]*?<\\/svg>`,
