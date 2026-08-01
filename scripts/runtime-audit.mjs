@@ -275,7 +275,7 @@ export async function buildRuntimeAudit(root = ROOT) {
   }
 
   if (classicScriptReferences) warnings.push(`${classicScriptReferences} classic local script references remain on the compatibility runtime path.`);
-  if (inlineExecutableScripts) warnings.push(`${inlineExecutableScripts} executable inline script blocks remain and require migration before a strict CSP.`);
+  if (inlineExecutableScripts) errors.push(`${inlineExecutableScripts} executable inline script blocks are not allowed.`);
   if (inlineHandlers) warnings.push(`${inlineHandlers} inline event handlers remain and require a documented global contract.`);
 
   const scriptOrderVariants = [...sequences.entries()]
