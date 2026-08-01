@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import {
   extractProductPresentation,
+  normalizeTemplateStructure,
   templatizeProductPage,
   templateHash,
 } from './product-page-template.mjs';
@@ -26,29 +27,32 @@ if (sortedProducts.length !== batch.expectedProductCount) {
 }
 
 let template = null;
+let normalizedTemplate = null;
 let referencePage = null;
 const presentations = [];
 
 for (const product of sortedProducts) {
   const html = await readFile(join(ROOT, product.page), 'utf8');
   const candidate = templatizeProductPage(html);
+  const normalizedCandidate = normalizeTemplateStructure(candidate);
   const presentation = extractProductPresentation(html, product);
   presentations.push(presentation);
 
   if (!template) {
     template = candidate;
+    normalizedTemplate = normalizedCandidate;
     referencePage = product.page;
     continue;
   }
 
-  if (candidate !== template) {
-    const index = firstDifference(template, candidate);
+  if (normalizedCandidate !== normalizedTemplate) {
+    const index = firstDifference(normalizedTemplate, normalizedCandidate);
     const start = Math.max(0, index - 120);
     const end = index + 120;
     throw new Error(
-      `${product.page}: static page structure differs from ${referencePage} near character ${index}.\n` +
-      `Reference: ${JSON.stringify(template.slice(start, end))}\n` +
-      `Candidate: ${JSON.stringify(candidate.slice(start, end))}`,
+      `${product.page}: static page structure differs from ${referencePage} near normalized character ${index}.\n` +
+      `Reference: ${JSON.stringify(normalizedTemplate.slice(start, end))}\n` +
+      `Candidate: ${JSON.stringify(normalizedCandidate.slice(start, end))}`,
     );
   }
 }
