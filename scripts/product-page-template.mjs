@@ -40,6 +40,16 @@ export function normalizeLegacyProductPageMarkup(input) {
     '$1',
   );
 
+  html = html.replace(
+    /(<span class="text-text-secondary">)[^<]*(<\/span>\s*<span id="cart-total")/,
+    '$1Total$2',
+  );
+
+  html = html.replace(
+    /<\/aside>\s*<\/aside>(\s*<!-- CHECKOUT DRAWER -->)/,
+    '</aside>$1',
+  );
+
   for (const [category, label] of CATEGORY_LINKS) {
     const escapedLabel = escapeRegExp(label);
     const desktop = new RegExp(
