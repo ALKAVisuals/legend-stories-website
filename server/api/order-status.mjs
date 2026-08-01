@@ -1,3 +1,8 @@
+import {
+  OrderStoreContractError,
+  requireOrderLookupStore,
+} from '../orders/store-contract.mjs';
+
 const MAX_REQUEST_BYTES = 4 * 1024;
 const REFERENCE_PATTERN = /^[a-f0-9]{64}$/;
 const ORDER_STATUSES = new Set([
@@ -105,13 +110,6 @@ function normalizeLookup(payload = {}) {
   return Object.freeze({ reference, sessionId, mode });
 }
 
-function validateStore(orderStore) {
-  if (!orderStore || typeof orderStore.getOrderByReference !== 'function') {
-    fail('ORDER_STORE_NOT_CONFIGURED', 'Order status storage is not configured.');
-  }
-  return orderStore;
-}
-
 function normalizePublicStatus(order, lookup) {
   if (!order || typeof order !== 'object') return null;
   if (order.reference !== lookup.reference
@@ -144,10 +142,15 @@ function normalizePublicStatus(order, lookup) {
 }
 
 function mapError(error, origin) {
+  if (error instanceof OrderStoreContractError) {
+    return errorResponse(
+      503,
+      'ORDER_STORE_NOT_CONFIGURED',
+      'Order status storage is not configured.',
+      origin,
+    );
+  }
   if (error instanceof OrderStatusLookupError) {
-    if (error.code === 'ORDER_STORE_NOT_CONFIGURED') {
-      return errorResponse(503, error.code, error.message, origin);
-    }
     if (error.code === 'INVALID_ORDER_STORE_RESULT') {
       return errorResponse(500, error.code, 'Stored order status is unavailable.', origin);
     }
@@ -178,7 +181,7 @@ export async function handleOrderStatus(request, {
   }
 
   try {
-    const store = validateStore(orderStore);
+    const store = requireOrderLookupStore(orderStore);
     const lookup = normalizeLookup(await parseJsonRequest(request));
     const order = await store.getOrderByReference(lookup.reference);
     const status = normalizePublicStatus(order, lookup);

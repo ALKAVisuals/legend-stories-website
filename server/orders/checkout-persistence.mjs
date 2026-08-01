@@ -4,6 +4,10 @@ import {
   normalizeCheckoutCustomer,
 } from '../payments/checkout-session.mjs';
 import { createPendingOrderRecord } from './order-status.mjs';
+import {
+  OrderStoreContractError,
+  requireCheckoutStore as requireCheckoutStoreCapability,
+} from './store-contract.mjs';
 
 const REFERENCE_PATTERN = /^[a-f0-9]{64}$/;
 
@@ -21,13 +25,18 @@ function fail(code, message, details) {
 }
 
 function requireCheckoutStore(checkoutStore) {
-  if (!checkoutStore || typeof checkoutStore.persistPendingCheckout !== 'function') {
-    fail(
-      'CHECKOUT_STORE_NOT_CONFIGURED',
-      'Durable pending-order storage is not configured.',
-    );
+  try {
+    return requireCheckoutStoreCapability(checkoutStore);
+  } catch (error) {
+    if (error instanceof OrderStoreContractError) {
+      fail(
+        'CHECKOUT_STORE_NOT_CONFIGURED',
+        'Durable pending-order storage is not configured.',
+        error.details,
+      );
+    }
+    throw error;
   }
-  return checkoutStore;
 }
 
 function normalizeDeliveryCountry(value) {
@@ -200,6 +209,9 @@ export async function persistPendingHostedCheckout({
     result = await store.persistPendingCheckout(record);
   } catch (error) {
     if (error instanceof CheckoutPersistenceError) throw error;
+    if (error?.code === 'ORDER_STORE_CONFLICT') {
+      fail('CHECKOUT_STORE_CONFLICT', 'A conflicting pending order already exists.');
+    }
     fail('CHECKOUT_PERSISTENCE_FAILED', 'The pending order could not be stored.', {
       causeCode: error?.code || error?.name || 'UNKNOWN',
     });

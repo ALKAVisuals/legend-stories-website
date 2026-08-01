@@ -1,5 +1,9 @@
 import { OrderStatusError, createOrderStatusUpdate } from '../orders/order-status.mjs';
 import {
+  OrderStoreContractError,
+  requirePaymentEventStore,
+} from '../orders/store-contract.mjs';
+import {
   StripeWebhookError,
   verifyAndNormalizeStripeWebhook,
 } from '../payments/stripe-webhook.mjs';
@@ -49,6 +53,13 @@ function mapError(error) {
     }
     return errorResponse(400, error.code, error.message);
   }
+  if (error instanceof OrderStoreContractError) {
+    return errorResponse(
+      503,
+      'PAYMENT_STORE_NOT_CONFIGURED',
+      'Atomic payment-event storage is not configured.',
+    );
+  }
   if (error instanceof OrderStatusError) {
     return errorResponse(409, error.code, error.message);
   }
@@ -58,13 +69,6 @@ function mapError(error) {
 
   console.error('Unexpected Stripe webhook error:', error);
   return errorResponse(500, 'STRIPE_WEBHOOK_FAILED', 'The Stripe webhook could not be processed.');
-}
-
-function validatePaymentStore(paymentStore) {
-  if (!paymentStore || typeof paymentStore.processStripeEvent !== 'function') {
-    return false;
-  }
-  return true;
 }
 
 export async function handleStripeWebhook(request, {
@@ -110,15 +114,8 @@ export async function handleStripeWebhook(request, {
       });
     }
 
-    if (!validatePaymentStore(paymentStore)) {
-      return errorResponse(
-        503,
-        'PAYMENT_STORE_NOT_CONFIGURED',
-        'Atomic payment-event storage is not configured.',
-      );
-    }
-
-    const result = await paymentStore.processStripeEvent(
+    const store = requirePaymentEventStore(paymentStore);
+    const result = await store.processStripeEvent(
       paymentEvent,
       (order) => createOrderStatusUpdate(order, paymentEvent),
     );
