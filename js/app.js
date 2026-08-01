@@ -71,13 +71,13 @@
     return commerceModulePromise;
   }
 
-  function getCommerceTotals() {
+  function getCommerceTotals(countryCode = state.shippingCountry) {
     if (!commerceModule) {
       throw new Error('Commerce totals requested before the commerce module was loaded.');
     }
     return commerceModule.calculateCommerceTotals({
       items: state.cart,
-      countryCode: state.shippingCountry,
+      countryCode,
       discountPercent: state.discountPercent,
     });
   }
@@ -598,12 +598,7 @@
 
   function processOrder(address, firstname, lastname, email) {
     const validatedCountry = address.country;
-    const zone = SHIPPING_ZONES[validatedCountry] || SHIPPING_ZONES.OTHER;
-    const subtotal = getCartTotal();
-    const discount = getDiscountAmount(subtotal);
-    const discountedSubtotal = subtotal - discount;
-    const shipping = discountedSubtotal >= zone.freeFrom ? 0 : zone.cost;
-    const total = discountedSubtotal + shipping;
+    const totals = getCommerceTotals(validatedCountry);
 
     const orderData = {
       items: state.cart.map(item => ({
@@ -613,11 +608,11 @@
         image: item.image,
       })),
       customer: { firstname, lastname, email, street: address.street, zip: address.postal_code, city: address.city, country: validatedCountry, formatted: address.formatted },
-      shipping: { zone: zone.name, cost: shipping },
-      subtotal: subtotal,
-      discount: discount,
+      shipping: { zone: totals.zone.name, cost: totals.shipping },
+      subtotal: totals.subtotal,
+      discount: totals.discount,
       discountCode: state.discountCode,
-      total: total,
+      total: totals.grandTotal,
     };
 
     // Store for Stripe redirect
@@ -625,7 +620,7 @@
 
     // Redirect to Stripe Checkout (placeholder — replace with real Stripe URL)
     // For now, show confirmation
-    alert('Order ready! In production this redirects to Stripe Checkout.\n\nSubtotal: ' + formatPrice(subtotal) + '\nDiscount (' + state.discountPercent + '%): -' + formatPrice(discount) + '\nShipping to ' + zone.name + ': ' + (shipping === 0 ? 'Free' : formatPrice(shipping)) + '\nTotal: ' + formatPrice(total));
+    alert('Order ready! In production this redirects to Stripe Checkout.\n\nSubtotal: ' + formatPrice(totals.subtotal) + '\nDiscount (' + state.discountPercent + '%): -' + formatPrice(totals.discount) + '\nShipping to ' + totals.zone.name + ': ' + (totals.shipping === 0 ? 'Free' : formatPrice(totals.shipping)) + '\nTotal: ' + formatPrice(totals.grandTotal));
   }
 
   // ==========================================
