@@ -4,9 +4,11 @@ const appPath = new URL('../js/app.js', import.meta.url);
 let source = await readFile(appPath, 'utf8');
 
 function replaceExactly(before, after, label) {
-  if (source.includes(after)) return;
   const first = source.indexOf(before);
-  if (first < 0) throw new Error(`${label}: expected source fragment was not found.`);
+  if (first < 0) {
+    if (source.includes(after)) return;
+    throw new Error(`${label}: expected source fragment was not found.`);
+  }
   if (source.indexOf(before, first + before.length) >= 0) {
     throw new Error(`${label}: source fragment is not unique.`);
   }
