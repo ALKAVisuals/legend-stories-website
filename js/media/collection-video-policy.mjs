@@ -1,7 +1,7 @@
 const BLOCKED_EFFECTIVE_TYPES = new Set(['slow-2g', '2g']);
 
 export function normalizeEffectiveType(value = '') {
-  return String(value).trim().toLowerCase();
+  return String(value ?? '').trim().toLowerCase();
 }
 
 export function evaluateCollectionVideoPolicy({
