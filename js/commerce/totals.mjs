@@ -1,5 +1,5 @@
 import { calculateDiscount, calculateSubtotal } from './pricing.mjs';
-import { calculateShipping, getShippingZone } from './shipping.mjs';
+import { calculateShipping, getShippingZone, SHIPPING_ZONES } from './shipping.mjs';
 
 export function calculateCommerceTotals({
   items = [],
@@ -9,14 +9,19 @@ export function calculateCommerceTotals({
   const subtotal = calculateSubtotal(items);
   const discount = calculateDiscount(subtotal, discountPercent);
   const discountedSubtotal = Math.max(0, subtotal - discount);
+  const normalizedCountryCode = Object.hasOwn(SHIPPING_ZONES, countryCode)
+    ? countryCode
+    : 'OTHER';
+  const zone = getShippingZone(normalizedCountryCode);
   const shipping = calculateShipping({
-    countryCode,
+    countryCode: normalizedCountryCode,
     subtotal: discountedSubtotal,
     hasItems: items.length > 0,
   });
   const grandTotal = Math.max(0, discountedSubtotal + shipping);
-  const zone = getShippingZone(countryCode);
-  const freeShippingRemaining = Math.max(0, zone.freeFrom - discountedSubtotal);
+  const freeShippingRemaining = items.length > 0
+    ? Math.max(0, zone.freeFrom - discountedSubtotal)
+    : 0;
 
   return Object.freeze({
     subtotal,
@@ -26,13 +31,7 @@ export function calculateCommerceTotals({
     grandTotal,
     freeShippingRemaining,
     qualifiesForFreeShipping: items.length > 0 && shipping === 0,
-    countryCode: SHIPPING_CODE(countryCode),
+    countryCode: normalizedCountryCode,
     zone,
   });
-}
-
-function SHIPPING_CODE(countryCode) {
-  return typeof countryCode === 'string' && countryCode in Object.fromEntries([])
-    ? countryCode
-    : countryCode;
 }
