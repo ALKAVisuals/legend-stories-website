@@ -51,9 +51,20 @@ export function normalizeLegacyProductPageMarkup(input) {
   );
 
   html = html.replace('<!-- FLOATING CTA -->', '');
+  html = html.replace('<!-- WHATSAPP BUTTON -->', '');
+
+  html = html.replace(
+    /(<a[^>]*class="[^"]*\bfloating-cta\b[^"]*"[^>]*>\s*<span>✨<\/span>)\s*Custom Mural\s*<\/a>/,
+    '$1 Custom mural</a>',
+  );
 
   html = html.replace(
     /<div>\s*<label[^>]*>Discount code<\/label>\s*<div class="flex gap-2">[\s\S]*?<input[^>]*id="checkout-discount"[\s\S]*?<button[^>]*id="apply-discount-btn"[\s\S]*?<\/button>\s*<\/div>\s*<p[^>]*id="discount-message"[^>]*><\/p>\s*<\/div>/,
+    '',
+  );
+
+  html = html.replace(
+    /<div class="flex justify-between text-sm hidden" id="discount-row">\s*<span class="text-text-muted">Discount<\/span>\s*<span class="text-red-400" id="checkout-discount-amount">€0,00<\/span>\s*<\/div>/,
     '',
   );
 
