@@ -145,8 +145,13 @@ function normalizePublicStatus(order, lookup) {
 
 function mapError(error, origin) {
   if (error instanceof OrderStatusLookupError) {
-    const status = error.code === 'ORDER_STORE_NOT_CONFIGURED' ? 503 : 400;
-    return errorResponse(status, error.code, error.message, origin);
+    if (error.code === 'ORDER_STORE_NOT_CONFIGURED') {
+      return errorResponse(503, error.code, error.message, origin);
+    }
+    if (error.code === 'INVALID_ORDER_STORE_RESULT') {
+      return errorResponse(500, error.code, 'Stored order status is unavailable.', origin);
+    }
+    return errorResponse(400, error.code, error.message, origin);
   }
 
   console.error('Unexpected order status error:', error);
