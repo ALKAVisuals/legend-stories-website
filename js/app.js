@@ -441,7 +441,6 @@
       state.discountCode = discount.code;
       state.discountPercent = percent;
       saveCart();
-      saveCart();
       if (messageEl) {
         messageEl.textContent = '✓ ' + percent + '% discount applied!';
         messageEl.className = 'text-[11px] mt-1.5 text-mint';
@@ -453,7 +452,6 @@
     } else {
       state.discountCode = '';
       state.discountPercent = 0;
-      saveCart();
       saveCart();
       if (messageEl) {
         messageEl.textContent = 'Invalid discount code';

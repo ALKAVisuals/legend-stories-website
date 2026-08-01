@@ -36,6 +36,9 @@ if (source.includes("localStorage.setItem('legendDiscountPercent'")) {
 if (source.includes("localStorage.getItem('legendDiscountPercent'")) {
   errors.push('app.js must not trust a stored browser discount percentage.');
 }
+if (/saveCart\(\);\s*saveCart\(\);/.test(source)) {
+  errors.push('app.js must not persist the same cart state twice in succession.');
+}
 if (source.includes('const SHIPPING_ZONES =')) {
   errors.push('app.js must not contain a duplicate SHIPPING_ZONES table.');
 }
@@ -58,4 +61,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Commerce runtime validation passed with stable product identities, revalidated discounts and trusted order requests.');
+console.log('Commerce runtime validation passed with stable product identities, revalidated discounts and single-write cart persistence.');
