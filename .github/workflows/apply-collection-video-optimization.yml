@@ -59,20 +59,42 @@ jobs:
             "data/video/collection-video-optimization.json"
           )
 
+          declare -A approved_map=()
+          for file in "${approved[@]}"; do
+            approved_map["$file"]=1
+          done
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -- "${approved[@]}"
 
-          unexpected="$(git status --porcelain | awk '{print substr($0,4)}' | while IFS= read -r file; do
-            allowed=false
-            for candidate in "${approved[@]}"; do
-              [[ "$file" == "$candidate" ]] && allowed=true
-            done
-            [[ "$allowed" == false ]] && printf '%s\n' "$file"
-          done)"
-          if [[ -n "$unexpected" ]]; then
-            echo "::error::Unexpected files changed during video optimization:"
-            printf '%s\n' "$unexpected"
+          unstaged=()
+          while IFS= read -r -d '' file; do
+            unstaged+=("$file")
+          done < <(git diff --name-only -z)
+          if ((${#unstaged[@]})); then
+            echo "::error::Unexpected unstaged files changed during video optimization:"
+            printf '%s\n' "${unstaged[@]}"
+            exit 1
+          fi
+
+          untracked=()
+          while IFS= read -r -d '' file; do
+            untracked+=("$file")
+          done < <(git ls-files --others --exclude-standard -z)
+          if ((${#untracked[@]})); then
+            echo "::error::Unexpected untracked files created during video optimization:"
+            printf '%s\n' "${untracked[@]}"
+            exit 1
+          fi
+
+          unexpected=()
+          while IFS= read -r -d '' file; do
+            [[ -n "${approved_map[$file]:-}" ]] || unexpected+=("$file")
+          done < <(git diff --cached --name-only -z)
+          if ((${#unexpected[@]})); then
+            echo "::error::Unexpected staged files changed during video optimization:"
+            printf '%s\n' "${unexpected[@]}"
             exit 1
           fi
 
