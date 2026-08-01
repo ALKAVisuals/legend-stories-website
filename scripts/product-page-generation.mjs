@@ -38,6 +38,14 @@ export function escapeHtml(value = '') {
     .replaceAll('"', '&quot;');
 }
 
+function decodeHtmlText(value = '') {
+  return String(value)
+    .replaceAll('&quot;', '"')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&lt;', '<')
+    .replaceAll('&amp;', '&');
+}
+
 export function formatEuro(value) {
   return `€${Number(value).toFixed(2).replace('.', ',')}`;
 }
@@ -110,7 +118,13 @@ export function extractProductPresentation(html, product) {
     throw new Error(`${product.page}: displayed price ${currentPrice} differs from catalog price ${product.price}.`);
   }
 
-  return {
+  const pageTitle = decodeHtmlText(matchRequired(
+    html,
+    /<title>([\s\S]*?)<\/title>/,
+    `${product.page} page title`,
+  ).trim());
+  const defaultPageTitle = `${product.name} — ${product.collection} | Legend Stories`;
+  const presentation = {
     page: product.page,
     story,
     imageAlt,
@@ -118,6 +132,8 @@ export function extractProductPresentation(html, product) {
     discountLabel,
     announcementHtml,
   };
+  if (pageTitle !== defaultPageTitle) presentation.pageTitle = pageTitle;
+  return presentation;
 }
 
 export function templatizeProductPage(input) {
@@ -220,7 +236,7 @@ function breadcrumb(product) {
 }
 
 export function renderProductPage(template, product, presentation) {
-  const title = `${product.name} — ${product.collection} | Legend Stories`;
+  const title = presentation.pageTitle || `${product.name} — ${product.collection} | Legend Stories`;
   const values = {
     META_DESCRIPTION: escapeHtml(product.description),
     PAGE_TITLE: escapeHtml(title),

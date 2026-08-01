@@ -31,6 +31,18 @@ if (products.length !== expectedCount) {
 
 const template = await readFile(join(ROOT, TEMPLATE_PATH), 'utf8');
 const normalizedTemplate = normalizeTemplateStructure(template);
+const presentationPath = join('data', 'products', `${BATCH_ID}-presentation.json`);
+let existingTitlesByPage = new Map();
+try {
+  const existing = JSON.parse(await readFile(join(ROOT, presentationPath), 'utf8'));
+  existingTitlesByPage = new Map(
+    (existing.products || [])
+      .filter((presentation) => presentation.pageTitle)
+      .map((presentation) => [presentation.page, presentation.pageTitle]),
+  );
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error;
+}
 const presentations = [];
 let referencePage = null;
 
@@ -42,6 +54,8 @@ for (const product of products) {
   }
 
   const presentation = extractProductPresentation(html, product);
+  const existingPageTitle = existingTitlesByPage.get(product.page);
+  if (existingPageTitle) presentation.pageTitle = existingPageTitle;
   if (NORMALIZE_LEGACY_PRESENTATION) {
     presentation.imageAlt = `${product.name} — ${product.collection} Wall Sticker`;
     presentation.announcementHtml =
