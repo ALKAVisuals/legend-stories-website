@@ -34,10 +34,11 @@ A generated root product page is never an independent source of truth.
 
 - `2026-batch-3`: 20 pages
 - `2026-batch-4`: 19 pages
+- `2026-batch-5`: 20 pages
 - `2026-batch-6`: 12 pages
-- Total: 51 live generated product pages
+- Total: 71 live generated product pages
 
-Batches 1, 2 and 5 are audited as compatible but stay unmanaged until their presentation manifest and live migration complete the same guarded process.
+Batches 1 and 2 are audited as compatible but stay unmanaged until their presentation manifest and live migration complete the same guarded process.
 
 ## Normal commands
 
