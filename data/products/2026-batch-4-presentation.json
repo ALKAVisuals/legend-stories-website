@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "batchId": "2026-batch-4",
+  "template": {
+    "path": "templates/product-page.html",
+    "referencePage": "combat-balanced-mind-combat-legend-mural.html",
+    "sha256": "a21bb24d9c6e08e571d45bb461003acf53f8a1a785f06dbc72862a36d492e71d"
+  },
+  "products": [
+    {
+      "page": "combat-balanced-mind-combat-legend-mural.html",
+      "story": "Lives by the philosophy of ignoring the noise, knowing that neither praise nor criticism defines his true value.",
+      "imageAlt": "The Balanced Mind — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "combat-fearless-challenger-combat-legend-mural.html",
+      "story": "A silent force of nature who fears no opponent and is always ready to prove his dominance, anywhere and at any time.",
+      "imageAlt": "The Fearless Challenger — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "combat-inner-vision-combat-legend-mural.html",
+      "story": "Mastered the art of self-belief, proving that the most important battle is the one fought within your own mind.",
+      "imageAlt": "Inner Vision — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "combat-total-ownership-combat-legend-mural.html",
+      "story": "A warrior who believes that true strength starts with the courage to take full responsibility for every outcome in life.",
+      "imageAlt": "Total Ownership — Combat Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-beautiful-world-music-legend-mural.html",
+      "story": "A modern icon of authenticity who encourages the world to value inner beauty over external expectations.",
+      "imageAlt": "The Beautiful Choice — Music Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-daily-blessing-music-legend-mural.html",
+      "story": "A global phenomenon who reminds us that gratitude is the key to happiness, regardless of how much success you achieve.",
+      "imageAlt": "Daily Blessing — Music Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "music-grateful-spirit-music-legend-mural.html",
+      "story": "Rose to fame at a young age, proving that staying grounded and appreciative of life is the only way to survive the spotlight.",
+      "imageAlt": "Grateful Spirit — Music Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "sport-dedicated-vision-sport-legend-mural.html",
+      "story": "An icon of focused determination who teaches that every dream requires a foundation of hard work.",
+      "imageAlt": "Dedicated Vision — Sport Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "sport-failure-into-triumph-sport-legend-mural.html",
+      "story": "An icon who redefined success by using every failure as a powerful catalyst for growth.",
+      "imageAlt": "Rising from Failure — Sport Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "sport-fearless-respect-sport-legend-mural.html",
+      "story": "A spirit of iron who shows that true dominance comes from facing the world with both courage and respect.",
+      "imageAlt": "Fearless Respect — Sport Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "sport-hard-work-reward-sport-legend-mural.html",
+      "story": "A testament to the truth that greatness is never a shortcut, but a reward for tireless dedication.",
+      "imageAlt": "The Reward of Effort — Sport Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "sport-height-of-success-sport-legend-mural.html",
+      "story": "A symbol of ultimate achievement that shows the glory of reaching your highest potential.",
+      "imageAlt": "The Height of Success — Sport Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "sport-intuitive-wisdom-sport-legend-mural.html",
+      "story": "A champion who teaches us that the greatest decisions are guided by the wisdom of intuition rather than just logic.",
+      "imageAlt": "Pure Instinct — Sport Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "sport-overcoming-fear-sport-legend-mural.html",
+      "story": "A master of mindset who views fear not as a barrier, but as an illusion to be overcome through persistence.",
+      "imageAlt": "Beyond Fear — Sport Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "sport-pressure-into-power-sport-legend-mural.html",
+      "story": "A legend who mastered the art of turning intense pressure and challenges into fuel for personal ascension.",
+      "imageAlt": "Pressure into Power — Sport Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "sport-respect-and-dignity-sport-legend-mural.html",
+      "story": "A master of grace who proves that true strength lies in treating everyone with dignity, regardless of the field of play.",
+      "imageAlt": "Eternal Respect — Sport Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "sport-sacrifice-for-dreams-sport-legend-mural.html",
+      "story": "A symbol of perseverance who proves that great dreams are built on a foundation of sacrifice and hard work.",
+      "imageAlt": "The Dreamer's Sacrifice — Sport Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "sport-supreme-confidence-sport-legend-mural.html",
+      "story": "A powerhouse of self-belief who stands tall, knowing his legacy is already etched in greatness.",
+      "imageAlt": "Silent Confidence — Sport Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    },
+    {
+      "page": "sport-unstoppable-will-sport-legend-mural.html",
+      "story": "A master of resilience who proves that the only true failure is the choice to stop trying.",
+      "imageAlt": "Unstoppable Will — Sport Legends Wall Sticker",
+      "compareAtPrice": 59.95,
+      "discountLabel": "Save 17%",
+      "announcementHtml": "🔥 Batch 4 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
+    }
+  ]
+}
