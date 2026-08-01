@@ -27,6 +27,15 @@ if (!source.includes("sessionStorage.setItem('legendOrderRequest'")) {
 if (!source.includes('page: page,')) {
   errors.push('cart items must store a stable product page identifier.');
 }
+if (!source.includes("const savedDiscount = commerceModule.resolveDiscount(savedDiscountCode || '')")) {
+  errors.push('stored discount codes must be revalidated through the central policy.');
+}
+if (source.includes("localStorage.setItem('legendDiscountPercent'")) {
+  errors.push('app.js must not persist a browser-controlled discount percentage.');
+}
+if (source.includes("localStorage.getItem('legendDiscountPercent'")) {
+  errors.push('app.js must not trust a stored browser discount percentage.');
+}
 if (source.includes('const SHIPPING_ZONES =')) {
   errors.push('app.js must not contain a duplicate SHIPPING_ZONES table.');
 }
@@ -39,8 +48,8 @@ if (/return state\.cart\.reduce\(\(sum, item\) => sum \+ item\.price \* item\.qu
 if (/discountedSubtotal >= zone\.freeFrom/.test(source)) {
   errors.push('app.js must not calculate shipping thresholds independently.');
 }
-if (!/async function init\(\)[\s\S]*await loadCommerceModule\(\)/.test(source)) {
-  errors.push('app initialization must await the commerce module.');
+if (!/async function init\(\) \{\s*await loadCommerceModule\(\);\s*loadCart\(\)/.test(source)) {
+  errors.push('app initialization must load commerce policies before restoring cart state.');
 }
 
 if (errors.length) {
@@ -49,4 +58,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Commerce runtime validation passed with stable product identities and trusted order requests.');
+console.log('Commerce runtime validation passed with stable product identities, revalidated discounts and trusted order requests.');
