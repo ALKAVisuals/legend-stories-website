@@ -1,14 +1,7 @@
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import {
-  mkdir,
-  readFile,
-  rename,
-  rm,
-  stat,
-  writeFile,
-} from 'node:fs/promises';
-import { basename, dirname, join, resolve } from 'node:path';
+import { mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 
 const ROOT = process.cwd();
 const MANIFEST_PATH = join(ROOT, 'data', 'video', 'collection-video-optimization.json');
@@ -46,13 +39,9 @@ function run(command, args, { capture = false } = {}) {
   return result;
 }
 
-function ffprobe(file) {
+function probe(file) {
   return JSON.parse(run('ffprobe', [
-    '-v', 'error',
-    '-print_format', 'json',
-    '-show_format',
-    '-show_streams',
-    file,
+    '-v', 'error', '-print_format', 'json', '-show_format', '-show_streams', file,
   ], { capture: true }).stdout);
 }
 
@@ -62,14 +51,13 @@ function parseRate(value) {
 }
 
 function metadata(file) {
-  const probe = ffprobe(file);
-  const video = probe.streams.find((stream) => stream.codec_type === 'video');
-  const audio = probe.streams.find((stream) => stream.codec_type === 'audio');
+  const result = probe(file);
+  const video = result.streams.find((stream) => stream.codec_type === 'video');
+  const audio = result.streams.find((stream) => stream.codec_type === 'audio');
   if (!video) throw new Error(`No video stream found in ${file}.`);
   return {
-    bytes: Number(probe.format.size || 0),
-    durationSeconds: Number(probe.format.duration || video.duration || 0),
-    overallBitRate: Number(probe.format.bit_rate || 0),
+    bytes: Number(result.format.size || 0),
+    durationSeconds: Number(result.format.duration || video.duration || 0),
     video: {
       codec: video.codec_name,
       profile: video.profile || '',
@@ -77,7 +65,6 @@ function metadata(file) {
       height: Number(video.height),
       pixelFormat: video.pix_fmt || '',
       averageFrameRate: parseRate(video.avg_frame_rate),
-      nominalFrameRate: parseRate(video.r_frame_rate),
       frames: Number(video.nb_frames || 0),
       bitRate: Number(video.bit_rate || 0),
       colorSpace: video.color_space || '',
@@ -93,33 +80,22 @@ function metadata(file) {
 }
 
 async function sha256(file) {
-  const data = await readFile(file);
-  return createHash('sha256').update(data).digest('hex');
+  return createHash('sha256').update(await readFile(file)).digest('hex');
 }
 
-function parseMetric(stderr, metric) {
-  const pattern = metric === 'ssim'
-    ? /SSIM[^\n]*All:([0-9.]+)/
-    : /PSNR[^\n]*average:([0-9.]+)/;
-  const match = stderr.match(pattern);
+function compareMetric(source, candidate, metric) {
+  const stderr = run('ffmpeg', [
+    '-v', 'info', '-i', source, '-i', candidate,
+    '-lavfi', `[0:v:0][1:v:0]${metric}`, '-an', '-f', 'null', '-',
+  ], { capture: true }).stderr;
+  const match = metric === 'ssim'
+    ? stderr.match(/SSIM[^\n]*All:([0-9.]+)/)
+    : stderr.match(/PSNR[^\n]*average:([0-9.]+)/);
   if (!match) throw new Error(`Unable to parse ${metric.toUpperCase()} output.`);
   return Number(match[1]);
 }
 
-function compareMetric(source, candidate, metric) {
-  const result = run('ffmpeg', [
-    '-v', 'info',
-    '-i', source,
-    '-i', candidate,
-    '-lavfi', `[0:v:0][1:v:0]${metric}`,
-    '-an',
-    '-f', 'null',
-    '-',
-  ], { capture: true });
-  return parseMetric(result.stderr, metric);
-}
-
-async function inspectMp4FastStart(file) {
+async function hasFastStart(file) {
   const data = await readFile(file);
   let position = 0;
   let moovOffset = -1;
@@ -168,25 +144,27 @@ function assertCandidate(source, candidate, target) {
   if (errors.length) throw new Error(`${target.path}: ${errors.join(', ')}.`);
 }
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 async function addPosterToPage(pagePath, videoPath, posterPath) {
   const absolute = join(ROOT, pagePath);
   let source = await readFile(absolute, 'utf8');
-  const encodedVideoPath = encodeURI(videoPath).replaceAll('(', '%28').replaceAll(')', '%29');
+  const encodedVideoPath = encodeURI(videoPath);
   const videoPattern = new RegExp(
-    `(<video\\b[^>]*)(>\\s*<source\\b[^>]*src=["']${encodedVideoPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["'])`,
+    `(<video\\b[^>]*)(>\\s*<source\\b[^>]*src=["']${escapeRegExp(encodedVideoPath)}["'])`,
     'i',
   );
   const match = source.match(videoPattern);
   if (!match) throw new Error(`${pagePath}: active collection video block was not found.`);
-  const opening = match[1];
-  const posterAttribute = ` poster="${posterPath}"`;
-  let updatedOpening = opening;
+  let opening = match[1];
   if (/\bposter=["'][^"']*["']/i.test(opening)) {
-    updatedOpening = opening.replace(/\bposter=["'][^"']*["']/i, `poster="${posterPath}"`);
+    opening = opening.replace(/\bposter=["'][^"']*["']/i, `poster="${posterPath}"`);
   } else {
-    updatedOpening = `${opening}${posterAttribute}`;
+    opening = `${opening} poster="${posterPath}"`;
   }
-  source = source.replace(videoPattern, `${updatedOpening}${match[2]}`);
+  source = source.replace(videoPattern, `${opening}${match[2]}`);
   await writeFile(absolute, source, 'utf8');
 }
 
@@ -201,8 +179,7 @@ if (existingManifest) {
   for (const target of TARGETS) {
     const entry = existingManifest.videos.find((video) => video.id === target.id);
     if (!entry) throw new Error(`Manifest is missing ${target.id}.`);
-    const currentHash = await sha256(join(ROOT, target.path));
-    if (currentHash !== entry.output.sha256) {
+    if (await sha256(join(ROOT, target.path)) !== entry.output.sha256) {
       throw new Error(`${target.path}: current video does not match the optimized manifest.`);
     }
     for (const page of target.pages) await addPosterToPage(page, target.path, target.poster);
@@ -216,13 +193,8 @@ const manifest = {
   schemaVersion: 1,
   generatedAt: new Date().toISOString(),
   encoder: {
-    codec: 'libx264',
-    preset: 'slow',
-    crf: CRF,
-    pixelFormat: 'yuv420p',
-    color: 'bt709',
-    audio: 'removed',
-    fastStart: true,
+    codec: 'libx264', preset: 'slow', crf: CRF,
+    pixelFormat: 'yuv420p', color: 'bt709', audio: 'removed', fastStart: true,
   },
   thresholds: {
     minimumSsim: MIN_SSIM,
@@ -245,21 +217,12 @@ for (const target of TARGETS) {
   const sourceHash = await sha256(sourcePath);
 
   run('ffmpeg', [
-    '-y',
-    '-v', 'error',
-    '-i', sourcePath,
-    '-map', '0:v:0',
-    '-an',
-    '-c:v', 'libx264',
-    '-preset', 'slow',
-    '-crf', String(CRF),
-    '-pix_fmt', 'yuv420p',
-    '-movflags', '+faststart',
-    '-color_primaries', 'bt709',
-    '-color_trc', 'bt709',
-    '-colorspace', 'bt709',
-    '-map_metadata', '-1',
-    temporaryVideo,
+    '-y', '-v', 'error', '-i', sourcePath,
+    '-map', '0:v:0', '-an',
+    '-c:v', 'libx264', '-preset', 'slow', '-crf', String(CRF),
+    '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
+    '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709',
+    '-map_metadata', '-1', temporaryVideo,
   ]);
 
   const output = metadata(temporaryVideo);
@@ -270,23 +233,16 @@ for (const target of TARGETS) {
   if (ssim < MIN_SSIM || psnr < MIN_PSNR || reductionPercent < MIN_REDUCTION_PERCENT) {
     throw new Error(`${target.path}: candidate failed objective acceptance thresholds.`);
   }
-  if (!await inspectMp4FastStart(temporaryVideo)) {
+  if (!await hasFastStart(temporaryVideo)) {
     throw new Error(`${target.path}: optimized MP4 is missing fast start.`);
   }
 
   await mkdir(dirname(posterPath), { recursive: true });
   run('ffmpeg', [
-    '-y',
-    '-v', 'error',
-    '-ss', '0.1',
-    '-i', temporaryVideo,
-    '-frames:v', '1',
-    '-c:v', 'libwebp',
-    '-quality', '82',
-    '-compression_level', '6',
-    temporaryPoster,
+    '-y', '-v', 'error', '-ss', '0.1', '-i', temporaryVideo,
+    '-frames:v', '1', '-c:v', 'libwebp', '-quality', '82',
+    '-compression_level', '6', temporaryPoster,
   ]);
-
   const posterInfo = await stat(temporaryPoster);
   if (posterInfo.size <= 0 || posterInfo.size > 300 * 1024) {
     throw new Error(`${target.poster}: poster size is outside the accepted range.`);
@@ -321,10 +277,7 @@ for (const target of TARGETS) {
       psnr,
       reductionPercent,
     },
-    posterOutput: {
-      sha256: posterHash,
-      bytes: posterInfo.size,
-    },
+    posterOutput: { sha256: posterHash, bytes: posterInfo.size },
   });
 }
 
@@ -332,9 +285,8 @@ manifest.summary = {
   sourceBytes: manifest.videos.reduce((sum, video) => sum + video.source.bytes, 0),
   outputBytes: manifest.videos.reduce((sum, video) => sum + video.output.bytes, 0),
 };
-manifest.summary.reductionPercent = (
-  1 - manifest.summary.outputBytes / manifest.summary.sourceBytes
-) * 100;
+manifest.summary.reductionPercent = 1 - manifest.summary.outputBytes / manifest.summary.sourceBytes;
+manifest.summary.reductionPercent *= 100;
 
 await writeFile(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 console.log(
