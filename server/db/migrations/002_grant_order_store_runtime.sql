@@ -1,0 +1,9 @@
+GRANT USAGE ON SCHEMA legend_commerce TO __LEGEND_RUNTIME_ROLE__;
+
+GRANT SELECT, INSERT, UPDATE
+  ON TABLE legend_commerce.orders
+  TO __LEGEND_RUNTIME_ROLE__;
+
+GRANT SELECT, INSERT
+  ON TABLE legend_commerce.stripe_events
+  TO __LEGEND_RUNTIME_ROLE__;
