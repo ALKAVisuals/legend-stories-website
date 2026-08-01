@@ -1,8 +1,9 @@
-import { access, readdir, readFile, stat } from 'node:fs/promises';
+import { access, mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { extname, join, relative } from 'node:path';
 
 const ROOT = process.cwd();
 const DIST = join(ROOT, 'dist');
+const REPORT_DIR = join(ROOT, 'reports');
 const RUNTIME_REGISTRY = join(DIST, 'data/product-registry.json');
 const RELATED_PRODUCTS_MODULE = join(DIST, 'js/catalog/related-products.mjs');
 const BASELINE = JSON.parse(
@@ -80,6 +81,46 @@ async function validateRuntimeArtifacts(errors) {
   }
 }
 
+async function persistReport({ errors, htmlFiles, files, allowedBaselineHits }) {
+  const report = {
+    generatedAt: new Date().toISOString(),
+    summary: {
+      htmlPages: htmlFiles.length,
+      outputFiles: files.length,
+      errors: errors.length,
+      allowedBaselineReferences: allowedBaselineHits.length,
+    },
+    errors,
+    allowedBaselineHits,
+  };
+
+  const markdown = [
+    '# Production Build Validation',
+    '',
+    `Generated: ${report.generatedAt}`,
+    '',
+    '## Summary',
+    '',
+    `- HTML pages: ${report.summary.htmlPages}`,
+    `- Output files: ${report.summary.outputFiles}`,
+    `- Errors: ${report.summary.errors}`,
+    `- Allowed baseline references: ${report.summary.allowedBaselineReferences}`,
+    '',
+    '## Errors',
+    '',
+    ...(errors.length ? errors.map((error) => `- ${error}`) : ['None detected.']),
+    '',
+    '## Allowed baseline references',
+    '',
+    ...(allowedBaselineHits.length ? allowedBaselineHits.map((entry) => `- ${entry}`) : ['None detected.']),
+    '',
+  ].join('\n');
+
+  await mkdir(REPORT_DIR, { recursive: true });
+  await writeFile(join(REPORT_DIR, 'build-validation.json'), `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+  await writeFile(join(REPORT_DIR, 'build-validation.md'), markdown, 'utf8');
+}
+
 async function main() {
   await access(DIST);
   const files = await walk(DIST);
@@ -131,6 +172,8 @@ async function main() {
     }
   }
 
+  await persistReport({ errors, htmlFiles, files, allowedBaselineHits });
+
   if (errors.length > 0) {
     console.error('\nBuild validation failed:\n');
     errors.slice(0, 100).forEach((error) => console.error(`- ${error}`));
@@ -145,7 +188,17 @@ async function main() {
   }
 }
 
-main().catch((error) => {
+main().catch(async (error) => {
   console.error('Build validation failed unexpectedly:', error);
+  try {
+    await mkdir(REPORT_DIR, { recursive: true });
+    await writeFile(
+      join(REPORT_DIR, 'build-validation-crash.txt'),
+      `${error.stack || error.message || String(error)}\n`,
+      'utf8',
+    );
+  } catch {
+    // Preserve the original failure.
+  }
   process.exit(1);
 });
