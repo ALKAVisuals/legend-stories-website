@@ -55,6 +55,9 @@ jobs:
       - name: Validate related product runtime
         run: npm run validate:related-products
 
+      - name: Validate commerce runtime
+        run: npm run validate:commerce-runtime
+
       - name: Generate Batch 3 previews
         run: npm run generate:product-previews
 
