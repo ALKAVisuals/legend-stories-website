@@ -11,6 +11,7 @@ const entries = Object.fromEntries(
 
 export default defineConfig({
   root: ROOT,
+  publicDir: resolve(ROOT, 'generated/public'),
   build: {
     outDir: resolve(ROOT, 'dist'),
     emptyOutDir: true,
