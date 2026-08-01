@@ -14,10 +14,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  audit-and-build:
-    name: Audit, tests and production build
+  quality:
+    name: Sprint 1 quality gate
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Check out repository
@@ -32,20 +32,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run repository audit
-        run: npm run audit
-
-      - name: Run unit tests
-        run: npm test
-
-      - name: Build production bundle
-        run: npm run build
+      - name: Run full quality gate
+        run: npm run quality
 
       - name: Upload audit reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: repository-audit
+          name: repository-audits
           path: reports/
           if-no-files-found: warn
           retention-days: 14
