@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { access, mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { extname, join, relative } from 'node:path';
 
@@ -6,6 +7,9 @@ const DIST = join(ROOT, 'dist');
 const REPORT_DIR = join(ROOT, 'reports');
 const RUNTIME_REGISTRY = join(DIST, 'data/product-registry.json');
 const RELATED_PRODUCTS_MODULE = join(DIST, 'js/catalog/related-products.mjs');
+const COLLECTION_VIDEO_CONTROLLER = join(DIST, 'js/collection-video.mjs');
+const COLLECTION_VIDEO_POLICY = join(DIST, 'js/media/collection-video-policy.mjs');
+const COLLECTION_VIDEO_MANIFEST = join(ROOT, 'data/video/collection-video-optimization.json');
 const BASELINE = JSON.parse(
   await readFile(join(ROOT, 'config/build-validation-baseline.json'), 'utf8')
 );
@@ -31,7 +35,7 @@ async function walk(directory) {
 
 function extractLocalReferences(html) {
   const references = [];
-  const pattern = /(?:href|src)=["']([^"']+)["']/gi;
+  const pattern = /(?:\s|<)(?:href|src|data-src|poster)=["']([^"']+)["']/gi;
   let match;
 
   while ((match = pattern.exec(html))) {
@@ -51,6 +55,10 @@ function extractLocalReferences(html) {
   }
 
   return references.filter(Boolean);
+}
+
+async function sha256(path) {
+  return createHash('sha256').update(await readFile(path)).digest('hex');
 }
 
 async function validateRuntimeArtifacts(errors) {
@@ -78,6 +86,63 @@ async function validateRuntimeArtifacts(errors) {
     }
   } catch (error) {
     errors.push(`js/catalog/related-products.mjs: missing or unreadable (${error.message}).`);
+  }
+
+  try {
+    const [controller, policy] = await Promise.all([
+      readFile(COLLECTION_VIDEO_CONTROLLER, 'utf8'),
+      readFile(COLLECTION_VIDEO_POLICY, 'utf8'),
+    ]);
+    if (!controller.includes("from './media/collection-video-policy.mjs'")) {
+      errors.push('js/collection-video.mjs: policy module import is missing.');
+    }
+    if (!controller.includes("video[data-collection-video]")) {
+      errors.push('js/collection-video.mjs: collection video selector is missing.');
+    }
+    if (!policy.includes('evaluateCollectionVideoPolicy')) {
+      errors.push('js/media/collection-video-policy.mjs: policy export is missing.');
+    }
+  } catch (error) {
+    errors.push(`Collection video runtime modules are missing or unreadable (${error.message}).`);
+  }
+}
+
+async function validateDeferredCollectionMedia(errors) {
+  let manifest;
+  try {
+    manifest = JSON.parse(await readFile(COLLECTION_VIDEO_MANIFEST, 'utf8'));
+  } catch (error) {
+    errors.push(`Collection video manifest is missing or invalid (${error.message}).`);
+    return;
+  }
+
+  if (!Array.isArray(manifest.videos) || manifest.videos.length !== 2) {
+    errors.push('Collection video manifest must contain exactly two approved videos.');
+    return;
+  }
+
+  for (const entry of manifest.videos) {
+    for (const [path, expected, label] of [
+      [entry.path, entry.output, 'video'],
+      [entry.poster, entry.posterOutput, 'poster'],
+    ]) {
+      const outputPath = join(DIST, path);
+      try {
+        const outputInfo = await stat(outputPath);
+        if (!outputInfo.isFile()) {
+          errors.push(`${path}: built deferred ${label} is not a file.`);
+          continue;
+        }
+        if (outputInfo.size !== expected.bytes) {
+          errors.push(`${path}: built deferred ${label} size differs from the manifest.`);
+        }
+        if (await sha256(outputPath) !== expected.sha256) {
+          errors.push(`${path}: built deferred ${label} hash differs from the manifest.`);
+        }
+      } catch (error) {
+        errors.push(`${path}: built deferred ${label} is missing (${error.message}).`);
+      }
+    }
   }
 }
 
@@ -133,6 +198,7 @@ async function main() {
   }
 
   await validateRuntimeArtifacts(errors);
+  await validateDeferredCollectionMedia(errors);
 
   for (const htmlFile of htmlFiles) {
     const html = await readFile(htmlFile, 'utf8');
@@ -143,7 +209,13 @@ async function main() {
     if (!/<h1(?:\s|>)/i.test(html)) errors.push(`${relativeHtml}: missing H1.`);
 
     for (const reference of extractLocalReferences(html)) {
-      const normalized = decodeURIComponent(reference.replace(/^\.\//, ''));
+      let normalized;
+      try {
+        normalized = decodeURIComponent(reference.replace(/^\.\//, ''));
+      } catch {
+        errors.push(`${relativeHtml}: built reference is not valid URI encoding: ${reference}`);
+        continue;
+      }
       const candidates = normalized.startsWith('/')
         ? [join(DIST, normalized.slice(1))]
         : [join(htmlFile, '..', normalized), join(DIST, normalized)];
