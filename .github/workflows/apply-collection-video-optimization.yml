@@ -1,0 +1,80 @@
+name: Apply collection video optimization
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'scripts/optimize-collection-videos.mjs'
+      - 'scripts/validate-optimized-collection-videos.mjs'
+      - '.github/workflows/apply-collection-video-optimization.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-collection-video-optimization-${{ github.head_ref }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Transcode and commit validated videos
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends ffmpeg
+
+      - name: Generate and validate optimized delivery
+        run: |
+          node scripts/optimize-collection-videos.mjs
+          node scripts/validate-optimized-collection-videos.mjs
+
+      - name: Commit only approved video outputs
+        shell: bash
+        run: |
+          approved=(
+            "media/welcome/LM Welcome video  mobile   (3).mp4"
+            "media/welcome/LM Welcome video  mobile   (5).mp4"
+            "media/welcome/collection-video-3-poster.webp"
+            "media/welcome/collection-video-5-poster.webp"
+            "combat-legends.html"
+            "music-legends.html"
+            "sport-legends.html"
+            "wisdom-legends.html"
+            "data/video/collection-video-optimization.json"
+          )
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "${approved[@]}"
+
+          unexpected="$(git status --porcelain | awk '{print substr($0,4)}' | while IFS= read -r file; do
+            allowed=false
+            for candidate in "${approved[@]}"; do
+              [[ "$file" == "$candidate" ]] && allowed=true
+            done
+            [[ "$allowed" == false ]] && printf '%s\n' "$file"
+          done)"
+          if [[ -n "$unexpected" ]]; then
+            echo "::error::Unexpected files changed during video optimization:"
+            printf '%s\n' "$unexpected"
+            exit 1
+          fi
+
+          git diff --cached --quiet || git commit -m "perf: optimize active collection videos"
+          git push
