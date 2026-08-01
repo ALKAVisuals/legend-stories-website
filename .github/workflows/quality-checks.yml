@@ -61,8 +61,14 @@ jobs:
       - name: Run unit tests
         run: npm test
 
-      - name: Build production output
-        run: npm run build
+      - name: Build Vite multi-page output
+        run: npx vite build
+
+      - name: Copy browser runtime files
+        run: node scripts/copy-static-js.mjs
+
+      - name: Validate production output
+        run: node scripts/validate-build.mjs
 
       - name: Upload audit reports
         if: always()
