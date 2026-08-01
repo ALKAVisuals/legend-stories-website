@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { loadBatch3ProductData } from '../scripts/batch3-product-data.mjs';
+import {
+  loadCatalogBatch,
+  loadManagedProductPageBatches,
+} from '../scripts/managed-product-page-data.mjs';
 import { renderProductPage } from '../scripts/product-page-generation.mjs';
 import {
   normalizeLegacyProductPageMarkup,
@@ -75,11 +78,24 @@ test('template structure ignores formatting-only whitespace between tags', () =>
   );
 });
 
-test('Batch 3 resolves exactly 20 complete products from the full catalog', async () => {
-  const { batch, products } = await loadBatch3ProductData(process.cwd());
+test('catalog batch loader resolves exactly 20 complete Batch 3 products', async () => {
+  const { batch, products } = await loadCatalogBatch(process.cwd(), '2026-batch-3');
   assert.equal(batch.id, '2026-batch-3');
   assert.equal(products.length, 20);
   assert.ok(products.every((product) => product.canonical));
   assert.ok(products.every((product) => product.availability));
   assert.ok(products.every((product) => product.batchId === batch.id));
+});
+
+test('managed page config resolves Batch 3 and Batch 6 as 32 products', async () => {
+  const managed = await loadManagedProductPageBatches(process.cwd());
+  assert.deepEqual(
+    managed.batches.map((entry) => entry.id),
+    ['2026-batch-3', '2026-batch-6'],
+  );
+  assert.equal(
+    managed.batches.reduce((total, entry) => total + entry.products.length, 0),
+    32,
+  );
+  assert.ok(managed.batches.every((entry) => entry.products.length === entry.expectedProductCount));
 });
