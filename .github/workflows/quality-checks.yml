@@ -52,6 +52,9 @@ jobs:
       - name: Validate runtime product registry
         run: npm run validate:runtime-products
 
+      - name: Validate related product runtime
+        run: npm run validate:related-products
+
       - name: Generate Batch 3 previews
         run: npm run generate:product-previews
 
