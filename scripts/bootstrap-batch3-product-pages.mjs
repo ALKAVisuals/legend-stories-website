@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { loadBatch3ProductData } from './batch3-product-data.mjs';
 import {
   extractProductPresentation,
   normalizeTemplateStructure,
@@ -8,7 +9,6 @@ import {
 } from './product-page-template.mjs';
 
 const ROOT = process.cwd();
-const DATA_FILE = join(ROOT, 'data', 'products', '2026-batch-3.json');
 const TEMPLATE_FILE = join(ROOT, 'templates', 'product-page.html');
 const PRESENTATION_FILE = join(ROOT, 'data', 'products', '2026-batch-3-presentation.json');
 
@@ -20,18 +20,13 @@ function firstDifference(left, right) {
   return limit;
 }
 
-const { batch, products } = JSON.parse(await readFile(DATA_FILE, 'utf8'));
-const sortedProducts = [...products].sort((a, b) => a.page.localeCompare(b.page));
-if (sortedProducts.length !== batch.expectedProductCount) {
-  throw new Error(`Batch metadata expects ${batch.expectedProductCount} products, found ${sortedProducts.length}.`);
-}
-
+const { batch, products } = await loadBatch3ProductData(ROOT);
 let template = null;
 let normalizedTemplate = null;
 let referencePage = null;
 const presentations = [];
 
-for (const product of sortedProducts) {
+for (const product of products) {
   const html = await readFile(join(ROOT, product.page), 'utf8');
   const candidate = templatizeProductPage(html);
   const normalizedCandidate = normalizeTemplateStructure(candidate);
@@ -74,5 +69,5 @@ await writeFile(TEMPLATE_FILE, template, 'utf8');
 await writeFile(PRESENTATION_FILE, `${JSON.stringify(presentationData, null, 2)}\n`, 'utf8');
 
 console.log(`Bootstrapped one Batch 3 product template from ${referencePage}.`);
-console.log(`Captured presentation data for ${presentations.length} products.`);
+console.log(`Captured presentation data for ${presentations.length} products from the full catalog.`);
 console.log(`Template SHA-256: ${presentationData.template.sha256}`);
