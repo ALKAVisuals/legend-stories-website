@@ -114,6 +114,22 @@ function loadProductCardNavigationModule() {
   return productCardNavigationModulePromise;
 }
 
+let dialogAccessibilityModule = null;
+let dialogAccessibilityModulePromise = null;
+let cartDialogController = null;
+let checkoutDialogController = null;
+
+function loadDialogAccessibilityModule() {
+  if (!dialogAccessibilityModulePromise) {
+    dialogAccessibilityModulePromise = import('./dialog-accessibility.mjs')
+      .then((module) => {
+        dialogAccessibilityModule = module;
+        return module;
+      });
+  }
+  return dialogAccessibilityModulePromise;
+}
+
   function getCommerceTotals(countryCode = state.shippingCountry) {
     if (!commerceModule) {
       throw new Error('Commerce totals requested before the commerce module was loaded.');
@@ -202,6 +218,7 @@ function loadProductCardNavigationModule() {
     checkoutBtn: document.getElementById('checkout-btn'),
     checkoutDrawer: document.getElementById('checkout-drawer'),
     checkoutOverlay: document.getElementById('checkout-overlay'),
+    purchaseFeedback: document.getElementById('purchase-feedback'),
     mobileMenuBtn: document.getElementById('mobile-menu-btn'),
     mobileMenu: document.getElementById('mobile-menu'),
     baSlider: document.getElementById('ba-slider'),
@@ -211,32 +228,65 @@ function loadProductCardNavigationModule() {
     testimonialDots: document.querySelectorAll('.testimonial-dot'),
   };
 
+  let purchaseFeedbackTimer = null;
+
+  function announcePurchaseFeedback(message, { assertive = false, focusTarget = null, duration = 6000 } = {}) {
+    const feedback = dom.purchaseFeedback || document.getElementById('purchase-feedback');
+    if (feedback) {
+      if (purchaseFeedbackTimer) clearTimeout(purchaseFeedbackTimer);
+      feedback.setAttribute('role', assertive ? 'alert' : 'status');
+      feedback.setAttribute('aria-live', assertive ? 'assertive' : 'polite');
+      feedback.textContent = message;
+      feedback.classList.remove('hidden', 'border-red-400/40', 'text-red-300', 'border-mint/40', 'text-mint');
+      feedback.classList.add(assertive ? 'border-red-400/40' : 'border-mint/40');
+      feedback.classList.add(assertive ? 'text-red-300' : 'text-mint');
+      if (duration > 0) {
+        purchaseFeedbackTimer = setTimeout(() => feedback.classList.add('hidden'), duration);
+      }
+    } else if (assertive) {
+      console.warn(message);
+    }
+    if (focusTarget?.focus) focusTarget.focus({ preventScroll: true });
+  }
+
   // ==========================================
   // CART FUNCTIONS
   // ==========================================
   function openCart() {
     state.cartOpen = true;
-    if (dom.cartOverlay) dom.cartOverlay.classList.remove('hidden');
-    if (dom.cartDrawer) {
-      dom.cartDrawer.classList.remove('translate-x-full');
-      dom.cartDrawer.setAttribute('aria-hidden', 'false');
-    }
-    if (dom.cartOverlay) dom.cartOverlay.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
     renderCart();
+    if (dom.cartBtn) dom.cartBtn.setAttribute('aria-expanded', 'true');
+    if (cartDialogController) {
+      cartDialogController.open({ trigger: dom.cartBtn, initialFocus: dom.cartClose });
+    } else {
+      if (dom.cartOverlay) {
+        dom.cartOverlay.classList.remove('hidden');
+        dom.cartOverlay.setAttribute('aria-hidden', 'false');
+      }
+      if (dom.cartDrawer) {
+        dom.cartDrawer.classList.remove('translate-x-full');
+        dom.cartDrawer.setAttribute('aria-hidden', 'false');
+      }
+      document.body.style.overflow = 'hidden';
+    }
   }
 
-  function closeCart() {
+  function closeCart({ restoreFocus = true } = {}) {
     state.cartOpen = false;
-    if (dom.cartDrawer) {
-      dom.cartDrawer.classList.add('translate-x-full');
-      dom.cartDrawer.setAttribute('aria-hidden', 'true');
+    if (dom.cartBtn) dom.cartBtn.setAttribute('aria-expanded', 'false');
+    if (cartDialogController) {
+      cartDialogController.close({ restoreFocus });
+    } else {
+      if (dom.cartDrawer) {
+        dom.cartDrawer.classList.add('translate-x-full');
+        dom.cartDrawer.setAttribute('aria-hidden', 'true');
+      }
+      if (dom.cartOverlay) {
+        dom.cartOverlay.classList.add('hidden');
+        dom.cartOverlay.setAttribute('aria-hidden', 'true');
+      }
+      document.body.style.overflow = '';
     }
-    if (dom.cartOverlay) {
-      dom.cartOverlay.classList.add('hidden');
-      dom.cartOverlay.setAttribute('aria-hidden', 'true');
-    }
-    document.body.style.overflow = '';
   }
 
   function formatPrice(price) {
@@ -357,17 +407,25 @@ function loadProductCardNavigationModule() {
   // ==========================================
   function openCheckoutModal() {
     // Removed early return based on cart length to always open checkout drawer
-    closeCart();
+    closeCart({ restoreFocus: false });
     const drawer = dom.checkoutDrawer;
     const overlay = dom.checkoutOverlay;
     if (!drawer || !overlay) {
       return;
     }
-    overlay.classList.remove('hidden');
-    overlay.setAttribute('aria-hidden', 'false');
-    drawer.classList.remove('translate-x-full');
-    drawer.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
+    if (dom.checkoutBtn) dom.checkoutBtn.setAttribute('aria-expanded', 'true');
+    if (checkoutDialogController) {
+      checkoutDialogController.open({
+        trigger: dom.cartBtn,
+        initialFocus: document.getElementById('checkout-close'),
+      });
+    } else {
+      overlay.classList.remove('hidden');
+      overlay.setAttribute('aria-hidden', 'false');
+      drawer.classList.remove('translate-x-full');
+      drawer.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
 
     validatedAddress = null;
 
@@ -415,18 +473,23 @@ function loadProductCardNavigationModule() {
     }
   }
 
-  function closeCheckoutModal() {
+  function closeCheckoutModal({ restoreFocus = true } = {}) {
     const drawer = dom.checkoutDrawer;
     const overlay = dom.checkoutOverlay;
-    if (drawer) {
-      drawer.classList.add('translate-x-full');
-      drawer.setAttribute('aria-hidden', 'true');
+    if (dom.checkoutBtn) dom.checkoutBtn.setAttribute('aria-expanded', 'false');
+    if (checkoutDialogController) {
+      checkoutDialogController.close({ restoreFocus });
+    } else {
+      if (drawer) {
+        drawer.classList.add('translate-x-full');
+        drawer.setAttribute('aria-hidden', 'true');
+      }
+      if (overlay) {
+        overlay.classList.add('hidden');
+        overlay.setAttribute('aria-hidden', 'true');
+      }
+      document.body.style.overflow = '';
     }
-    if (overlay) {
-      overlay.classList.add('hidden');
-      overlay.setAttribute('aria-hidden', 'true');
-    }
-    document.body.style.overflow = '';
   }
 
   function updateCheckoutTotals() {
@@ -477,6 +540,7 @@ function loadProductCardNavigationModule() {
       }
       updateCheckoutTotals();
       renderCart();
+      announcePurchaseFeedback(percent + '% discount applied.');
       return true;
     } else {
       state.discountCode = '';
@@ -488,6 +552,7 @@ function loadProductCardNavigationModule() {
         messageEl.classList.remove('hidden');
       }
       updateCheckoutTotals();
+      announcePurchaseFeedback('Invalid discount code.', { assertive: true });
       return false;
     }
   }
@@ -556,13 +621,28 @@ function loadProductCardNavigationModule() {
     const country = document.getElementById('checkout-country')?.value;
 
     if (!firstname || !lastname || !email || !street || !zip || !city || !country) {
-      alert('Please fill in all required fields.');
+      const firstMissing = [
+        ['checkout-firstname', firstname],
+        ['checkout-lastname', lastname],
+        ['checkout-email', email],
+        ['checkout-street', street],
+        ['checkout-zip', zip],
+        ['checkout-city', city],
+        ['checkout-country', country],
+      ].find(([, value]) => !value);
+      announcePurchaseFeedback('Please fill in all required fields.', {
+        assertive: true,
+        focusTarget: firstMissing ? document.getElementById(firstMissing[0]) : null,
+      });
       return;
     }
 
     // Email format check
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      alert('Please enter a valid email address.');
+      announcePurchaseFeedback('Please enter a valid email address.', {
+        assertive: true,
+        focusTarget: document.getElementById('checkout-email'),
+      });
       return;
     }
 
@@ -579,8 +659,10 @@ function loadProductCardNavigationModule() {
       validateAddressWithGoogle(street, zip, city, country, function(err, googleAddress) {
         if (payBtn) { payBtn.disabled = false; payBtn.textContent = originalBtnText; }
         if (err) {
-          alert(err);
-          document.getElementById('checkout-street').focus();
+          announcePurchaseFeedback(err, {
+            assertive: true,
+            focusTarget: document.getElementById('checkout-street'),
+          });
           return;
         }
         processOrder(googleAddress, firstname, lastname, email);
@@ -676,7 +758,7 @@ function loadProductCardNavigationModule() {
       });
     } catch (error) {
       console.error('Cannot create trusted order request:', error);
-      alert('Your saved cart uses an outdated product format. Please clear the cart and add the products again.');
+      announcePurchaseFeedback('Your saved cart uses an outdated product format. Please clear the cart and add the products again.', { assertive: true });
       return;
     }
 
@@ -724,7 +806,7 @@ function loadProductCardNavigationModule() {
       window.location.origin,
     );
     if (!checkoutConfigured) {
-      alert('Order ready! Secure online payment is not enabled on this deployment yet.\n\nSubtotal: ' + formatPrice(totals.subtotal) + '\nDiscount (' + state.discountPercent + '%): -' + formatPrice(totals.discount) + '\nShipping to ' + totals.zone.name + ': ' + (totals.shipping === 0 ? 'Free' : formatPrice(totals.shipping)) + '\nTotal: ' + formatPrice(totals.grandTotal));
+      announcePurchaseFeedback('Order ready. Secure online payment is not enabled on this deployment yet. Total: ' + formatPrice(totals.grandTotal) + '.', { assertive: true, duration: 12000 });
       return;
     }
 
@@ -749,7 +831,7 @@ function loadProductCardNavigationModule() {
       window.location.assign(checkout.url);
     } catch (error) {
       console.error('Hosted checkout could not be started:', error);
-      alert('Secure payment could not be started. Your cart is still saved. Please try again.');
+      announcePurchaseFeedback('Secure payment could not be started. Your cart is still saved. Please try again.', { assertive: true });
     } finally {
       if (payBtn) {
         payBtn.disabled = false;
@@ -905,7 +987,7 @@ function loadProductCardNavigationModule() {
         const page = resolveCartProductPage(btn, name);
         if (!page) {
           console.error('Cannot add product without a stable catalog page:', name);
-          alert('This product could not be added safely. Please open its product page and try again.');
+          announcePurchaseFeedback('This product could not be added safely. Please open its product page and try again.', { assertive: true });
           return;
         }
         addToCart(page, name, price, image);
@@ -1071,11 +1153,7 @@ function initProductCards() {
       });
     }
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        if (state.cartOpen) closeCart();
-        if (state.mobileMenuOpen) closeMobileMenu();
-        closeCheckoutModal();
-      }
+      if (e.key === 'Escape' && state.mobileMenuOpen) closeMobileMenu();
     });
 
     const checkoutBtn = document.getElementById('checkout-btn');
@@ -1093,12 +1171,15 @@ function initProductCards() {
         if (fn && ln && email) {
           loadGooglePlaces();
         } else {
-          // Prompt user to fill missing fields before address autocomplete
-          alert('Vul eerst uw voornaam, achternaam en e‑mail in voordat u het adres invult.');
-          // Optionally focus the first missing field
-          if (!fn) document.getElementById('checkout-firstname')?.focus();
-          else if (!ln) document.getElementById('checkout-lastname')?.focus();
-          else if (!email) document.getElementById('checkout-email')?.focus();
+          const firstMissing = !fn
+            ? document.getElementById('checkout-firstname')
+            : !ln
+              ? document.getElementById('checkout-lastname')
+              : document.getElementById('checkout-email');
+          announcePurchaseFeedback('Fill in your first name, last name and email before entering the address.', {
+            assertive: true,
+            focusTarget: firstMissing,
+          });
         }
       }, { once: true });
     }
@@ -1488,6 +1569,23 @@ function initStickerModalClose() {
     await loadCommerceModule();
     loadCart();  // Restore cart after commerce policies are available
     await loadProductCardNavigationModule();
+    await loadDialogAccessibilityModule();
+    if (dom.cartDrawer && dom.cartOverlay) {
+      cartDialogController = dialogAccessibilityModule.createDialogController({
+        dialog: dom.cartDrawer,
+        overlay: dom.cartOverlay,
+        documentRef: document,
+        onRequestClose: closeCart,
+      });
+    }
+    if (dom.checkoutDrawer && dom.checkoutOverlay) {
+      checkoutDialogController = dialogAccessibilityModule.createDialogController({
+        dialog: dom.checkoutDrawer,
+        overlay: dom.checkoutOverlay,
+        documentRef: document,
+        onRequestClose: closeCheckoutModal,
+      });
+    }
     const fns = [
       initStickerClicks,
       initStickerModalClose,

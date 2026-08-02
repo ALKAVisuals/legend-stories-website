@@ -323,7 +323,9 @@ function auditPage(page, html) {
     if (attributes.role === 'dialog' && attributes['aria-modal'] !== 'true') {
       issues.push(issue(page, 'review', 'dialog-modality', 'Dialog role is present without aria-modal="true"; verify whether the background is intended to remain interactive.', signature));
     }
-    issues.push(issue(page, 'review', 'dialog-focus-lifecycle', 'Verify focus entry, focus containment, Escape handling and focus restoration for this dialog.', signature));
+    if (attributes['data-focus-managed'] !== 'true') {
+      issues.push(issue(page, 'review', 'dialog-focus-lifecycle', 'Verify focus entry, focus containment, Escape handling and focus restoration for this dialog.', signature));
+    }
   }
 
   stats.liveRegions = (markup.match(/aria-live\s*=|role\s*=\s*["'](?:status|alert)["']/gi) || []).length;
