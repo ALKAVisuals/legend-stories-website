@@ -3,7 +3,9 @@ import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 
 const ROOT = process.cwd();
-const EXPECTED_PRODUCT_CARDS = 232;
+const EXPECTED_PRODUCT_CARD_CONTAINERS = 233;
+const EXPECTED_PRODUCT_CARD_IMAGES = 232;
+const EXPECTED_IMAGELESS_CTA_CARDS = 1;
 const EXPECTED_PRESENTATION_MANIFESTS = 6;
 
 function setAttribute(tag, name, value) {
@@ -29,9 +31,19 @@ function updateHero(html, label) {
   return `${html.slice(0, start)}${tag}${html.slice(end + 1)}`;
 }
 
+function validateImagelessCta(block, label, cardNumber) {
+  if (/\bdata-product-href\s*=/i.test(block)) {
+    throw new Error(`${label}: image-less card ${cardNumber} unexpectedly has a product destination.`);
+  }
+  if (/\badd-to-cart-btn\b/i.test(block)) {
+    throw new Error(`${label}: image-less card ${cardNumber} unexpectedly has an add-to-cart action.`);
+  }
+}
+
 function updateProductCards(html, label) {
   let cards = 0;
   let images = 0;
+  let imageLessCtas = 0;
   const output = html.replace(
     /<article\b(?=[^>]*\bclass=["'][^"']*\bproduct-card\b[^"']*["'])[^>]*>[\s\S]*?<\/article>/gi,
     (block) => {
@@ -45,11 +57,14 @@ function updateProductCards(html, label) {
         updated = setAttribute(updated, 'fetchpriority', 'low');
         return updated;
       });
-      if (!changed) throw new Error(`${label}: product card ${cards} has no image.`);
+      if (!changed) {
+        imageLessCtas += 1;
+        validateImagelessCta(block, label, cards);
+      }
       return next;
     },
   );
-  return { output, cards, images };
+  return { output, cards, images, imageLessCtas };
 }
 
 function replaceExact(source, before, after, label) {
@@ -85,16 +100,24 @@ const htmlFiles = (await readdir(ROOT, { withFileTypes: true }))
   .sort();
 let cardCount = 0;
 let imageCount = 0;
+let imageLessCtaCount = 0;
 for (const file of htmlFiles) {
   const path = join(ROOT, file);
   const html = await readFile(path, 'utf8');
   const result = updateProductCards(html, file);
   cardCount += result.cards;
   imageCount += result.images;
+  imageLessCtaCount += result.imageLessCtas;
   if (result.output !== html) await writeFile(path, result.output, 'utf8');
 }
-if (cardCount !== EXPECTED_PRODUCT_CARDS || imageCount !== EXPECTED_PRODUCT_CARDS) {
-  throw new Error(`Expected ${EXPECTED_PRODUCT_CARDS} product-card images, found ${cardCount} cards and ${imageCount} images.`);
+if (
+  cardCount !== EXPECTED_PRODUCT_CARD_CONTAINERS ||
+  imageCount !== EXPECTED_PRODUCT_CARD_IMAGES ||
+  imageLessCtaCount !== EXPECTED_IMAGELESS_CTA_CARDS
+) {
+  throw new Error(
+    `Expected ${EXPECTED_PRODUCT_CARD_CONTAINERS} card containers, ${EXPECTED_PRODUCT_CARD_IMAGES} product images and ${EXPECTED_IMAGELESS_CTA_CARDS} image-less CTA; found ${cardCount}, ${imageCount} and ${imageLessCtaCount}.`,
+  );
 }
 
 const appPath = join(ROOT, 'js/app.js');
@@ -144,4 +167,6 @@ for (const file of presentationFiles) {
   await writeFile(path, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 }
 
-console.log(`Prepared product image loading contract: ${cardCount} card images, one shared hero template and ${presentationFiles.length} manifests.`);
+console.log(
+  `Prepared product image loading contract: ${imageCount} product-card images, ${imageLessCtaCount} image-less CTA, one shared hero template and ${presentationFiles.length} manifests.`,
+);
