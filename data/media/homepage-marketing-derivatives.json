@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "page": "index.html",
+  "format": "webp",
+  "quality": 86,
+  "compressionLevel": 6,
+  "minimumSsim": 0.985,
+  "maximumSizeRatio": 0.35,
+  "images": [
+    {
+      "source": "media/voorbeelden/Arnold S.png",
+      "derivative": "media/voorbeelden/Arnold S.webp",
+      "width": 878,
+      "height": 901
+    },
+    {
+      "source": "media/voorbeelden/Fightclub.png",
+      "derivative": "media/voorbeelden/Fightclub.webp",
+      "width": 878,
+      "height": 901
+    },
+    {
+      "source": "media/voorbeelden/Ibrahimovic.png",
+      "derivative": "media/voorbeelden/Ibrahimovic.webp",
+      "width": 878,
+      "height": 901
+    },
+    {
+      "source": "media/voorbeelden/Ice Cube.png",
+      "derivative": "media/voorbeelden/Ice Cube.webp",
+      "width": 878,
+      "height": 901
+    },
+    {
+      "source": "media/voorbeelden/Mike T..png",
+      "derivative": "media/voorbeelden/Mike T..webp",
+      "width": 878,
+      "height": 901
+    }
+  ]
+}
