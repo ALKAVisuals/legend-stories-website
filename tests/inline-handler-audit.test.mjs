@@ -2,11 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  buildFamilyInventory,
   buildPatternInventory,
   classifyHandlerCode,
   elementSignature,
   extractInlineHandlerRecords,
+  handlerFamily,
   normalizeHandlerCode,
+  validateHandlerSyntax,
 } from '../scripts/inline-handler-audit.mjs';
 
 test('normalizes whitespace without changing handler meaning', () => {
@@ -19,6 +22,20 @@ test('classifies common handler shapes', () => {
   assert.equal(classifyHandlerCode('window.cart.open()'), 'global-call');
   assert.equal(classifyHandlerCode('if (ready) { openCart(); }'), 'control-flow');
   assert.equal(classifyHandlerCode('first(); second();'), 'compound');
+});
+
+test('compiles handler syntax without executing the handler', () => {
+  assert.deepEqual(validateHandlerSyntax("window.location='shop.html';"), { valid: true, error: '' });
+  const invalid = validateHandlerSyntax("window.location=\\'shop.html\\';");
+  assert.equal(invalid.valid, false);
+  assert.match(invalid.error, /token|invalid|unexpected/i);
+});
+
+test('maps parameterized handlers into semantic families', () => {
+  assert.equal(handlerFamily('event.stopPropagation();'), 'event-stop-propagation');
+  assert.equal(handlerFamily("window.location='a.html';"), 'location-assignment');
+  assert.equal(handlerFamily("window.location='b.html';"), 'location-assignment');
+  assert.equal(handlerFamily('window.legendApp.open()'), 'global-call');
 });
 
 test('builds compact element signatures', () => {
@@ -37,18 +54,23 @@ test('extracts handlers while ignoring scripts and styles', () => {
   assert.deepEqual(records.map((record) => record.event), ['onclick', 'onload']);
   assert.equal(records[0].element, 'button#buy.btn.primary');
   assert.equal(records[0].classification, 'global-call');
+  assert.equal(records[0].syntaxValid, true);
   assert.equal(records[1].classification, 'element-state');
 });
 
-test('groups repeated patterns and assigns migration signals', () => {
+test('groups exact patterns separately from semantic families', () => {
   const records = [
-    ...extractInlineHandlerRecords('<button onclick="openCart()"></button>', 'a.html'),
-    ...extractInlineHandlerRecords('<a onclick="openCart()"></a>', 'b.html'),
-    ...extractInlineHandlerRecords('<div onclick="this.classList.toggle(\'open\')"></div>', 'c.html'),
-    ...extractInlineHandlerRecords('<span onclick="this.classList.toggle(\'open\')"></span>', 'd.html'),
+    ...extractInlineHandlerRecords('<article onclick="window.location=\'a.html\'"></article>', 'a.html'),
+    ...extractInlineHandlerRecords('<article onclick="window.location=\'b.html\'"></article>', 'b.html'),
+    ...extractInlineHandlerRecords('<button onclick="event.stopPropagation();"></button>', 'a.html'),
+    ...extractInlineHandlerRecords('<button onclick="event.stopPropagation();"></button>', 'b.html'),
   ];
   const patterns = buildPatternInventory(records);
-  assert.equal(patterns.length, 2);
-  assert.equal(patterns[0].occurrences, 2);
-  assert.deepEqual(new Set(patterns.map((pattern) => pattern.migrationSignal)), new Set(['high', 'medium']));
+  const families = buildFamilyInventory(records);
+  assert.equal(patterns.length, 3);
+  assert.equal(families.length, 2);
+  assert.deepEqual(families.map((family) => [family.family, family.occurrences, family.migrationSignal]), [
+    ['event-stop-propagation', 2, 'high'],
+    ['location-assignment', 2, 'high'],
+  ]);
 });
