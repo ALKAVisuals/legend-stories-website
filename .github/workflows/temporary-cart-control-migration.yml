@@ -36,19 +36,42 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
-      - name: Apply exact cart control migration
-        run: node scripts/migrate-cart-controls.mjs
+      - name: Apply migration and validate
+        shell: bash
+        run: |
+          set +e
+          node scripts/migrate-cart-controls.mjs > /tmp/cart-migration.log 2>&1
+          migration_status=$?
+          if [ "$migration_status" -ne 0 ]; then
+            {
+              echo "stage=migration"
+              echo "exit_code=$migration_status"
+              tail -n 160 /tmp/cart-migration.log
+            } > cart-control-migration-diagnostic.txt
+          else
+            npm run quality > /tmp/cart-quality.log 2>&1
+            quality_status=$?
+            if [ "$quality_status" -ne 0 ]; then
+              {
+                echo "stage=quality"
+                echo "exit_code=$quality_status"
+                tail -n 240 /tmp/cart-quality.log
+              } > cart-control-migration-diagnostic.txt
+            fi
+          fi
 
-      - name: Run complete quality gate
-        run: npm run quality
-
-      - name: Remove temporary migration tooling
-        run: rm scripts/migrate-cart-controls.mjs .github/workflows/temporary-cart-control-migration.yml
-
-      - name: Commit validated result
+      - name: Commit diagnostic or validated result
+        shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -f cart-control-migration-diagnostic.txt ]; then
+            git add cart-control-migration-diagnostic.txt
+            git commit -m "Record cart migration diagnostic"
+            git push origin HEAD:agent/cart-control-delegation
+            exit 0
+          fi
+          rm scripts/migrate-cart-controls.mjs .github/workflows/temporary-cart-control-migration.yml
           git add -A
           git diff --cached --quiet && { echo "No validated changes to commit"; exit 1; }
           git commit -m "Delegate cart item controls"
