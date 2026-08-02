@@ -22,6 +22,41 @@ test('product browser derivative manifest is exact and unique', () => {
   assert.equal(new Set(PRODUCT_BROWSER_DERIVATIVES.map((image) => image.productPage)).size, 21);
 });
 
+test('product browser derivative quality policy matches the validated layout contract', () => {
+  assert.equal(PRODUCT_BROWSER_DERIVATIVE_MANIFEST.maxDimension, 1800);
+  assert.equal(PRODUCT_BROWSER_DERIVATIVE_MANIFEST.wideDisplayMaxDimension, 900);
+  assert.equal(PRODUCT_BROWSER_DERIVATIVE_MANIFEST.minimumNativeCompositeSsim, 0.975);
+  assert.equal(PRODUCT_BROWSER_DERIVATIVE_MANIFEST.minimumWideDisplayCompositeSsim, 0.98);
+  assert.equal(PRODUCT_BROWSER_DERIVATIVE_MANIFEST.maximumSizeRatio, 0.35);
+  assert.equal('minimumColorSsim' in PRODUCT_BROWSER_DERIVATIVE_MANIFEST, false);
+  assert.equal('minimumAlphaSsim' in PRODUCT_BROWSER_DERIVATIVE_MANIFEST, false);
+  assert.equal('standardDisplayMaxDimension' in PRODUCT_BROWSER_DERIVATIVE_MANIFEST, false);
+
+  assert.equal(PRODUCT_BROWSER_DERIVATIVES.filter((image) => image.quality === 100).length, 1);
+  assert.equal(PRODUCT_BROWSER_DERIVATIVES.filter((image) => image.quality === 96).length, 7);
+  assert.equal(PRODUCT_BROWSER_DERIVATIVES.filter((image) => image.maxDimension === 1440).length, 1);
+  assert.equal(PRODUCT_BROWSER_DERIVATIVES.filter((image) => image.maxDimension === 1600).length, 1);
+  assert.equal(PRODUCT_BROWSER_DERIVATIVES.filter((image) => image.maxDimension === 1700).length, 3);
+
+  const unstoppableWill = PRODUCT_BROWSER_DERIVATIVES.find(
+    (image) => image.productPage === 'combat-unstoppable-will.html',
+  );
+  assert.deepEqual(
+    {
+      quality: unstoppableWill?.quality,
+      maxDimension: unstoppableWill?.maxDimension,
+      width: unstoppableWill?.width,
+      height: unstoppableWill?.height,
+    },
+    {
+      quality: 100,
+      maxDimension: 1440,
+      width: 1440,
+      height: 1152,
+    },
+  );
+});
+
 test('product image paths normalize absolute, encoded and legacy URLs', () => {
   const expected = 'media/stikkers/2026/batch 3/Sport Legends/lions-pride-sport-legend-mural.png';
   assert.equal(
@@ -47,6 +82,10 @@ test('derivative dimensions preserve aspect ratio and even output dimensions', (
   assert.deepEqual(calculateDerivativeDimensions(9040, 4976, 1800), {
     width: 1800,
     height: 992,
+  });
+  assert.deepEqual(calculateDerivativeDimensions(7928, 6344, 1440), {
+    width: 1440,
+    height: 1152,
   });
 });
 
