@@ -1,6 +1,9 @@
 name: One-time shared form semantics migration
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - agent/shared-form-semantics
@@ -15,6 +18,7 @@ concurrency:
 
 jobs:
   migrate:
+    if: github.event_name != 'pull_request' || github.head_ref == 'agent/shared-form-semantics'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -74,5 +78,3 @@ jobs:
           git rm .github/workflows/one-time-shared-form-semantics.yml scripts/one-time-shared-form-semantics.py
           git commit -m "Remove one-time accessibility migration files"
           git push origin HEAD:agent/shared-form-semantics
-
-# PR-scoped trigger after the draft pull request exists.
