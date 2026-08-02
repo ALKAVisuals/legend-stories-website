@@ -74,3 +74,5 @@ jobs:
           git rm .github/workflows/one-time-shared-form-semantics.yml scripts/one-time-shared-form-semantics.py
           git commit -m "Remove one-time accessibility migration files"
           git push origin HEAD:agent/shared-form-semantics
+
+# PR-scoped trigger after the draft pull request exists.
