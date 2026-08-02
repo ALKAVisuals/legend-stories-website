@@ -104,3 +104,39 @@ test('dialog controller restores focus to the element that opened it', async () 
   assert.equal(documentRef.body.style.overflow, '');
   assert.equal(listeners.has('keydown'), false);
 });
+
+test('Tab falls back to the dialog when no inner controls are focusable', async () => {
+  const listeners = new Map();
+  let dialogFocusCalls = 0;
+  const trigger = { isConnected: true, focus() {} };
+  const documentRef = {
+    activeElement: trigger,
+    body: { style: {} },
+    addEventListener(type, listener) { listeners.set(type, listener); },
+    removeEventListener(type) { listeners.delete(type); },
+  };
+  const classList = { add() {}, remove() {} };
+  const overlay = { classList, setAttribute() {} };
+  const dialog = {
+    tabIndex: -1,
+    classList,
+    setAttribute() {},
+    querySelectorAll() { return []; },
+    focus() { dialogFocusCalls += 1; },
+  };
+
+  const controller = createDialogController({ dialog, overlay, documentRef });
+  controller.open({ trigger });
+  await Promise.resolve();
+  const initialFocusCalls = dialogFocusCalls;
+
+  let prevented = false;
+  listeners.get('keydown')({
+    key: 'Tab',
+    shiftKey: false,
+    preventDefault() { prevented = true; },
+  });
+
+  assert.equal(prevented, true);
+  assert.equal(dialogFocusCalls, initialFocusCalls + 1);
+});
