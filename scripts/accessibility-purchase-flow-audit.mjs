@@ -98,14 +98,14 @@ export function classifyPage(page = '', html = '') {
   const filename = String(page).toLowerCase();
   const markup = String(html).slice(0, 40000);
   if (PURCHASE_FILE_PATTERN.test(filename)) return 'purchase-flow';
-  if (/data-product-(?:id|slug|page)|product-detail|product-page/i.test(markup)) return 'product';
+  if (/data-product-(?:id|slug|page)|product-detail|product-page|"@type"\s*:\s*"Product"/i.test(markup)) return 'product';
   if (COLLECTION_FILE_PATTERN.test(filename) || /data-collection-page|collection-hero/i.test(markup)) return 'collection';
   if (filename === 'index.html') return 'home';
   return 'general';
 }
 
 export function expectedAutocompleteToken(attributes = {}) {
-  const hint = `${attributes.id || ''} ${attributes.name || ''} ${attributes.placeholder || ''}`;
+  const hint = `${attributes.id || ''} ${attributes.name || ''}`;
   return AUTOCOMPLETE_EXPECTATIONS.find((entry) => entry.pattern.test(hint))?.token || '';
 }
 
