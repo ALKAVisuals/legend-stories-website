@@ -90,7 +90,7 @@ export function extractProductPresentation(html, product) {
   ).trim();
   const imageAlt = matchRequired(
     html,
-    /<!-- IMAGE -->[\s\S]*?<img\s+src="[^"]*"\s+alt="([^"]*)"\s+class="w-full h-full object-contain">/,
+    /<!-- IMAGE -->[\s\S]*?<img\s+src="[^"]*"\s+alt="([^"]*)"\s+class="w-full h-full object-contain"[^>]*>/,
     `${product.page} image alt`,
   );
   const compareAtText = matchRequired(
@@ -173,7 +173,7 @@ export function templatizeProductPage(input) {
   );
   html = replaceRequired(
     html,
-    /(<!-- IMAGE -->[\s\S]*?<img\s+)src="[^"]*"\s+alt="[^"]*"(\s+class="w-full h-full object-contain">)/,
+    /(<!-- IMAGE -->[\s\S]*?<img\s+)src="[^"]*"\s+alt="[^"]*"(\s+class="w-full h-full object-contain"[^>]*>)/,
     '$1src="{{IMAGE}}" alt="{{IMAGE_ALT}}"$2',
     'primary product image',
   );
