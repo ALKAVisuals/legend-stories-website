@@ -42,18 +42,18 @@ function productCardBlocks(html = '') {
     .map((match) => match[0]);
 }
 
-function findUniqueLine(source, needle, label, failures) {
+function findUniqueLine(source, needle, label, failures, sourceLabel = 'js/app.js') {
   const lines = String(source).split('\n').filter((line) => line.includes(needle));
   if (lines.length !== 1) {
-    failures.push(`js/app.js: expected one ${label} line, found ${lines.length}`);
+    failures.push(`${sourceLabel}: expected one ${label} line, found ${lines.length}`);
     return '';
   }
   return lines[0];
 }
 
-function requireTokens(line, tokens, label, failures) {
+function requireTokens(line, tokens, label, failures, sourceLabel = 'js/app.js') {
   for (const token of tokens) {
-    if (!line.includes(token)) failures.push(`js/app.js: ${label} is missing ${token}`);
+    if (!line.includes(token)) failures.push(`${sourceLabel}: ${label} is missing ${token}`);
   }
 }
 
@@ -118,7 +118,10 @@ if (imageLessCtaCount !== EXPECTED_IMAGELESS_CTA_CARDS) {
   failures.push(`expected ${EXPECTED_IMAGELESS_CTA_CARDS} image-less CTA card, found ${imageLessCtaCount}`);
 }
 
-const app = await readFile(join(ROOT, 'js/app.js'), 'utf8');
+const [app, cartControls] = await Promise.all([
+  readFile(join(ROOT, 'js/app.js'), 'utf8'),
+  readFile(join(ROOT, 'js/cart-controls.mjs'), 'utf8'),
+]);
 const relatedLine = findUniqueLine(
   app,
   'group-hover:scale-105 transition-transform duration-500',
@@ -133,12 +136,19 @@ requireTokens(
 );
 
 const cartThumbnailLine = findUniqueLine(
-  app,
+  cartControls,
   'w-12 h-12 object-contain rounded',
   'cart thumbnail image',
   failures,
+  'js/cart-controls.mjs',
 );
-requireTokens(cartThumbnailLine, ['decoding=', 'async'], 'cart thumbnail image', failures);
+requireTokens(
+  cartThumbnailLine,
+  ['decoding=', 'async'],
+  'cart thumbnail image',
+  failures,
+  'js/cart-controls.mjs',
+);
 
 if (failures.length) {
   console.error(`Product image loading validation failed with ${failures.length} issue(s):`);
