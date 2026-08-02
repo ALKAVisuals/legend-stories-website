@@ -3,7 +3,9 @@ import { extname, join } from 'node:path';
 
 const ROOT = process.cwd();
 const EXPECTED_PRODUCT_PAGES = 111;
-const EXPECTED_PRODUCT_CARDS = 232;
+const EXPECTED_PRODUCT_CARD_CONTAINERS = 233;
+const EXPECTED_PRODUCT_CARD_IMAGES = 232;
+const EXPECTED_IMAGELESS_CTA_CARDS = 1;
 
 function parseAttributes(tag = '') {
   const attributes = {};
@@ -60,15 +62,25 @@ const rootHtmlFiles = (await readdir(ROOT, { withFileTypes: true }))
   .sort();
 
 let cardCount = 0;
+let imageCount = 0;
+let imageLessCtaCount = 0;
 for (const file of rootHtmlFiles) {
   const html = await readFile(join(ROOT, file), 'utf8');
   for (const [index, block] of productCardBlocks(html).entries()) {
     cardCount += 1;
     const image = block.match(/<img\b[^>]*>/i)?.[0];
     if (!image) {
-      failures.push(`${file}: product card ${index + 1} has no image`);
+      imageLessCtaCount += 1;
+      if (/\bdata-product-href\s*=/i.test(block)) {
+        failures.push(`${file}: image-less card ${index + 1} must not have a product destination`);
+      }
+      if (/\badd-to-cart-btn\b/i.test(block)) {
+        failures.push(`${file}: image-less card ${index + 1} must not have an add-to-cart action`);
+      }
       continue;
     }
+
+    imageCount += 1;
     const attributes = parseAttributes(image);
     for (const [name, value] of Object.entries({
       loading: 'lazy',
@@ -81,8 +93,14 @@ for (const file of rootHtmlFiles) {
     }
   }
 }
-if (cardCount !== EXPECTED_PRODUCT_CARDS) {
-  failures.push(`expected ${EXPECTED_PRODUCT_CARDS} product cards, found ${cardCount}`);
+if (cardCount !== EXPECTED_PRODUCT_CARD_CONTAINERS) {
+  failures.push(`expected ${EXPECTED_PRODUCT_CARD_CONTAINERS} product-card containers, found ${cardCount}`);
+}
+if (imageCount !== EXPECTED_PRODUCT_CARD_IMAGES) {
+  failures.push(`expected ${EXPECTED_PRODUCT_CARD_IMAGES} product-card images, found ${imageCount}`);
+}
+if (imageLessCtaCount !== EXPECTED_IMAGELESS_CTA_CARDS) {
+  failures.push(`expected ${EXPECTED_IMAGELESS_CTA_CARDS} image-less CTA card, found ${imageLessCtaCount}`);
 }
 
 const app = await readFile(join(ROOT, 'js/app.js'), 'utf8');
@@ -100,5 +118,5 @@ if (failures.length) {
 }
 
 console.log(
-  `Product image loading validated: ${EXPECTED_PRODUCT_PAGES} product heroes, ${cardCount} lazy product cards, related products and cart thumbnails.`,
+  `Product image loading validated: ${EXPECTED_PRODUCT_PAGES} product heroes, ${imageCount} lazy product-card images, ${imageLessCtaCount} image-less CTA, related products and cart thumbnails.`,
 );
