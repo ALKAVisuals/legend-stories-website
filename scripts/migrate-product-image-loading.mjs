@@ -73,6 +73,26 @@ function replaceExact(source, before, after, label) {
   return source.replace(before, after);
 }
 
+function replaceUniqueLine(source, needle, transform, label) {
+  const lines = source.split('\n');
+  const indexes = lines.flatMap((line, index) => line.includes(needle) ? [index] : []);
+  if (indexes.length !== 1) {
+    throw new Error(`${label}: expected exactly one matching line, found ${indexes.length}.`);
+  }
+  const index = indexes[0];
+  const updated = transform(lines[index]);
+  if (updated === lines[index]) throw new Error(`${label}: matching line was not changed.`);
+  lines[index] = updated;
+  return lines.join('\n');
+}
+
+function replaceMarkupAttribute(line, escapedBefore, escapedAfter, plainBefore, plainAfter, label) {
+  if (line.includes(escapedAfter) || line.includes(plainAfter)) return line;
+  if (line.includes(escapedBefore)) return line.replace(escapedBefore, escapedAfter);
+  if (line.includes(plainBefore)) return line.replace(plainBefore, plainAfter);
+  throw new Error(`${label}: expected markup attribute was not found.`);
+}
+
 const templatePath = join(ROOT, 'templates/product-page.html');
 let template = await readFile(templatePath, 'utf8');
 template = updateHero(template, 'templates/product-page.html');
@@ -122,16 +142,30 @@ if (
 
 const appPath = join(ROOT, 'js/app.js');
 let app = await readFile(appPath, 'utf8');
-app = replaceExact(
+app = replaceUniqueLine(
   app,
-  `html += '<img src=\\"' + image + '\\" alt=\\"' + name + '\\" class=\\"w-full h-full object-contain group-hover:scale-105 transition-transform duration-500\\" loading=\\"lazy\\">';`,
-  `html += '<img src=\\"' + image + '\\" alt=\\"' + name + '\\" class=\\"w-full h-full object-contain group-hover:scale-105 transition-transform duration-500\\" loading=\\"lazy\\" decoding=\\"async\\" fetchpriority=\\"low\\">';`,
+  'group-hover:scale-105 transition-transform duration-500',
+  (line) => replaceMarkupAttribute(
+    line,
+    'loading=\\"lazy\\"',
+    'loading=\\"lazy\\" decoding=\\"async\\" fetchpriority=\\"low\\"',
+    'loading="lazy"',
+    'loading="lazy" decoding="async" fetchpriority="low"',
+    'related-product image loading',
+  ),
   'related-product image loading',
 );
-app = replaceExact(
+app = replaceUniqueLine(
   app,
-  `? '<img src=\\"' + item.image + '\\" alt=\\"' + item.name + '\\" class=\\"w-12 h-12 object-contain rounded\\">'`,
-  `? '<img src=\\"' + item.image + '\\" alt=\\"' + item.name + '\\" class=\\"w-12 h-12 object-contain rounded\\" decoding=\\"async\\">'`,
+  'w-12 h-12 object-contain rounded',
+  (line) => replaceMarkupAttribute(
+    line,
+    'class=\\"w-12 h-12 object-contain rounded\\"',
+    'class=\\"w-12 h-12 object-contain rounded\\" decoding=\\"async\\"',
+    'class="w-12 h-12 object-contain rounded"',
+    'class="w-12 h-12 object-contain rounded" decoding="async"',
+    'cart thumbnail decoding',
+  ),
   'cart thumbnail decoding',
 );
 await writeFile(appPath, app, 'utf8');
