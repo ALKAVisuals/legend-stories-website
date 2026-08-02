@@ -35,9 +35,9 @@ export function renderCartItemMarkup({ item, index, formatPrice } = {}) {
     '<div class="w-16 h-16 rounded-lg bg-surface flex items-center justify-center text-2xl shrink-0">' + imageMarkup + '</div>' +
     '<div class="flex-1 min-w-0"><p class="text-sm font-medium text-text-primary truncate">' + safeName + '</p>' +
     '<div class="flex items-center justify-between mt-2"><div class="flex items-center gap-2">' +
-    '<button type="button" data-cart-action="decrement" data-cart-index="' + cartIndex + '" aria-label="Decrease quantity" class="w-6 h-6 rounded bg-surface flex items-center justify-center text-text-secondary hover:text-mint transition-colors">−</button>' +
+    '<button type="button" data-cart-action="decrement" data-cart-index="' + cartIndex + '" aria-label="Decrease quantity for ' + safeName + '" class="w-6 h-6 rounded bg-surface flex items-center justify-center text-text-secondary hover:text-mint transition-colors">−</button>' +
     '<span class="text-sm text-text-primary min-w-[20px] text-center">' + quantity + '</span>' +
-    '<button type="button" data-cart-action="increment" data-cart-index="' + cartIndex + '" aria-label="Increase quantity" class="w-6 h-6 rounded bg-surface flex items-center justify-center text-text-secondary hover:text-mint transition-colors">+</button>' +
+    '<button type="button" data-cart-action="increment" data-cart-index="' + cartIndex + '" aria-label="Increase quantity for ' + safeName + '" class="w-6 h-6 rounded bg-surface flex items-center justify-center text-text-secondary hover:text-mint transition-colors">+</button>' +
     '</div><div class="flex items-center gap-3"><span class="text-sm font-medium text-mint">' + formatPrice(lineTotal) + '</span>' +
     '<button type="button" data-cart-action="remove" data-cart-index="' + cartIndex + '" aria-label="Remove ' + safeName + ' from cart" class="text-text-muted hover:text-red-400 transition-colors">' +
     '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>' +
