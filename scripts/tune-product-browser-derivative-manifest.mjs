@@ -7,9 +7,11 @@ if (manifest.minimumDarkCompositeSsim !== 0.985 || manifest.minimumLightComposit
   throw new Error('Visible composite policy must be applied before derivative tuning.');
 }
 
-manifest.displayMaxDimension = 900;
+manifest.wideDisplayMaxDimension = 900;
+manifest.standardDisplayMaxDimension = 600;
 manifest.minimumNativeCompositeSsim = 0.975;
-manifest.minimumDisplayCompositeSsim = 0.985;
+manifest.minimumWideDisplayCompositeSsim = 0.98;
+manifest.minimumStandardDisplayCompositeSsim = 0.985;
 delete manifest.minimumDarkCompositeSsim;
 delete manifest.minimumLightCompositeSsim;
 
@@ -25,7 +27,7 @@ const QUALITY_OVERRIDES = new Map([
 ]);
 
 const DIMENSION_OVERRIDES = new Map([
-  ['combat-unstoppable-will.html', { maxDimension: 1600, width: 1600, height: 1280 }],
+  ['combat-unstoppable-will.html', { maxDimension: 1450, width: 1450, height: 1160 }],
   ['music-heart-of-gold-music-legend-mural.html', { maxDimension: 1700, width: 1700, height: 1096 }],
   ['music-eternal-will.html', { maxDimension: 1600, width: 1530, height: 1600 }],
   ['combat-dream-reality.html', { maxDimension: 1700, width: 1700, height: 1352 }],
@@ -42,6 +44,7 @@ for (const image of manifest.images || []) {
 
 const quality100Count = manifest.images.filter((image) => image.quality === 100).length;
 const quality96Count = manifest.images.filter((image) => image.quality === 96).length;
+const dimension1450Count = manifest.images.filter((image) => image.maxDimension === 1450).length;
 const dimension1600Count = manifest.images.filter((image) => image.maxDimension === 1600).length;
 const dimension1700Count = manifest.images.filter((image) => image.maxDimension === 1700).length;
 const customEncoderCount = manifest.images.filter((image) => image.encoder).length;
@@ -49,8 +52,10 @@ const customEncoderCount = manifest.images.filter((image) => image.encoder).leng
 if (quality100Count !== 1 || quality96Count !== 7) {
   throw new Error(`Expected 1 quality-100 and 7 quality-96 derivatives, found ${quality100Count} and ${quality96Count}.`);
 }
-if (dimension1600Count !== 2 || dimension1700Count !== 3) {
-  throw new Error(`Expected 2 1600px and 3 1700px derivatives, found ${dimension1600Count} and ${dimension1700Count}.`);
+if (dimension1450Count !== 1 || dimension1600Count !== 1 || dimension1700Count !== 3) {
+  throw new Error(
+    `Expected 1 1450px, 1 1600px and 3 1700px derivatives, found ${dimension1450Count}, ${dimension1600Count} and ${dimension1700Count}.`,
+  );
 }
 if (customEncoderCount !== 0) {
   throw new Error(`Expected no custom encoder overrides, found ${customEncoderCount}.`);
@@ -58,5 +63,5 @@ if (customEncoderCount !== 0) {
 
 await writeFile(path, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 console.log(
-  `Tuned ${quality100Count} quality-100, ${quality96Count} quality-96, ${dimension1600Count} 1600px and ${dimension1700Count} 1700px derivatives with 900px display validation.`,
+  `Tuned ${quality100Count} quality-100, ${quality96Count} quality-96 and five size-sensitive derivatives with native, 900px and 600px validation.`,
 );
