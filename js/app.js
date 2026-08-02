@@ -127,6 +127,20 @@ function loadMobileNavigationModule() {
   return mobileNavigationModulePromise;
 }
 
+let motionPreferencesModule = null;
+let motionPreferencesModulePromise = null;
+
+function loadMotionPreferencesModule() {
+  if (!motionPreferencesModulePromise) {
+    motionPreferencesModulePromise = import('./motion-preferences.mjs')
+      .then((module) => {
+        motionPreferencesModule = module;
+        return module;
+      });
+  }
+  return motionPreferencesModulePromise;
+}
+
 function loadDialogAccessibilityModule() {
   if (!dialogAccessibilityModulePromise) {
     dialogAccessibilityModulePromise = import('./dialog-accessibility.mjs')
@@ -914,15 +928,43 @@ function loadDialogAccessibilityModule() {
   }
 
   function initTestimonials() {
-    if (!dom.testimonialTrack) return;
-    nextTestimonial(); // Set initial state
-    setInterval(() => {
-      state.testimonialIndex = (state.testimonialIndex + 1) % state.totalTestimonials;
-      goToTestimonial(state.testimonialIndex);
-    }, 5000);
+    if (!dom.testimonialTrack || !motionPreferencesModule) return;
+    nextTestimonial();
+    let timer = null;
+    const testimonialMotionGate = motionPreferencesModule.createAutomaticMotionGate({
+      element: dom.testimonialTrack,
+      windowRef: window,
+      documentRef: document,
+    });
+
+    function clearTestimonialTimer() {
+      if (timer !== null) {
+        window.clearTimeout(timer);
+        timer = null;
+      }
+    }
+
+    function scheduleTestimonial() {
+      clearTestimonialTimer();
+      if (!testimonialMotionGate.isAllowed()) return;
+      timer = window.setTimeout(() => {
+        state.testimonialIndex = (state.testimonialIndex + 1) % state.totalTestimonials;
+        goToTestimonial(state.testimonialIndex);
+        scheduleTestimonial();
+      }, 5000);
+    }
+
+    testimonialMotionGate.subscribe(({ allowed }) => {
+      if (allowed) scheduleTestimonial();
+      else clearTestimonialTimer();
+    });
+
     if (dom.testimonialDots) {
       dom.testimonialDots.forEach((dot) => {
-        dot.addEventListener('click', () => goToTestimonial(parseInt(dot.dataset.index)));
+        dot.addEventListener('click', () => {
+          goToTestimonial(Number.parseInt(dot.dataset.index, 10));
+          scheduleTestimonial();
+        });
       });
     }
   }
@@ -1180,12 +1222,13 @@ function initProductCards() {
   // ==========================================
   function initParticleCanvas() {
     const canvas = document.getElementById('particle-canvas');
-    if (!canvas) return;
+    if (!canvas || !motionPreferencesModule) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     let width, height;
     let particles = [];
+    let frameId = null;
     const particleCount = 60;
     const connectionDistance = 150;
 
@@ -1222,15 +1265,13 @@ function initProductCards() {
 
     function initParticles() {
       particles = [];
-      for (let i = 0; i < particleCount; i++) {
-        particles.push(new Particle());
-      }
+      for (let i = 0; i < particleCount; i++) particles.push(new Particle());
     }
 
-    function animate() {
+    function renderFrame(advance) {
       ctx.clearRect(0, 0, width, height);
       for (let i = 0; i < particles.length; i++) {
-        particles[i].update();
+        if (advance) particles[i].update();
         particles[i].draw();
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
@@ -1246,13 +1287,48 @@ function initProductCards() {
           }
         }
       }
-      requestAnimationFrame(animate);
+    }
+
+    const particleMotionGate = motionPreferencesModule.createAutomaticMotionGate({
+      element: canvas,
+      windowRef: window,
+      documentRef: document,
+    });
+
+    function stopAnimation() {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+        frameId = null;
+      }
+      renderFrame(false);
+    }
+
+    function startAnimation() {
+      if (frameId !== null || !particleMotionGate.isAllowed()) return;
+      function animate() {
+        if (!particleMotionGate.isAllowed()) {
+          frameId = null;
+          renderFrame(false);
+          return;
+        }
+        renderFrame(true);
+        frameId = window.requestAnimationFrame(animate);
+      }
+      frameId = window.requestAnimationFrame(animate);
     }
 
     resize();
     initParticles();
-    animate();
-    window.addEventListener('resize', () => { resize(); initParticles(); });
+    renderFrame(false);
+    particleMotionGate.subscribe(({ allowed }) => {
+      if (allowed) startAnimation();
+      else stopAnimation();
+    });
+    window.addEventListener('resize', () => {
+      resize();
+      initParticles();
+      renderFrame(false);
+    });
   }
 
   // ==========================================
@@ -1360,10 +1436,19 @@ function initProductCards() {
       var track = el.querySelector('.related-track');
       var previous = el.querySelector('.related-prev');
       var next = el.querySelector('.related-next');
+      var relatedMotionGate = motionPreferencesModule.createAutomaticMotionGate({
+        element: track,
+        windowRef: window,
+        documentRef: document,
+      });
 
       function smoothScrollTo(targetX, duration) {
         if (!track) return;
         duration = duration || 800;
+        if (relatedMotionGate.prefersReducedMotion() || duration <= 0) {
+          track.scrollLeft = targetX;
+          return;
+        }
         var start = track.scrollLeft;
         var distance = targetX - start;
         if (Math.abs(distance) < 1) return;
@@ -1374,52 +1459,80 @@ function initProductCards() {
           var elapsed = timestamp - startTime;
           var progress = Math.min(elapsed / duration, 1);
           track.scrollLeft = start + distance * ease(progress);
-          if (progress < 1) requestAnimationFrame(step);
+          if (progress < 1) window.requestAnimationFrame(step);
         }
-        requestAnimationFrame(step);
+        window.requestAnimationFrame(step);
       }
 
       if (track && previous) {
         previous.addEventListener('click', function(event) {
           event.stopPropagation();
           smoothScrollTo(track.scrollLeft - track.clientWidth * 0.66, 600);
+          deferAutoScroll();
         });
       }
       if (track && next) {
         next.addEventListener('click', function(event) {
           event.stopPropagation();
           smoothScrollTo(track.scrollLeft + track.clientWidth * 0.66, 600);
+          deferAutoScroll();
         });
       }
 
       var autoTimer = null;
-      var autoActive = false;
+      var interactionPaused = false;
+
+      function clearAutoTimer() {
+        if (autoTimer) {
+          window.clearTimeout(autoTimer);
+          autoTimer = null;
+        }
+      }
+
+      function scheduleAutoScroll(delay) {
+        clearAutoTimer();
+        if (interactionPaused || !relatedMotionGate.isAllowed()) return;
+        autoTimer = window.setTimeout(doAutoScroll, delay || 1500);
+      }
+
       function doAutoScroll() {
-        if (!track || !autoActive) return;
+        if (!track || interactionPaused || !relatedMotionGate.isAllowed()) return;
         var maxScroll = track.scrollWidth - track.clientWidth;
-        if (maxScroll <= 1) { autoActive = false; return; }
+        if (maxScroll <= 1) return;
         var target = track.scrollLeft + track.clientWidth * 0.66;
         if (target >= maxScroll - 5) target = 0;
         smoothScrollTo(target, 900);
-        setTimeout(function() { doAutoScroll(); }, 3900);
-      }
-      function startAutoScroll() {
-        if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
-        autoActive = true;
-        autoTimer = setTimeout(function() { doAutoScroll(); }, 1500);
-      }
-      function stopAutoScroll() {
-        autoActive = false;
-        if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+        scheduleAutoScroll(3900);
       }
 
-      setTimeout(startAutoScroll, 600);
-      track.addEventListener('mouseenter', stopAutoScroll);
-      track.addEventListener('mouseleave', startAutoScroll);
-      track.addEventListener('touchstart', stopAutoScroll, { passive: true });
-      track.addEventListener('touchend', startAutoScroll);
-      if (previous) previous.addEventListener('click', stopAutoScroll);
-      if (next) next.addEventListener('click', stopAutoScroll);
+      function pauseAutoScroll() {
+        interactionPaused = true;
+        clearAutoTimer();
+      }
+
+      function resumeAutoScroll() {
+        interactionPaused = false;
+        scheduleAutoScroll(1500);
+      }
+
+      function deferAutoScroll() {
+        if (!interactionPaused) scheduleAutoScroll(5000);
+      }
+
+      function handleRelatedFocusOut(event) {
+        if (!track.contains(event.relatedTarget)) resumeAutoScroll();
+      }
+
+      relatedMotionGate.subscribe(({ allowed }) => {
+        if (allowed && !interactionPaused) scheduleAutoScroll(1500);
+        else clearAutoTimer();
+      });
+      track.addEventListener('mouseenter', pauseAutoScroll);
+      track.addEventListener('mouseleave', resumeAutoScroll);
+      track.addEventListener('focusin', pauseAutoScroll);
+      track.addEventListener('focusout', handleRelatedFocusOut);
+      track.addEventListener('touchstart', pauseAutoScroll, { passive: true });
+      track.addEventListener('touchend', resumeAutoScroll);
     } catch (error) {
       console.warn('Related products could not be loaded:', error);
     }
@@ -1551,6 +1664,7 @@ function initStickerModalClose() {
     loadCart();  // Restore cart after commerce policies are available
     await loadProductCardNavigationModule();
     await loadDialogAccessibilityModule();
+    await loadMotionPreferencesModule();
     const mobileNavigationModule = await loadMobileNavigationModule();
     if (dom.cartDrawer && dom.cartOverlay) {
       cartDialogController = dialogAccessibilityModule.createDialogController({
