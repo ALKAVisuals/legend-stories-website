@@ -52,11 +52,17 @@ for (const entry of manifest.videos || []) {
     if (!/\baria-hidden=["']true["']/i.test(attributes) || !/\btabindex=["']-1["']/i.test(attributes)) {
       errors.push(`${page}: decorative video accessibility attributes are incomplete.`);
     }
-    if (!new RegExp(`\\bdata-src=["']${escapeRegExp(encodedPath)}["']`, 'i').test(sourceTag)) {
-      errors.push(`${page}: deferred source URL is missing.`);
+
+    if (/\sdata-(?:data-)+src=/i.test(sourceTag)) {
+      errors.push(`${page}: deferred source attribute contains repeated data- prefixes.`);
     }
-    const sourceWithoutDataSrc = sourceTag.replace(/\bdata-src=["'][^"']*["']/i, '');
-    if (/(?:^|\s)src=["']/i.test(sourceWithoutDataSrc)) {
+    const deferredAttributes = [...sourceTag.matchAll(/(?:^|\s)data-src=(["'])([^"']+)\1/gi)];
+    if (deferredAttributes.length !== 1) {
+      errors.push(`${page}: expected exactly one data-src attribute, found ${deferredAttributes.length}.`);
+    } else if (deferredAttributes[0][2] !== encodedPath) {
+      errors.push(`${page}: deferred source URL does not match the optimization manifest.`);
+    }
+    if (/(?:^|\s)src=(["'])/i.test(sourceTag)) {
       errors.push(`${page}: source URL is still eagerly exposed through src.`);
     }
     if ((source.match(new RegExp(escapeRegExp(MODULE_SCRIPT), 'g')) || []).length !== 1) {
@@ -103,5 +109,5 @@ if (errors.length) {
 }
 
 console.log(
-  'Collection video loading validation passed: four pages use posters and deferred sources with reduced-motion, Save-Data, network, viewport and visibility controls.',
+  'Collection video loading validation passed: four pages use posters and exact deferred sources with reduced-motion, Save-Data, network, viewport and visibility controls.',
 );
