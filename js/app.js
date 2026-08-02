@@ -100,6 +100,20 @@
     return commerceModulePromise;
   }
 
+  let productCardNavigationModule = null;
+let productCardNavigationModulePromise = null;
+
+function loadProductCardNavigationModule() {
+  if (!productCardNavigationModulePromise) {
+    productCardNavigationModulePromise = import('./product-card-navigation.mjs')
+      .then((module) => {
+        productCardNavigationModule = module;
+        return module;
+      });
+  }
+  return productCardNavigationModulePromise;
+}
+
   function getCommerceTotals(countryCode = state.shippingCountry) {
     if (!commerceModule) {
       throw new Error('Commerce totals requested before the commerce module was loaded.');
@@ -902,27 +916,20 @@
     });
   }
 
-  // Product card navigation (click anywhere on card except add-to-cart button)
-  function initProductCards() {
-    const cards = document.querySelectorAll('.legend-card-swiper article.group');
-    cards.forEach((card) => {
-      card.style.cursor = 'pointer';
-      card.addEventListener('click', (e) => {
-        // Don't navigate if clicking add-to-cart button
-        if (e.target.closest('.add-to-cart-btn')) return;
-        const name = card.querySelector('h3')?.textContent;
-        if (name) {
-          const page = PRODUCT_PAGE_BY_NAME[name]
-            || PRODUCT_PAGE_BY_NAME[name.replace(/^The /, '')]
-            || PRODUCT_PAGE_BY_NAME[name.replace(/ Legend$/, '')];
-          if (page) window.location.href = page;
-        }
-      });
-    });
+  // Product card navigation is centralized so cards have one click and keyboard contract.
+function initProductCards() {
+  if (!productCardNavigationModule) {
+    throw new Error('Product card navigation module was not loaded.');
   }
+  productCardNavigationModule.initProductCardNavigation({
+    root: document,
+    navigate: (href) => { window.location.href = href; },
+    pageByName: PRODUCT_PAGE_BY_NAME,
+  });
+}
 
-  // ==========================================
-  // DAY / NIGHT TOGGLE
+// ==========================================
+// DAY / NIGHT TOGGLE
   // ==========================================
   function initThemeToggle() {
     const toggle = document.getElementById('theme-toggle');
@@ -1479,6 +1486,7 @@ function initStickerModalClose() {
   async function init() {
     await loadCommerceModule();
     loadCart();  // Restore cart after commerce policies are available
+    await loadProductCardNavigationModule();
     const fns = [
       initStickerClicks,
       initStickerModalClose,
