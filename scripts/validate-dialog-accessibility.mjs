@@ -103,13 +103,24 @@ async function main() {
     if (!pattern.test(dialogModule)) failures.push(`js/dialog-accessibility.mjs: missing ${label}`);
   }
 
+  const sharedStyles = await readFile(join(ROOT, 'css', 'shared.css'), 'utf8');
+  const styleContracts = [
+    ['screen-reader-only utility', /\.sr-only\s*\{[\s\S]*?clip:\s*rect\(0,\s*0,\s*0,\s*0\)/],
+    ['feedback positioning', /#purchase-feedback\s*\{[\s\S]*?z-index:\s*80[\s\S]*?width:\s*calc\(100%\s*-\s*2rem\)/],
+    ['status feedback tone', /#purchase-feedback\[role="status"\]/],
+    ['alert feedback tone', /#purchase-feedback\[role="alert"\]/],
+  ];
+  for (const [label, pattern] of styleContracts) {
+    if (!pattern.test(sharedStyles)) failures.push(`css/shared.css: missing ${label}`);
+  }
+
   if (failures.length) {
     console.error(`Dialog accessibility validation failed with ${failures.length} issue(s):`);
     failures.forEach((failure) => console.error(`- ${failure}`));
     process.exit(1);
   }
 
-  console.log(`Dialog accessibility validated: ${purchaseSurfaces.length} purchase surfaces, ${purchaseSurfaces.length * EXPECTED_DIALOGS_PER_SURFACE} modal dialogs, zero heading jumps.`);
+  console.log(`Dialog accessibility validated: ${purchaseSurfaces.length} purchase surfaces, ${purchaseSurfaces.length * EXPECTED_DIALOGS_PER_SURFACE} modal dialogs, zero heading jumps and durable feedback styles.`);
 }
 
 main().catch((error) => {
