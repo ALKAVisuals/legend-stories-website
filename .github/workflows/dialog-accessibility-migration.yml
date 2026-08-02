@@ -8,6 +8,7 @@ on:
       - .github/workflows/dialog-accessibility-migration.yml
       - scripts/migrate-dialog-accessibility.mjs
       - scripts/normalize-footer-navigation-labels.mjs
+      - scripts/add-collection-section-headings.mjs
       - js/dialog-accessibility.mjs
       - tests/dialog-accessibility.test.mjs
       - scripts/validate-dialog-accessibility.mjs
@@ -49,6 +50,9 @@ jobs:
       - name: Normalize footer navigation labels
         run: node scripts/normalize-footer-navigation-labels.mjs
 
+      - name: Add product-section headings
+        run: node scripts/add-collection-section-headings.mjs
+
       - name: Regenerate managed product pages
         run: npm run generate:managed-product-pages:live
 
@@ -70,7 +74,7 @@ jobs:
         run: npm run quality
 
       - name: Remove temporary migration tooling
-        run: git rm .github/workflows/dialog-accessibility-migration.yml scripts/migrate-dialog-accessibility.mjs scripts/normalize-footer-navigation-labels.mjs
+        run: git rm .github/workflows/dialog-accessibility-migration.yml scripts/migrate-dialog-accessibility.mjs scripts/normalize-footer-navigation-labels.mjs scripts/add-collection-section-headings.mjs
 
       - name: Commit validated migration
         run: |
