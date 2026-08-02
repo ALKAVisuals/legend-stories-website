@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { escapeCartHtml, initCartControlDelegation } from '../js/cart-controls.mjs';
+import {
+  escapeCartHtml,
+  initCartControlDelegation,
+  renderCartItemMarkup,
+} from '../js/cart-controls.mjs';
 
 class FakeContainer {
   constructor() {
@@ -122,5 +126,36 @@ test('escapes cart text and attribute content', () => {
   assert.equal(
     escapeCartHtml(`A&B <script> "quote" 'single'`),
     'A&amp;B &lt;script&gt; &quot;quote&quot; &#039;single&#039;',
+  );
+});
+
+test('renders delegated accessible cart controls without inline code', () => {
+  const markup = renderCartItemMarkup({
+    item: {
+      name: `Hero <script>alert('x')</script>`,
+      image: 'media/products/hero".webp',
+      price: 12.5,
+      quantity: 2,
+    },
+    index: 4,
+    formatPrice: (value) => `€${value.toFixed(2)}`,
+  });
+
+  assert.match(markup, /data-cart-action="decrement" data-cart-index="4"/);
+  assert.match(markup, /data-cart-action="increment" data-cart-index="4"/);
+  assert.match(markup, /data-cart-action="remove" data-cart-index="4"/);
+  assert.match(markup, /aria-label="Decrease quantity"/);
+  assert.match(markup, /aria-label="Increase quantity"/);
+  assert.match(markup, /aria-label="Remove Hero &lt;script&gt;/);
+  assert.match(markup, /src="media\/products\/hero&quot;\.webp"/);
+  assert.match(markup, /€25\.00/);
+  assert.doesNotMatch(markup, /onclick=/);
+  assert.doesNotMatch(markup, /<script>alert/);
+});
+
+test('rejects incomplete cart markup input', () => {
+  assert.throws(
+    () => renderCartItemMarkup({ item: null, index: 0, formatPrice: () => '' }),
+    /requires an item/,
   );
 });
