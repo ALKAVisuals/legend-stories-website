@@ -48,6 +48,34 @@ jobs:
       - name: Regenerate managed product pages
         run: npm run generate:managed-product-pages:live
 
+      - name: Normalize return-page footer headings
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFile, readdir, writeFile } from 'node:fs/promises';
+          import { extname } from 'node:path';
+
+          const pattern = /<h4 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">([\s\S]*?)<\/h4>/g;
+          let pages = 0;
+          let headings = 0;
+          for (const entry of await readdir('.', { withFileTypes: true })) {
+            if (!entry.isFile() || extname(entry.name).toLowerCase() !== '.html') continue;
+            const html = await readFile(entry.name, 'utf8');
+            const matches = [...html.matchAll(pattern)];
+            if (matches.length === 0) continue;
+            pages += 1;
+            headings += matches.length;
+            await writeFile(
+              entry.name,
+              html.replace(pattern, '<h3 class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">$1</h3>'),
+              'utf8',
+            );
+          }
+          if (pages !== 2 || headings !== 6) {
+            throw new Error(`Expected two return pages and six footer headings, found ${pages} pages and ${headings} headings.`);
+          }
+          console.log(`Normalized ${headings} footer headings across ${pages} return pages.`);
+          NODE
+
       - name: Require zero static accessibility findings
         run: |
           node scripts/accessibility-purchase-flow-audit.mjs
@@ -56,6 +84,7 @@ jobs:
           const report = JSON.parse(await readFile('reports/accessibility-purchase-flow-audit.json', 'utf8'));
           const summary = report.summary;
           if (summary.errors !== 0 || summary.warnings !== 0 || summary.reviewItems !== 0) {
+            console.error(JSON.stringify(report.issueGroups, null, 2));
             throw new Error(`Expected zero accessibility findings, received ${summary.errors} errors, ${summary.warnings} warnings and ${summary.reviewItems} review items.`);
           }
           console.log(`Accessibility audit clean across ${summary.pages} pages.`);
