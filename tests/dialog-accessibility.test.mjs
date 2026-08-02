@@ -70,3 +70,37 @@ test('dialog controller closes through the application callback on Escape', asyn
   assert.equal(requestedClose, 1);
   assert.equal(controller.isOpen(), true, 'the application callback owns the final close transition');
 });
+
+test('dialog controller restores focus to the element that opened it', async () => {
+  const listeners = new Map();
+  let triggerFocusCalls = 0;
+  const trigger = {
+    isConnected: true,
+    focus() { triggerFocusCalls += 1; },
+  };
+  const documentRef = {
+    activeElement: trigger,
+    body: { style: {} },
+    addEventListener(type, listener) { listeners.set(type, listener); },
+    removeEventListener(type) { listeners.delete(type); },
+  };
+  const classList = { add() {}, remove() {} };
+  const overlay = { classList, setAttribute() {} };
+  const dialog = {
+    tabIndex: -1,
+    classList,
+    setAttribute() {},
+    querySelectorAll() { return []; },
+    focus() {},
+  };
+
+  const controller = createDialogController({ dialog, overlay, documentRef });
+  controller.open({ trigger });
+  await Promise.resolve();
+  controller.close();
+
+  assert.equal(triggerFocusCalls, 1);
+  assert.equal(controller.isOpen(), false);
+  assert.equal(documentRef.body.style.overflow, '');
+  assert.equal(listeners.has('keydown'), false);
+});
