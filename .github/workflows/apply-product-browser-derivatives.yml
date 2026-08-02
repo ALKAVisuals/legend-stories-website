@@ -44,6 +44,9 @@ jobs:
       - name: Apply bounded browser-reference migration
         run: node scripts/migrate-product-browser-derivatives.mjs
 
+      - name: Apply evidence-based derivative tuning
+        run: node scripts/tune-product-browser-derivative-manifest.mjs
+
       - name: Generate transparent browser derivatives
         run: npm run generate:product-browser-derivatives
 
@@ -63,6 +66,7 @@ jobs:
         run: |
           rm .github/workflows/apply-product-browser-derivatives.yml
           rm scripts/migrate-product-browser-derivatives.mjs
+          rm scripts/tune-product-browser-derivative-manifest.mjs
 
       - name: Commit validated browser derivatives
         run: |
