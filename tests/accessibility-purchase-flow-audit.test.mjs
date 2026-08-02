@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   classifyPage,
+  expectedAutocompleteToken,
   findHeadingJumps,
   hasAccessibleName,
   headingLevels,
@@ -27,9 +28,22 @@ test('finds heading level jumps', () => {
   ]);
 });
 
-test('classifies checkout and product pages', () => {
-  assert.equal(classifyPage('checkout-overview.html', ''), 'purchase-flow');
-  assert.equal(classifyPage('legend.html', '<main data-product-id="abc"></main>'), 'product');
-  assert.equal(classifyPage('sport-collection.html', ''), 'collection');
-  assert.equal(classifyPage('about.html', ''), 'general');
+test('classifies the primary page without treating shared cart markup as the page type', () => {
+  const sharedCart = '<aside id="cart-drawer"><div id="checkout-modal">Shipping address</div></aside>';
+  assert.equal(classifyPage('checkout-overview.html', sharedCart), 'purchase-flow');
+  assert.equal(classifyPage('legend.html', `<main data-product-id="abc"></main>${sharedCart}`), 'product');
+  assert.equal(classifyPage('sport-collection.html', sharedCart), 'collection');
+  assert.equal(classifyPage('index.html', sharedCart), 'home');
+  assert.equal(classifyPage('about.html', sharedCart), 'general');
+});
+
+test('maps purchase fields to expected autocomplete tokens', () => {
+  assert.equal(expectedAutocompleteToken({ id: 'checkout-firstname' }), 'given-name');
+  assert.equal(expectedAutocompleteToken({ id: 'checkout-lastname' }), 'family-name');
+  assert.equal(expectedAutocompleteToken({ id: 'checkout-email' }), 'email');
+  assert.equal(expectedAutocompleteToken({ id: 'checkout-street' }), 'street-address');
+  assert.equal(expectedAutocompleteToken({ id: 'checkout-zip' }), 'postal-code');
+  assert.equal(expectedAutocompleteToken({ id: 'checkout-city' }), 'address-level2');
+  assert.equal(expectedAutocompleteToken({ id: 'checkout-country' }), 'country');
+  assert.equal(expectedAutocompleteToken({ id: 'search-query' }), '');
 });
