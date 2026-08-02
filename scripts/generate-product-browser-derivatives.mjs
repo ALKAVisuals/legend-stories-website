@@ -19,6 +19,7 @@ function runFfmpeg(args, label) {
 for (const image of PRODUCT_BROWSER_DERIVATIVE_MANIFEST.images || []) {
   const source = join(ROOT, image.source);
   const derivative = join(ROOT, image.derivative);
+  const quality = image.quality || PRODUCT_BROWSER_DERIVATIVE_MANIFEST.quality;
   await mkdir(dirname(derivative), { recursive: true });
 
   runFfmpeg([
@@ -28,7 +29,7 @@ for (const image of PRODUCT_BROWSER_DERIVATIVE_MANIFEST.images || []) {
     '-frames:v', '1',
     '-vf', `scale=${image.width}:${image.height}:flags=lanczos`,
     '-c:v', 'libwebp',
-    '-quality', String(PRODUCT_BROWSER_DERIVATIVE_MANIFEST.quality),
+    '-quality', String(quality),
     '-compression_level', String(PRODUCT_BROWSER_DERIVATIVE_MANIFEST.compressionLevel),
     '-preset', 'drawing',
     '-pix_fmt', 'yuva420p',
@@ -36,7 +37,7 @@ for (const image of PRODUCT_BROWSER_DERIVATIVE_MANIFEST.images || []) {
     derivative,
   ], image.source);
 
-  console.log(`${image.source} -> ${image.derivative} (${image.width}x${image.height}, transparent WebP)`);
+  console.log(`${image.source} -> ${image.derivative} (${image.width}x${image.height}, quality ${quality})`);
 }
 
 console.log(
