@@ -1,0 +1,53 @@
+name: Accessibility and purchase-flow audit
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: accessibility-purchase-flow-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: Static accessibility inventory
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run accessibility and purchase-flow audit
+        run: node scripts/accessibility-purchase-flow-audit.mjs
+
+      - name: Run focused audit tests
+        run: node --test tests/accessibility-purchase-flow-audit.test.mjs
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: accessibility-purchase-flow-audit
+          path: |
+            reports/accessibility-purchase-flow-audit.json
+            reports/accessibility-purchase-flow-audit.md
+          if-no-files-found: error
+          retention-days: 14
