@@ -22,7 +22,6 @@
   const state = {
     cart: [],
     cartOpen: false,
-    mobileMenuOpen: false,
     testimonialIndex: 0,
     totalTestimonials: 4,
     shippingCountry: 'NL',
@@ -118,6 +117,15 @@ let dialogAccessibilityModule = null;
 let dialogAccessibilityModulePromise = null;
 let cartDialogController = null;
 let checkoutDialogController = null;
+let mobileNavigationModulePromise = null;
+let mobileNavigationController = null;
+
+function loadMobileNavigationModule() {
+  if (!mobileNavigationModulePromise) {
+    mobileNavigationModulePromise = import('./mobile-navigation.mjs');
+  }
+  return mobileNavigationModulePromise;
+}
 
 function loadDialogAccessibilityModule() {
   if (!dialogAccessibilityModulePromise) {
@@ -840,24 +848,6 @@ function loadDialogAccessibilityModule() {
     }
   }
   // ==========================================
-  // MOBILE MENU
-  // ==========================================
-  function toggleMobileMenu() {
-    state.mobileMenuOpen = !state.mobileMenuOpen;
-    if (dom.mobileMenu) {
-      dom.mobileMenu.style.display = state.mobileMenuOpen ? 'block' : 'none';
-    }
-    if (dom.mobileMenuBtn) dom.mobileMenuBtn.setAttribute('aria-expanded', state.mobileMenuOpen);
-  }
-  function closeMobileMenu() {
-    state.mobileMenuOpen = false;
-    if (dom.mobileMenu) {
-      dom.mobileMenu.style.display = 'none';
-    }
-    if (dom.mobileMenuBtn) dom.mobileMenuBtn.setAttribute('aria-expanded', 'false');
-  }
-
-  // ==========================================
   // BEFORE / AFTER SLIDER
   // ==========================================
   function initBeforeAfter() {
@@ -1146,15 +1136,6 @@ function initProductCards() {
     if (dom.cartBtn) dom.cartBtn.addEventListener('click', openCart);
     if (dom.cartClose) dom.cartClose.addEventListener('click', closeCart);
     if (dom.cartOverlay) dom.cartOverlay.addEventListener('click', closeCart);
-    if (dom.mobileMenuBtn) dom.mobileMenuBtn.addEventListener('click', toggleMobileMenu);
-    if (dom.mobileMenu) {
-      dom.mobileMenu.querySelectorAll('a').forEach((link) => {
-        link.addEventListener('click', closeMobileMenu);
-      });
-    }
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && state.mobileMenuOpen) closeMobileMenu();
-    });
 
     const checkoutBtn = document.getElementById('checkout-btn');
     if (checkoutBtn) checkoutBtn.addEventListener('click', function() {
@@ -1570,6 +1551,7 @@ function initStickerModalClose() {
     loadCart();  // Restore cart after commerce policies are available
     await loadProductCardNavigationModule();
     await loadDialogAccessibilityModule();
+    const mobileNavigationModule = await loadMobileNavigationModule();
     if (dom.cartDrawer && dom.cartOverlay) {
       cartDialogController = dialogAccessibilityModule.createDialogController({
         dialog: dom.cartDrawer,
@@ -1584,6 +1566,14 @@ function initStickerModalClose() {
         overlay: dom.checkoutOverlay,
         documentRef: document,
         onRequestClose: closeCheckoutModal,
+      });
+    }
+    if (dom.mobileMenuBtn && dom.mobileMenu) {
+      mobileNavigationController = mobileNavigationModule.createMobileNavigationController({
+        button: dom.mobileMenuBtn,
+        menu: dom.mobileMenu,
+        documentRef: document,
+        windowRef: window,
       });
     }
     const fns = [
