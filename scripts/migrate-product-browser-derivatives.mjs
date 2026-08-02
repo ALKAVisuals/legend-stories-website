@@ -15,9 +15,15 @@ function replaceExact(source, search, replacement, label, expectedCount = 1) {
 }
 
 function replacePattern(source, pattern, replacement, label, expectedCount = 1) {
+  let count;
   pattern.lastIndex = 0;
-  const count = [...source.matchAll(pattern)].length;
-  pattern.lastIndex = 0;
+  if (pattern.global) {
+    count = [...source.matchAll(pattern)].length;
+    pattern.lastIndex = 0;
+  } else {
+    count = pattern.test(source) ? 1 : 0;
+    pattern.lastIndex = 0;
+  }
   if (count !== expectedCount) {
     throw new Error(`${label}: expected ${expectedCount} match(es), found ${count}.`);
   }
