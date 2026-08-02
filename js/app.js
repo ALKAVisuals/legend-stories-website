@@ -127,6 +127,21 @@ function loadMobileNavigationModule() {
   return mobileNavigationModulePromise;
 }
 
+let googlePlacesLoaderModule = null;
+let googlePlacesLoaderModulePromise = null;
+let googlePlacesLoader = null;
+
+function loadGooglePlacesLoaderModule() {
+  if (!googlePlacesLoaderModulePromise) {
+    googlePlacesLoaderModulePromise = import('./google-places-loader.mjs')
+      .then((module) => {
+        googlePlacesLoaderModule = module;
+        return module;
+      });
+  }
+  return googlePlacesLoaderModulePromise;
+}
+
 let cartControlsModule = null;
 let cartControlsModulePromise = null;
 
@@ -708,33 +723,23 @@ function loadDialogAccessibilityModule() {
   }
 
   function validateAddressWithGoogle(street, zip, city, country, callback) {
-    // Ensure Google Places is loaded
-    if (!window.google || !window.google.maps || !window.google.maps.places) {
-      // Google API not loaded yet — load it first, then retry
-      loadGooglePlaces();
-      // Wait for API to load, then retry
-      var retryInterval = setInterval(function() {
-        if (window.google && window.google.maps && window.google.maps.places) {
-          clearInterval(retryInterval);
-          doGoogleValidation(street, zip, city, country, callback);
-        }
-      }, 500);
-      // Timeout after 10s
-      setTimeout(function() { clearInterval(retryInterval); }, 10000);
-      return;
-    }
-    doGoogleValidation(street, zip, city, country, callback);
+    loadGooglePlaces().then(() => {
+      doGoogleValidation(street, zip, city, country, callback);
+    }).catch((error) => {
+      console.warn('Google address validation could not start:', error);
+      callback('Address verification is temporarily unavailable. Please try again.');
+    });
   }
 
   function doGoogleValidation(street, zip, city, country, callback) {
-    var service = new google.maps.places.PlacesService(document.createElement('div'));
+    var service = new window.google.maps.places.PlacesService(document.createElement('div'));
     var query = street + ', ' + zip + ' ' + city + ', ' + country.toUpperCase();
 
     service.findPlaceFromQuery({
       query: query,
       fields: ['address_components', 'formatted_address', 'geometry', 'name']
     }, function(results, status) {
-      if (status !== google.maps.places.PlacesServiceStatus.OK || !results || results.length === 0) {
+      if (status !== window.google.maps.places.PlacesServiceStatus.OK || !results || results.length === 0) {
         callback('Address not found. Please check your street, postal code, city and country, or select an address from the suggestions.');
         return;
       }
@@ -1094,22 +1099,20 @@ function initProductCards() {
 
   const GP_API_KEY = 'V5yqGyVnJ1IFk3fpZojBuvxMAic=';
 
-  function loadGooglePlaces() {
+  async function loadGooglePlaces() {
     if (placeAutocompleteInitialized) return;
-
-    // Create script element
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GP_API_KEY}&libraries=places&callback=initGooglePlacesAutocomplete`;
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
+    if (!googlePlacesLoader) {
+      throw new Error('Google Places loader is not initialized.');
+    }
+    await googlePlacesLoader.load();
+    initGooglePlacesAutocomplete();
   }
 
   function initGooglePlacesAutocomplete() {
     const streetInput = document.getElementById('checkout-street');
     if (!streetInput) return;
 
-    placeAutocomplete = new google.maps.places.Autocomplete(streetInput, {
+    placeAutocomplete = new window.google.maps.places.Autocomplete(streetInput, {
       types: ['address'],
       fields: ['address_components', 'formatted_address', 'geometry', 'name'],
     });
@@ -1183,9 +1186,6 @@ function initProductCards() {
     };
   }
 
-  // Global callback for Google script
-  window.initGooglePlacesAutocomplete = initGooglePlacesAutocomplete;
-
   // ==========================================
   // EVENT LISTENERS
   // ==========================================
@@ -1209,13 +1209,11 @@ function initProductCards() {
     // Add lazy loading for Google Places Autocomplete on street field focus
     const streetInput = document.getElementById('checkout-street');
     if (streetInput) {
-      streetInput.addEventListener('focus', function() {
+      streetInput.addEventListener('focus', async function() {
         const fn = document.getElementById('checkout-firstname')?.value.trim();
         const ln = document.getElementById('checkout-lastname')?.value.trim();
         const email = document.getElementById('checkout-email')?.value.trim();
-        if (fn && ln && email) {
-          loadGooglePlaces();
-        } else {
+        if (!fn || !ln || !email) {
           const firstMissing = !fn
             ? document.getElementById('checkout-firstname')
             : !ln
@@ -1225,8 +1223,19 @@ function initProductCards() {
             assertive: true,
             focusTarget: firstMissing,
           });
+          return;
         }
-      }, { once: true });
+
+        try {
+          await loadGooglePlaces();
+        } catch (error) {
+          console.warn('Google Places autocomplete could not be loaded:', error);
+          announcePurchaseFeedback(
+            'Google address suggestions are temporarily unavailable. You can try focusing the address field again.',
+            { assertive: true, focusTarget: streetInput },
+          );
+        }
+      });
     }
 
     const checkoutCloseBtn = document.getElementById('checkout-close');
@@ -1688,6 +1697,12 @@ function initStickerModalClose() {
     await loadDialogAccessibilityModule();
     await loadMotionPreferencesModule();
     await loadCartControlsModule();
+    await loadGooglePlacesLoaderModule();
+    googlePlacesLoader = googlePlacesLoader || googlePlacesLoaderModule.createGooglePlacesLoader({
+      apiKey: GP_API_KEY,
+      windowRef: window,
+      documentRef: document,
+    });
     const mobileNavigationModule = await loadMobileNavigationModule();
     if (dom.cartDrawer && dom.cartOverlay) {
       cartDialogController = dialogAccessibilityModule.createDialogController({
