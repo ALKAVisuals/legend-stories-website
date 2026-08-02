@@ -31,6 +31,7 @@ export function createDialogController({
   overlay,
   documentRef = globalThis.document,
   body = documentRef?.body,
+  onRequestClose = null,
 } = {}) {
   if (!dialog || !overlay || !documentRef) {
     throw new Error('A dialog, overlay and document are required.');
@@ -43,11 +44,19 @@ export function createDialogController({
     if (element?.focus) element.focus({ preventScroll: true });
   }
 
+  function requestClose() {
+    if (typeof onRequestClose === 'function') {
+      onRequestClose();
+    } else {
+      close();
+    }
+  }
+
   function handleKeydown(event) {
     if (!open) return;
     if (event.key === 'Escape') {
       event.preventDefault();
-      close();
+      requestClose();
       return;
     }
     if (event.key !== 'Tab') return;
@@ -104,6 +113,7 @@ export function createDialogController({
   return Object.freeze({
     open: show,
     close,
+    requestClose,
     isOpen: () => open,
     getReturnFocus: () => returnFocus,
   });
