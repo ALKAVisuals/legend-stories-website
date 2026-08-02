@@ -7,6 +7,15 @@
 (function () {
   'use strict';
 
+  // Hide decorative images that fail to load without inline event handlers.
+  function hideBrokenImage(event) {
+    const image = event.target;
+    if (image?.matches?.('img[data-hide-on-error]')) {
+      image.style.display = 'none';
+    }
+  }
+  document.addEventListener('error', hideBrokenImage, true);
+
   // ==========================================
   // STATE
   // ==========================================
