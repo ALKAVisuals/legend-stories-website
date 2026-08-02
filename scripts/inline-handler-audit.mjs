@@ -37,16 +37,16 @@ export function classifyHandlerCode(code = '') {
     return 'element-state';
   }
 
-  if (/^(?:(?:window|globalThis)\.)?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*\([\s\S]*\)\s*;?$/.test(normalized)) {
-    return 'global-call';
-  }
-
   if (/\b(?:if|else|for|while|switch|try|catch|return)\b|[{}]/.test(normalized)) {
     return 'control-flow';
   }
 
   const statementCount = normalized.split(';').map((item) => item.trim()).filter(Boolean).length;
   if (statementCount > 1) return 'compound';
+
+  if (/^(?:(?:window|globalThis)\.)?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*\([\s\S]*\)\s*;?$/.test(normalized)) {
+    return 'global-call';
+  }
 
   return 'other';
 }
