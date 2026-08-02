@@ -5,8 +5,19 @@ import { fileURLToPath } from 'node:url';
 const ROOT = process.cwd();
 const REPORT_DIR = join(ROOT, 'reports');
 const INTERACTIVE_TAGS = new Set(['a', 'button', 'input', 'select', 'textarea', 'summary', 'details']);
-const PERSONAL_FIELD_PATTERN = /(?:name|email|phone|tel|address|street|postal|postcode|zip|city|country)/i;
-const PURCHASE_PATTERN = /(?:checkout|payment|betaling|cart|winkelwagen|order|bestelling)/i;
+const INTERACTIVE_ROLES = new Set(['button', 'link', 'checkbox', 'radio', 'switch', 'menuitem', 'option', 'tab']);
+const PURCHASE_FILE_PATTERN = /(?:^|[-_])(checkout|payment|order|cart|winkelwagen|betaling)(?:[-_.]|$)/i;
+const COLLECTION_FILE_PATTERN = /(?:collection|collectie|(?:combat|music|sport|wisdom)-legends)\.html$/i;
+const AUTOCOMPLETE_EXPECTATIONS = [
+  { pattern: /(?:first|given)[-_ ]?name/i, token: 'given-name' },
+  { pattern: /(?:last|family|sur)[-_ ]?name/i, token: 'family-name' },
+  { pattern: /email/i, token: 'email' },
+  { pattern: /(?:phone|tel)/i, token: 'tel' },
+  { pattern: /(?:street|address(?:-line)?1)/i, token: 'street-address' },
+  { pattern: /(?:postal|postcode|zip)/i, token: 'postal-code' },
+  { pattern: /city/i, token: 'address-level2' },
+  { pattern: /country/i, token: 'country' },
+];
 
 const posix = (value) => value.split(sep).join('/');
 
@@ -36,6 +47,16 @@ function textContent(html = '') {
     .replace(/&#39;/gi, "'")
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function elementSignature(tag, attributes = {}) {
+  const id = typeof attributes.id === 'string' && attributes.id.trim()
+    ? `#${attributes.id.trim()}`
+    : '';
+  const classes = typeof attributes.class === 'string'
+    ? attributes.class.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((name) => `.${name}`).join('')
+    : '';
+  return `<${String(tag || 'unknown').toLowerCase()}${id}${classes}>`;
 }
 
 export function hasAccessibleName(attributes = {}, innerHtml = '', tag = '') {
@@ -74,11 +95,22 @@ export function findHeadingJumps(levels = []) {
 }
 
 export function classifyPage(page = '', html = '') {
-  const haystack = `${page} ${String(html).slice(0, 20000)}`;
-  if (PURCHASE_PATTERN.test(haystack)) return 'purchase-flow';
-  if (/data-product-|product-page|product-detail/i.test(haystack)) return 'product';
-  if (/collection|collectie/i.test(haystack)) return 'collection';
+  const filename = String(page).toLowerCase();
+  const markup = String(html).slice(0, 40000);
+  if (PURCHASE_FILE_PATTERN.test(filename)) return 'purchase-flow';
+  if (/data-product-(?:id|slug|page)|product-detail|product-page/i.test(markup)) return 'product';
+  if (COLLECTION_FILE_PATTERN.test(filename) || /data-collection-page|collection-hero/i.test(markup)) return 'collection';
+  if (filename === 'index.html') return 'home';
   return 'general';
+}
+
+export function expectedAutocompleteToken(attributes = {}) {
+  const hint = `${attributes.id || ''} ${attributes.name || ''} ${attributes.placeholder || ''}`;
+  return AUTOCOMPLETE_EXPECTATIONS.find((entry) => entry.pattern.test(hint))?.token || '';
+}
+
+function hasPurchaseSurface(markup = '') {
+  return /id=["']checkout-(?:modal|drawer|firstname|email|country)["']|>\s*Shipping address\s*</i.test(markup);
 }
 
 function issue(page, severity, code, message, element = '') {
@@ -93,6 +125,23 @@ function countBy(items, key) {
     .sort((a, b) => b.occurrences - a.occurrences || a.name.localeCompare(b.name));
 }
 
+function groupIssues(issues = []) {
+  const groups = new Map();
+  for (const item of issues) {
+    const key = [item.severity, item.code, item.message, item.element].join('\u0000');
+    const group = groups.get(key) || { ...item, occurrences: 0, pages: new Set() };
+    group.occurrences += 1;
+    group.pages.add(item.page);
+    groups.set(key, group);
+  }
+  return [...groups.values()]
+    .map((group) => ({ ...group, pages: [...group.pages].sort() }))
+    .sort((a, b) => b.occurrences - a.occurrences
+      || a.severity.localeCompare(b.severity)
+      || a.code.localeCompare(b.code)
+      || a.element.localeCompare(b.element));
+}
+
 function controlIsLabelled(attributes, labelsFor, wrappedControlIds) {
   const ariaLabel = typeof attributes['aria-label'] === 'string' && attributes['aria-label'].trim();
   const labelledBy = typeof attributes['aria-labelledby'] === 'string' && attributes['aria-labelledby'].trim();
@@ -104,10 +153,12 @@ function controlIsLabelled(attributes, labelsFor, wrappedControlIds) {
 function auditPage(page, html) {
   const markup = stripNonMarkup(html);
   const type = classifyPage(page, html);
+  const purchaseSurface = hasPurchaseSurface(markup);
   const issues = [];
   const stats = {
     page,
     type,
+    purchaseSurface,
     images: 0,
     forms: 0,
     controls: 0,
@@ -123,7 +174,6 @@ function auditPage(page, html) {
   if (!htmlTag || typeof htmlAttributes.lang !== 'string' || !htmlAttributes.lang.trim()) {
     issues.push(issue(page, 'error', 'html-lang', 'The document has no non-empty html lang attribute.', '<html>'));
   }
-
   if (!/<title\b[^>]*>\s*[^<]+\s*<\/title>/i.test(markup)) {
     issues.push(issue(page, 'error', 'document-title', 'The document has no non-empty title.', '<title>'));
   }
@@ -152,6 +202,7 @@ function auditPage(page, html) {
   while ((tagMatch = allTagPattern.exec(markup))) {
     const tag = tagMatch[1].toLowerCase();
     const attributes = parseAttributes(tagMatch[2]);
+    const signature = elementSignature(tag, attributes);
     if (typeof attributes.id === 'string' && attributes.id.trim()) {
       const id = attributes.id.trim();
       ids.set(id, (ids.get(id) || 0) + 1);
@@ -161,15 +212,15 @@ function auditPage(page, html) {
     if (handlers.length && !INTERACTIVE_TAGS.has(tag)) {
       const role = typeof attributes.role === 'string' ? attributes.role.toLowerCase() : '';
       const tabindex = attributes.tabindex;
-      if (!['button', 'link', 'checkbox', 'radio', 'switch', 'menuitem', 'option'].includes(role) || tabindex === undefined) {
-        issues.push(issue(page, 'warning', 'non-native-interactive', `Non-native <${tag}> uses ${handlers.join(', ')} without a complete keyboard contract.`, `<${tag}>`));
+      if (!INTERACTIVE_ROLES.has(role) || tabindex === undefined) {
+        issues.push(issue(page, 'warning', 'non-native-interactive', `Non-native <${tag}> uses ${handlers.join(', ')} without a complete keyboard contract.`, signature));
       }
     }
 
     if (attributes.target === '_blank') {
       const rel = typeof attributes.rel === 'string' ? attributes.rel.toLowerCase().split(/\s+/) : [];
       if (!rel.includes('noopener')) {
-        issues.push(issue(page, 'warning', 'target-blank-rel', 'A target=_blank link is missing rel=noopener.', `<${tag}>`));
+        issues.push(issue(page, 'warning', 'target-blank-rel', 'A target=_blank link is missing rel=noopener.', signature));
       }
     }
   }
@@ -183,9 +234,7 @@ function auditPage(page, html) {
     stats.images += 1;
     const attributes = parseAttributes(imageMatch[1]);
     if (attributes.alt === undefined) {
-      issues.push(issue(page, 'error', 'image-alt-missing', 'Image has no alt attribute.', '<img>'));
-    } else if (attributes.alt === '' && attributes.role !== 'presentation' && attributes['aria-hidden'] !== 'true') {
-      issues.push(issue(page, 'review', 'image-alt-empty', 'Image has empty alt without an explicit decorative marker.', '<img>'));
+      issues.push(issue(page, 'error', 'image-alt-missing', 'Image has no alt attribute.', elementSignature('img', attributes)));
     }
   }
 
@@ -195,7 +244,7 @@ function auditPage(page, html) {
     stats.buttons += 1;
     const attributes = parseAttributes(buttonMatch[1]);
     if (!hasAccessibleName(attributes, buttonMatch[2], 'button')) {
-      issues.push(issue(page, 'error', 'button-name', 'Button has no accessible name.', '<button>'));
+      issues.push(issue(page, 'error', 'button-name', 'Button has no accessible name.', elementSignature('button', attributes)));
     }
   }
 
@@ -204,11 +253,12 @@ function auditPage(page, html) {
   while ((linkMatch = linkPattern.exec(markup))) {
     stats.links += 1;
     const attributes = parseAttributes(linkMatch[1]);
+    const signature = elementSignature('a', attributes);
     if (!hasAccessibleName(attributes, linkMatch[2], 'a')) {
-      issues.push(issue(page, 'error', 'link-name', 'Link has no accessible name.', '<a>'));
+      issues.push(issue(page, 'error', 'link-name', 'Link has no accessible name.', signature));
     }
     if (typeof attributes.href !== 'string' || !attributes.href.trim()) {
-      issues.push(issue(page, 'warning', 'link-href', 'Anchor has no non-empty href.', '<a>'));
+      issues.push(issue(page, 'warning', 'link-href', 'Anchor has no non-empty href.', signature));
     }
   }
 
@@ -235,17 +285,18 @@ function auditPage(page, html) {
     const inputType = tag === 'input' ? String(attributes.type || 'text').toLowerCase() : tag;
     if (inputType === 'hidden') continue;
     stats.controls += 1;
+    const signature = elementSignature(tag, attributes);
 
     if (!controlIsLabelled(attributes, labelsFor, wrappedControlIds) && !hasAccessibleName(attributes, '', tag)) {
-      issues.push(issue(page, 'error', 'control-label', `${tag} control has no associated label or accessible name.`, `<${tag}>`));
-    }
-    if (typeof attributes.name !== 'string' || !attributes.name.trim()) {
-      issues.push(issue(page, 'warning', 'control-name', `${tag} control has no non-empty name.`, `<${tag}>`));
+      issues.push(issue(page, 'error', 'control-label', `${tag} control has no associated label or accessible name.`, signature));
     }
 
-    const fieldHint = `${attributes.id || ''} ${attributes.name || ''} ${attributes.placeholder || ''}`;
-    if (type === 'purchase-flow' && PERSONAL_FIELD_PATTERN.test(fieldHint) && attributes.autocomplete === undefined) {
-      issues.push(issue(page, 'review', 'autocomplete', 'Likely personal-data field has no autocomplete token.', `<${tag}>`));
+    if (purchaseSurface) {
+      const expectedToken = expectedAutocompleteToken(attributes);
+      const actualToken = typeof attributes.autocomplete === 'string' ? attributes.autocomplete.trim().toLowerCase() : '';
+      if (expectedToken && actualToken !== expectedToken) {
+        issues.push(issue(page, 'review', 'autocomplete-token', `Expected autocomplete="${expectedToken}" for this purchase-flow field; found ${actualToken ? `"${actualToken}"` : 'none'}.`, signature));
+      }
     }
   }
 
@@ -263,18 +314,24 @@ function auditPage(page, html) {
   let dialogMatch;
   while ((dialogMatch = dialogPattern.exec(markup))) {
     stats.dialogs += 1;
+    const tag = dialogMatch[1].toLowerCase();
     const attributes = parseAttributes(dialogMatch[2]);
-    if (!hasAccessibleName(attributes, '', dialogMatch[1].toLowerCase())) {
-      issues.push(issue(page, 'error', 'dialog-name', 'Dialog or modal has no aria-label or aria-labelledby.', `<${dialogMatch[1]}>`));
+    const signature = elementSignature(tag, attributes);
+    if (!hasAccessibleName(attributes, '', tag)) {
+      issues.push(issue(page, 'error', 'dialog-name', 'Dialog or modal has no aria-label or aria-labelledby.', signature));
     }
+    if (attributes.role === 'dialog' && attributes['aria-modal'] !== 'true') {
+      issues.push(issue(page, 'review', 'dialog-modality', 'Dialog role is present without aria-modal="true"; verify whether the background is intended to remain interactive.', signature));
+    }
+    issues.push(issue(page, 'review', 'dialog-focus-lifecycle', 'Verify focus entry, focus containment, Escape handling and focus restoration for this dialog.', signature));
   }
 
   stats.liveRegions = (markup.match(/aria-live\s*=|role\s*=\s*["'](?:status|alert)["']/gi) || []).length;
-  if (type === 'purchase-flow' && stats.forms > 0 && stats.liveRegions === 0) {
-    issues.push(issue(page, 'review', 'form-feedback', 'Purchase-flow form has no detectable status or alert live region.', '<form>'));
+  if (purchaseSurface && stats.liveRegions === 0) {
+    issues.push(issue(page, 'review', 'purchase-feedback', 'The shared purchase surface has no detectable status or alert live region for validation and submission feedback.', '#checkout-modal'));
   }
 
-  return { page, type, stats, issues };
+  return { page, type, purchaseSurface, stats, issues };
 }
 
 function escapeTable(value = '') {
@@ -282,7 +339,6 @@ function escapeTable(value = '') {
 }
 
 function toMarkdown(report) {
-  const purchasePages = report.pages.filter((page) => page.type === 'purchase-flow');
   return [
     '# Accessibility and purchase-flow audit',
     '',
@@ -291,43 +347,43 @@ function toMarkdown(report) {
     '## Summary',
     '',
     `- Runtime pages scanned: ${report.summary.pages}`,
-    `- Purchase-flow pages detected: ${report.summary.purchasePages}`,
+    `- Dedicated purchase-flow pages: ${report.summary.purchaseFlowPages}`,
+    `- Pages carrying the shared purchase surface: ${report.summary.purchaseSurfacePages}`,
     `- Errors: ${report.summary.errors}`,
     `- Warnings: ${report.summary.warnings}`,
     `- Review items: ${report.summary.reviewItems}`,
+    `- Unique finding groups: ${report.summary.findingGroups}`,
     `- Images: ${report.summary.images}`,
     `- Forms: ${report.summary.forms}`,
     `- Form controls: ${report.summary.controls}`,
     `- Dialogs/modals: ${report.summary.dialogs}`,
     '',
-    '## Issue types',
+    '## Page types',
+    '',
+    '| Type | Pages |',
+    '|---|---:|',
+    ...report.pageTypes.map((item) => `| \`${escapeTable(item.name)}\` | ${item.occurrences} |`),
+    '',
+    '## Finding types',
     '',
     '| Code | Occurrences |',
     '|---|---:|',
     ...report.issueCodes.map((item) => `| \`${escapeTable(item.name)}\` | ${item.occurrences} |`),
     '',
-    '## Purchase-flow pages',
+    '## Consolidated findings',
     '',
-    '| Page | Forms | Controls | Dialogs | Errors | Warnings | Review |',
-    '|---|---:|---:|---:|---:|---:|---:|',
-    ...purchasePages.map((item) => {
-      const counts = countBy(item.issues, 'severity');
-      const get = (name) => counts.find((entry) => entry.name === name)?.occurrences || 0;
-      return `| \`${escapeTable(item.page)}\` | ${item.stats.forms} | ${item.stats.controls} | ${item.stats.dialogs} | ${get('error')} | ${get('warning')} | ${get('review')} |`;
-    }),
-    '',
-    '## Findings',
-    '',
-    ...(report.issues.length
-      ? report.issues.map((item) => `- **${item.severity.toUpperCase()}** \`${item.page}\` — \`${item.code}\`: ${item.message}${item.element ? ` (${escapeTable(item.element)})` : ''}`)
-      : ['No static findings detected.']),
+    '| Severity | Occurrences | Pages | Code | Element | Finding |',
+    '|---|---:|---:|---|---|---|',
+    ...report.issueGroups.map((item) => `| ${item.severity} | ${item.occurrences} | ${item.pages.length} | \`${escapeTable(item.code)}\` | \`${escapeTable(item.element)}\` | ${escapeTable(item.message)} |`),
     '',
     '## Interpretation',
     '',
-    '- `error` indicates a deterministic static accessibility defect such as a missing label, accessible name, language, title, or duplicate id.',
-    '- `warning` indicates a likely interaction or semantic defect that needs component-level review.',
-    '- `review` identifies checks that cannot be concluded from static HTML alone, such as focus behavior, decorative imagery, live feedback, or heading intent.',
-    '- This audit does not replace keyboard, screen-reader, contrast, zoom, responsive, or real checkout testing.',
+    '- Repeated findings usually originate from a shared header, cart drawer, checkout modal, footer or product template; they should be fixed once at the source rather than page by page.',
+    '- `error` is a deterministic static defect such as a missing label, accessible name, language, title or unique ID.',
+    '- `warning` is a likely semantic or keyboard defect that needs component-level review.',
+    '- `review` identifies behavior that static HTML cannot prove, including focus lifecycle, live feedback, heading intent and autocomplete policy.',
+    '- Empty `alt=""` is treated as an intentional decorative alternative and is not reported; only missing alt attributes fail.',
+    '- This audit does not replace keyboard, screen-reader, contrast, zoom, responsive or real hosted-checkout testing.',
     '- The audit is read-only and never modifies storefront markup.',
     '',
   ].join('\n');
@@ -348,22 +404,27 @@ export async function buildAccessibilityPurchaseFlowAudit(root = ROOT) {
   const issues = pages.flatMap((page) => page.issues);
   const severity = countBy(issues, 'severity');
   const getSeverity = (name) => severity.find((item) => item.name === name)?.occurrences || 0;
+  const issueGroups = groupIssues(issues);
 
   return {
     generatedAt: new Date().toISOString(),
     summary: {
       pages: pages.length,
-      purchasePages: pages.filter((page) => page.type === 'purchase-flow').length,
+      purchaseFlowPages: pages.filter((page) => page.type === 'purchase-flow').length,
+      purchaseSurfacePages: pages.filter((page) => page.purchaseSurface).length,
       errors: getSeverity('error'),
       warnings: getSeverity('warning'),
       reviewItems: getSeverity('review'),
+      findingGroups: issueGroups.length,
       images: pages.reduce((sum, page) => sum + page.stats.images, 0),
       forms: pages.reduce((sum, page) => sum + page.stats.forms, 0),
       controls: pages.reduce((sum, page) => sum + page.stats.controls, 0),
       dialogs: pages.reduce((sum, page) => sum + page.stats.dialogs, 0),
     },
     severities: severity,
+    pageTypes: countBy(pages, 'type'),
     issueCodes: countBy(issues, 'code'),
+    issueGroups,
     pages,
     issues,
   };
@@ -374,7 +435,7 @@ async function main() {
   await mkdir(REPORT_DIR, { recursive: true });
   await writeFile(join(REPORT_DIR, 'accessibility-purchase-flow-audit.json'), `${JSON.stringify(report, null, 2)}\n`, 'utf8');
   await writeFile(join(REPORT_DIR, 'accessibility-purchase-flow-audit.md'), `${toMarkdown(report)}\n`, 'utf8');
-  console.log(`Accessibility audit completed: ${report.summary.pages} pages, ${report.summary.errors} errors, ${report.summary.warnings} warnings, ${report.summary.reviewItems} review items.`);
+  console.log(`Accessibility audit completed: ${report.summary.pages} pages, ${report.summary.findingGroups} finding groups, ${report.summary.errors} errors, ${report.summary.warnings} warnings, ${report.summary.reviewItems} review items.`);
 }
 
 const isDirectRun = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
