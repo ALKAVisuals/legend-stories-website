@@ -4,8 +4,6 @@
   "maxDimension": 1800,
   "quality": 92,
   "compressionLevel": 6,
-  "minimumColorSsim": 0.985,
-  "minimumAlphaSsim": 0.995,
   "maximumSizeRatio": 0.35,
   "images": [
     {
@@ -15,7 +13,8 @@
       "sourceWidth": 5892,
       "sourceHeight": 8536,
       "width": 1242,
-      "height": 1800
+      "height": 1800,
+      "quality": 96
     },
     {
       "source": "media/stikkers/2026/Batch 6/Wisdom Legends/unstoppable-drive-combat-legend-mural.png",
@@ -33,7 +32,8 @@
       "sourceWidth": 7292,
       "sourceHeight": 6900,
       "width": 1800,
-      "height": 1704
+      "height": 1704,
+      "quality": 96
     },
     {
       "source": "media/stikkers/2026/Batch 6/Music Legends/unapologetic-self-music-legend-mural-bleu.png",
@@ -51,7 +51,8 @@
       "sourceWidth": 7688,
       "sourceHeight": 6544,
       "width": 1800,
-      "height": 1532
+      "height": 1532,
+      "quality": 96
     },
     {
       "source": "media/stikkers/2026/Batch 6/Music Legends/singular-grace-music-legend-mural.png",
@@ -77,8 +78,10 @@
       "productPage": "combat-unstoppable-will.html",
       "sourceWidth": 7928,
       "sourceHeight": 6344,
-      "width": 1800,
-      "height": 1440
+      "width": 1440,
+      "height": 1152,
+      "quality": 100,
+      "maxDimension": 1440
     },
     {
       "source": "media/stikkers/2026/batch 3/Combat Legends/grind-cycle-combat-legend-mural.png",
@@ -96,7 +99,8 @@
       "sourceWidth": 9040,
       "sourceHeight": 4976,
       "width": 1800,
-      "height": 992
+      "height": 992,
+      "quality": 96
     },
     {
       "source": "media/stikkers/2026/batch1/Music Legends/west-coast-loyalty-color-legend-mural.png",
@@ -114,7 +118,8 @@
       "sourceWidth": 9024,
       "sourceHeight": 5572,
       "width": 1800,
-      "height": 1112
+      "height": 1112,
+      "quality": 96
     },
     {
       "source": "media/stikkers/2026/Batch 6/Sport Legends/simple-belief-sport-legend-mural.png",
@@ -131,8 +136,9 @@
       "productPage": "combat-dream-reality.html",
       "sourceWidth": 7952,
       "sourceHeight": 6324,
-      "width": 1800,
-      "height": 1432
+      "width": 1700,
+      "height": 1352,
+      "maxDimension": 1700
     },
     {
       "source": "media/stikkers/2026/Batch 5/Music Legends/heart-of-gold-music-legend-mural.png",
@@ -140,8 +146,10 @@
       "productPage": "music-heart-of-gold-music-legend-mural.html",
       "sourceWidth": 8836,
       "sourceHeight": 5696,
-      "width": 1800,
-      "height": 1160
+      "width": 1700,
+      "height": 1096,
+      "quality": 96,
+      "maxDimension": 1700
     },
     {
       "source": "media/stikkers/2026/batch1/Music Legends/eternal-will-rap-legend-mural.png",
@@ -149,8 +157,9 @@
       "productPage": "music-eternal-will.html",
       "sourceWidth": 6932,
       "sourceHeight": 7256,
-      "width": 1720,
-      "height": 1800
+      "width": 1530,
+      "height": 1600,
+      "maxDimension": 1600
     },
     {
       "source": "media/stikkers/2026/Batch 4/Sport Legends/supreme-confidence-sport-legend-mural.png",
@@ -168,7 +177,8 @@
       "sourceWidth": 9380,
       "sourceHeight": 5364,
       "width": 1800,
-      "height": 1030
+      "height": 1030,
+      "quality": 96
     },
     {
       "source": "media/stikkers/2026/Batch2/Music Legends/living-truth-music-legend-mural.png",
@@ -194,8 +204,12 @@
       "productPage": "music-style-code.html",
       "sourceWidth": 7964,
       "sourceHeight": 6316,
-      "width": 1800,
-      "height": 1428
+      "width": 1700,
+      "height": 1348,
+      "maxDimension": 1700
     }
-  ]
+  ],
+  "wideDisplayMaxDimension": 900,
+  "minimumNativeCompositeSsim": 0.975,
+  "minimumWideDisplayCompositeSsim": 0.98
 }

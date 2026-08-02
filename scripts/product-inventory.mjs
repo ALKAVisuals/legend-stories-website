@@ -2,6 +2,8 @@ import { access, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { basename, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { browserProductImageFor } from './lib/product-browser-derivatives.mjs';
+
 const ROOT = process.cwd();
 const REPORT_DIR = join(ROOT, 'reports');
 const LEGACY_BASE_PATH = '/legend-stories-website/';
@@ -135,6 +137,7 @@ export function extractProductFromHtml(file, html) {
   const offer = firstOffer(source);
   const imageValue = Array.isArray(source.image) ? source.image[0] : source.image;
   const image = normalizeLocalAsset(imageValue);
+  const browserImage = browserProductImageFor(image);
   const batch = extractBatchMetadata(image);
   const cart = extractCartButton(html);
   const price = Number(offer.price);
@@ -157,7 +160,7 @@ export function extractProductFromHtml(file, html) {
     if (Number.isFinite(cart.price) && Number.isFinite(price) && Math.abs(cart.price - price) > 0.001) {
       errors.push(`${file}: cart price differs from Product JSON-LD price.`);
     }
-    if (cart.image && image && cart.image !== image) errors.push(`${file}: cart image differs from Product JSON-LD image.`);
+    if (cart.image && browserImage && cart.image !== browserImage) errors.push(`${file}: cart image differs from the expected browser product image.`);
   }
 
   const offeredPage = String(offer.url || '').split('#')[0].split('?')[0];
@@ -171,6 +174,7 @@ export function extractProductFromHtml(file, html) {
       name,
       description: normalizeWhitespace(source.description),
       image,
+      browserImage,
       price,
       currency: String(offer.priceCurrency || ''),
       availability: String(offer.availability || ''),
@@ -254,11 +258,12 @@ export async function buildProductInventory(root = ROOT) {
 
   const missingAssets = [];
   for (const product of products) {
-    if (!product.image) continue;
-    try {
-      await access(join(root, product.image));
-    } catch {
-      missingAssets.push({ page: product.page, image: product.image });
+    for (const image of new Set([product.image, product.browserImage].filter(Boolean))) {
+      try {
+        await access(join(root, image));
+      } catch {
+        missingAssets.push({ page: product.page, image });
+      }
     }
   }
 
