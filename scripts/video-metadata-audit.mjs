@@ -2,6 +2,8 @@ import { spawnSync } from 'node:child_process';
 import { open, readFile, writeFile, mkdir } from 'node:fs/promises';
 import { basename, extname, join, resolve } from 'node:path';
 
+import { parseSingleVideoSource } from './lib/video-source-attributes.mjs';
+
 const ROOT = process.cwd();
 const REPORT_DIR = join(ROOT, 'reports');
 const COLLECTION_PAGES = [
@@ -101,14 +103,18 @@ async function discoverActiveVideos() {
     for (const match of source.matchAll(/<video\b([^>]*)>([\s\S]*?)<\/video>/gi)) {
       const attributes = match[1];
       const body = match[2];
-      const sourceMatch = body.match(/<source\b[^>]*\b(data-src|src)=["']([^"']+)["'][^>]*>/i);
-      if (!sourceMatch) continue;
-      const decoded = decodeURIComponent(sourceMatch[2]);
+      const sourceDetails = parseSingleVideoSource(body, {
+        label: `${page} collection video`,
+      });
+      if (!sourceDetails) continue;
+
+      const decoded = decodeURIComponent(sourceDetails.value);
       const path = normalizePath(decoded.replace(/^\.\//, ''));
       const record = videos.get(path) || {
         path,
         pages: [],
-        deferred: sourceMatch[1].toLowerCase() === 'data-src',
+        deferred: sourceDetails.deferred,
+        sourceAttribute: sourceDetails.attribute,
         autoplay: /\bautoplay\b/i.test(attributes),
         loop: /\bloop\b/i.test(attributes),
         muted: /\bmuted\b/i.test(attributes),
@@ -117,7 +123,8 @@ async function discoverActiveVideos() {
         poster: attributes.match(/\bposter=["']([^"']+)["']/i)?.[1] || '',
         policyId: attributes.match(/\bdata-collection-video=["']([^"']+)["']/i)?.[1] || '',
       };
-      if (record.deferred !== (sourceMatch[1].toLowerCase() === 'data-src')) {
+      if (record.deferred !== sourceDetails.deferred
+        || record.sourceAttribute !== sourceDetails.attribute) {
         throw new Error(`${page}: collection video loading mode is inconsistent for ${path}.`);
       }
       record.pages.push(page);
@@ -188,6 +195,7 @@ const report = {
     collectionPages: COLLECTION_PAGES.length,
     totalBytes: records.reduce((sum, record) => sum + record.bytes, 0),
     deferredFiles: records.filter((record) => record.deferred).length,
+    immediateFiles: records.filter((record) => !record.deferred).length,
     autoplayFiles: records.filter((record) => record.autoplay).length,
     filesWithoutPoster: records.filter((record) => !record.poster).length,
     filesWithoutFastStart: records.filter((record) => !record.mp4.fastStart).length,
@@ -207,6 +215,7 @@ const markdown = [
   `- Collection pages: ${report.summary.collectionPages}`,
   `- Total active video size: ${formatBytes(report.summary.totalBytes)}`,
   `- Deferred source files: ${report.summary.deferredFiles}`,
+  `- Immediate source files: ${report.summary.immediateFiles}`,
   `- Declarative autoplay files: ${report.summary.autoplayFiles}`,
   `- Files without poster: ${report.summary.filesWithoutPoster}`,
   `- Files without MP4 fast start: ${report.summary.filesWithoutFastStart}`,
@@ -247,10 +256,10 @@ await Promise.all([
 ]);
 
 console.log(
-  `Video metadata audit completed for ${records.length} active files (${formatBytes(report.summary.totalBytes)}), deferred=${report.summary.deferredFiles}, autoplay=${report.summary.autoplayFiles}.`,
+  `Video metadata audit completed for ${records.length} active files (${formatBytes(report.summary.totalBytes)}), deferred=${report.summary.deferredFiles}, immediate=${report.summary.immediateFiles}, autoplay=${report.summary.autoplayFiles}.`,
 );
 for (const record of records) {
   console.log(
-    `- ${record.path}: ${record.video.codec} ${record.video.width}x${record.video.height} @ ${record.video.averageFrameRate.toFixed(3)} fps, ${formatBytes(record.bytes)}, ${record.durationSeconds.toFixed(2)}s, deferred=${record.deferred ? 'yes' : 'no'}, preload=${record.preload}, audio=${record.audio ? 'yes' : 'no'}, fastStart=${record.mp4.fastStart ? 'yes' : 'no'}`,
+    `- ${record.path}: ${record.video.codec} ${record.video.width}x${record.video.height} @ ${record.video.averageFrameRate.toFixed(3)} fps, ${formatBytes(record.bytes)}, ${record.durationSeconds.toFixed(2)}s, delivery=${record.deferred ? 'deferred' : 'immediate'}, source=${record.sourceAttribute}, preload=${record.preload}, audio=${record.audio ? 'yes' : 'no'}, fastStart=${record.mp4.fastStart ? 'yes' : 'no'}`,
   );
 }
