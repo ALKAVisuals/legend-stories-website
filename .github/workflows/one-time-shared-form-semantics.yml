@@ -1,0 +1,76 @@
+name: One-time shared form semantics migration
+
+on:
+  push:
+    branches:
+      - agent/shared-form-semantics
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: one-time-shared-form-semantics-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          ref: agent/shared-form-semantics
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies and media tools
+        run: |
+          npm ci
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Apply deterministic accessibility migration
+        run: |
+          python scripts/one-time-shared-form-semantics.py
+          npm run generate:managed-product-pages:live
+
+      - name: Validate focused accessibility contracts
+        run: |
+          node scripts/validate-shared-form-semantics.mjs
+          node scripts/inline-handler-audit.mjs
+          node scripts/accessibility-purchase-flow-audit.mjs
+          node - <<'NODE'
+          const { readFileSync } = require('node:fs');
+          const report = JSON.parse(readFileSync('reports/accessibility-purchase-flow-audit.json', 'utf8'));
+          if (report.summary.errors !== 0 || report.summary.warnings !== 0) {
+            throw new Error(`Expected zero deterministic findings; found ${report.summary.errors} errors and ${report.summary.warnings} warnings.`);
+          }
+          console.log(`Accessibility inventory reduced to ${report.summary.reviewItems} review-only findings.`);
+          NODE
+          git diff --check
+
+      - name: Run full quality gate
+        run: npm run quality
+
+      - name: Commit migration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Fix shared form and control semantics"
+          git push origin HEAD:agent/shared-form-semantics
+
+      - name: Remove one-time migration files
+        if: success()
+        run: |
+          git rm .github/workflows/one-time-shared-form-semantics.yml scripts/one-time-shared-form-semantics.py
+          git commit -m "Remove one-time accessibility migration files"
+          git push origin HEAD:agent/shared-form-semantics
