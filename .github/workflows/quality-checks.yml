@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: quality-${{ github.workflow }}-${{ github.ref }}
@@ -25,8 +25,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -36,15 +34,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Repair collection video source attributes
-        run: |
-          node scripts/fix-collection-video-source-attributes.mjs
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- combat-legends.html music-legends.html sport-legends.html wisdom-legends.html
-          git diff --cached --quiet || git commit -m "fix: restore exact deferred video source attributes"
-          git push
 
       - name: Install video inspection tools
         run: |
