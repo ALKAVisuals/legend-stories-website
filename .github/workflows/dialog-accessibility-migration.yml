@@ -1,0 +1,76 @@
+name: Apply dialog accessibility migration
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/dialog-accessibility-migration.yml
+      - scripts/migrate-dialog-accessibility.mjs
+      - js/dialog-accessibility.mjs
+      - tests/dialog-accessibility.test.mjs
+      - scripts/validate-dialog-accessibility.mjs
+      - package.json
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dialog-accessibility-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    if: >-
+      github.event.pull_request.head.ref == 'agent/dialog-accessibility' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out migration branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/dialog-accessibility
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply bounded migration
+        run: node scripts/migrate-dialog-accessibility.mjs
+
+      - name: Regenerate managed product pages
+        run: npm run generate:managed-product-pages:live
+
+      - name: Require zero static accessibility findings
+        run: |
+          node scripts/accessibility-purchase-flow-audit.mjs
+          node --input-type=module <<'NODE'
+          import { readFile } from 'node:fs/promises';
+          const report = JSON.parse(await readFile('reports/accessibility-purchase-flow-audit.json', 'utf8'));
+          const summary = report.summary;
+          if (summary.errors !== 0 || summary.warnings !== 0 || summary.reviewItems !== 0) {
+            throw new Error(`Expected zero accessibility findings, received ${summary.errors} errors, ${summary.warnings} warnings and ${summary.reviewItems} review items.`);
+          }
+          console.log(`Accessibility audit clean across ${summary.pages} pages.`);
+          NODE
+
+      - name: Run complete repository quality gate
+        run: npm run quality
+
+      - name: Remove temporary migration tooling
+        run: git rm .github/workflows/dialog-accessibility-migration.yml scripts/migrate-dialog-accessibility.mjs
+
+      - name: Commit validated migration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Implement accessible cart and checkout dialogs"
+          git push origin HEAD:agent/dialog-accessibility
