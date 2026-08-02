@@ -39,9 +39,31 @@ def add_label_for(source, control_id, label_text, tag):
     )
     matches = list(pattern.finditer(source))
     if len(matches) != 1:
-        raise SystemExit(f'{control_id}: expected 1 unbound label, found {len(matches)}')
+        raise SystemExit(f'{control_id}: expected 1 directly associated unbound label, found {len(matches)}')
     return pattern.sub(
         rf'\1\2 for="{control_id}">\3</label>\4',
+        source,
+        count=1,
+    )
+
+def bind_unique_label(source, control_id, label_text):
+    control_pattern = re.compile(
+        rf'<(?:input|select|textarea)\b[^>]*\bid="{re.escape(control_id)}"[^>]*>',
+        re.IGNORECASE,
+    )
+    controls = list(control_pattern.finditer(source))
+    if len(controls) != 1:
+        raise SystemExit(f'{control_id}: expected 1 control, found {len(controls)}')
+
+    label_pattern = re.compile(
+        rf'(<label\b)(?![^>]*\bfor=)([^>]*)>(\s*{re.escape(label_text)}\s*)</label>',
+        re.IGNORECASE,
+    )
+    labels = list(label_pattern.finditer(source))
+    if len(labels) != 1:
+        raise SystemExit(f'{control_id}: expected 1 unique unbound label, found {len(labels)}')
+    return label_pattern.sub(
+        rf'\1\2 for="{control_id}">\3</label>',
         source,
         count=1,
     )
@@ -111,7 +133,7 @@ for page in STATIC_PAGES:
     source = page.read_text(encoding='utf-8')
     if 'id="checkout-discount"' not in source:
         continue
-    source = add_label_for(source, 'checkout-discount', 'Discount code', 'input')
+    source = bind_unique_label(source, 'checkout-discount', 'Discount code')
     page.write_text(source, encoding='utf-8')
     discount_pages.append(page.name)
 if len(discount_pages) != 6:
@@ -119,7 +141,7 @@ if len(discount_pages) != 6:
 
 index_path = ROOT / 'index.html'
 index = index_path.read_text(encoding='utf-8')
-index = add_label_for(index, 'cart-discount', 'Discount code', 'input')
+index = bind_unique_label(index, 'cart-discount', 'Discount code')
 index = set_attribute(index, 'input', 'email', 'autocomplete', 'email')
 index = replace_once(
     index,
