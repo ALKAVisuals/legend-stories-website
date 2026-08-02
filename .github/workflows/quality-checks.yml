@@ -54,6 +54,7 @@ jobs:
           npm run validate:video-delivery
           npm run validate:collection-video-loading
           npm run audit:runtime
+          npm run validate:image-error-fallbacks
 
       - name: Build product inventory
         run: npm run inventory:products
