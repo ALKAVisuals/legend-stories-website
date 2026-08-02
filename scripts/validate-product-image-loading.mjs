@@ -42,6 +42,21 @@ function productCardBlocks(html = '') {
     .map((match) => match[0]);
 }
 
+function findUniqueLine(source, needle, label, failures) {
+  const lines = String(source).split('\n').filter((line) => line.includes(needle));
+  if (lines.length !== 1) {
+    failures.push(`js/app.js: expected one ${label} line, found ${lines.length}`);
+    return '';
+  }
+  return lines[0];
+}
+
+function requireTokens(line, tokens, label, failures) {
+  for (const token of tokens) {
+    if (!line.includes(token)) failures.push(`js/app.js: ${label} is missing ${token}`);
+  }
+}
+
 const failures = [];
 const catalog = JSON.parse(await readFile(join(ROOT, 'data/products/catalog.json'), 'utf8'));
 if (catalog.productCount !== EXPECTED_PRODUCT_PAGES || catalog.products?.length !== EXPECTED_PRODUCT_PAGES) {
@@ -104,12 +119,26 @@ if (imageLessCtaCount !== EXPECTED_IMAGELESS_CTA_CARDS) {
 }
 
 const app = await readFile(join(ROOT, 'js/app.js'), 'utf8');
-if (!app.includes('loading=\\"lazy\\" decoding=\\"async\\" fetchpriority=\\"low\\"')) {
-  failures.push('js/app.js: related-product images must be lazy, async and low priority');
-}
-if (!app.includes('class=\\"w-12 h-12 object-contain rounded\\" decoding=\\"async\\"')) {
-  failures.push('js/app.js: cart thumbnail images must decode asynchronously');
-}
+const relatedLine = findUniqueLine(
+  app,
+  'group-hover:scale-105 transition-transform duration-500',
+  'related-product image',
+  failures,
+);
+requireTokens(
+  relatedLine,
+  ['loading=', 'lazy', 'decoding=', 'async', 'fetchpriority=', 'low'],
+  'related-product image',
+  failures,
+);
+
+const cartThumbnailLine = findUniqueLine(
+  app,
+  'w-12 h-12 object-contain rounded',
+  'cart thumbnail image',
+  failures,
+);
+requireTokens(cartThumbnailLine, ['decoding=', 'async'], 'cart thumbnail image', failures);
 
 if (failures.length) {
   console.error(`Product image loading validation failed with ${failures.length} issue(s):`);
