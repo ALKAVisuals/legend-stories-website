@@ -1,0 +1,462 @@
+name: One-time product card navigation migration
+
+on:
+  push:
+    branches:
+      - refactor/product-card-navigation
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          ref: refactor/product-card-navigation
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+
+      - name: Migrate product cards and runtime
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import html
+          import json
+          import re
+
+          collection_files = [
+              Path('shop.html'),
+              Path('combat-legends.html'),
+              Path('music-legends.html'),
+              Path('sport-legends.html'),
+              Path('wisdom-legends.html'),
+          ]
+
+          article_pattern = re.compile(r'<article(?P<attrs>[^>]*)>(?P<body>[\s\S]*?)</article>', re.IGNORECASE)
+          navigation_pattern = re.compile(r'\s+onclick="window\.location=\'([^\']+)\';"')
+          propagation_pattern = re.compile(r'\s+onclick="event\.stopPropagation\(\);"')
+          heading_pattern = re.compile(r'<h3\b[^>]*>([\s\S]*?)</h3>', re.IGNORECASE)
+
+          migrated_cards = 0
+          removed_propagation_handlers = 0
+
+          def strip_tags(value):
+              return re.sub(r'<[^>]+>', '', value)
+
+          def migrate_article(match):
+              global migrated_cards, removed_propagation_handlers
+              attrs = match.group('attrs')
+              body = match.group('body')
+              if 'product-card' not in attrs:
+                  return match.group(0)
+              navigation = navigation_pattern.search(attrs)
+              if not navigation:
+                  return match.group(0)
+
+              href = navigation.group(1).strip()
+              title_match = heading_pattern.search(body)
+              if not title_match:
+                  raise SystemExit(f'Product card for {href} has no h3 title')
+              title = html.unescape(strip_tags(title_match.group(1))).strip()
+              if not title:
+                  raise SystemExit(f'Product card for {href} has an empty title')
+
+              clean_attrs, removed_navigation = navigation_pattern.subn('', attrs, count=1)
+              if removed_navigation != 1:
+                  raise SystemExit(f'Expected one navigation handler for {href}')
+
+              body, removed = propagation_pattern.subn('', body)
+              if removed != 1:
+                  raise SystemExit(f'Expected one propagation handler for {href}, found {removed}')
+
+              migrated_cards += 1
+              removed_propagation_handlers += removed
+              accessible_name = html.escape(f'View {title}', quote=True)
+              safe_href = html.escape(href, quote=True)
+              opening = (
+                  f'<article{clean_attrs} data-product-href="{safe_href}" role="link" '
+                  f'tabindex="0" aria-label="{accessible_name}">'
+              )
+              return f'{opening}{body}</article>'
+
+          for path in collection_files:
+              source = path.read_text(encoding='utf-8')
+              migrated = article_pattern.sub(migrate_article, source)
+              path.write_text(migrated, encoding='utf-8')
+
+          if migrated_cards != 232:
+              raise SystemExit(f'Expected 232 migrated product cards, found {migrated_cards}')
+          if removed_propagation_handlers != 232:
+              raise SystemExit(
+                  f'Expected 232 removed propagation handlers, found {removed_propagation_handlers}'
+              )
+
+          module = r'''const INTERACTIVE_DESCENDANT_SELECTOR = [
+            'a',
+            'button',
+            'input',
+            'select',
+            'textarea',
+            'summary',
+            'details',
+            '[contenteditable="true"]',
+            '[role="button"]',
+            '[role="link"]',
+          ].join(', ');
+
+          export function isProductCardActivationKey(key) {
+            return key === 'Enter';
+          }
+
+          export function resolveProductCardHref(card, pageByName = {}) {
+            const explicitHref = String(card?.dataset?.productHref || '').trim();
+            if (explicitHref) return explicitHref;
+
+            const name = String(card?.querySelector?.('h3')?.textContent || '').trim();
+            if (!name) return '';
+            return pageByName[name]
+              || pageByName[name.replace(/^The /, '')]
+              || pageByName[name.replace(/ Legend$/, '')]
+              || '';
+          }
+
+          export function shouldIgnoreProductCardClick(card, target) {
+            if (!card || !target || typeof target.closest !== 'function') return false;
+            const interactive = target.closest(INTERACTIVE_DESCENDANT_SELECTOR);
+            return Boolean(interactive && interactive !== card);
+          }
+
+          function applyProductCardSemantics(card, href) {
+            if (typeof card.setAttribute !== 'function') return;
+            if (!card.hasAttribute?.('role')) card.setAttribute('role', 'link');
+            if (!card.hasAttribute?.('tabindex')) card.setAttribute('tabindex', '0');
+            if (!card.hasAttribute?.('aria-label')) {
+              const name = String(card.querySelector?.('h3')?.textContent || '').trim();
+              card.setAttribute('aria-label', name ? `View ${name}` : `View product ${href}`);
+            }
+          }
+
+          export function initProductCardNavigation({
+            root = document,
+            navigate = (href) => window.location.assign(href),
+            pageByName = {},
+          } = {}) {
+            const cards = [...root.querySelectorAll(
+              '[data-product-href], .legend-card-swiper article.group',
+            )];
+            let initialized = 0;
+
+            for (const card of new Set(cards)) {
+              const href = resolveProductCardHref(card, pageByName);
+              if (!href) continue;
+              applyProductCardSemantics(card, href);
+
+              card.addEventListener('click', (event) => {
+                if (shouldIgnoreProductCardClick(card, event.target)) return;
+                navigate(href);
+              });
+
+              card.addEventListener('keydown', (event) => {
+                if (event.target !== card || !isProductCardActivationKey(event.key)) return;
+                event.preventDefault();
+                navigate(href);
+              });
+
+              initialized += 1;
+            }
+
+            return initialized;
+          }
+          '''
+          Path('js/product-card-navigation.mjs').write_text(module, encoding='utf-8')
+
+          app_path = Path('js/app.js')
+          app = app_path.read_text(encoding='utf-8')
+
+          loader_anchor = "  function getCommerceTotals(countryCode = state.shippingCountry) {"
+          loader = r'''  let productCardNavigationModule = null;
+          let productCardNavigationModulePromise = null;
+
+          function loadProductCardNavigationModule() {
+            if (!productCardNavigationModulePromise) {
+              productCardNavigationModulePromise = import('./product-card-navigation.mjs')
+                .then((module) => {
+                  productCardNavigationModule = module;
+                  return module;
+                });
+            }
+            return productCardNavigationModulePromise;
+          }
+
+          '''
+          if loader_anchor not in app:
+              raise SystemExit('Could not find product-card module loader anchor in js/app.js')
+          app = app.replace(loader_anchor, loader + loader_anchor, 1)
+
+          old_cards = re.compile(
+              r"  // Product card navigation \(click anywhere on card except add-to-cart button\)\n"
+              r"  function initProductCards\(\) \{[\s\S]*?\n  \}\n\n"
+              r"  // ==========================================\n"
+              r"  // DAY / NIGHT TOGGLE",
+          )
+          replacement = r'''  // Product card navigation is centralized so cards have one click and keyboard contract.
+          function initProductCards() {
+            if (!productCardNavigationModule) {
+              throw new Error('Product card navigation module was not loaded.');
+            }
+            productCardNavigationModule.initProductCardNavigation({
+              root: document,
+              navigate: (href) => { window.location.href = href; },
+              pageByName: PRODUCT_PAGE_BY_NAME,
+            });
+          }
+
+          // ==========================================
+          // DAY / NIGHT TOGGLE'''
+          app, replaced = old_cards.subn(replacement, app, count=1)
+          if replaced != 1:
+              raise SystemExit(f'Expected to replace one initProductCards implementation, replaced {replaced}')
+
+          old_init = "    await loadCommerceModule();"
+          new_init = "    await Promise.all([loadCommerceModule(), loadProductCardNavigationModule()]);"
+          if app.count(old_init) != 1:
+              raise SystemExit(f'Expected one commerce init anchor, found {app.count(old_init)}')
+          app = app.replace(old_init, new_init, 1)
+          app_path.write_text(app, encoding='utf-8')
+
+          validator = r'''import { readFile } from 'node:fs/promises';
+          import { resolve } from 'node:path';
+
+          const root = process.cwd();
+          const files = [
+            'shop.html',
+            'combat-legends.html',
+            'music-legends.html',
+            'sport-legends.html',
+            'wisdom-legends.html',
+          ];
+          const expectedCards = 232;
+          const errors = [];
+          let cardCount = 0;
+
+          const articlePattern = /<article\b([^>]*)>([\s\S]*?)<\/article>/gi;
+          const attribute = (source, name) => {
+            const match = source.match(new RegExp(`\\b${name}=["']([^"']*)["']`, 'i'));
+            return match?.[1] || '';
+          };
+
+          for (const file of files) {
+            const html = await readFile(resolve(root, file), 'utf8');
+            for (const match of html.matchAll(articlePattern)) {
+              const attributes = match[1];
+              const body = match[2];
+              if (!/\bproduct-card\b/.test(attribute(attributes, 'class'))) continue;
+              cardCount += 1;
+
+              const href = attribute(attributes, 'data-product-href');
+              if (!href) errors.push(`${file}: product card has no data-product-href`);
+              if (attribute(attributes, 'role') !== 'link') {
+                errors.push(`${file}: product card ${href || cardCount} must use role=link`);
+              }
+              if (attribute(attributes, 'tabindex') !== '0') {
+                errors.push(`${file}: product card ${href || cardCount} must use tabindex=0`);
+              }
+              if (!attribute(attributes, 'aria-label').trim()) {
+                errors.push(`${file}: product card ${href || cardCount} has no accessible name`);
+              }
+              if (/\bonclick\s*=/.test(attributes)) {
+                errors.push(`${file}: product card ${href || cardCount} still has inline onclick`);
+              }
+              if (/class=["'][^"']*add-to-cart-btn[^"']*["'][^>]*\bonclick\s*=/i.test(body)) {
+                errors.push(`${file}: add-to-cart button inside ${href || cardCount} still has inline onclick`);
+              }
+            }
+          }
+
+          if (cardCount !== expectedCards) {
+            errors.push(`Expected ${expectedCards} product cards, found ${cardCount}`);
+          }
+
+          const app = await readFile(resolve(root, 'js/app.js'), 'utf8');
+          const moduleSource = await readFile(resolve(root, 'js/product-card-navigation.mjs'), 'utf8');
+          if (!app.includes("import('./product-card-navigation.mjs')")) {
+            errors.push('js/app.js does not load the product-card navigation module');
+          }
+          if (!app.includes('initProductCardNavigation')) {
+            errors.push('js/app.js does not initialize centralized product-card navigation');
+          }
+          if (!moduleSource.includes("key === 'Enter'")) {
+            errors.push('Product-card navigation module has no Enter-key contract');
+          }
+          if (!moduleSource.includes('shouldIgnoreProductCardClick')) {
+            errors.push('Product-card navigation module does not protect nested controls');
+          }
+
+          if (errors.length) {
+            console.error(errors.map((error) => `- ${error}`).join('\n'));
+            process.exit(1);
+          }
+
+          console.log(`Validated ${cardCount} centralized, keyboard-accessible product cards.`);
+          '''
+          Path('scripts/validate-product-card-navigation.mjs').write_text(validator, encoding='utf-8')
+
+          tests = r'''import test from 'node:test';
+          import assert from 'node:assert/strict';
+
+          import {
+            initProductCardNavigation,
+            isProductCardActivationKey,
+            resolveProductCardHref,
+            shouldIgnoreProductCardClick,
+          } from '../js/product-card-navigation.mjs';
+
+          function createCard({ href = '', name = 'Example Product' } = {}) {
+            const handlers = {};
+            const attributes = new Map();
+            return {
+              dataset: { productHref: href },
+              handlers,
+              querySelector(selector) {
+                return selector === 'h3' ? { textContent: name } : null;
+              },
+              addEventListener(type, handler) {
+                handlers[type] = handler;
+              },
+              hasAttribute(name) {
+                return attributes.has(name);
+              },
+              setAttribute(name, value) {
+                attributes.set(name, value);
+              },
+              getAttribute(name) {
+                return attributes.get(name);
+              },
+            };
+          }
+
+          test('uses Enter as the link activation key', () => {
+            assert.equal(isProductCardActivationKey('Enter'), true);
+            assert.equal(isProductCardActivationKey(' '), false);
+          });
+
+          test('resolves explicit and legacy card destinations', () => {
+            assert.equal(resolveProductCardHref(createCard({ href: 'explicit.html' })), 'explicit.html');
+            assert.equal(
+              resolveProductCardHref(createCard({ name: 'The Free Spirit' }), {
+                'The Free Spirit': 'music-free-spirit.html',
+              }),
+              'music-free-spirit.html',
+            );
+          });
+
+          test('ignores nested controls but not the card itself', () => {
+            const card = createCard();
+            const button = {};
+            const buttonTarget = { closest: () => button };
+            const cardTarget = { closest: () => card };
+            assert.equal(shouldIgnoreProductCardClick(card, buttonTarget), true);
+            assert.equal(shouldIgnoreProductCardClick(card, cardTarget), false);
+          });
+
+          test('binds click and keyboard navigation with accessible semantics', () => {
+            const card = createCard({ href: 'product.html', name: 'Product' });
+            const root = { querySelectorAll: () => [card] };
+            const navigations = [];
+            const initialized = initProductCardNavigation({
+              root,
+              navigate: (href) => navigations.push(href),
+            });
+
+            assert.equal(initialized, 1);
+            assert.equal(card.getAttribute('role'), 'link');
+            assert.equal(card.getAttribute('tabindex'), '0');
+            assert.equal(card.getAttribute('aria-label'), 'View Product');
+
+            card.handlers.click({ target: { closest: () => card } });
+            let prevented = false;
+            card.handlers.keydown({
+              target: card,
+              key: 'Enter',
+              preventDefault: () => { prevented = true; },
+            });
+
+            assert.equal(prevented, true);
+            assert.deepEqual(navigations, ['product.html', 'product.html']);
+          });
+
+          test('does not hijack add-to-cart button clicks', () => {
+            const card = createCard({ href: 'product.html' });
+            const button = {};
+            const root = { querySelectorAll: () => [card] };
+            const navigations = [];
+            initProductCardNavigation({ root, navigate: (href) => navigations.push(href) });
+
+            card.handlers.click({ target: { closest: () => button } });
+            assert.deepEqual(navigations, []);
+          });
+          '''
+          Path('tests/product-card-navigation.test.mjs').write_text(tests, encoding='utf-8')
+
+          package_path = Path('package.json')
+          package_text = package_path.read_text(encoding='utf-8')
+          script_anchor = '    "validate:related-products": "node scripts/validate-related-products-runtime.mjs",\n'
+          new_script = (
+              '    "validate:product-card-navigation": '
+              '"node scripts/validate-product-card-navigation.mjs",\n'
+          )
+          if script_anchor not in package_text:
+              raise SystemExit('Could not find package script insertion anchor')
+          package_text = package_text.replace(script_anchor, new_script + script_anchor, 1)
+
+          quality_anchor = 'npm run audit:inline-handlers && npm run validate:image-error-fallbacks'
+          quality_replacement = (
+              'npm run audit:inline-handlers && npm run validate:product-card-navigation '
+              '&& npm run validate:image-error-fallbacks'
+          )
+          if quality_anchor not in package_text:
+              raise SystemExit('Could not find quality-chain insertion anchor')
+          package_text = package_text.replace(quality_anchor, quality_replacement, 1)
+          package_path.write_text(package_text, encoding='utf-8')
+
+          print(
+              f'Migrated {migrated_cards} cards and removed '
+              f'{removed_propagation_handlers} propagation handlers.'
+          )
+          PY
+
+      - name: Validate focused migration
+        run: |
+          node scripts/validate-product-card-navigation.mjs
+          node scripts/inline-handler-audit.mjs
+          node --test tests/product-card-navigation.test.mjs
+          git diff --check
+
+      - name: Commit migration
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add shop.html combat-legends.html music-legends.html sport-legends.html wisdom-legends.html \
+            js/app.js js/product-card-navigation.mjs package.json \
+            scripts/validate-product-card-navigation.mjs tests/product-card-navigation.test.mjs
+          git commit -m "Centralize product card navigation"
+          git push origin HEAD:refactor/product-card-navigation
+
+      - name: Remove one-time workflow
+        shell: bash
+        run: |
+          rm .github/workflows/one-time-product-card-navigation.yml
+          git add .github/workflows/one-time-product-card-navigation.yml
+          git commit -m "Remove one-time product card migration workflow"
+          git push origin HEAD:refactor/product-card-navigation
