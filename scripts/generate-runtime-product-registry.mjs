@@ -13,7 +13,7 @@ export function toRuntimeProduct(product) {
     slug: product.slug,
     page: product.page,
     name: product.name,
-    image: product.image,
+    image: product.browserImage || product.image,
     category: product.category,
     collection: product.collection,
     batchId: product.batchId,

@@ -59,7 +59,10 @@ for (const product of products) {
   }
 
   for (const field of REQUIRED_FIELDS) {
-    compare(errors, product.page, field, inventoryProduct[field], product[field]);
+    const expected = field === 'image'
+      ? inventoryProduct.browserImage || inventoryProduct.image
+      : inventoryProduct[field];
+    compare(errors, product.page, field, expected, product[field]);
   }
 }
 

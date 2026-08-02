@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
 
+import { browserProductImageFor } from './lib/product-browser-derivatives.mjs';
+
 const CATEGORY_LINKS = [
   ['music', 'Music Legends'],
   ['sport', 'Sport Legends'],
@@ -57,11 +59,11 @@ function parseEuro(value) {
   return parsed;
 }
 
-function absoluteImageUrl(product) {
+function absoluteImageUrl(product, image = product.image) {
   const canonical = String(product.canonical || '');
   const slash = canonical.lastIndexOf('/');
-  if (slash < 0) return product.image;
-  return `${canonical.slice(0, slash + 1)}${product.image}`;
+  if (slash < 0) return image;
+  return `${canonical.slice(0, slash + 1)}${image}`;
 }
 
 function structuredData(product) {
@@ -237,6 +239,7 @@ function breadcrumb(product) {
 
 export function renderProductPage(template, product, presentation) {
   const title = presentation.pageTitle || `${product.name} — ${product.collection} | Legend Stories`;
+  const browserImage = browserProductImageFor(product.image);
   const values = {
     META_DESCRIPTION: escapeHtml(product.description),
     PAGE_TITLE: escapeHtml(title),
@@ -245,7 +248,7 @@ export function renderProductPage(template, product, presentation) {
     STRUCTURED_DATA_SCRIPT: `<script type="application/ld+json">\n${structuredData(product)}\n  </script>`,
     ANNOUNCEMENT_HTML: presentation.announcementHtml,
     BREADCRUMB: breadcrumb(product),
-    IMAGE: escapeHtml(product.image),
+    IMAGE: escapeHtml(browserImage),
     IMAGE_ALT: escapeHtml(presentation.imageAlt),
     COLLECTION: escapeHtml(product.collection),
     NAME: escapeHtml(product.name),
