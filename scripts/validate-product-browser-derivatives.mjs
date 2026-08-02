@@ -23,6 +23,10 @@ const REPORT_ROOT = join(ROOT, 'reports');
 const manifest = PRODUCT_BROWSER_DERIVATIVE_MANIFEST;
 const errors = [];
 const records = [];
+const COMPOSITE_BACKGROUNDS = Object.freeze({
+  dark: '0x09090b',
+  light: '0xf5f5f5',
+});
 
 function formatBytes(bytes) {
   if (bytes >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(2)} MB`;
@@ -67,23 +71,36 @@ function inspectImage(path) {
   };
 }
 
-function measureSsim(source, derivative, width, height, mode) {
-  const reference = mode === 'alpha'
-    ? `[0:v]scale=${width}:${height}:flags=lanczos,format=rgba,alphaextract[reference];[1:v]format=rgba,alphaextract[derivative];[reference][derivative]ssim`
-    : `[0:v]scale=${width}:${height}:flags=lanczos,format=yuv444p[reference];[1:v]format=yuv444p[derivative];[reference][derivative]ssim`;
+function measureCompositeSsim(source, derivative, width, height, background, label) {
+  const filter = [
+    `color=c=${background}:s=${width}x${height}:d=1[background]`,
+    '[background]split=2[sourceBackground][derivativeBackground]',
+    `[0:v]scale=${width}:${height}:flags=lanczos,format=rgba[source]`,
+    '[1:v]format=rgba[derivative]',
+    '[sourceBackground][source]overlay=shortest=1:format=auto,format=yuv444p[sourceComposite]',
+    '[derivativeBackground][derivative]overlay=shortest=1:format=auto,format=yuv444p[derivativeComposite]',
+    '[sourceComposite][derivativeComposite]ssim',
+  ].join(';');
   const result = run('ffmpeg', [
     '-v', 'info',
     '-i', source,
     '-i', derivative,
-    '-filter_complex', reference,
+    '-filter_complex', filter,
+    '-frames:v', '1',
     '-f', 'null',
     '-',
-  ], `${source} ${mode} SSIM`);
+  ], `${source} ${label} composite SSIM`);
   return parseSsimScore(`${result.stdout}\n${result.stderr}`);
 }
 
 if (manifest.schemaVersion !== 1) errors.push('Product browser derivative schemaVersion must be 1.');
 if (manifest.format !== 'webp') errors.push('Product browser derivatives must use WebP.');
+if (!Number.isFinite(manifest.minimumDarkCompositeSsim)) {
+  errors.push('Product browser derivative manifest requires minimumDarkCompositeSsim.');
+}
+if (!Number.isFinite(manifest.minimumLightCompositeSsim)) {
+  errors.push('Product browser derivative manifest requires minimumLightCompositeSsim.');
+}
 if (!Array.isArray(manifest.images) || manifest.images.length !== 21) {
   errors.push(`Product browser derivative manifest must contain exactly 21 images; found ${manifest.images?.length || 0}.`);
 }
@@ -108,7 +125,7 @@ for (const image of manifest.images || []) {
   const expectedDimensions = calculateDerivativeDimensions(
     image.sourceWidth,
     image.sourceHeight,
-    manifest.maxDimension,
+    image.maxDimension || manifest.maxDimension,
   );
   if (expectedDimensions.width !== image.width || expectedDimensions.height !== image.height) {
     errors.push(`${source}: manifest target ${image.width}x${image.height} differs from calculated ${expectedDimensions.width}x${expectedDimensions.height}.`);
@@ -147,8 +164,23 @@ for (const image of manifest.images || []) {
       stat(join(ROOT, derivativePath)),
     ]);
     const sizeRatio = calculateSizeRatio(sourceStat.size, derivativeStat.size);
-    const colorSsim = measureSsim(sourcePath, derivativePath, image.width, image.height, 'color');
-    const alphaSsim = measureSsim(sourcePath, derivativePath, image.width, image.height, 'alpha');
+    const darkCompositeSsim = measureCompositeSsim(
+      sourcePath,
+      derivativePath,
+      image.width,
+      image.height,
+      COMPOSITE_BACKGROUNDS.dark,
+      'dark',
+    );
+    const lightCompositeSsim = measureCompositeSsim(
+      sourcePath,
+      derivativePath,
+      image.width,
+      image.height,
+      COMPOSITE_BACKGROUNDS.light,
+      'light',
+    );
+    const maximumSizeRatio = image.maximumSizeRatio || manifest.maximumSizeRatio;
 
     if (sourceInfo.width !== image.sourceWidth || sourceInfo.height !== image.sourceHeight) {
       errors.push(`${sourcePath}: source dimensions changed from ${image.sourceWidth}x${image.sourceHeight}.`);
@@ -165,14 +197,14 @@ for (const image of manifest.images || []) {
     if (!pixelFormatSupportsAlpha(derivativeInfo.pixelFormat)) {
       errors.push(`${derivativePath}: derivative pixel format ${derivativeInfo.pixelFormat || 'unknown'} is not alpha-capable.`);
     }
-    if (sizeRatio > manifest.maximumSizeRatio) {
-      errors.push(`${derivativePath}: size ratio ${sizeRatio.toFixed(4)} exceeds ${manifest.maximumSizeRatio}.`);
+    if (sizeRatio > maximumSizeRatio) {
+      errors.push(`${derivativePath}: size ratio ${sizeRatio.toFixed(4)} exceeds ${maximumSizeRatio}.`);
     }
-    if (colorSsim < manifest.minimumColorSsim) {
-      errors.push(`${derivativePath}: color SSIM ${colorSsim.toFixed(6)} is below ${manifest.minimumColorSsim}.`);
+    if (darkCompositeSsim < manifest.minimumDarkCompositeSsim) {
+      errors.push(`${derivativePath}: dark composite SSIM ${darkCompositeSsim.toFixed(6)} is below ${manifest.minimumDarkCompositeSsim}.`);
     }
-    if (alphaSsim < manifest.minimumAlphaSsim) {
-      errors.push(`${derivativePath}: alpha SSIM ${alphaSsim.toFixed(6)} is below ${manifest.minimumAlphaSsim}.`);
+    if (lightCompositeSsim < manifest.minimumLightCompositeSsim) {
+      errors.push(`${derivativePath}: light composite SSIM ${lightCompositeSsim.toFixed(6)} is below ${manifest.minimumLightCompositeSsim}.`);
     }
 
     const productHtml = htmlByFile.get(image.productPage) || '';
@@ -221,9 +253,10 @@ for (const image of manifest.images || []) {
       derivativeBytes: derivativeStat.size,
       savedBytes: sourceStat.size - derivativeStat.size,
       sizeRatio,
+      maximumSizeRatio,
       reductionPercent: (1 - sizeRatio) * 100,
-      colorSsim,
-      alphaSsim,
+      darkCompositeSsim,
+      lightCompositeSsim,
       sourcePixelFormat: sourceInfo.pixelFormat,
       derivativePixelFormat: derivativeInfo.pixelFormat,
       derivativeBrowserReferences,
@@ -248,22 +281,23 @@ const markdown = [
   `- Original source bytes: ${formatBytes(sourceBytes)}`,
   `- Browser WebP bytes: ${formatBytes(derivativeBytes)}`,
   `- Potential transfer reduction: ${formatBytes(savedBytes)} (${sourceBytes ? ((savedBytes / sourceBytes) * 100).toFixed(2) : '0.00'}%)`,
-  `- Maximum browser dimension: ${manifest.maxDimension}px`,
-  `- Minimum color SSIM: ${manifest.minimumColorSsim}`,
-  `- Minimum alpha SSIM: ${manifest.minimumAlphaSsim}`,
+  `- Default maximum browser dimension: ${manifest.maxDimension}px`,
+  `- Minimum dark-background composite SSIM: ${manifest.minimumDarkCompositeSsim}`,
+  `- Minimum light-background composite SSIM: ${manifest.minimumLightCompositeSsim}`,
   `- Validation errors: ${errors.length}`,
   '',
   '## Files',
   '',
-  '| Source | Browser derivative | Source size | Browser size | Reduction | Color SSIM | Alpha SSIM | Dimensions | Browser refs |',
+  '| Source | Browser derivative | Source size | Browser size | Reduction | Dark SSIM | Light SSIM | Dimensions | Browser refs |',
   '|---|---|---:|---:|---:|---:|---:|---:|---:|',
-  ...records.map((record) => `| \`${record.source}\` | \`${record.derivative}\` | ${formatBytes(record.sourceBytes)} | ${formatBytes(record.derivativeBytes)} | ${record.reductionPercent.toFixed(2)}% | ${record.colorSsim.toFixed(6)} | ${record.alphaSsim.toFixed(6)} | ${record.width}×${record.height} | ${record.derivativeBrowserReferences} |`),
+  ...records.map((record) => `| \`${record.source}\` | \`${record.derivative}\` | ${formatBytes(record.sourceBytes)} | ${formatBytes(record.derivativeBytes)} | ${record.reductionPercent.toFixed(2)}% | ${record.darkCompositeSsim.toFixed(6)} | ${record.lightCompositeSsim.toFixed(6)} | ${record.width}×${record.height} | ${record.derivativeBrowserReferences} |`),
   '',
   '## Policy',
   '',
   '- Original transparent PNG files remain committed as print/source assets and Product JSON-LD references.',
   '- Browser-facing product heroes, cards, cart thumbnails, social previews and related products use reviewed WebP derivatives when available.',
-  '- Derivatives must preserve alpha, stay within the size ratio budget and pass separate color and alpha SSIM thresholds.',
+  '- Visual similarity is measured after compositing source and derivative over dark and light backgrounds, matching actual browser rendering and ignoring hidden RGB beneath fully transparent pixels.',
+  '- Derivatives must retain an alpha-capable pixel format, stay within the size ratio budget and pass both composite SSIM thresholds.',
   '- Regeneration must use the committed manifest and generator.',
   '',
   ...(errors.length ? ['## Errors', '', ...errors.map((error) => `- ${error}`), ''] : []),
@@ -286,10 +320,11 @@ await Promise.all([
       maxDimension: manifest.maxDimension,
       quality: manifest.quality,
       compressionLevel: manifest.compressionLevel,
-      minimumColorSsim: manifest.minimumColorSsim,
-      minimumAlphaSsim: manifest.minimumAlphaSsim,
+      minimumDarkCompositeSsim: manifest.minimumDarkCompositeSsim,
+      minimumLightCompositeSsim: manifest.minimumLightCompositeSsim,
       maximumSizeRatio: manifest.maximumSizeRatio,
     },
+    backgrounds: COMPOSITE_BACKGROUNDS,
     images: records,
     errors,
   }, null, 2)}\n`, 'utf8'),
@@ -306,6 +341,6 @@ console.log(
 );
 for (const record of records) {
   console.log(
-    `- ${record.source}: ${record.reductionPercent.toFixed(2)}% smaller, color SSIM=${record.colorSsim.toFixed(6)}, alpha SSIM=${record.alphaSsim.toFixed(6)}.`,
+    `- ${record.source}: ${record.reductionPercent.toFixed(2)}% smaller, dark SSIM=${record.darkCompositeSsim.toFixed(6)}, light SSIM=${record.lightCompositeSsim.toFixed(6)}.`,
   );
 }
