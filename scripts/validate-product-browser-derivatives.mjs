@@ -93,16 +93,43 @@ function measureCompositeSsim(source, derivative, width, height, background, lab
   return parseSsimScore(`${result.stdout}\n${result.stderr}`);
 }
 
+function measureAtDimensions(source, derivative, dimensions, label) {
+  return {
+    dark: measureCompositeSsim(
+      source,
+      derivative,
+      dimensions.width,
+      dimensions.height,
+      COMPOSITE_BACKGROUNDS.dark,
+      `${label} dark`,
+    ),
+    light: measureCompositeSsim(
+      source,
+      derivative,
+      dimensions.width,
+      dimensions.height,
+      COMPOSITE_BACKGROUNDS.light,
+      `${label} light`,
+    ),
+  };
+}
+
 if (manifest.schemaVersion !== 1) errors.push('Product browser derivative schemaVersion must be 1.');
 if (manifest.format !== 'webp') errors.push('Product browser derivatives must use WebP.');
-if (!Number.isFinite(manifest.displayMaxDimension) || manifest.displayMaxDimension !== 900) {
-  errors.push('Product browser derivative manifest requires displayMaxDimension 900.');
+if (manifest.wideDisplayMaxDimension !== 900) {
+  errors.push('Product browser derivative manifest requires wideDisplayMaxDimension 900.');
+}
+if (manifest.standardDisplayMaxDimension !== 600) {
+  errors.push('Product browser derivative manifest requires standardDisplayMaxDimension 600.');
 }
 if (!Number.isFinite(manifest.minimumNativeCompositeSsim)) {
   errors.push('Product browser derivative manifest requires minimumNativeCompositeSsim.');
 }
-if (!Number.isFinite(manifest.minimumDisplayCompositeSsim)) {
-  errors.push('Product browser derivative manifest requires minimumDisplayCompositeSsim.');
+if (!Number.isFinite(manifest.minimumWideDisplayCompositeSsim)) {
+  errors.push('Product browser derivative manifest requires minimumWideDisplayCompositeSsim.');
+}
+if (!Number.isFinite(manifest.minimumStandardDisplayCompositeSsim)) {
+  errors.push('Product browser derivative manifest requires minimumStandardDisplayCompositeSsim.');
 }
 if (!Array.isArray(manifest.images) || manifest.images.length !== 21) {
   errors.push(`Product browser derivative manifest must contain exactly 21 images; found ${manifest.images?.length || 0}.`);
@@ -167,43 +194,20 @@ for (const image of manifest.images || []) {
       stat(join(ROOT, derivativePath)),
     ]);
     const sizeRatio = calculateSizeRatio(sourceStat.size, derivativeStat.size);
-    const displayDimensions = calculateDerivativeDimensions(
+    const nativeDimensions = { width: image.width, height: image.height };
+    const wideDimensions = calculateDerivativeDimensions(
       image.width,
       image.height,
-      manifest.displayMaxDimension,
+      manifest.wideDisplayMaxDimension,
     );
-    const nativeDarkCompositeSsim = measureCompositeSsim(
-      sourcePath,
-      derivativePath,
+    const standardDimensions = calculateDerivativeDimensions(
       image.width,
       image.height,
-      COMPOSITE_BACKGROUNDS.dark,
-      'native dark',
+      manifest.standardDisplayMaxDimension,
     );
-    const nativeLightCompositeSsim = measureCompositeSsim(
-      sourcePath,
-      derivativePath,
-      image.width,
-      image.height,
-      COMPOSITE_BACKGROUNDS.light,
-      'native light',
-    );
-    const displayDarkCompositeSsim = measureCompositeSsim(
-      sourcePath,
-      derivativePath,
-      displayDimensions.width,
-      displayDimensions.height,
-      COMPOSITE_BACKGROUNDS.dark,
-      'display dark',
-    );
-    const displayLightCompositeSsim = measureCompositeSsim(
-      sourcePath,
-      derivativePath,
-      displayDimensions.width,
-      displayDimensions.height,
-      COMPOSITE_BACKGROUNDS.light,
-      'display light',
-    );
+    const nativeSsim = measureAtDimensions(sourcePath, derivativePath, nativeDimensions, 'native');
+    const wideSsim = measureAtDimensions(sourcePath, derivativePath, wideDimensions, 'wide display');
+    const standardSsim = measureAtDimensions(sourcePath, derivativePath, standardDimensions, 'standard display');
     const maximumSizeRatio = image.maximumSizeRatio || manifest.maximumSizeRatio;
 
     if (sourceInfo.width !== image.sourceWidth || sourceInfo.height !== image.sourceHeight) {
@@ -224,17 +228,21 @@ for (const image of manifest.images || []) {
     if (sizeRatio > maximumSizeRatio) {
       errors.push(`${derivativePath}: size ratio ${sizeRatio.toFixed(4)} exceeds ${maximumSizeRatio}.`);
     }
-    if (nativeDarkCompositeSsim < manifest.minimumNativeCompositeSsim) {
-      errors.push(`${derivativePath}: native dark SSIM ${nativeDarkCompositeSsim.toFixed(6)} is below ${manifest.minimumNativeCompositeSsim}.`);
+
+    for (const [background, score] of Object.entries(nativeSsim)) {
+      if (score < manifest.minimumNativeCompositeSsim) {
+        errors.push(`${derivativePath}: native ${background} SSIM ${score.toFixed(6)} is below ${manifest.minimumNativeCompositeSsim}.`);
+      }
     }
-    if (nativeLightCompositeSsim < manifest.minimumNativeCompositeSsim) {
-      errors.push(`${derivativePath}: native light SSIM ${nativeLightCompositeSsim.toFixed(6)} is below ${manifest.minimumNativeCompositeSsim}.`);
+    for (const [background, score] of Object.entries(wideSsim)) {
+      if (score < manifest.minimumWideDisplayCompositeSsim) {
+        errors.push(`${derivativePath}: 900px ${background} SSIM ${score.toFixed(6)} is below ${manifest.minimumWideDisplayCompositeSsim}.`);
+      }
     }
-    if (displayDarkCompositeSsim < manifest.minimumDisplayCompositeSsim) {
-      errors.push(`${derivativePath}: 900px dark SSIM ${displayDarkCompositeSsim.toFixed(6)} is below ${manifest.minimumDisplayCompositeSsim}.`);
-    }
-    if (displayLightCompositeSsim < manifest.minimumDisplayCompositeSsim) {
-      errors.push(`${derivativePath}: 900px light SSIM ${displayLightCompositeSsim.toFixed(6)} is below ${manifest.minimumDisplayCompositeSsim}.`);
+    for (const [background, score] of Object.entries(standardSsim)) {
+      if (score < manifest.minimumStandardDisplayCompositeSsim) {
+        errors.push(`${derivativePath}: 600px ${background} SSIM ${score.toFixed(6)} is below ${manifest.minimumStandardDisplayCompositeSsim}.`);
+      }
     }
 
     const productHtml = htmlByFile.get(image.productPage) || '';
@@ -285,12 +293,12 @@ for (const image of manifest.images || []) {
       sizeRatio,
       maximumSizeRatio,
       reductionPercent: (1 - sizeRatio) * 100,
-      displayWidth: displayDimensions.width,
-      displayHeight: displayDimensions.height,
-      nativeDarkCompositeSsim,
-      nativeLightCompositeSsim,
-      displayDarkCompositeSsim,
-      displayLightCompositeSsim,
+      nativeDimensions,
+      wideDimensions,
+      standardDimensions,
+      nativeSsim,
+      wideSsim,
+      standardSsim,
       sourcePixelFormat: sourceInfo.pixelFormat,
       derivativePixelFormat: derivativeInfo.pixelFormat,
       derivativeBrowserReferences,
@@ -315,25 +323,25 @@ const markdown = [
   `- Original source bytes: ${formatBytes(sourceBytes)}`,
   `- Browser WebP bytes: ${formatBytes(derivativeBytes)}`,
   `- Potential transfer reduction: ${formatBytes(savedBytes)} (${sourceBytes ? ((savedBytes / sourceBytes) * 100).toFixed(2) : '0.00'}%)`,
-  `- Default maximum derivative dimension: ${manifest.maxDimension}px`,
-  `- Browser display validation dimension: ${manifest.displayMaxDimension}px`,
-  `- Minimum native composite SSIM: ${manifest.minimumNativeCompositeSsim}`,
-  `- Minimum displayed composite SSIM: ${manifest.minimumDisplayCompositeSsim}`,
+  `- Native SSIM guardrail: ${manifest.minimumNativeCompositeSsim}`,
+  `- 900px wide-layout SSIM: ${manifest.minimumWideDisplayCompositeSsim}`,
+  `- 600px standard-layout SSIM: ${manifest.minimumStandardDisplayCompositeSsim}`,
   `- Validation errors: ${errors.length}`,
   '',
   '## Files',
   '',
-  '| Source | Browser derivative | Source size | Browser size | Reduction | Native dark/light | 900px dark/light | Derivative | Display | Browser refs |',
-  '|---|---|---:|---:|---:|---:|---:|---:|---:|---:|',
-  ...records.map((record) => `| \`${record.source}\` | \`${record.derivative}\` | ${formatBytes(record.sourceBytes)} | ${formatBytes(record.derivativeBytes)} | ${record.reductionPercent.toFixed(2)}% | ${record.nativeDarkCompositeSsim.toFixed(6)} / ${record.nativeLightCompositeSsim.toFixed(6)} | ${record.displayDarkCompositeSsim.toFixed(6)} / ${record.displayLightCompositeSsim.toFixed(6)} | ${record.width}×${record.height} | ${record.displayWidth}×${record.displayHeight} | ${record.derivativeBrowserReferences} |`),
+  '| Source | Browser derivative | Reduction | Native dark/light | 900px dark/light | 600px dark/light | Derivative | Browser refs |',
+  '|---|---|---:|---:|---:|---:|---:|---:|',
+  ...records.map((record) => `| \`${record.source}\` | \`${record.derivative}\` | ${record.reductionPercent.toFixed(2)}% | ${record.nativeSsim.dark.toFixed(6)} / ${record.nativeSsim.light.toFixed(6)} | ${record.wideSsim.dark.toFixed(6)} / ${record.wideSsim.light.toFixed(6)} | ${record.standardSsim.dark.toFixed(6)} / ${record.standardSsim.light.toFixed(6)} | ${record.width}×${record.height} | ${record.derivativeBrowserReferences} |`),
   '',
   '## Policy',
   '',
   '- Original transparent PNG files remain committed as print/source assets and Product JSON-LD references.',
   '- Browser-facing product heroes, cards, cart thumbnails, social previews and related products use reviewed WebP derivatives when available.',
-  '- Native-resolution composite SSIM is a hard anti-artifact guardrail.',
-  '- The stricter SSIM threshold is evaluated at the 900px browser presentation size used by the product hero contract.',
-  '- Both checks composite source and derivative over dark and light backgrounds, matching actual rendering and ignoring hidden RGB beneath transparent pixels.',
+  '- Native composite SSIM blocks severe encoder artifacts.',
+  '- The 900px threshold covers the widest single-column tablet presentation before the large-screen two-column layout activates.',
+  '- The stricter 600px threshold covers the normal desktop product column and all smaller product-card contexts.',
+  '- Every visual check composites source and derivative over dark and light backgrounds, matching real rendering and ignoring hidden RGB beneath transparent pixels.',
   '- Derivatives must retain an alpha-capable pixel format and stay within the size ratio budget.',
   '- Regeneration must use the committed manifest and generator.',
   '',
@@ -355,11 +363,13 @@ await Promise.all([
     },
     manifest: {
       maxDimension: manifest.maxDimension,
-      displayMaxDimension: manifest.displayMaxDimension,
+      wideDisplayMaxDimension: manifest.wideDisplayMaxDimension,
+      standardDisplayMaxDimension: manifest.standardDisplayMaxDimension,
       quality: manifest.quality,
       compressionLevel: manifest.compressionLevel,
       minimumNativeCompositeSsim: manifest.minimumNativeCompositeSsim,
-      minimumDisplayCompositeSsim: manifest.minimumDisplayCompositeSsim,
+      minimumWideDisplayCompositeSsim: manifest.minimumWideDisplayCompositeSsim,
+      minimumStandardDisplayCompositeSsim: manifest.minimumStandardDisplayCompositeSsim,
       maximumSizeRatio: manifest.maximumSizeRatio,
     },
     backgrounds: COMPOSITE_BACKGROUNDS,
@@ -379,6 +389,6 @@ console.log(
 );
 for (const record of records) {
   console.log(
-    `- ${record.source}: ${record.reductionPercent.toFixed(2)}% smaller, native=${record.nativeDarkCompositeSsim.toFixed(6)}/${record.nativeLightCompositeSsim.toFixed(6)}, 900px=${record.displayDarkCompositeSsim.toFixed(6)}/${record.displayLightCompositeSsim.toFixed(6)}.`,
+    `- ${record.source}: ${record.reductionPercent.toFixed(2)}% smaller, native=${record.nativeSsim.dark.toFixed(6)}/${record.nativeSsim.light.toFixed(6)}, 900px=${record.wideSsim.dark.toFixed(6)}/${record.wideSsim.light.toFixed(6)}, 600px=${record.standardSsim.dark.toFixed(6)}/${record.standardSsim.light.toFixed(6)}.`,
   );
 }
