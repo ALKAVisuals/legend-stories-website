@@ -26,20 +26,19 @@ for (const image of PRODUCT_BROWSER_DERIVATIVE_MANIFEST.images || []) {
     '-y',
     '-i', source,
     '-frames:v', '1',
-    '-vf', `scale=${image.width}:${image.height}:flags=lanczos`,
+    '-vf', `scale=${image.width}:${image.height}:flags=lanczos,format=bgra`,
     '-c:v', 'libwebp',
     '-lossless', '1',
     '-quality', String(PRODUCT_BROWSER_DERIVATIVE_MANIFEST.quality),
     '-compression_level', String(PRODUCT_BROWSER_DERIVATIVE_MANIFEST.compressionLevel),
-    '-preset', 'drawing',
-    '-pix_fmt', 'yuva420p',
+    '-pix_fmt', 'bgra',
     '-map_metadata', '-1',
     derivative,
   ], image.source);
 
-  console.log(`${image.source} -> ${image.derivative} (${image.width}x${image.height}, lossless WebP)`);
+  console.log(`${image.source} -> ${image.derivative} (${image.width}x${image.height}, lossless RGBA WebP)`);
 }
 
 console.log(
-  `Generated ${PRODUCT_BROWSER_DERIVATIVE_MANIFEST.images.length} transparent lossless product browser derivatives.`,
+  `Generated ${PRODUCT_BROWSER_DERIVATIVE_MANIFEST.images.length} transparent lossless RGBA product browser derivatives.`,
 );
