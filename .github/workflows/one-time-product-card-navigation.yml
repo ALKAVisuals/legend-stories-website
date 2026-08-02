@@ -111,11 +111,18 @@ jobs:
 
           app_path = Path('js/app.js')
           app = app_path.read_text(encoding='utf-8')
-          parallel = '    await Promise.all([loadCommerceModule(), loadProductCardNavigationModule()]);'
-          sequential = '    await loadCommerceModule();\n    await loadProductCardNavigationModule();'
-          if app.count(parallel) != 1:
-              raise SystemExit(f'Expected one parallel initialization line, found {app.count(parallel)}')
-          app = app.replace(parallel, sequential, 1)
+          generated = (
+              '    await Promise.all([loadCommerceModule(), loadProductCardNavigationModule()]);\n'
+              '    loadCart();  // Restore cart after commerce policies are available'
+          )
+          corrected = (
+              '    await loadCommerceModule();\n'
+              '    loadCart();  // Restore cart after commerce policies are available\n'
+              '    await loadProductCardNavigationModule();'
+          )
+          if app.count(generated) != 1:
+              raise SystemExit(f'Expected one generated initialization block, found {app.count(generated)}')
+          app = app.replace(generated, corrected, 1)
           app_path.write_text(app, encoding='utf-8')
           PY
 
