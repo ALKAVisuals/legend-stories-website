@@ -144,8 +144,8 @@ test('renders delegated accessible cart controls without inline code', () => {
   assert.match(markup, /data-cart-action="decrement" data-cart-index="4"/);
   assert.match(markup, /data-cart-action="increment" data-cart-index="4"/);
   assert.match(markup, /data-cart-action="remove" data-cart-index="4"/);
-  assert.match(markup, /aria-label="Decrease quantity"/);
-  assert.match(markup, /aria-label="Increase quantity"/);
+  assert.match(markup, /aria-label="Decrease quantity for Hero &lt;script&gt;/);
+  assert.match(markup, /aria-label="Increase quantity for Hero &lt;script&gt;/);
   assert.match(markup, /aria-label="Remove Hero &lt;script&gt;/);
   assert.match(markup, /src="media\/products\/hero&quot;\.webp"/);
   assert.match(markup, /€25\.00/);
