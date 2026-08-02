@@ -836,6 +836,7 @@ function loadProductCardNavigationModule() {
       dom.testimonialDots.forEach((dot, i) => {
         dot.classList.toggle('bg-mint', i === index);
         dot.classList.toggle('bg-surface-border', i !== index);
+        dot.setAttribute('aria-pressed', i === index ? 'true' : 'false');
       });
     }
   }
