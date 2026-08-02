@@ -49,6 +49,7 @@ jobs:
           npm run audit:media:references
           npm run validate:media-references
           npm run audit:image:metadata
+          npm run validate:homepage-marketing-webp
           npm run audit:video:metadata
           npm run validate:video-delivery
           npm run validate:collection-video-loading

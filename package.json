@@ -22,6 +22,7 @@
     "inventory:products": "node scripts/product-inventory.mjs",
     "bootstrap:product-page-batch": "node scripts/bootstrap-product-page-batch.mjs",
     "bootstrap:batch3-pages": "node scripts/bootstrap-product-page-batch.mjs --batch=2026-batch-3 --expected=20",
+    "generate:homepage-marketing-webp": "node scripts/generate-homepage-marketing-webp.mjs",
     "generate:managed-product-pages": "node scripts/generate-managed-product-pages.mjs",
     "generate:managed-product-pages:live": "node scripts/generate-managed-product-pages.mjs --write-live",
     "generate:batch3-pages": "node scripts/generate-managed-product-pages.mjs --batch=2026-batch-3",
@@ -32,6 +33,7 @@
     "migrate:neon:test": "node scripts/run-neon-test-migrations.mjs",
     "optimize:collection-videos": "node scripts/optimize-collection-videos.mjs",
     "test:neon:integration": "node scripts/test-neon-order-store-integration.mjs",
+    "validate:homepage-marketing-webp": "node scripts/validate-homepage-marketing-webp.mjs",
     "validate:managed-product-pages": "node scripts/validate-managed-product-pages.mjs",
     "validate:managed-product-pages:live": "node scripts/validate-managed-product-pages.mjs --live",
     "validate:batch3-pages": "node scripts/validate-managed-product-pages.mjs --batch=2026-batch-3",
@@ -55,7 +57,7 @@
     "validate:runtime-products": "node scripts/validate-runtime-product-registry.mjs",
     "validate:video-delivery": "node scripts/validate-optimized-collection-videos.mjs",
     "test": "node --test tests/*.test.mjs",
-    "quality": "npm run audit && npm run audit:css && npm run audit:dependencies && npm run audit:media && npm run audit:media:references && npm run validate:media-references && npm run audit:image:metadata && npm run audit:video:metadata && npm run validate:video-delivery && npm run validate:collection-video-loading && npm run audit:runtime && npm run inventory:products && npm run validate:full-catalog && npm run audit:product-page-templates && npm run generate:managed-product-pages && npm run validate:managed-product-pages:live && npm run generate:runtime-products && npm run validate:runtime-products && npm run validate:related-products && npm run validate:commerce-runtime && npm run validate:order-security && npm run validate:stripe-checkout && npm run validate:browser-checkout && npm run validate:order-store && npm run validate:neon-order-store && npm run validate:neon-integration && npm run validate:checkout-persistence && npm run validate:stripe-webhook && npm run validate:order-return && npm run generate:product-previews && npm run validate:catalog && npm test && npm run build"
+    "quality": "npm run audit && npm run audit:css && npm run audit:dependencies && npm run audit:media && npm run audit:media:references && npm run validate:media-references && npm run audit:image:metadata && npm run validate:homepage-marketing-webp && npm run audit:video:metadata && npm run validate:video-delivery && npm run validate:collection-video-loading && npm run audit:runtime && npm run inventory:products && npm run validate:full-catalog && npm run audit:product-page-templates && npm run generate:managed-product-pages && npm run validate:managed-product-pages:live && npm run generate:runtime-products && npm run validate:runtime-products && npm run validate:related-products && npm run validate:commerce-runtime && npm run validate:order-security && npm run validate:stripe-checkout && npm run validate:browser-checkout && npm run validate:order-store && npm run validate:neon-order-store && npm run validate:neon-integration && npm run validate:checkout-persistence && npm run validate:stripe-webhook && npm run validate:order-return && npm run generate:product-previews && npm run validate:catalog && npm test && npm run build"
   },
   "dependencies": {
     "@neondatabase/serverless": "1.0.2",
