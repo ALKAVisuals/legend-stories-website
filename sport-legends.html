@@ -76,8 +76,8 @@
     <section class="relative overflow-hidden bg-void min-h-screen flex flex-col justify-end">
       <!-- Video background -->
       <div class="absolute inset-0 w-full h-[110%] -top-[10%]">
-        <video class="w-full h-full object-cover scale-110" autoplay muted loop playsinline preload="metadata" poster="media/welcome/collection-video-5-poster.webp">
-          <source src="media/welcome/LM%20Welcome%20video%20%20mobile%20%20%20(5).mp4" type="video/mp4">
+        <video class="w-full h-full object-cover scale-110" muted loop playsinline poster="media/welcome/collection-video-5-poster.webp" data-collection-video="collection-video-5" aria-hidden="true" tabindex="-1" preload="none">
+          <source data-src="media/welcome/LM%20Welcome%20video%20%20mobile%20%20%20(5).mp4" type="video/mp4">
         </video>
         <!-- Dark overlay for readability -->
         <div class="absolute inset-0 bg-gradient-to-t from-void/80 via-void/30 to-transparent"></div>
@@ -333,6 +333,7 @@
     </div>
   </aside>
 
+  <script type="module" src="js/collection-video.mjs"></script>
   <script src="js/componentry.js"></script>
   <script src="js/skipper.js"></script>
   <script src="js/app.js"></script>
