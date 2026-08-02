@@ -243,7 +243,7 @@ export function renderProductPage(template, product, presentation) {
   const values = {
     META_DESCRIPTION: escapeHtml(product.description),
     PAGE_TITLE: escapeHtml(title),
-    ABSOLUTE_IMAGE: escapeHtml(absoluteImageUrl(product, browserImage)),
+    ABSOLUTE_IMAGE: escapeHtml(absoluteImageUrl(product)),
     CANONICAL: escapeHtml(product.canonical),
     STRUCTURED_DATA_SCRIPT: `<script type="application/ld+json">\n${structuredData(product)}\n  </script>`,
     ANNOUNCEMENT_HTML: presentation.announcementHtml,

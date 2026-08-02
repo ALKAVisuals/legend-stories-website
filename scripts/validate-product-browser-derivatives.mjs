@@ -230,9 +230,9 @@ for (const image of manifest.images || []) {
 
     const productHtml = htmlByFile.get(image.productPage) || '';
     if (!productHtml) errors.push(`${image.productPage}: product page is missing.`);
-    const sourceCount = countOccurrences(productHtml, sourcePath);
-    if (sourceCount !== 1) {
-      errors.push(`${image.productPage}: expected exactly one original source reference in Product JSON-LD, found ${sourceCount}.`);
+    const structuredDataPattern = new RegExp(`<script type="application\\/ld\\+json">[\\s\\S]*?"image":\\s*"[^"]*${escapeRegExp(sourcePath)}"[\\s\\S]*?<\\/script>`, 'i');
+    if (!structuredDataPattern.test(productHtml)) {
+      errors.push(`${image.productPage}: Product JSON-LD does not retain the original PNG source ${sourcePath}.`);
     }
     const heroPattern = new RegExp(`<img\\b[^>]*\\bsrc="${escapeRegExp(derivativePath)}"[^>]*\\bdata-product-hero="true"`, 'i');
     if (!heroPattern.test(productHtml)) {
@@ -242,10 +242,15 @@ for (const image of manifest.images || []) {
     if (!cartPattern.test(productHtml)) {
       errors.push(`${image.productPage}: add-to-cart image does not use ${derivativePath}.`);
     }
-    const socialPattern = new RegExp(`<meta\\s+(?:property="og:image"|name="twitter:image")\\s+content="[^"]*${escapeRegExp(derivativePath)}"`, 'gi');
-    const socialCount = [...productHtml.matchAll(socialPattern)].length;
-    if (socialCount !== 2) {
-      errors.push(`${image.productPage}: expected two social image references to ${derivativePath}, found ${socialCount}.`);
+    const socialSourcePattern = new RegExp(`<meta\\s+(?:property="og:image"|name="twitter:image")\\s+content="[^"]*${escapeRegExp(sourcePath)}"`, 'gi');
+    const socialSourceCount = [...productHtml.matchAll(socialSourcePattern)].length;
+    if (socialSourceCount !== 2) {
+      errors.push(`${image.productPage}: expected two social image references to original PNG ${sourcePath}, found ${socialSourceCount}.`);
+    }
+    const socialDerivativePattern = new RegExp(`<meta\\s+(?:property="og:image"|name="twitter:image")\\s+content="[^"]*${escapeRegExp(derivativePath)}"`, 'gi');
+    const socialDerivativeCount = [...productHtml.matchAll(socialDerivativePattern)].length;
+    if (socialDerivativeCount !== 0) {
+      errors.push(`${image.productPage}: social metadata must not use WebP derivative ${derivativePath}.`);
     }
 
     let sourceBrowserReferences = 0;
@@ -317,7 +322,7 @@ const markdown = [
   '## Policy',
   '',
   '- Original transparent PNG files remain committed as print/source assets and Product JSON-LD references.',
-  '- Browser-facing product heroes, cards, cart thumbnails, social previews and related products use reviewed WebP derivatives when available.',
+  '- Browser-facing product heroes, cards, cart thumbnails and related products use reviewed WebP derivatives when available; Product JSON-LD and social previews retain the original PNG source for crawler compatibility.',
   '- Native composite SSIM blocks severe encoder artifacts.',
   '- The 900px threshold covers the widest single-column product presentation before the large-screen two-column layout activates.',
   '- Every visual check composites source and derivative over dark and light backgrounds, matching real rendering and ignoring hidden RGB beneath transparent pixels.',
