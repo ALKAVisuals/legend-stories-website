@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           ref: refactor/product-card-navigation
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -43,16 +43,17 @@ jobs:
           import textwrap
 
           workflow_path = '.github/workflows/one-time-product-card-navigation.yml'
-          previous = subprocess.check_output(
-              ['git', 'show', f'HEAD~1:{workflow_path}'],
+          source_commit = '8387b49fdfe683fe92919c139980496c62982235'
+          reviewed = subprocess.check_output(
+              ['git', 'show', f'{source_commit}:{workflow_path}'],
               text=True,
           )
           match = re.search(
               r"          python - <<'PY'\n(?P<script>[\s\S]*?)\n          PY",
-              previous,
+              reviewed,
           )
           if not match:
-              raise SystemExit('Could not recover the reviewed migration script from HEAD~1')
+              raise SystemExit('Could not recover the reviewed migration script')
 
           migration_script = textwrap.dedent(match.group('script'))
           exec(compile(migration_script, '<product-card-migration>', 'exec'), {})
@@ -86,10 +87,7 @@ jobs:
               "    explicitCardCount += 1;",
               1,
           )
-          validator = validator.replace(
-              "${href || cardCount}",
-              "${href || explicitCardCount}",
-          )
+          validator = validator.replace('${href || cardCount}', '${href || explicitCardCount}')
           validator = validator.replace(
               "if (cardCount !== expectedCards) {\n"
               "  errors.push(`Expected ${expectedCards} product cards, found ${cardCount}`);\n"
@@ -107,10 +105,18 @@ jobs:
               'console.log(`Validated ${explicitCardCount} centralized cards across ${totalCardCount} product cards.`);',
               1,
           )
-
           if 'expectedExplicitCards' not in validator or 'totalCardCount' not in validator:
               raise SystemExit('Corrected validator replacements were not applied')
           validator_path.write_text(validator, encoding='utf-8')
+
+          app_path = Path('js/app.js')
+          app = app_path.read_text(encoding='utf-8')
+          parallel = '    await Promise.all([loadCommerceModule(), loadProductCardNavigationModule()]);'
+          sequential = '    await loadCommerceModule();\n    await loadProductCardNavigationModule();'
+          if app.count(parallel) != 1:
+              raise SystemExit(f'Expected one parallel initialization line, found {app.count(parallel)}')
+          app = app.replace(parallel, sequential, 1)
+          app_path.write_text(app, encoding='utf-8')
           PY
 
       - name: Validate focused migration
