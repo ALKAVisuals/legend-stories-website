@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: quality-${{ github.workflow }}-${{ github.ref }}
@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -40,6 +42,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends ffmpeg
 
+      - name: Generate homepage marketing WebP derivatives
+        run: |
+          npm run generate:homepage-marketing-webp
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- \
+            index.html \
+            'media/voorbeelden/Arnold S.webp' \
+            'media/voorbeelden/Fightclub.webp' \
+            'media/voorbeelden/Ibrahimovic.webp' \
+            'media/voorbeelden/Ice Cube.webp' \
+            'media/voorbeelden/Mike T..webp'
+          git diff --cached --quiet || git commit -m "perf: add homepage marketing WebP derivatives"
+          git push
+
       - name: Run repository audits
         run: |
           npm run audit
@@ -49,6 +66,7 @@ jobs:
           npm run audit:media:references
           npm run validate:media-references
           npm run audit:image:metadata
+          npm run validate:homepage-marketing-webp
           npm run audit:video:metadata
           npm run validate:video-delivery
           npm run validate:collection-video-loading
