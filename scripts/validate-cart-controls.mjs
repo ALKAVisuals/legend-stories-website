@@ -21,12 +21,16 @@ if (count(appSource, "import('./cart-controls.mjs')") !== 1) {
 if (count(appSource, 'initCartControlDelegation({') !== 1) {
   errors.push('js/app.js must initialize cart control delegation exactly once.');
 }
+if (count(appSource, 'renderCartItemMarkup({') !== 1) {
+  errors.push('js/app.js must render cart items through the shared module exactly once.');
+}
 if (appSource.includes('window.legendApp')) {
   errors.push('The legacy global window.legendApp API must be removed.');
 }
 if (/onclick=/.test(appSource)) {
   errors.push('js/app.js must not generate inline onclick attributes.');
 }
+
 for (const signal of [
   'data-cart-action="decrement"',
   'data-cart-action="increment"',
@@ -35,11 +39,12 @@ for (const signal of [
   'aria-label="Decrease quantity"',
   'aria-label="Increase quantity"',
   'aria-label="Remove ',
-  'cartControlsModule.escapeCartHtml(item.name)',
-  'cartControlsModule.escapeCartHtml(item.image',
+  'escapeCartHtml(item.name',
+  'escapeCartHtml(item.image',
+  'aria-hidden="true" focusable="false"',
 ]) {
-  if (!appSource.includes(signal)) {
-    errors.push(`js/app.js is missing required delegated cart markup: ${signal}`);
+  if (!moduleSource.includes(signal)) {
+    errors.push(`js/cart-controls.mjs is missing required safe cart markup: ${signal}`);
   }
 }
 
@@ -51,7 +56,7 @@ for (const signal of [
   'container.removeEventListener?.',
 ]) {
   if (!moduleSource.includes(signal)) {
-    errors.push(`js/cart-controls.mjs is missing required behavior: ${signal}`);
+    errors.push(`js/cart-controls.mjs is missing required delegated behavior: ${signal}`);
   }
 }
 
@@ -68,4 +73,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Cart control validation passed with delegated controls and no global inline API.');
+console.log('Cart control validation passed with delegated controls and centralized escaped markup.');
