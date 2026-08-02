@@ -42,6 +42,18 @@ async function updateTextFile(path, transform) {
   await writeFile(absolute, after, 'utf8');
 }
 
+await updateTextFile('data/media/product-browser-derivatives.json', (input) => {
+  const policy = JSON.parse(input);
+  if (policy.minimumColorSsim !== 0.985 || policy.minimumAlphaSsim !== 0.995) {
+    throw new Error('Product browser derivative policy: unexpected legacy SSIM thresholds.');
+  }
+  policy.minimumDarkCompositeSsim = 0.985;
+  policy.minimumLightCompositeSsim = 0.985;
+  delete policy.minimumColorSsim;
+  delete policy.minimumAlphaSsim;
+  return `${JSON.stringify(policy, null, 2)}\n`;
+});
+
 await updateTextFile('scripts/product-page-generation.mjs', (input) => {
   let source = input;
   source = replaceExact(
