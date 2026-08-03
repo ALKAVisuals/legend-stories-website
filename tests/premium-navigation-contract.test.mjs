@@ -12,26 +12,42 @@ test('premium navigation stylesheet is loaded by the mobile navigation controlle
   assert.match(navigationSource, /premium-mobile-menu-panel/);
 });
 
-test('announcement bar is refined without changing the active promotion', () => {
-  assert.match(navigationSource, /New release/);
-  assert.match(navigationSource, /Combat Legends/);
-  assert.match(navigationSource, /LEGEND10/);
-  assert.match(navigationSource, /10% off/);
+test('announcement bar is collection-aware and removes emoji presentation', () => {
+  assert.match(navigationSource, /removeEmoji/);
+  assert.match(navigationSource, /Extended_Pictographic/);
+  assert.match(navigationSource, /new\\s\+drop/);
+  assert.match(navigationSource, /premium-announcement-collection/);
+  assert.match(navigationSource, /LEGEND\\d\+/);
   assert.match(stylesSource, /premium-announcement/);
+  assert.doesNotMatch(navigationSource, /🔥/u);
 });
 
-test('mobile menu uses a premium drawer and retains accessible close paths', () => {
+test('mobile menu is portaled outside the filtered header and fills the viewport', () => {
+  assert.match(navigationSource, /portalMobileMenu/);
+  assert.match(navigationSource, /documentRef\?\.body/);
+  assert.match(navigationSource, /body\.append\(menu\)/);
+  assert.match(navigationSource, /aria-modal/);
+  assert.match(navigationSource, /data-mobile-menu-close/);
+  assert.match(stylesSource, /height:\s*100dvh/);
+  assert.match(stylesSource, /width:\s*100vw/);
+  assert.match(stylesSource, /premium-mobile-menu-topbar/);
+  assert.match(stylesSource, /premium-mobile-menu-close/);
+});
+
+test('mobile menu keeps accessible close paths without emoji or glyph arrows', () => {
   assert.match(stylesSource, /#mobile-menu \{/);
-  assert.match(stylesSource, /premium-mobile-menu-panel/);
   assert.match(stylesSource, /premium-mobile-menu-cta/);
-  assert.match(stylesSource, /#mobile-menu-btn\[aria-expanded="true"\]/);
-  assert.match(navigationSource, /event\?\.target === menu/);
+  assert.match(navigationSource, /event\?\.target/);
   assert.match(navigationSource, /Escape/);
   assert.match(navigationSource, /mobile-menu-open/);
+  assert.match(stylesSource, /border-top:/);
+  assert.match(stylesSource, /border-right:/);
+  assert.doesNotMatch(stylesSource, /content:\s*['"]↗['"]/u);
 });
 
 test('premium navigation includes responsive, light-mode and reduced-motion treatments', () => {
   assert.match(stylesSource, /@media \(max-width: 767px\)/);
+  assert.match(stylesSource, /@media \(max-width: 480px\)/);
   assert.match(stylesSource, /\[data-theme="light"\] header\.premium-site-header/);
   assert.match(stylesSource, /@media \(prefers-reduced-motion: reduce\)/);
 });
