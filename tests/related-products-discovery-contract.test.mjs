@@ -13,7 +13,7 @@ const relatedBlock = appSource.match(
 )?.[0] || '';
 
 test('product pages render four premium related sticker cards', () => {
-  assert.match(relatedBlock, /Discover more legends/);
+  assert.match(appSource, /heading\.textContent = 'Discover more legends'/);
   assert.match(relatedBlock, /catalog\.selectRelatedProducts\(products, currentProduct, \{ limit: 4 \}\)/);
   assert.match(relatedBlock, /related-discovery-track/);
   assert.match(relatedBlock, /related-discovery-card/);
