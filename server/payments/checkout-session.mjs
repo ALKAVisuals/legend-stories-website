@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 
 import { createAuthoritativeOrderQuote } from '../commerce/order-quote.mjs';
 
-const REFERENCE_VERSION = 1;
+const REFERENCE_VERSION = 2;
 
 export class CheckoutSessionError extends Error {
   constructor(code, message, details = {}) {
@@ -124,28 +124,45 @@ export function allocateDiscountCents(quote) {
   }
 
   const remaining = discount - allocated;
-  const ranked = [...lines].sort((left, right) => {
-    if (right.remainder !== left.remainder) return right.remainder - left.remainder;
-    return left.page.localeCompare(right.page);
-  });
+  const ranked = lines
+    .map((line, index) => ({
+      line,
+      index,
+      variantId: String(quote.items[index]?.variantId || ''),
+    }))
+    .sort((left, right) => {
+      if (right.line.remainder !== left.line.remainder) {
+        return right.line.remainder - left.line.remainder;
+      }
+      const pageOrder = left.line.page.localeCompare(right.line.page);
+      if (pageOrder !== 0) return pageOrder;
+      const variantOrder = left.variantId.localeCompare(right.variantId);
+      return variantOrder || left.index - right.index;
+    });
   for (let index = 0; index < remaining; index += 1) {
-    ranked[index % ranked.length].allocation += 1;
+    ranked[index % ranked.length].line.allocation += 1;
   }
 
   return Object.freeze(lines.map((line) => Object.freeze(line)));
 }
 
-function buildStripeLineItems(quote, deliveryCountry) {
-  const allocations = new Map(
-    allocateDiscountCents(quote).map((line) => [line.page, line.allocation]),
-  );
+function productDescription(item) {
+  const parts = [];
+  if (item.sizeCm) parts.push(`Size: ${item.sizeCm} cm`);
+  parts.push(`Quantity: ${item.quantity}`);
+  return parts.join(' · ');
+}
 
-  const lineItems = quote.items.map((item) => {
+function buildStripeLineItems(quote, deliveryCountry) {
+  const allocations = allocateDiscountCents(quote);
+
+  const lineItems = quote.items.map((item, index) => {
     const lineCents = Math.round(item.lineTotal * 100);
-    const discountedLineCents = lineCents - (allocations.get(item.page) || 0);
+    const discountedLineCents = lineCents - (allocations[index]?.allocation || 0);
     if (discountedLineCents < 0) {
       fail('QUOTE_RECONCILIATION_FAILED', 'A discounted product line became negative.', {
         page: item.page,
+        variantId: item.variantId,
       });
     }
 
@@ -155,10 +172,14 @@ function buildStripeLineItems(quote, deliveryCountry) {
         unit_amount: discountedLineCents,
         product_data: {
           name: item.name,
-          description: `Quantity: ${item.quantity}`,
+          description: productDescription(item),
           metadata: {
             page: item.page,
             slug: item.slug,
+            sku: item.sku || item.slug,
+            variant_id: item.variantId || 'legacy',
+            variant_label: item.variantLabel || 'Standard',
+            size_cm: item.sizeCm ? String(item.sizeCm) : 'legacy',
             quantity: String(item.quantity),
           },
         },
@@ -206,7 +227,11 @@ function createReference({ quote, customer, successUrl, cancelUrl, deliveryCount
     items: quote.items.map((item) => ({
       page: item.page,
       slug: item.slug,
+      sku: item.sku,
       name: item.name,
+      variantId: item.variantId,
+      variantLabel: item.variantLabel,
+      sizeCm: item.sizeCm,
       unitPrice: item.unitPrice,
       quantity: item.quantity,
       lineTotal: item.lineTotal,
