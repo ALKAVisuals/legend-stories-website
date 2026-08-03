@@ -1,9 +1,6 @@
 name: Temporary product variant migration
 
 on:
-  push:
-    branches:
-      - feat/product-size-variants
   pull_request:
     branches:
       - main
@@ -13,7 +10,7 @@ permissions:
 
 concurrency:
   group: product-variant-migration
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   migrate-validate-publish:
