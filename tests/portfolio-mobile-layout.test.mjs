@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 const css = await readFile(new URL('../css/skipper.css', import.meta.url), 'utf8');
-const mobileBlock = css.match(//* Mobile portfolio gallery containment */[\s\S]*$/)?.[0] || '';
+const mobileBlock = css.match(/\/\* Mobile portfolio gallery containment \*\/[\s\S]*$/)?.[0] || '';
 
 test('mobile portfolio gallery stays inside the viewport and remains swipeable', () => {
   assert.match(mobileBlock, /@media \(max-width: 767px\)/);
