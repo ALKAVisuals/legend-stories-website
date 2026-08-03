@@ -11,13 +11,33 @@ import {
 } from '../scripts/product-page-template.mjs';
 
 test('rendered product values preserve SEO title overrides, apostrophes and canonical URLs', () => {
-  const template = '{{PAGE_TITLE}}|{{NAME}}|{{STORY}}|{{CANONICAL}}|{{ABSOLUTE_IMAGE}}|{{PRICE_RAW}}';
+  const template = '{{PAGE_TITLE}}|{{NAME}}|{{STORY}}|{{CANONICAL}}|{{ABSOLUTE_IMAGE}}';
   const product = {
     page: 'sport-lions-pride.html',
     name: "The Lion's Pride",
     description: 'A test product.',
     image: 'media/stikkers/test.png',
-    price: 49.95,
+    price: 45,
+    fromPrice: 35,
+    defaultVariantId: 'statement-45',
+    variants: [
+      {
+        id: 'statement-45',
+        label: 'Statement',
+        sizeCm: 45,
+        price: 45,
+        skuSuffix: '45',
+        isDefault: true,
+      },
+      {
+        id: 'compact-30',
+        label: 'Compact',
+        sizeCm: 30,
+        price: 35,
+        skuSuffix: '30',
+        isDefault: false,
+      },
+    ],
     currency: 'EUR',
     availability: 'https://schema.org/InStock',
     canonical: 'https://example.com/sport-lions-pride.html',
@@ -28,15 +48,13 @@ test('rendered product values preserve SEO title overrides, apostrophes and cano
     pageTitle: "The Lion's Pride — Limited Edition | Legend Stories",
     story: "Don't stop believing.",
     imageAlt: "The Lion's Pride wall sticker",
-    compareAtPrice: 59.95,
-    discountLabel: 'Save 17%',
     announcementHtml: '<strong>Test</strong>',
   };
 
   const rendered = renderProductPage(template, product, presentation);
   assert.equal(
     rendered,
-    "The Lion's Pride — Limited Edition | Legend Stories|The Lion's Pride|Don't stop believing.|https://example.com/sport-lions-pride.html|https://example.com/media/stikkers/test.png|49.95",
+    "The Lion's Pride — Limited Edition | Legend Stories|The Lion's Pride|Don't stop believing.|https://example.com/sport-lions-pride.html|https://example.com/media/stikkers/test.png",
   );
 });
 
