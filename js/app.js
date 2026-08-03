@@ -1086,10 +1086,7 @@ function loadDialogAccessibilityModule() {
         if (sizeOutput) sizeOutput.textContent = variant.label + ' · ' + variant.sizeCm + ' cm';
         cards.forEach((card) => {
           const selected = card.contains(input);
-          card.classList.toggle('border-mint/60', selected);
-          card.classList.toggle('bg-mint/10', selected);
-          card.classList.toggle('border-surface-border/40', !selected);
-          card.classList.toggle('bg-surface-light/20', !selected);
+          card.classList.toggle('is-selected', selected);
         });
       }
 

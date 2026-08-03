@@ -64,7 +64,7 @@ for (const product of catalog.products || []) {
 if (!/data-product-variant-selector/.test(template)) errors.push('product template lacks a size selector.');
 if (!/value="statement-45" checked/.test(template)) errors.push('45 cm must be selected by default.');
 if (!/value="compact-30"/.test(template)) errors.push('30 cm option is missing.');
-if (!/Most chosen/.test(template)) errors.push('45 cm option lacks the Most chosen badge.');
+if (!/product-variant-recommendation[^>]*>[\s\S]*Recommended/.test(template)) errors.push('45 cm option lacks the Recommended label.');
 if (!/measured along the longest side/i.test(template)) errors.push('longest-side measurement note is missing.');
 if (/line-through|Save 17%|60\s*[×x]\s*90/.test(template)) errors.push('legacy comparison price or size remains in the template.');
 
