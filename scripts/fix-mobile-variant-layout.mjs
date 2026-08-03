@@ -1,3 +1,4 @@
+// Triggered after the temporary workflow is present on the branch.
 import { readFile, writeFile } from 'node:fs/promises';
 
 const templateUrl = new URL('../templates/product-page.html', import.meta.url);
