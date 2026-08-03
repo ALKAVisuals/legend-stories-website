@@ -1619,23 +1619,6 @@ function initProductCards() {
   }
 
   // ==========================================
-  // SKIPER67: Video Player Interaction
-  // ==========================================
-  function initVideoPlayer() {
-    const players = document.querySelectorAll('.skiper-video-player');
-    players.forEach((player) => {
-      player.addEventListener('click', () => {
-        // Placeholder: show alert or expand to modal
-        const videoId = player.dataset.videoId;
-        if (videoId) {
-          // Future: open video modal or redirect
-          console.log('Play video:', videoId);
-        }
-      });
-    });
-  }
-
-  // ==========================================
   // STICKER FACT MODAL
   // ==========================================
 async function fetchStickerFact(query) {
@@ -1653,8 +1636,6 @@ async function fetchStickerFact(query) {
     return null;
   }
 }
-
-function initHoverExpandMobile() {}
 
 function initStickerClicks() {
   // Sticker click handlers — attach to sticker cards with data-sticker-name
@@ -1743,8 +1724,6 @@ function initStickerModalClose() {
       initScrollReveal,
       initRelatedProducts,
       initCarousel,
-      initVideoPlayer,
-      initHoverExpandMobile,
     ];
     // Inject discount UI and init after DOM is ready
     injectCartDiscount();
