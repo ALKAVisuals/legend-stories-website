@@ -37,6 +37,15 @@ if (!/export\s+(?:async\s+)?function\s+findCurrentProduct\b/.test(moduleSource))
 if (!/export\s+(?:async\s+)?function\s+selectRelatedProducts\b/.test(moduleSource)) {
   errors.push('related-products.mjs is missing selectRelatedProducts export.');
 }
+if (!/COLLECTION_PAGE_FILES\s*=\s*Object\.freeze\(/.test(moduleSource)) {
+  errors.push('related-products.mjs is missing the source-deployment collection page fallback list.');
+}
+if (!/export\s+function\s+parseCollectionProducts\b/.test(moduleSource)) {
+  errors.push('related-products.mjs is missing collection-page product parsing.');
+}
+if (!/loadCollectionPageRegistry\(baseUri, fetchImpl\)/.test(moduleSource)) {
+  errors.push('related-products.mjs does not fall back to collection pages when the generated registry is unavailable.');
+}
 
 try {
   await access(REGISTRY_FILE);
@@ -55,4 +64,4 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-console.log('Related-products runtime validation passed: generated registry and catalog module are authoritative.');
+console.log('Related-products runtime validation passed: build registry and source-deployment fallback are available.');
