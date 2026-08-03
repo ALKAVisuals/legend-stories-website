@@ -24,6 +24,8 @@ test('loader keeps a single in-flight request and recovers from failure', () => 
   assert.match(loaderSource, /script\?\.remove\?\.\(\)/);
   assert.match(loaderSource, /Google Places loading timed out/);
   assert.match(loaderSource, /loadPromise = null/);
+  assert.match(loaderSource, /deleteTemporaryCallback\(windowRef, callbackName\)/);
+  assert.match(loaderSource, /callback: callbackName/);
 });
 
 test('the permanent quality chain validates the loader once', () => {
