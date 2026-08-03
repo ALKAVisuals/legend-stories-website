@@ -1,0 +1,203 @@
+import { createHash } from 'node:crypto';
+import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+const ROOT = process.cwd();
+const DEFAULT_VARIANT_ID = 'statement-45';
+const VARIANTS = [
+  {
+    id: 'statement-45',
+    label: 'Statement',
+    sizeCm: 45,
+    price: 45,
+    skuSuffix: '45',
+    isDefault: true,
+  },
+  {
+    id: 'compact-30',
+    label: 'Compact',
+    sizeCm: 30,
+    price: 35,
+    skuSuffix: '30',
+    isDefault: false,
+  },
+];
+
+async function read(path) {
+  return readFile(join(ROOT, path), 'utf8');
+}
+
+async function write(path, content) {
+  await writeFile(join(ROOT, path), content, 'utf8');
+  console.log(`Updated ${path}`);
+}
+
+function replaceOnce(source, pattern, replacement, label) {
+  const matches = typeof pattern === 'string'
+    ? source.split(pattern).length - 1
+    : [...source.matchAll(new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : `${pattern.flags}g`))].length;
+  if (matches !== 1) {
+    throw new Error(`${label}: expected one match, found ${matches}.`);
+  }
+  return source.replace(pattern, replacement);
+}
+
+function normalizeDescription(value = '') {
+  let description = String(value)
+    .replace(/\s*60\s*[x×]\s*90\s*cm,?/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+,/g, ',')
+    .replace(/,\s*\./g, '.')
+    .trim();
+  if (!/[.!?]$/.test(description)) description += '.';
+  const sizing = ' Available in 30 cm and 45 cm, measured along the longest side.';
+  if (!/available in 30 cm and 45 cm/i.test(description)) description += sizing;
+  return description;
+}
+
+async function migrateCatalog() {
+  const path = 'data/products/catalog.json';
+  const catalog = JSON.parse(await read(path));
+  catalog.schemaVersion = 2;
+  catalog.variantPolicy = {
+    defaultVariantId: DEFAULT_VARIANT_ID,
+    sizeMeasurement: 'longest_side',
+    variants: VARIANTS,
+  };
+  catalog.products = catalog.products.map((product) => ({
+    ...product,
+    description: normalizeDescription(product.description),
+    price: 45,
+    fromPrice: 35,
+    defaultVariantId: DEFAULT_VARIANT_ID,
+    variants: VARIANTS.map((variant) => ({ ...variant })),
+  }));
+  catalog.productCount = catalog.products.length;
+  await write(path, `${JSON.stringify(catalog, null, 2)}\n`);
+}
+
+const PRODUCT_PURCHASE_MARKUP = `            <!-- SIZE + PRICE -->
+            <fieldset class="mb-6" data-product-variant-selector>
+              <legend class="text-sm font-semibold text-text-primary mb-3">Choose your size</legend>
+              <div class="grid sm:grid-cols-2 gap-3">
+                <label data-variant-card class="relative cursor-pointer rounded-xl border border-surface-border/40 bg-surface-light/20 p-4 transition-colors hover:border-mint/40">
+                  <input class="sr-only" type="radio" name="product-size" value="compact-30">
+                  <span class="flex items-start justify-between gap-3">
+                    <span>
+                      <span class="block text-sm font-semibold text-text-primary">Compact</span>
+                      <span class="block text-xs text-text-muted mt-1">30 cm · subtle wall accent</span>
+                    </span>
+                    <span class="font-display text-xl font-bold">€35</span>
+                  </span>
+                </label>
+                <label data-variant-card class="relative cursor-pointer rounded-xl border border-mint/60 bg-mint/10 p-4 transition-colors">
+                  <input class="sr-only" type="radio" name="product-size" value="statement-45" checked>
+                  <span class="absolute -top-2.5 right-3 rounded-full bg-mint px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-void">Most chosen</span>
+                  <span class="flex items-start justify-between gap-3">
+                    <span>
+                      <span class="block text-sm font-semibold text-text-primary">Statement</span>
+                      <span class="block text-xs text-text-muted mt-1">45 cm · maximum visual impact</span>
+                    </span>
+                    <span class="font-display text-xl font-bold">€45</span>
+                  </span>
+                </label>
+              </div>
+              <p class="mt-3 text-xs text-text-muted">Size is measured along the longest side. The original proportions of the design are preserved.</p>
+            </fieldset>
+
+            <div class="flex items-end justify-between gap-4 mb-6">
+              <div>
+                <p class="text-xs uppercase tracking-wider text-text-muted">Selected size</p>
+                <p class="text-sm font-medium text-text-secondary" data-selected-size>Statement · 45 cm</p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs text-text-muted">From €35</p>
+                <span class="font-display text-3xl font-bold" data-selected-price>€45</span>
+              </div>
+            </div>
+
+            <button class="btn-primary w-full sm:w-auto text-base !px-8 !py-3 add-to-cart-btn" data-name="{{NAME}}" data-price="45" data-variant-id="statement-45" data-size-cm="45" data-variant-label="Statement" data-img="{{IMAGE}}">
+              Add to cart — €45
+            </button>
+`;
+
+async function migrateTemplate() {
+  const path = 'templates/product-page.html';
+  let template = await read(path);
+  template = replaceOnce(
+    template,
+    /            <!-- PRICE \+ CTA -->[\s\S]*?            <\/button>\n/,
+    PRODUCT_PURCHASE_MARKUP,
+    'product purchase block',
+  );
+  template = replaceOnce(
+    template,
+    '<p class="text-sm font-medium">60 × 90 cm</p>',
+    '<p class="text-sm font-medium">30 cm or 45 cm · longest side</p>',
+    'product size specification',
+  );
+  await write(path, template);
+  return template;
+}
+
+function newStructuredDataFunction() {
+  return `function structuredData(product) {
+  const variants = Array.isArray(product.variants) && product.variants.length
+    ? product.variants
+    : [{ id: 'legacy', label: 'Standard', sizeCm: null, price: product.price, skuSuffix: 'standard', isDefault: true }];
+  const orderedVariants = [...variants].sort((left, right) => Number(Boolean(right.isDefault)) - Number(Boolean(left.isDefault)));
+  return JSON.stringify({
+    '@context': 'https://schema.org/',
+    '@type': 'Product',
+    name: product.name,
+    image: absoluteImageUrl(product),
+    description: product.description,
+    brand: { '@type': 'Brand', name: 'Legend Stories' },
+    offers: orderedVariants.map((variant) => ({
+      '@type': 'Offer',
+      name: variant.sizeCm ? \`${product.name} — ${variant.sizeCm} cm\` : product.name,
+      sku: \`${product.slug}-${variant.skuSuffix || variant.sizeCm || 'standard'}\`,
+      price: Number(variant.price).toFixed(2),
+      priceCurrency: product.currency || 'EUR',
+      availability: product.availability,
+      url: variant.sizeCm ? \`${product.canonical}?size=${variant.sizeCm}\` : product.canonical,
+    })),
+  }, null, 2).replaceAll('<', '\\\\u003c');
+}`;
+}
+
+function newPresentationFunction() {
+  return `export function extractProductPresentation(html, product) {
+  const story = matchRequired(
+    html,
+    /<!-- FACT -->[\\\\s\\\\S]*?<p class="text-text-secondary text-base md:text-lg leading-relaxed italic">([\\\\s\\\\S]*?)<\\\\/p>/,
+    \`${product.page} story\`,
+  ).trim();
+  const imageAlt = matchRequired(
+    html,
+    /<!-- IMAGE -->[\\\\s\\\\S]*?<img\\\\s+src="[^"]*"\\\\s+alt="([^"]*)"\\\\s+class="w-full h-full object-contain"[^>]*>/,
+    \`${product.page} image alt\`,
+  );
+  const announcementHtml = matchRequired(
+    html,
+    /<div class="w-full bg-gradient-mint[^>]*" role="banner">\\\\s*<p>([\\\\s\\\\S]*?)<\\\\/p>\\\\s*<\\\\/div>/,
+    \`${product.page} announcement\`,
+  ).trim();
+
+  const pageTitle = decodeHtmlText(matchRequired(
+    html,
+    /<title>([\\\\s\\\\S]*?)<\\\\/title>/,
+    \`${product.page} page title\`,
+  ).trim());
+  const defaultPageTitle = \`${product.name} — ${product.collection} | Legend Stories\`;
+  const presentation = {
+    page: product.page,
+    story,
+    imageAlt,
+    announcementHtml,
+  };
+  if (pageTitle !== defaultPageTitle) presentation.pageTitle = pageTitle;
+  return presentation;
+}`;
+}
+
