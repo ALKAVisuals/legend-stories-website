@@ -18,8 +18,8 @@ const packageJson = JSON.parse(packageSource);
 if (count(appSource, "import('./motion-preferences.mjs')") !== 1) {
   errors.push('js/app.js must load the motion-preferences module exactly once.');
 }
-if (count(appSource, 'createAutomaticMotionGate({') !== 3) {
-  errors.push('js/app.js must create exactly three automatic-motion gates.');
+if (count(appSource, 'createAutomaticMotionGate({') !== 2) {
+  errors.push('js/app.js must create exactly two automatic-motion gates.');
 }
 if (/function initTestimonials\(\)[\s\S]*?setInterval\(/.test(appSource)) {
   errors.push('Testimonials must not use an unconditional setInterval loop.');
@@ -33,17 +33,11 @@ if (!/function initParticleCanvas\(\)[\s\S]*?cancelAnimationFrame/.test(appSourc
 if (!/function initParticleCanvas\(\)[\s\S]*?particleMotionGate\.subscribe/.test(appSource)) {
   errors.push('Particle canvas must subscribe to the automatic-motion gate.');
 }
-if (!/async function initRelatedProducts\(\)[\s\S]*?relatedMotionGate\.subscribe/.test(appSource)) {
-  errors.push('Related products must subscribe to the automatic-motion gate.');
+if (/relatedMotionGate|scheduleAutoScroll|pauseAutoScroll|resumeAutoScroll/.test(appSource)) {
+  errors.push('Related products must remain user-controlled and must not restore automatic carousel motion.');
 }
-for (const signal of [
-  "track.addEventListener('focusin', pauseAutoScroll)",
-  "track.addEventListener('focusout', handleRelatedFocusOut)",
-  'relatedMotionGate.prefersReducedMotion()',
-]) {
-  if (!appSource.includes(signal)) {
-    errors.push(`Related products are missing required motion behavior: ${signal}`);
-  }
+if (!/async function initRelatedProducts\(\)[\s\S]*?related-discovery-track/.test(appSource)) {
+  errors.push('Related products must render the user-controlled discovery track.');
 }
 
 for (const signal of [
@@ -71,4 +65,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Motion preference validation passed for testimonials, particle canvas and related products.');
+console.log('Motion preference validation passed for testimonials, particle canvas and user-controlled related products.');
