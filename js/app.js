@@ -127,6 +127,20 @@ function loadMobileNavigationModule() {
   return mobileNavigationModulePromise;
 }
 
+let cartControlsModule = null;
+let cartControlsModulePromise = null;
+
+function loadCartControlsModule() {
+  if (!cartControlsModulePromise) {
+    cartControlsModulePromise = import('./cart-controls.mjs')
+      .then((module) => {
+        cartControlsModule = module;
+        return module;
+      });
+  }
+  return cartControlsModulePromise;
+}
+
 let motionPreferencesModule = null;
 let motionPreferencesModulePromise = null;
 
@@ -408,12 +422,13 @@ function loadDialogAccessibilityModule() {
     const zone = totals.zone;
 
     dom.cartItems.innerHTML =
-      state.cart.map((item, i) => {
-        const imgHtml = item.image && item.image.startsWith('media/')
-          ? '<img src="' + item.image + '" alt="' + item.name + '" class="w-12 h-12 object-contain rounded" decoding="async">'
-          : item.image;
-        return '<div class="flex gap-4 mb-3 p-3 rounded-xl bg-surface-light/50 border border-surface-border/30"><div class="w-16 h-16 rounded-lg bg-surface flex items-center justify-center text-2xl shrink-0">' + imgHtml + '</div><div class="flex-1 min-w-0"><p class="text-sm font-medium text-text-primary truncate">' + item.name + '</p><div class="flex items-center justify-between mt-2"><div class="flex items-center gap-2"><button onclick="window.legendApp.updateQty(' + i + ',-1)" class="w-6 h-6 rounded bg-surface flex items-center justify-center text-text-secondary hover:text-mint transition-colors">−</button><span class="text-sm text-text-primary min-w-[20px] text-center">' + item.quantity + '</span><button onclick="window.legendApp.updateQty(' + i + ',1)" class="w-6 h-6 rounded bg-surface flex items-center justify-center text-text-secondary hover:text-mint transition-colors">+</button></div><div class="flex items-center gap-3"><span class="text-sm font-medium text-mint">' + formatPrice(item.price * item.quantity) + '</span><button onclick="window.legendApp.removeItem(' + i + ')" class="text-text-muted hover:text-red-400 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div></div></div></div>';
-      }).join('') +
+      state.cart.map((item, i) =>
+        cartControlsModule.renderCartItemMarkup({
+          item,
+          index: i,
+          formatPrice,
+        })
+      ).join('') +
       '<div class="border-t border-surface-border/30 pt-3 mt-3">' +
       '<div class="flex justify-between text-sm"><span class="text-text-muted">Subtotal</span><span class="text-text-primary font-medium">' + formatPrice(cartSubtotal) + '</span></div>' +
       (state.discountPercent > 0 ? '<div class="flex justify-between text-sm"><span class="text-text-muted">Discount (' + state.discountPercent + '%)</span><span class="text-red-400 font-medium">-' + formatPrice(totals.discount) + '</span></div>' : '') +
@@ -1178,6 +1193,13 @@ function initProductCards() {
     if (dom.cartBtn) dom.cartBtn.addEventListener('click', openCart);
     if (dom.cartClose) dom.cartClose.addEventListener('click', closeCart);
     if (dom.cartOverlay) dom.cartOverlay.addEventListener('click', closeCart);
+    if (dom.cartItems) {
+      cartControlsModule.initCartControlDelegation({
+        container: dom.cartItems,
+        onUpdateQuantity: updateCartQuantity,
+        onRemoveItem: removeFromCart,
+      });
+    }
 
     const checkoutBtn = document.getElementById('checkout-btn');
     if (checkoutBtn) checkoutBtn.addEventListener('click', function() {
@@ -1665,6 +1687,7 @@ function initStickerModalClose() {
     await loadProductCardNavigationModule();
     await loadDialogAccessibilityModule();
     await loadMotionPreferencesModule();
+    await loadCartControlsModule();
     const mobileNavigationModule = await loadMobileNavigationModule();
     if (dom.cartDrawer && dom.cartOverlay) {
       cartDialogController = dialogAccessibilityModule.createDialogController({
@@ -1717,14 +1740,6 @@ function initStickerModalClose() {
     });
     updateCartCount();
   }
-
-
-  // Expose for inline onclick
-  window.legendApp = {
-    updateQty: updateCartQuantity,
-    removeItem: removeFromCart,
-    addProduct: addToCart,
-  };
 
   function startApp() {
     init().catch((error) => {
