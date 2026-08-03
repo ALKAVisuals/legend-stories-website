@@ -39,6 +39,8 @@ test('builds totals from authoritative catalog prices and ignores browser price 
   }, catalog);
 
   assert.equal(quote.items[0].name, expectedFirstProductName);
+  assert.equal(quote.items[0].variantId, 'statement-45');
+  assert.equal(quote.items[0].sizeCm, 45);
   assert.equal(quote.items[0].unitPrice, 45);
   assert.equal(quote.totals.subtotal, 45);
   assert.equal(quote.totals.shipping, 3.95);
