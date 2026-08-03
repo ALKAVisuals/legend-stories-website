@@ -111,7 +111,22 @@ jobs:
           sudo apt-get install -y ffmpeg
 
       - name: Run complete quality gate
-        run: npm run quality
+        shell: bash
+        run: |
+          set +e
+          npm run quality > /tmp/product-variant-quality.log 2>&1
+          quality_status=$?
+          set -e
+          if [ "$quality_status" -ne 0 ]; then
+            tail -n 320 /tmp/product-variant-quality.log > product-variant-quality-diagnostic.txt
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add product-variant-quality-diagnostic.txt
+            git commit -m "Record product variant quality diagnostic"
+            git push origin HEAD:feat/product-size-variants
+            exit "$quality_status"
+          fi
+          cat /tmp/product-variant-quality.log
 
       - name: Publish validated implementation
         shell: bash
@@ -119,6 +134,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f product-variant-quality-diagnostic.txt
           rm scripts/migrate-product-variants.mjs
           rm scripts/product-variant-migration.00.part
           rm scripts/product-variant-migration.01.part
