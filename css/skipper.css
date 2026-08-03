@@ -683,3 +683,48 @@
   background: linear-gradient(135deg, #C9A84B, #D4B85C);
 }
 
+
+
+/* Mobile portfolio gallery containment */
+@media (max-width: 767px) {
+  .skp-hover-expand {
+    justify-content: flex-start;
+    gap: 0.875rem;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 0 0.75rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+    scroll-padding-inline: 0.25rem;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .skp-hover-expand::-webkit-scrollbar {
+    display: none;
+  }
+
+  .skp-hover-expand__item,
+  .skp-hover-expand__item--default,
+  .skp-hover-expand__item--active,
+  .skp-hover-expand__item:hover,
+  .skp-hover-expand__item:hover ~ .skp-hover-expand__item {
+    width: min(82vw, 22rem);
+    height: auto;
+    flex: 0 0 min(82vw, 22rem);
+    aspect-ratio: 4 / 5;
+    border-radius: 20px;
+    scroll-snap-align: start;
+  }
+
+  .skp-hover-expand__overlay {
+    opacity: 1;
+  }
+
+  .skp-hover-expand__label {
+    opacity: 1;
+    color: rgba(255, 255, 255, 0.9);
+  }
+}
