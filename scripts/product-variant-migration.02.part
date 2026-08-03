@@ -1,0 +1,219 @@
+        });`,
+    'commerce variant exports',
+  );
+  source = source.replace(
+    '? parsedCart.filter((item) => item && item.page && Number(item.quantity) > 0)',
+    '? parsedCart.filter((item) => item && item.page && item.variantId && Number(item.quantity) > 0)',
+  );
+
+  source = replaceOnce(
+    source,
+    /  function addToCart\(page, name, price, image\) \{[\s\S]*?\n  \}\n\n  function removeFromCart/,
+    `  function addToCart(page, name, image, variant) {
+    if (!page) {
+      throw new Error('A stable product page is required before adding an item to the cart.');
+    }
+    const product = {
+      id: commerceModule.createCartLineId(page, variant.id),
+      page,
+      name,
+      price: variant.price,
+      variantId: variant.id,
+      variantLabel: variant.label,
+      sizeCm: variant.sizeCm,
+      quantity: 1,
+      image: image || '🎨',
+    };
+    const existingIndex = state.cart.findIndex((item) => item.id === product.id);
+    if (existingIndex > -1) {
+      state.cart[existingIndex].quantity += 1;
+    } else {
+      state.cart.push(product);
+    }
+    saveCart();
+    renderCart();
+    updateCartCount();
+    openCart();
+  }
+
+  function removeFromCart`,
+    'variant-aware addToCart',
+  );
+
+  source = replaceOnce(
+    source,
+    /  function initAddToCart\(\) \{[\s\S]*?\n  \}\n\n  \/\/ Product card navigation/,
+    `${variantSelectorFunction()}  function initAddToCart() {
+    const btns = document.querySelectorAll('.add-to-cart-btn');
+    btns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const name = btn.dataset.name;
+        const image = btn.dataset.emoji || btn.dataset.img;
+        const page = resolveCartProductPage(btn, name);
+        if (!page) {
+          console.error('Cannot add product without a stable catalog page:', name);
+          announcePurchaseFeedback('This product could not be added safely. Please open its product page and try again.', { assertive: true });
+          return;
+        }
+
+        let variant;
+        try {
+          variant = commerceModule.resolveProductVariant(btn.dataset.variantId);
+        } catch (error) {
+          console.error('Cannot add product with an invalid size:', error);
+          announcePurchaseFeedback('Please choose a valid size before adding this product.', { assertive: true });
+          return;
+        }
+
+        addToCart(page, name, image, variant);
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '✅ Added!';
+        btn.style.background = '#16a34a';
+        setTimeout(() => { btn.innerHTML = originalText; btn.style.background = ''; }, 2000);
+      });
+    });
+  }
+
+  // Product card navigation`,
+    'variant-aware add-to-cart initializer',
+  );
+
+  source = replaceOnce(
+    source,
+    `  function updateCheckoutTotals() {`,
+    `${internationalNoticeFunctions()}  function updateCheckoutTotals() {`,
+    'international shipping notice functions',
+  );
+  source = replaceOnce(
+    source,
+    `    if (noteEl) {
+      if (totals.qualifiesForFreeShipping) {
+        noteEl.textContent = '✓ Free shipping to ' + totals.zone.name;
+      } else {
+        noteEl.textContent = 'Add ' + formatPrice(totals.freeShippingRemaining) + ' more for free shipping to ' + totals.zone.name;
+      }
+    }
+  }`,
+    `    if (noteEl) {
+      if (totals.qualifiesForFreeShipping) {
+        noteEl.textContent = '✓ Free shipping to ' + totals.zone.name;
+      } else {
+        noteEl.textContent = 'Add ' + formatPrice(totals.freeShippingRemaining) + ' more for free shipping to ' + totals.zone.name;
+      }
+    }
+    updateInternationalShippingNotice(totals.countryCode);
+  }`,
+    'checkout shipping notice update',
+  );
+
+  source = replaceOnce(
+    source,
+    `      items: state.cart.map(item => ({
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image,
+      })),`,
+    `      items: state.cart.map(item => ({
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image,
+        variantId: item.variantId,
+        variantLabel: item.variantLabel,
+        sizeCm: item.sizeCm,
+      })),`,
+    'display order variants',
+  );
+
+  source = replaceOnce(
+    source,
+    `      initFilters,
+      initAddToCart,`,
+    `      initFilters,
+      initProductVariantSelectors,
+      initAddToCart,`,
+    'product selector initialization',
+  );
+  source = replaceOnce(
+    source,
+    `      initThemeToggle,
+      initParticleCanvas,`,
+    `      initThemeToggle,
+      initInternationalShippingNotice,
+      initParticleCanvas,`,
+    'shipping notice initialization',
+  );
+
+  await write(path, source);
+}
+
+function migrateStorefrontHtml(html) {
+  let result = html;
+  result = result.replace(
+    /<article(?![^>]*\bdata-page=)([^>]*\bdata-product-href="([^"]+)"[^>]*)>/g,
+    '<article data-page="$2"$1>',
+  );
+  result = result.replace(
+    /<span class="font-display text-xl font-bold">€49[,.]95<\/span>/g,
+    '<span class="font-display text-xl font-bold">From €35</span>',
+  );
+  result = result.replace(
+    /(<button\b[^>]*\badd-to-cart-btn\b[^>]*?) data-price="49\.95"(?![^>]*\bdata-variant-id=)([^>]*>)/g,
+    '$1 data-price="45" data-variant-id="statement-45" data-size-cm="45" data-variant-label="Statement"$2',
+  );
+  result = result.replace(
+    /(<button\b[^>]*\badd-to-cart-btn\b[^>]*data-variant-id="statement-45"[^>]*>)\s*Add to cart\s*(<\/button>)/g,
+    '$1Add 45 cm$2',
+  );
+  result = result.replace(
+    'Every design comes in Small (60×80cm), Medium (100×140cm), and Mural (200×280cm). Custom sizes on request.',
+    'Every design is available in Compact (30 cm) and Statement (45 cm). Sizes are measured along the longest side.',
+  );
+  return result;
+}
+
+async function migrateRootHtml() {
+  const files = (await readdir(ROOT)).filter((file) => file.endsWith('.html'));
+  for (const file of files) {
+    const source = await read(file);
+    const migrated = migrateStorefrontHtml(source);
+    if (migrated !== source) await write(file, migrated);
+  }
+}
+
+async function updatePresentationHashes(template) {
+  const hash = createHash('sha256').update(template).digest('hex');
+  for (let batch = 1; batch <= 6; batch += 1) {
+    const path = `data/products/2026-batch-${batch}-presentation.json`;
+    const presentation = JSON.parse(await read(path));
+    presentation.template = {
+      ...(presentation.template || {}),
+      sha256: hash,
+    };
+    await write(path, `${JSON.stringify(presentation, null, 2)}\n`);
+  }
+}
+
+async function migratePackage() {
+  const path = 'package.json';
+  const packageJson = JSON.parse(await read(path));
+  packageJson.scripts['validate:product-variants'] = 'node scripts/validate-product-variants.mjs';
+  const marker = 'npm run validate:runtime-placeholders';
+  const addition = `${marker} && npm run validate:product-variants`;
+  if (!packageJson.scripts.quality.includes('npm run validate:product-variants')) {
+    if (!packageJson.scripts.quality.includes(marker)) throw new Error('quality chain marker is missing.');
+    packageJson.scripts.quality = packageJson.scripts.quality.replace(marker, addition);
+  }
+  await write(path, `${JSON.stringify(packageJson, null, 2)}\n`);
+}
+
+await migrateCatalog();
+const template = await migrateTemplate();
+await migrateProductGenerator();
+await migrateApp();
+await migrateRootHtml();
+await updatePresentationHashes(template);
+await migratePackage();
+
+console.log('Product variant migration completed.');
