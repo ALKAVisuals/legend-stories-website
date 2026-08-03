@@ -20,7 +20,7 @@ jobs:
   materialize-selector:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     env:
       TARGET_BRANCH: ${{ github.head_ref }}
 
@@ -40,19 +40,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install media inspection tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends ffmpeg
-
       - name: Apply premium size selector
         run: node scripts/apply-premium-size-selector.mjs
 
       - name: Regenerate all managed product pages
         run: npm run generate:managed-product-pages:live
 
-      - name: Run full quality gate
-        run: npm run quality
+      - name: Validate selector and generated pages
+        run: |
+          npm run validate:product-variants
+          npm run audit:product-page-templates
+          npm run validate:managed-product-pages:live
+          npm test
+          npm run build
 
       - name: Remove temporary migration files
         run: |
