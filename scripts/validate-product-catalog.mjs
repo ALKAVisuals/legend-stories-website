@@ -1,6 +1,11 @@
 import { access, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import {
+  DEFAULT_PRODUCT_VARIANT_ID,
+  PRODUCT_VARIANTS,
+  resolveCatalogProductVariant,
+} from '../js/commerce/product-variants.mjs';
 import { buildProductInventory } from './product-inventory.mjs';
 
 const ROOT = process.cwd();
@@ -15,6 +20,9 @@ const REQUIRED_FIELDS = [
   'collection',
   'batchId',
   'price',
+  'fromPrice',
+  'defaultVariantId',
+  'variants',
   'currency',
   'availability',
   'status',
@@ -46,7 +54,13 @@ const catalog = JSON.parse(await readFile(DATA_FILE, 'utf8'));
 const { schemaVersion, batch, products } = catalog;
 const errors = [];
 
-if (schemaVersion !== 1) errors.push('Unsupported or missing product catalog schemaVersion.');
+if (schemaVersion !== 2) errors.push('Batch 3 catalog schemaVersion must be 2.');
+if (catalog.variantPolicy?.defaultVariantId !== DEFAULT_PRODUCT_VARIANT_ID) {
+  errors.push('Batch 3 catalog has an invalid default variant policy.');
+}
+if (catalog.variantPolicy?.sizeMeasurement !== 'longest_side') {
+  errors.push('Batch 3 catalog must measure sizes along the longest side.');
+}
 if (!batch?.id || !Number.isInteger(batch.year) || !Number.isInteger(batch.number)) {
   errors.push('Invalid batch metadata.');
 }
@@ -96,9 +110,27 @@ for (const product of safeProducts) {
   if (product.page !== `${product.slug}.html`) errors.push(`${product.slug}: page must match slug.html.`);
   if (product.batchId !== batch?.id) errors.push(`${product.slug}: batchId differs from catalog batch.`);
   if (!ALLOWED_CATEGORIES.has(product.category)) errors.push(`${product.slug}: invalid category ${product.category}.`);
-  if (!sameNumber(product.price, Number(product.price)) || product.price <= 0) errors.push(`${product.slug}: invalid price.`);
+  if (product.price !== 45 || product.fromPrice !== 35) errors.push(`${product.slug}: expected €45 default and €35 from price.`);
+  if (product.defaultVariantId !== DEFAULT_PRODUCT_VARIANT_ID) errors.push(`${product.slug}: invalid default variant.`);
   if (product.currency !== 'EUR') errors.push(`${product.slug}: unsupported currency ${product.currency}.`);
   if (product.status !== 'active') errors.push(`${product.slug}: unsupported status ${product.status}.`);
+
+  if (!Array.isArray(product.variants) || product.variants.length !== PRODUCT_VARIANTS.length) {
+    errors.push(`${product.slug}: expected two approved variants.`);
+  } else {
+    for (const policyVariant of PRODUCT_VARIANTS) {
+      const actual = product.variants.find((variant) => variant.id === policyVariant.id);
+      if (!actual) {
+        errors.push(`${product.slug}: missing ${policyVariant.id}.`);
+        continue;
+      }
+      for (const field of ['label', 'sizeCm', 'price', 'skuSuffix', 'isDefault']) {
+        if (actual[field] !== policyVariant[field]) {
+          errors.push(`${product.slug}: ${policyVariant.id}.${field} differs from policy.`);
+        }
+      }
+    }
+  }
 
   try {
     await access(join(ROOT, product.page));
@@ -124,10 +156,11 @@ for (const product of safeProducts) {
     compareValue(errors, product, live, 'batchId');
     compareValue(errors, product, live, 'collection');
     compareValue(errors, product, live, 'category');
-    if (!sameNumber(product.price, live.price)) errors.push(`${product.slug}: central price differs from ${product.page}.`);
+    if (!sameNumber(product.price, live.price)) errors.push(`${product.slug}: central default price differs from ${product.page}.`);
   }
 
   try {
+    const defaultVariant = resolveCatalogProductVariant(product, product.defaultVariantId);
     const generated = await readFile(join(GENERATED_DIR, product.page), 'utf8');
     const escapedName = escapeHtml(product.name);
     if (!generated.includes(`<title>${escapedName} — ${product.collection} | Legend Stories Preview</title>`)) {
@@ -136,10 +169,14 @@ for (const product of safeProducts) {
     if (!generated.includes(`data-product-slug="${product.slug}"`)) errors.push(`${product.slug}: generated slug metadata missing.`);
     if (!generated.includes(`data-batch-id="${product.batchId}"`)) errors.push(`${product.slug}: generated batch metadata missing.`);
     if (!generated.includes(`data-name="${escapedName}"`)) errors.push(`${product.slug}: generated cart name mismatch.`);
-    if (!generated.includes(`data-price="${product.price}"`)) errors.push(`${product.slug}: generated cart price mismatch.`);
+    if (!generated.includes(`data-price="${defaultVariant.price}"`)) errors.push(`${product.slug}: generated default price mismatch.`);
+    if (!generated.includes(`data-variant-id="${defaultVariant.id}"`)) errors.push(`${product.slug}: generated default variant missing.`);
+    if (!generated.includes(`data-size-cm="${defaultVariant.sizeCm}"`)) errors.push(`${product.slug}: generated size metadata missing.`);
+    if (!generated.includes('From €35')) errors.push(`${product.slug}: generated from-price missing.`);
+    if (!generated.includes('"offers":[')) errors.push(`${product.slug}: generated multi-offer structured data missing.`);
     if (!generated.includes(product.image)) errors.push(`${product.slug}: generated image mismatch.`);
-  } catch {
-    errors.push(`${product.slug}: generated preview not found.`);
+  } catch (error) {
+    errors.push(`${product.slug}: generated preview invalid (${error.message}).`);
   }
 }
 
@@ -155,5 +192,5 @@ const categoryCounts = safeProducts.reduce((counts, product) => {
 }, {});
 
 console.log(
-  `Product catalog validation passed for ${safeProducts.length} products in ${batch.id}: ${JSON.stringify(categoryCounts)}.`,
+  `Variant-aware product catalog validation passed for ${safeProducts.length} products in ${batch.id}: ${JSON.stringify(categoryCounts)}.`,
 );
