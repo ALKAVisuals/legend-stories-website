@@ -59,8 +59,25 @@ jobs:
           node --check scripts/migrate-product-variants.mjs
 
       - name: Apply product variants
+        shell: bash
         run: |
+          set -euo pipefail
           node scripts/migrate-product-variants.mjs
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/product-page-generation.mjs')
+          source = path.read_text()
+          for before, after in (
+              (r'\\s', r'\s'),
+              (r'\\S', r'\S'),
+              (r'\\/', r'\/'),
+              (r'\\b', r'\b'),
+              (r'\\n', r'\n'),
+          ):
+              source = source.replace(before, after)
+          path.write_text(source)
+          PY
+          node --check scripts/product-page-generation.mjs
           npm run generate:managed-product-pages:live
 
       - name: Install media inspection tools
