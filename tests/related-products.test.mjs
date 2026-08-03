@@ -3,10 +3,12 @@ import assert from 'node:assert/strict';
 
 import {
   clearProductRegistryCache,
+  collectionPageUrls,
   createSeededRandom,
   findCurrentProduct,
   getRelatedSessionSeed,
   loadProductRegistry,
+  parseCollectionProducts,
   registryUrl,
   selectRelatedProducts,
 } from '../js/catalog/related-products.mjs';
@@ -134,6 +136,37 @@ test('resolves the registry relative to the current document', () => {
   );
 });
 
+test('resolves all source-deployment collection pages relative to the current document', () => {
+  assert.deepEqual(
+    collectionPageUrls('https://example.com/store/music-first.html'),
+    [
+      'https://example.com/store/music-legends.html',
+      'https://example.com/store/sport-legends.html',
+      'https://example.com/store/combat-legends.html',
+      'https://example.com/store/wisdom-legends.html',
+    ],
+  );
+});
+
+test('parses product cards from a collection page without executing its scripts', () => {
+  const parsed = parseCollectionProducts(`
+    <article data-page="music-second.html" class="product-card group" data-category="music" data-product-href="music-second.html">
+      <div><img src="media/music-second.png" alt="Second"></div>
+      <div><p class="text-mint uppercase">Music Legends</p><h3>Second &amp; Strong</h3></div>
+    </article>
+  `);
+
+  assert.deepEqual(parsed, [{
+    slug: 'music-second',
+    page: 'music-second.html',
+    name: 'Second & Strong',
+    image: 'media/music-second.png',
+    category: 'music',
+    collection: 'Music Legends',
+    batchId: null,
+  }]);
+});
+
 test('loads and caches a valid product registry', async () => {
   clearProductRegistryCache();
   let calls = 0;
@@ -153,6 +186,41 @@ test('loads and caches a valid product registry', async () => {
   assert.equal(calls, 1);
   assert.equal(first, second);
   assert.equal(first.length, products.length);
+});
+
+test('recovers product recommendations from collection pages when the generated registry is not published', async () => {
+  clearProductRegistryCache();
+  const calls = [];
+  const collectionHtml = `
+    <article data-page="music-first.html" class="product-card" data-category="music" data-product-href="music-first.html">
+      <img src="media/music-first.png" alt="First">
+      <p class="text-mint">Music Legends</p><h3>First</h3>
+    </article>
+    <article data-page="music-second.html" class="product-card" data-category="music" data-product-href="music-second.html">
+      <img src="media/music-second.png" alt="Second">
+      <p class="text-mint">Music Legends</p><h3>Second</h3>
+    </article>
+  `;
+  const fetchImpl = async (url) => {
+    calls.push(url);
+    if (url.endsWith('/data/product-registry.json')) {
+      return { ok: false, status: 404 };
+    }
+    return {
+      ok: true,
+      status: 200,
+      async text() {
+        return url.endsWith('/music-legends.html') ? collectionHtml : '<main></main>';
+      },
+    };
+  };
+
+  const first = await loadProductRegistry('https://example.com/store/music-first.html', fetchImpl);
+  const second = await loadProductRegistry('https://example.com/store/music-first.html', fetchImpl);
+
+  assert.equal(calls.length, 5);
+  assert.equal(first, second);
+  assert.deepEqual(first.map((product) => product.page), ['music-first.html', 'music-second.html']);
 });
 
 test('rejects unsupported registry schemas and clears failed cache entries', async () => {

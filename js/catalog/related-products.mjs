@@ -1,6 +1,12 @@
 const registryCache = new Map();
 const RELATED_SESSION_SEED_KEY = 'legendRelatedSeedV1';
 const DEFAULT_RELATED_LIMIT = 4;
+const COLLECTION_PAGE_FILES = Object.freeze([
+  'music-legends.html',
+  'sport-legends.html',
+  'combat-legends.html',
+  'wisdom-legends.html',
+]);
 
 function pageFromLocation(locationLike = globalThis.location) {
   const pathname = String(locationLike?.pathname || '');
@@ -123,18 +129,146 @@ export function registryUrl(baseUri = globalThis.document?.baseURI) {
   return new URL('data/product-registry.json', baseUri).href;
 }
 
+export function collectionPageUrls(baseUri = globalThis.document?.baseURI) {
+  if (!baseUri) throw new Error('A document base URI is required to resolve collection pages.');
+  return COLLECTION_PAGE_FILES.map((page) => new URL(page, baseUri).href);
+}
+
+function extractAttribute(source = '', name) {
+  const escapedName = String(name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = String(source).match(new RegExp(`\\b${escapedName}\\s*=\\s*(["'])(.*?)\\1`, 'i'));
+  return match?.[2] || '';
+}
+
+function decodeHtmlEntities(value = '') {
+  return String(value)
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#0*39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&nbsp;/gi, ' ');
+}
+
+function textFromHtml(value = '') {
+  return decodeHtmlEntities(String(value).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim());
+}
+
+function collectionFromPage(page = '') {
+  if (String(page).startsWith('music-')) return 'Music Legends';
+  if (String(page).startsWith('sport-')) return 'Sport Legends';
+  if (String(page).startsWith('combat-')) return 'Combat Legends';
+  if (String(page).startsWith('wisdom-')) return 'Wisdom Legends';
+  return 'LegendMural';
+}
+
+function categoryFromCollection(collection = '') {
+  return String(collection).replace(/\s+Legends$/i, '').trim().toLowerCase().replace(/\s+/g, '-');
+}
+
+export function parseCollectionProducts(html = '', fallbackCollection = '') {
+  const products = [];
+  const articlePattern = /<article\b([^>]*)>([\s\S]*?)<\/article>/gi;
+  let match;
+
+  while ((match = articlePattern.exec(String(html)))) {
+    const attributes = match[1] || '';
+    const body = match[2] || '';
+    const className = extractAttribute(attributes, 'class');
+    if (!/(?:^|\s)product-card(?:\s|$)/.test(className)) continue;
+
+    const page = decodeHtmlEntities(
+      extractAttribute(attributes, 'data-product-href') || extractAttribute(attributes, 'data-page'),
+    );
+    if (!page || !/\.html(?:$|[?#])/i.test(page)) continue;
+
+    const heading = body.match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/i)?.[1] || '';
+    const imageTag = body.match(/<img\b[^>]*>/i)?.[0] || '';
+    const collectionTag = (body.match(/<p\b[^>]*>[\s\S]*?<\/p>/gi) || []).find((tag) => {
+      const openingTag = tag.match(/^<p\b[^>]*>/i)?.[0] || '';
+      return /(?:^|\s)text-mint(?:\s|$)/.test(extractAttribute(openingTag, 'class'));
+    }) || '';
+    const collection = textFromHtml(collectionTag) || fallbackCollection || collectionFromPage(page);
+    const category = decodeHtmlEntities(extractAttribute(attributes, 'data-category'))
+      || categoryFromCollection(collection);
+    const name = textFromHtml(heading);
+    const image = decodeHtmlEntities(extractAttribute(imageTag, 'src'));
+
+    if (!name || !image) continue;
+    products.push({
+      slug: page.replace(/\.html(?:$|[?#].*)/i, ''),
+      page,
+      name,
+      image,
+      category,
+      collection,
+      batchId: null,
+    });
+  }
+
+  return products;
+}
+
+async function loadGeneratedRegistry(url, fetchImpl) {
+  const response = await fetchImpl(url, { credentials: 'same-origin' });
+  if (!response.ok) {
+    const error = new Error(`Product registry request failed with status ${response.status}.`);
+    error.code = 'REGISTRY_UNAVAILABLE';
+    throw error;
+  }
+  const registry = await response.json();
+  if (registry.schemaVersion !== 1 || !Array.isArray(registry.products)) {
+    const error = new Error('Product registry has an unsupported schema.');
+    error.code = 'UNSUPPORTED_SCHEMA';
+    throw error;
+  }
+  return registry.products;
+}
+
+async function loadCollectionPageRegistry(baseUri, fetchImpl) {
+  const urls = collectionPageUrls(baseUri);
+  const results = await Promise.allSettled(urls.map(async (url) => {
+    const response = await fetchImpl(url, { credentials: 'same-origin' });
+    if (!response.ok) throw new Error(`Collection page request failed with status ${response.status}.`);
+    const pageFile = new URL(url).pathname.split('/').filter(Boolean).pop() || '';
+    return parseCollectionProducts(await response.text(), collectionFromPage(pageFile));
+  }));
+
+  const products = results.flatMap((result) => result.status === 'fulfilled' ? result.value : []);
+  const unique = [];
+  const seenPages = new Set();
+  for (const product of products) {
+    if (!product.page || seenPages.has(product.page)) continue;
+    seenPages.add(product.page);
+    unique.push(product);
+  }
+
+  if (unique.length === 0) {
+    throw new Error('No products could be recovered from the collection pages.');
+  }
+  return unique;
+}
+
 export async function loadProductRegistry(baseUri, fetchImpl = globalThis.fetch) {
   if (typeof fetchImpl !== 'function') throw new Error('A fetch implementation is required.');
   const url = registryUrl(baseUri);
   if (!registryCache.has(url)) {
-    registryCache.set(url, fetchImpl(url, { credentials: 'same-origin' }).then(async (response) => {
-      if (!response.ok) throw new Error(`Product registry request failed with status ${response.status}.`);
-      const registry = await response.json();
-      if (registry.schemaVersion !== 1 || !Array.isArray(registry.products)) {
-        throw new Error('Product registry has an unsupported schema.');
+    registryCache.set(url, (async () => {
+      try {
+        return await loadGeneratedRegistry(url, fetchImpl);
+      } catch (error) {
+        if (error?.code === 'UNSUPPORTED_SCHEMA') throw error;
+        try {
+          return await loadCollectionPageRegistry(baseUri, fetchImpl);
+        } catch (fallbackError) {
+          const combined = new Error(
+            `Product recommendations could not load the runtime registry or collection pages: ${fallbackError.message}`,
+          );
+          combined.cause = error;
+          throw combined;
+        }
       }
-      return registry.products;
-    }).catch((error) => {
+    })().catch((error) => {
       registryCache.delete(url);
       throw error;
     }));
