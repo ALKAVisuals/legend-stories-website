@@ -1487,160 +1487,77 @@ function initProductCards() {
   }
 
   // ==========================================
-  // RELATED PRODUCTS CAROUSEL
+  // RELATED PRODUCT DISCOVERY
   // ==========================================
+  function ensureRelatedProductsStyles() {
+    if (document.querySelector('link[data-related-products-styles]')) return;
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = new URL('css/related-products.css', document.baseURI).href;
+    link.dataset.relatedProductsStyles = 'true';
+    document.head.appendChild(link);
+  }
+
+  function enhanceRelatedProductsSection(el) {
+    var section = el.closest('section');
+    if (!section) return;
+    section.classList.add('related-discovery-section');
+
+    var heading = section.querySelector('h2');
+    if (heading) {
+      heading.className = 'related-discovery-heading';
+      heading.textContent = 'Discover more legends';
+    }
+
+    if (!section.querySelector('.related-discovery-intro')) {
+      var intro = document.createElement('p');
+      intro.className = 'related-discovery-intro';
+      intro.textContent = 'A fresh selection of wall art, chosen for this visit.';
+      heading?.insertAdjacentElement('afterend', intro);
+    }
+  }
+
   async function initRelatedProducts() {
     var el = document.getElementById('related-carousel');
     if (!el) return;
 
     try {
+      ensureRelatedProductsStyles();
       var catalog = await loadRelatedProductsModule();
       var products = await catalog.loadProductRegistry(document.baseURI);
       var currentProduct = catalog.findCurrentProduct(products, {
         page: currentPageFileName(),
         name: el.dataset.currentProduct || '',
       });
-      var related = catalog.selectRelatedProducts(products, currentProduct);
+      var related = catalog.selectRelatedProducts(products, currentProduct, { limit: 4 });
       if (!currentProduct || related.length === 0) return;
 
-      var styleId = 'related-carousel-style';
-      if (!document.getElementById(styleId)) {
-        var style = document.createElement('style');
-        style.id = styleId;
-        style.textContent = '.related-carousel-item{width:45%;flex:0 0 45%}@media(min-width:640px){.related-carousel-item{width:30%;flex:0 0 30%}}@media(min-width:1024px){.related-carousel-item{width:22%;flex:0 0 22%}}' +
-                '.related-track{scrollbar-width:none;-ms-overflow-style:none;pointer-events:auto}.related-track::-webkit-scrollbar{display:none}' +
-                '.related-arrow{z-index:20;pointer-events:auto}' +
-                '.related-track-wrap{position:relative;max-width:100%;pointer-events:none}';
-        document.head.appendChild(style);
-      }
+      enhanceRelatedProductsSection(el);
 
-      var html = '';
-      for (var index = 0; index < related.length; index++) {
+      var html = '<div class="related-discovery-track" role="list" aria-label="Other LegendMural wall stickers">';
+      for (var index = 0; index < related.length; index += 1) {
         var product = related[index];
         var page = escapeRelatedHtml(product.page);
         var image = escapeRelatedHtml(product.image);
         var name = escapeRelatedHtml(product.name);
-        html += '<a href="' + page + '" class="inline-block flex-none snap-start group related-carousel-item">';
-        html += '<div class="aspect-[4/3] rounded-xl overflow-hidden border border-surface-border/30 mb-2 bg-neutral-200">';
-        html += '<img src="' + image + '" alt="' + name + '" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" fetchpriority="low">';
-        html += '</div>';
-        html += '<p class="text-sm text-text-secondary group-hover:text-mint transition-colors truncate">' + name + '</p>';
+        var collection = escapeRelatedHtml(product.collection || 'LegendMural');
+
+        html += '<a href="' + page + '" class="related-discovery-card" role="listitem" aria-label="View ' + name + '">';
+        html += '<span class="related-discovery-image">';
+        html += '<img src="' + image + '" alt="' + name + ' wall sticker" loading="lazy" decoding="async" fetchpriority="low">';
+        html += '</span>';
+        html += '<span class="related-discovery-copy">';
+        html += '<span class="related-discovery-collection">' + collection + '</span>';
+        html += '<span class="related-discovery-name">' + name + '</span>';
+        html += '<span class="related-discovery-meta">';
+        html += '<span class="related-discovery-price">From €35</span>';
+        html += '<span class="related-discovery-arrow" aria-hidden="true"></span>';
+        html += '</span>';
+        html += '</span>';
         html += '</a>';
       }
-
-      el.innerHTML =
-        '<div class="related-track-wrap">' +
-        '<button class="related-arrow related-prev absolute left-0 top-[40%] -translate-y-1/2 w-10 h-10 rounded-full bg-surface/90 backdrop-blur-sm border border-surface-border/30 flex items-center justify-center text-text-secondary hover:text-mint hover:bg-surface transition-all shadow-lg z-20" aria-label="Previous">' +
-        '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>' +
-        '</button>' +
-        '<button class="related-arrow related-next absolute right-0 top-[40%] -translate-y-1/2 w-10 h-10 rounded-full bg-surface/90 backdrop-blur-sm border border-surface-border/30 flex items-center justify-center text-text-secondary hover:text-mint hover:bg-surface transition-all shadow-lg z-20" aria-label="Next">' +
-        '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>' +
-        '</button>' +
-        '<div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 related-track" style="-webkit-overflow-scrolling:touch;overflow-y:hidden">' +
-        html +
-        '</div>' +
-        '</div>';
-
-      var track = el.querySelector('.related-track');
-      var previous = el.querySelector('.related-prev');
-      var next = el.querySelector('.related-next');
-      var relatedMotionGate = motionPreferencesModule.createAutomaticMotionGate({
-        element: track,
-        windowRef: window,
-        documentRef: document,
-      });
-
-      function smoothScrollTo(targetX, duration) {
-        if (!track) return;
-        duration = duration || 800;
-        if (relatedMotionGate.prefersReducedMotion() || duration <= 0) {
-          track.scrollLeft = targetX;
-          return;
-        }
-        var start = track.scrollLeft;
-        var distance = targetX - start;
-        if (Math.abs(distance) < 1) return;
-        var startTime = null;
-        function ease(progress) { return progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress; }
-        function step(timestamp) {
-          if (!startTime) startTime = timestamp;
-          var elapsed = timestamp - startTime;
-          var progress = Math.min(elapsed / duration, 1);
-          track.scrollLeft = start + distance * ease(progress);
-          if (progress < 1) window.requestAnimationFrame(step);
-        }
-        window.requestAnimationFrame(step);
-      }
-
-      if (track && previous) {
-        previous.addEventListener('click', function(event) {
-          event.stopPropagation();
-          smoothScrollTo(track.scrollLeft - track.clientWidth * 0.66, 600);
-          deferAutoScroll();
-        });
-      }
-      if (track && next) {
-        next.addEventListener('click', function(event) {
-          event.stopPropagation();
-          smoothScrollTo(track.scrollLeft + track.clientWidth * 0.66, 600);
-          deferAutoScroll();
-        });
-      }
-
-      var autoTimer = null;
-      var interactionPaused = false;
-
-      function clearAutoTimer() {
-        if (autoTimer) {
-          window.clearTimeout(autoTimer);
-          autoTimer = null;
-        }
-      }
-
-      function scheduleAutoScroll(delay) {
-        clearAutoTimer();
-        if (interactionPaused || !relatedMotionGate.isAllowed()) return;
-        autoTimer = window.setTimeout(doAutoScroll, delay || 1500);
-      }
-
-      function doAutoScroll() {
-        if (!track || interactionPaused || !relatedMotionGate.isAllowed()) return;
-        var maxScroll = track.scrollWidth - track.clientWidth;
-        if (maxScroll <= 1) return;
-        var target = track.scrollLeft + track.clientWidth * 0.66;
-        if (target >= maxScroll - 5) target = 0;
-        smoothScrollTo(target, 900);
-        scheduleAutoScroll(3900);
-      }
-
-      function pauseAutoScroll() {
-        interactionPaused = true;
-        clearAutoTimer();
-      }
-
-      function resumeAutoScroll() {
-        interactionPaused = false;
-        scheduleAutoScroll(1500);
-      }
-
-      function deferAutoScroll() {
-        if (!interactionPaused) scheduleAutoScroll(5000);
-      }
-
-      function handleRelatedFocusOut(event) {
-        if (!track.contains(event.relatedTarget)) resumeAutoScroll();
-      }
-
-      relatedMotionGate.subscribe(({ allowed }) => {
-        if (allowed && !interactionPaused) scheduleAutoScroll(1500);
-        else clearAutoTimer();
-      });
-      track.addEventListener('mouseenter', pauseAutoScroll);
-      track.addEventListener('mouseleave', resumeAutoScroll);
-      track.addEventListener('focusin', pauseAutoScroll);
-      track.addEventListener('focusout', handleRelatedFocusOut);
-      track.addEventListener('touchstart', pauseAutoScroll, { passive: true });
-      track.addEventListener('touchend', resumeAutoScroll);
+      html += '</div>';
+      el.innerHTML = html;
     } catch (error) {
       console.warn('Related products could not be loaded:', error);
     }

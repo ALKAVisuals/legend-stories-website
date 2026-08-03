@@ -11,17 +11,18 @@ function count(source, needle) {
 
 test('all automatic storefront motion uses the shared gate', () => {
   assert.equal(count(appSource, "import('./motion-preferences.mjs')"), 1);
-  assert.equal(count(appSource, 'createAutomaticMotionGate({'), 3);
+  assert.equal(count(appSource, 'createAutomaticMotionGate({'), 2);
   assert.match(appSource, /testimonialMotionGate\.subscribe/);
   assert.match(appSource, /particleMotionGate\.subscribe/);
-  assert.match(appSource, /relatedMotionGate\.subscribe/);
+  assert.doesNotMatch(appSource, /relatedMotionGate\.subscribe/);
 });
 
-test('legacy unconditional autoplay loops stay removed', () => {
+test('related sticker discovery remains user-controlled without autoplay', () => {
   const testimonialBlock = appSource.match(/function initTestimonials\(\)[\s\S]*?function nextTestimonial/)?.[0] || '';
   const relatedBlock = appSource.match(/async function initRelatedProducts\(\)[\s\S]*?function initCarousel/)?.[0] || '';
   assert.doesNotMatch(testimonialBlock, /setInterval\(/);
-  assert.doesNotMatch(relatedBlock, /setTimeout\(startAutoScroll/);
+  assert.match(relatedBlock, /related-discovery-track/);
+  assert.doesNotMatch(relatedBlock, /scheduleAutoScroll|startAutoScroll|pauseAutoScroll|resumeAutoScroll/);
   assert.match(appSource, /window\.cancelAnimationFrame\(frameId\)/);
 });
 

@@ -39,7 +39,10 @@ const requiredModuleSignals = [
   'restoreFocus: true',
   "documentRef.addEventListener('click'",
   "windowRef.addEventListener('resize'",
-  "event?.target?.closest?.('a[href]')",
+  "target?.closest?.('a[href]')",
+  "target?.closest?.('[data-mobile-menu-close]')",
+  'portalMobileMenu(menu, documentRef)',
+  "setAttribute(menu, 'aria-modal', 'true')",
   'Number(windowRef.innerWidth) >= Number(breakpoint)',
 ];
 for (const signal of requiredModuleSignals) {

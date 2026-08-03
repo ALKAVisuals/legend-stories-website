@@ -1,0 +1,255 @@
+/* LegendMural — randomized related sticker discovery */
+
+.related-discovery-section {
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+  background:
+    radial-gradient(circle at 82% 12%, rgba(42, 138, 74, 0.085), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0.006)) !important;
+}
+
+.related-discovery-heading {
+  margin-bottom: 0.5rem !important;
+  color: var(--color-text-primary);
+  font-size: clamp(1.75rem, 5vw, 2.6rem) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.related-discovery-intro {
+  max-width: 34rem;
+  margin: 0 0 2rem;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.65;
+}
+
+.related-discovery-track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(72vw, 72vw);
+  gap: 0.875rem;
+  margin: 0 -1rem;
+  padding: 0 1rem 0.75rem;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-padding-inline: 1rem;
+  scroll-snap-type: inline mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.related-discovery-track::-webkit-scrollbar {
+  display: none;
+}
+
+.related-discovery-card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.095);
+  border-radius: 16px;
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.048), rgba(255, 255, 255, 0.012));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 18px 48px rgba(0, 0, 0, 0.16);
+  scroll-snap-align: start;
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    transform 220ms ease;
+}
+
+.related-discovery-card:hover,
+.related-discovery-card:focus-visible {
+  border-color: rgba(76, 177, 104, 0.38);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 24px 58px rgba(0, 0, 0, 0.24),
+    0 0 0 1px rgba(42, 138, 74, 0.05);
+  outline: none;
+  transform: translateY(-3px);
+}
+
+.related-discovery-image {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.96), rgba(220, 222, 221, 0.92));
+}
+
+.related-discovery-image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+  background: linear-gradient(180deg, transparent 60%, rgba(9, 11, 10, 0.07));
+}
+
+.related-discovery-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.related-discovery-card:hover .related-discovery-image img,
+.related-discovery-card:focus-visible .related-discovery-image img {
+  transform: scale(1.035);
+}
+
+.related-discovery-copy {
+  display: flex;
+  min-height: 126px;
+  flex: 1;
+  flex-direction: column;
+  padding: 1rem 1rem 0.95rem;
+}
+
+.related-discovery-collection {
+  margin-bottom: 0.45rem;
+  color: var(--color-mint);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.related-discovery-name {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.075rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.related-discovery-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  color: var(--color-text-muted);
+  font-size: 0.6875rem;
+}
+
+.related-discovery-price {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.015em;
+}
+
+.related-discovery-arrow {
+  position: relative;
+  width: 25px;
+  height: 25px;
+  flex: 0 0 25px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.025);
+  transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.related-discovery-arrow::before,
+.related-discovery-arrow::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  background: currentColor;
+}
+
+.related-discovery-arrow::before {
+  left: 7px;
+  width: 9px;
+  height: 1px;
+  transform: translateY(-50%);
+}
+
+.related-discovery-arrow::after {
+  right: 7px;
+  width: 5px;
+  height: 5px;
+  border-top: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  background: transparent;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.related-discovery-card:hover .related-discovery-arrow,
+.related-discovery-card:focus-visible .related-discovery-arrow {
+  border-color: rgba(83, 190, 113, 0.42);
+  background: rgba(42, 138, 74, 0.11);
+  color: var(--color-mint);
+  transform: translateX(2px);
+}
+
+@media (min-width: 640px) {
+  .related-discovery-track {
+    grid-auto-columns: minmax(250px, 42vw);
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .related-discovery-track {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.1rem;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+}
+
+[data-theme="light"] .related-discovery-section,
+.light-mode .related-discovery-section {
+  border-top-color: rgba(17, 17, 17, 0.06);
+  background:
+    radial-gradient(circle at 82% 12%, rgba(181, 148, 91, 0.07), transparent 32%),
+    linear-gradient(180deg, rgba(17, 17, 17, 0.018), transparent) !important;
+}
+
+[data-theme="light"] .related-discovery-card,
+.light-mode .related-discovery-card {
+  border-color: rgba(17, 17, 17, 0.085);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 16px 44px rgba(17, 17, 17, 0.07);
+}
+
+[data-theme="light"] .related-discovery-card:hover,
+[data-theme="light"] .related-discovery-card:focus-visible,
+.light-mode .related-discovery-card:hover,
+.light-mode .related-discovery-card:focus-visible {
+  border-color: rgba(181, 148, 91, 0.38);
+  box-shadow: 0 22px 52px rgba(17, 17, 17, 0.1);
+}
+
+[data-theme="light"] .related-discovery-collection,
+.light-mode .related-discovery-collection {
+  color: #8a6d3b;
+}
+
+[data-theme="light"] .related-discovery-arrow,
+.light-mode .related-discovery-arrow {
+  border-color: rgba(17, 17, 17, 0.11);
+  background: rgba(17, 17, 17, 0.025);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .related-discovery-card,
+  .related-discovery-image img,
+  .related-discovery-arrow {
+    transition-duration: 0.01ms !important;
+  }
+}
