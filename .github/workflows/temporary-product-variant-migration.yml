@@ -83,6 +83,24 @@ jobs:
                   product.pop('compareAtPrice', None)
                   product.pop('discountLabel', None)
               path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + '\n')
+
+          full_catalog = json.loads(Path('data/products/catalog.json').read_text())
+          full_by_page = {product['page']: product for product in full_catalog['products']}
+          batch_path = Path('data/products/2026-batch-3.json')
+          batch_catalog = json.loads(batch_path.read_text())
+          batch_catalog['schemaVersion'] = 2
+          batch_catalog['variantPolicy'] = full_catalog['variantPolicy']
+          for product in batch_catalog['products']:
+              source_product = full_by_page[product['page']]
+              for field in (
+                  'description',
+                  'price',
+                  'fromPrice',
+                  'defaultVariantId',
+                  'variants',
+              ):
+                  product[field] = source_product[field]
+          batch_path.write_text(json.dumps(batch_catalog, indent=2, ensure_ascii=False) + '\n')
           PY
           node --check scripts/product-page-generation.mjs
           npm run generate:managed-product-pages:live
