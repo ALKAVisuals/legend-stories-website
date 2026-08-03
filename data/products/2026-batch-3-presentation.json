@@ -4,167 +4,127 @@
   "template": {
     "path": "templates/product-page.html",
     "referencePage": "combat-courageous-risk.html",
-    "sha256": "e855f6e510f8998c79c681caa215d89dca3f09c49413a63b5e9ab5975aefd24d"
+    "sha256": "a0934823de1210354903c6d66d532360c93edabe5519df13055a4c704a01b7b2"
   },
   "products": [
     {
       "page": "combat-courageous-risk.html",
       "story": "A bold design for those who take the leap. This matte vinyl mural brings raw energy to any room — easy to apply, easy to remove, zero residue.",
       "imageAlt": "Courageous Risk — Combat Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Combat Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "combat-dream-reality.html",
       "story": "Where vision meets reality. This mural captures the moment dreams take shape — premium matte vinyl that transforms any wall into a statement piece.",
       "imageAlt": "Dream Reality — Combat Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Combat Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "combat-greatest-courage.html",
       "story": "The greatest courage is showing up every day. This vinyl mural is a daily reminder — bold design, matte finish, effortless application.",
       "imageAlt": "The Greatest Courage — Combat Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Combat Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "combat-grind-cycle.html",
       "story": "Every round makes you stronger. This design captures the cycle of effort and reward — premium matte vinyl, sharp details, easy peel-and-stick.",
       "imageAlt": "The Grind Cycle — Combat Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Combat Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "combat-unstoppable-will.html",
       "story": "Not the absence of fear — the will to push through it. This mural brings unstoppable energy to your space. Matte vinyl, crisp lines, zero compromise.",
       "imageAlt": "Unstoppable Will — Combat Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Combat Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-constant-evolution.html",
       "story": "A master of transformation. This mural captures the evolution of sound and vision — premium matte vinyl, bold lines, zero compromise.",
       "imageAlt": "Constant Evolution — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Music Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-eternal-smile.html",
       "story": "Pure joy on your wall. This design radiates positivity and warmth — matte vinyl that transforms any room into a feel-good space.",
       "imageAlt": "Eternal Smile — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Music Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-free-spirit.html",
       "story": "No rules, no limits — just vibes. This mural is for the ones who march to their own beat. Premium matte vinyl, effortless style.",
       "imageAlt": "The Free Spirit — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Music Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-lyric-mastery.html",
       "story": "Every bar a masterpiece. This design celebrates the art of words — sharp, expressive, and built to stand out on any wall.",
       "imageAlt": "Lyric Mastery — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Music Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-pure-confidence.html",
       "story": "Unshakable energy. This mural commands attention the moment you walk in — bold matte vinyl that owns the room.",
       "imageAlt": "Pure Confidence — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Music Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-style-code.html",
       "story": "Dress like the main character. This mural blends fashion and sound into one statement piece — premium vinyl, flawless finish.",
       "imageAlt": "The Style Code — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Music Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-style-prophet.html",
       "story": "See the future, set the trend. This design is a cultural statement — matte vinyl that leads the way.",
       "imageAlt": "The Style Prophet — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Music Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-truth-seeker.html",
       "story": "Real talk, no filter. This mural speaks truth through design — raw, unfiltered energy on premium matte vinyl.",
       "imageAlt": "The Truth Seeker — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Music Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "sport-lions-pride.html",
       "story": "Lead the pack. This mural roars with confidence — premium matte vinyl that dominates any wall it's on.",
       "imageAlt": "The Lion's Pride — Sport Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Sport Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "sport-luxury-standard.html",
       "story": "Elite performance, premium results. This design brings championship energy to your space — matte vinyl, flawless execution.",
       "imageAlt": "The Luxury Standard — Sport Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Sport Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "sport-mamba-mindset.html",
       "story": "Relentless focus, killer instinct. This mural embodies the mindset of a champion — premium matte vinyl, zero distractions.",
       "imageAlt": "Mamba Mindset — Sport Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Sport Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "sport-peak-performer.html",
       "story": "Maximum output, every single day. This design is built for those who refuse to settle — sharp matte vinyl, peak energy.",
       "imageAlt": "The Peak Performer — Sport Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Sport Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "sport-pursuit-greatness.html",
       "story": "The grind never stops. This mural turns setbacks into fuel — premium matte vinyl that keeps you pushing forward.",
       "imageAlt": "Pursuit of Greatness — Sport Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Sport Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "sport-unforgettable-roots.html",
       "story": "Where you come from, where you're going. This design honors the journey — matte vinyl with soul and substance.",
       "imageAlt": "Unforgettable Roots — Sport Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Sport Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "sport-unstoppable-will.html",
       "story": "Champions are made when nobody is watching. This mural is a daily reminder — premium matte vinyl, relentless energy.",
       "imageAlt": "Unstoppable Will — Sport Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 New drop: Sport Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off",
       "pageTitle": "Unstoppable Will — Sport Legends (Batch 3) | Legend Stories"
     }

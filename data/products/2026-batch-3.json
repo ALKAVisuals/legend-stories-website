@@ -1,26 +1,714 @@
 {
-  "schemaVersion": 1,
-  "batch": {"id":"2026-batch-3","year":2026,"number":3,"status":"active","expectedProductCount":20},
+  "schemaVersion": 2,
+  "batch": {
+    "id": "2026-batch-3",
+    "year": 2026,
+    "number": 3,
+    "status": "active",
+    "expectedProductCount": 20
+  },
   "products": [
-    {"slug":"combat-courageous-risk","page":"combat-courageous-risk.html","name":"Courageous Risk","description":"Courageous Risk — Bold matte vinyl wall sticker from the Combat Legends collection. 60×90 cm, removable, residue-free. Transform your wall into a statement.","category":"combat","collection":"Combat Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Combat Legends/courageous-risk-combat-legend-mural.png"},
-    {"slug":"combat-dream-reality","page":"combat-dream-reality.html","name":"Dream Reality","description":"Dream Reality — Striking matte vinyl wall sticker from the Combat Legends collection. 60×90 cm, removable, residue-free. Where vision meets the wall.","category":"combat","collection":"Combat Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Combat Legends/dream-reality-combat-legend-mural.png"},
-    {"slug":"combat-greatest-courage","page":"combat-greatest-courage.html","name":"The Greatest Courage","description":"The Greatest Courage — Powerful matte vinyl wall sticker from the Combat Legends collection. 60×90 cm, removable, residue-free. Make your wall speak.","category":"combat","collection":"Combat Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Combat Legends/greatest-courage-combat-legend-mural.png"},
-    {"slug":"combat-grind-cycle","page":"combat-grind-cycle.html","name":"The Grind Cycle","description":"The Grind Cycle — Dynamic matte vinyl wall sticker from the Combat Legends collection. 60×90 cm, removable, residue-free. Built for the daily grind.","category":"combat","collection":"Combat Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Combat Legends/grind-cycle-combat-legend-mural.png"},
-    {"slug":"combat-unstoppable-will","page":"combat-unstoppable-will.html","name":"Unstoppable Will","description":"Unstoppable Will — Intense matte vinyl wall sticker from the Combat Legends collection. 60×90 cm, removable, residue-free. For those who never quit.","category":"combat","collection":"Combat Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Combat Legends/unstoppable-will-combat-legend-mural.png"},
-    {"slug":"music-constant-evolution","page":"music-constant-evolution.html","name":"Constant Evolution","description":"Constant Evolution — Transformative matte vinyl wall sticker from the Music Legends collection. 60×90 cm, removable, residue-free. Sound shapes the soul.","category":"music","collection":"Music Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Music Legends/constant-evolution-music-legend-mural.png"},
-    {"slug":"music-eternal-smile","page":"music-eternal-smile.html","name":"Eternal Smile","description":"Eternal Smile — Joyful matte vinyl wall sticker from the Music Legends collection. 60×90 cm, removable, residue-free. The rhythm that never fades.","category":"music","collection":"Music Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Music Legends/eternal-smile-music-legend-mural.png"},
-    {"slug":"music-free-spirit","page":"music-free-spirit.html","name":"The Free Spirit","description":"The Free Spirit — Independent matte vinyl wall sticker from the Music Legends collection. 60×90 cm, removable, residue-free. No rules. No limits. Just vibes.","category":"music","collection":"Music Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Music Legends/free-spirit-music-legend-mural.png"},
-    {"slug":"music-lyric-mastery","page":"music-lyric-mastery.html","name":"Lyric Mastery","description":"Lyric Mastery — Expressive matte vinyl wall sticker from the Music Legends collection. 60×90 cm, removable, residue-free. Words that hit different.","category":"music","collection":"Music Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Music Legends/lyric-mastery-music-legend-mural.png"},
-    {"slug":"music-pure-confidence","page":"music-pure-confidence.html","name":"Pure Confidence","description":"Pure Confidence — Bold matte vinyl wall sticker from the Music Legends collection. 60×90 cm, removable, residue-free. Walk in like you own the stage.","category":"music","collection":"Music Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Music Legends/pure-confidence-music-legend-mural.png"},
-    {"slug":"music-style-code","page":"music-style-code.html","name":"The Style Code","description":"The Style Code — Elegant matte vinyl wall sticker from the Music Legends collection. 60×90 cm, removable, residue-free. Dress like the main character.","category":"music","collection":"Music Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Music Legends/style-code-music-legend-mural.png"},
-    {"slug":"music-style-prophet","page":"music-style-prophet.html","name":"The Style Prophet","description":"The Style Prophet — Visionary matte vinyl wall sticker from the Music Legends collection. 60×90 cm, removable, residue-free. See the future. Set the trend.","category":"music","collection":"Music Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Music Legends/style-prophet-music-legend-mural.png"},
-    {"slug":"music-truth-seeker","page":"music-truth-seeker.html","name":"The Truth Seeker","description":"The Truth Seeker — Raw matte vinyl wall sticker from the Music Legends collection. 60×90 cm, removable, residue-free. Real talk. No filter.","category":"music","collection":"Music Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Music Legends/truth-seeker-music-legend-mural.png"},
-    {"slug":"sport-lions-pride","page":"sport-lions-pride.html","name":"The Lion's Pride","description":"The Lion's Pride — Bold matte vinyl wall sticker from the Sport Legends collection. 60×90 cm, removable, residue-free. Lead the pack.","category":"sport","collection":"Sport Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Sport Legends/lions-pride-sport-legend-mural.png"},
-    {"slug":"sport-luxury-standard","page":"sport-luxury-standard.html","name":"The Luxury Standard","description":"The Luxury Standard — Premium matte vinyl wall sticker from the Sport Legends collection. 60×90 cm, removable, residue-free. Elite performance.","category":"sport","collection":"Sport Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Sport Legends/football-luxury-performance-legend-mural.png"},
-    {"slug":"sport-mamba-mindset","page":"sport-mamba-mindset.html","name":"Mamba Mindset","description":"Mamba Mindset — Intense matte vinyl wall sticker from the Sport Legends collection. 60×90 cm, removable, residue-free. Relentless focus.","category":"sport","collection":"Sport Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Sport Legends/mamba-mindset-sport-legend-mural.png"},
-    {"slug":"sport-peak-performer","page":"sport-peak-performer.html","name":"The Peak Performer","description":"The Peak Performer — Focused matte vinyl wall sticker from the Sport Legends collection. 60×90 cm, removable, residue-free. Maximum output.","category":"sport","collection":"Sport Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Sport Legends/peak-performer-sport-legend-mural.png"},
-    {"slug":"sport-pursuit-greatness","page":"sport-pursuit-greatness.html","name":"Pursuit of Greatness","description":"Pursuit of Greatness — Determined matte vinyl wall sticker from the Sport Legends collection. 60×90 cm, removable, residue-free. The grind never stops.","category":"sport","collection":"Sport Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Sport Legends/pursuit-greatness-sport-legend-mural.png"},
-    {"slug":"sport-unforgettable-roots","page":"sport-unforgettable-roots.html","name":"Unforgettable Roots","description":"Unforgettable Roots — Grounded matte vinyl wall sticker from the Sport Legends collection. 60×90 cm, removable, residue-free. Where you come from.","category":"sport","collection":"Sport Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Sport Legends/unforgettable-roots-sport-legend-mural.png"},
-    {"slug":"sport-unstoppable-will","page":"sport-unstoppable-will.html","name":"Unstoppable Will","description":"Unstoppable Will — Driven matte vinyl wall sticker from the Sport Legends collection. 60×90 cm, removable, residue-free. Champions are made when nobody watches.","category":"sport","collection":"Sport Legends","batchId":"2026-batch-3","price":49.95,"currency":"EUR","availability":"https://schema.org/InStock","status":"active","image":"media/stikkers/2026/batch 3/Sport Legends/unstoppable-will-sport-legend-mural.png"}
-  ]
+    {
+      "slug": "combat-courageous-risk",
+      "page": "combat-courageous-risk.html",
+      "name": "Courageous Risk",
+      "description": "Courageous Risk — Bold matte vinyl wall sticker from the Combat Legends collection. removable, residue-free. Transform your wall into a statement. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "combat",
+      "collection": "Combat Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Combat Legends/courageous-risk-combat-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "combat-dream-reality",
+      "page": "combat-dream-reality.html",
+      "name": "Dream Reality",
+      "description": "Dream Reality — Striking matte vinyl wall sticker from the Combat Legends collection. removable, residue-free. Where vision meets the wall. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "combat",
+      "collection": "Combat Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Combat Legends/dream-reality-combat-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "combat-greatest-courage",
+      "page": "combat-greatest-courage.html",
+      "name": "The Greatest Courage",
+      "description": "The Greatest Courage — Powerful matte vinyl wall sticker from the Combat Legends collection. removable, residue-free. Make your wall speak. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "combat",
+      "collection": "Combat Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Combat Legends/greatest-courage-combat-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "combat-grind-cycle",
+      "page": "combat-grind-cycle.html",
+      "name": "The Grind Cycle",
+      "description": "The Grind Cycle — Dynamic matte vinyl wall sticker from the Combat Legends collection. removable, residue-free. Built for the daily grind. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "combat",
+      "collection": "Combat Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Combat Legends/grind-cycle-combat-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "combat-unstoppable-will",
+      "page": "combat-unstoppable-will.html",
+      "name": "Unstoppable Will",
+      "description": "Unstoppable Will — Intense matte vinyl wall sticker from the Combat Legends collection. removable, residue-free. For those who never quit. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "combat",
+      "collection": "Combat Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Combat Legends/unstoppable-will-combat-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "music-constant-evolution",
+      "page": "music-constant-evolution.html",
+      "name": "Constant Evolution",
+      "description": "Constant Evolution — Transformative matte vinyl wall sticker from the Music Legends collection. removable, residue-free. Sound shapes the soul. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "music",
+      "collection": "Music Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Music Legends/constant-evolution-music-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "music-eternal-smile",
+      "page": "music-eternal-smile.html",
+      "name": "Eternal Smile",
+      "description": "Eternal Smile — Joyful matte vinyl wall sticker from the Music Legends collection. removable, residue-free. The rhythm that never fades. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "music",
+      "collection": "Music Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Music Legends/eternal-smile-music-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "music-free-spirit",
+      "page": "music-free-spirit.html",
+      "name": "The Free Spirit",
+      "description": "The Free Spirit — Independent matte vinyl wall sticker from the Music Legends collection. removable, residue-free. No rules. No limits. Just vibes. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "music",
+      "collection": "Music Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Music Legends/free-spirit-music-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "music-lyric-mastery",
+      "page": "music-lyric-mastery.html",
+      "name": "Lyric Mastery",
+      "description": "Lyric Mastery — Expressive matte vinyl wall sticker from the Music Legends collection. removable, residue-free. Words that hit different. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "music",
+      "collection": "Music Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Music Legends/lyric-mastery-music-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "music-pure-confidence",
+      "page": "music-pure-confidence.html",
+      "name": "Pure Confidence",
+      "description": "Pure Confidence — Bold matte vinyl wall sticker from the Music Legends collection. removable, residue-free. Walk in like you own the stage. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "music",
+      "collection": "Music Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Music Legends/pure-confidence-music-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "music-style-code",
+      "page": "music-style-code.html",
+      "name": "The Style Code",
+      "description": "The Style Code — Elegant matte vinyl wall sticker from the Music Legends collection. removable, residue-free. Dress like the main character. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "music",
+      "collection": "Music Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Music Legends/style-code-music-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "music-style-prophet",
+      "page": "music-style-prophet.html",
+      "name": "The Style Prophet",
+      "description": "The Style Prophet — Visionary matte vinyl wall sticker from the Music Legends collection. removable, residue-free. See the future. Set the trend. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "music",
+      "collection": "Music Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Music Legends/style-prophet-music-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "music-truth-seeker",
+      "page": "music-truth-seeker.html",
+      "name": "The Truth Seeker",
+      "description": "The Truth Seeker — Raw matte vinyl wall sticker from the Music Legends collection. removable, residue-free. Real talk. No filter. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "music",
+      "collection": "Music Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Music Legends/truth-seeker-music-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "sport-lions-pride",
+      "page": "sport-lions-pride.html",
+      "name": "The Lion's Pride",
+      "description": "The Lion's Pride — Bold matte vinyl wall sticker from the Sport Legends collection. removable, residue-free. Lead the pack. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "sport",
+      "collection": "Sport Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Sport Legends/lions-pride-sport-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "sport-luxury-standard",
+      "page": "sport-luxury-standard.html",
+      "name": "The Luxury Standard",
+      "description": "The Luxury Standard — Premium matte vinyl wall sticker from the Sport Legends collection. removable, residue-free. Elite performance. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "sport",
+      "collection": "Sport Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Sport Legends/football-luxury-performance-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "sport-mamba-mindset",
+      "page": "sport-mamba-mindset.html",
+      "name": "Mamba Mindset",
+      "description": "Mamba Mindset — Intense matte vinyl wall sticker from the Sport Legends collection. removable, residue-free. Relentless focus. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "sport",
+      "collection": "Sport Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Sport Legends/mamba-mindset-sport-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "sport-peak-performer",
+      "page": "sport-peak-performer.html",
+      "name": "The Peak Performer",
+      "description": "The Peak Performer — Focused matte vinyl wall sticker from the Sport Legends collection. removable, residue-free. Maximum output. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "sport",
+      "collection": "Sport Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Sport Legends/peak-performer-sport-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "sport-pursuit-greatness",
+      "page": "sport-pursuit-greatness.html",
+      "name": "Pursuit of Greatness",
+      "description": "Pursuit of Greatness — Determined matte vinyl wall sticker from the Sport Legends collection. removable, residue-free. The grind never stops. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "sport",
+      "collection": "Sport Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Sport Legends/pursuit-greatness-sport-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "sport-unforgettable-roots",
+      "page": "sport-unforgettable-roots.html",
+      "name": "Unforgettable Roots",
+      "description": "Unforgettable Roots — Grounded matte vinyl wall sticker from the Sport Legends collection. removable, residue-free. Where you come from. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "sport",
+      "collection": "Sport Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Sport Legends/unforgettable-roots-sport-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "slug": "sport-unstoppable-will",
+      "page": "sport-unstoppable-will.html",
+      "name": "Unstoppable Will",
+      "description": "Unstoppable Will — Driven matte vinyl wall sticker from the Sport Legends collection. removable, residue-free. Champions are made when nobody watches. Available in 30 cm and 45 cm, measured along the longest side.",
+      "category": "sport",
+      "collection": "Sport Legends",
+      "batchId": "2026-batch-3",
+      "price": 45,
+      "currency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "status": "active",
+      "image": "media/stikkers/2026/batch 3/Sport Legends/unstoppable-will-sport-legend-mural.png",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
+    }
+  ],
+  "variantPolicy": {
+    "defaultVariantId": "statement-45",
+    "sizeMeasurement": "longest_side",
+    "variants": [
+      {
+        "id": "statement-45",
+        "label": "Statement",
+        "sizeCm": 45,
+        "price": 45,
+        "skuSuffix": "45",
+        "isDefault": true
+      },
+      {
+        "id": "compact-30",
+        "label": "Compact",
+        "sizeCm": 30,
+        "price": 35,
+        "skuSuffix": "30",
+        "isDefault": false
+      }
+    ]
+  }
 }

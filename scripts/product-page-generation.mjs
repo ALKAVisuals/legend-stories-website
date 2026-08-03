@@ -67,6 +67,10 @@ function absoluteImageUrl(product, image = product.image) {
 }
 
 function structuredData(product) {
+  const variants = Array.isArray(product.variants) && product.variants.length
+    ? product.variants
+    : [{ id: 'legacy', label: 'Standard', sizeCm: null, price: product.price, skuSuffix: 'standard', isDefault: true }];
+  const orderedVariants = [...variants].sort((left, right) => Number(Boolean(right.isDefault)) - Number(Boolean(left.isDefault)));
   return JSON.stringify({
     '@context': 'https://schema.org/',
     '@type': 'Product',
@@ -74,66 +78,41 @@ function structuredData(product) {
     image: absoluteImageUrl(product),
     description: product.description,
     brand: { '@type': 'Brand', name: 'Legend Stories' },
-    offers: {
+    offers: orderedVariants.map((variant) => ({
       '@type': 'Offer',
-      price: Number(product.price).toFixed(2),
+      name: variant.sizeCm ? `${product.name} — ${variant.sizeCm} cm` : product.name,
+      sku: `${product.slug}-${variant.skuSuffix || variant.sizeCm || 'standard'}`,
+      price: Number(variant.price).toFixed(2),
       priceCurrency: product.currency || 'EUR',
       availability: product.availability,
-      url: product.canonical,
-    },
+      url: variant.sizeCm ? `${product.canonical}?size=${variant.sizeCm}` : product.canonical,
+    })),
   }, null, 2).replaceAll('<', '\\u003c');
 }
 
 export function extractProductPresentation(html, product) {
   const story = matchRequired(
     html,
-    /<!-- FACT -->[\s\S]*?<p class="text-text-secondary text-base md:text-lg leading-relaxed italic">([\s\S]*?)<\/p>/,
+    /<!-- FACT -->[\s\S]*?<p class=\"text-text-secondary text-base md:text-lg leading-relaxed italic\">([\s\S]*?)<\/p>/,
     `${product.page} story`,
   ).trim();
   const imageAlt = matchRequired(
     html,
-    /<!-- IMAGE -->[\s\S]*?<img\s+src="[^"]*"\s+alt="([^"]*)"\s+class="w-full h-full object-contain"[^>]*>/,
+    /<!-- IMAGE -->[\s\S]*?<img\s+src=\"[^\"]*\"\s+alt=\"([^\"]*)\"\s+class=\"w-full h-full object-contain\"[^>]*>/,
     `${product.page} image alt`,
   );
-  const compareAtText = matchRequired(
-    html,
-    /<span class="text-text-muted text-sm line-through">([^<]+)<\/span>/,
-    `${product.page} compare-at price`,
-  ).trim();
-  const discountLabel = matchRequired(
-    html,
-    /<span class="px-2 py-0\.5 rounded bg-mint\/10 text-mint text-xs font-bold">([^<]+)<\/span>/,
-    `${product.page} discount label`,
-  ).trim();
   const announcementHtml = matchRequired(
     html,
-    /<div class="w-full bg-gradient-mint[^>]*" role="banner">\s*<p>([\s\S]*?)<\/p>\s*<\/div>/,
+    /<div class=\"w-full bg-gradient-mint[^>]*\" role=\"banner\">\s*<p>([\s\S]*?)<\/p>\s*<\/div>/,
     `${product.page} announcement`,
   ).trim();
-  const currentPriceText = matchRequired(
-    html,
-    /<span class="font-display text-3xl font-bold">([^<]+)<\/span>/,
-    `${product.page} current price`,
-  ).trim();
-  const currentPrice = parseEuro(currentPriceText);
-  if (Math.abs(currentPrice - Number(product.price)) > 0.001) {
-    throw new Error(`${product.page}: displayed price ${currentPrice} differs from catalog price ${product.price}.`);
-  }
-
   const pageTitle = decodeHtmlText(matchRequired(
     html,
     /<title>([\s\S]*?)<\/title>/,
     `${product.page} page title`,
   ).trim());
   const defaultPageTitle = `${product.name} — ${product.collection} | Legend Stories`;
-  const presentation = {
-    page: product.page,
-    story,
-    imageAlt,
-    compareAtPrice: parseEuro(compareAtText),
-    discountLabel,
-    announcementHtml,
-  };
+  const presentation = { page: product.page, story, imageAlt, announcementHtml };
   if (pageTitle !== defaultPageTitle) presentation.pageTitle = pageTitle;
   return presentation;
 }
@@ -161,8 +140,8 @@ export function templatizeProductPage(input) {
   );
 
   for (const [category, label] of CATEGORY_LINKS) {
-    const desktop = new RegExp(`<a href="${category}-legends\\.html" class="[^"]*">${label}<\\/a>`);
-    const mobile = new RegExp(`<a href="${category}-legends\\.html" class="[^"]* py-2">${label}<\\/a>`);
+    const desktop = new RegExp(`<a href="${category}-legends\\.html" class="[^"]*">${label}<\/a>`);
+    const mobile = new RegExp(`<a href="${category}-legends\\.html" class="[^"]* py-2">${label}<\/a>`);
     html = replaceRequired(html, desktop, `<a href="${category}-legends.html" class="{{NAV_${category.toUpperCase()}_DESKTOP_CLASS}}">${label}</a>`, `${label} desktop navigation`);
     html = replaceRequired(html, mobile, `<a href="${category}-legends.html" class="{{NAV_${category.toUpperCase()}_MOBILE_CLASS}}">${label}</a>`, `${label} mobile navigation`);
   }
@@ -197,13 +176,10 @@ export function templatizeProductPage(input) {
     '$1{{STORY}}$2',
     'product story',
   );
-  html = replaceRequired(html, /<span class="font-display text-3xl font-bold">[^<]+<\/span>/, '<span class="font-display text-3xl font-bold">{{PRICE_FORMATTED}}</span>', 'current price');
-  html = replaceRequired(html, /<span class="text-text-muted text-sm line-through">[^<]+<\/span>/, '<span class="text-text-muted text-sm line-through">{{COMPARE_AT_FORMATTED}}</span>', 'compare-at price');
-  html = replaceRequired(html, /<span class="px-2 py-0\.5 rounded bg-mint\/10 text-mint text-xs font-bold">[^<]+<\/span>/, '<span class="px-2 py-0.5 rounded bg-mint/10 text-mint text-xs font-bold">{{DISCOUNT_LABEL}}</span>', 'discount label');
   html = replaceRequired(
     html,
-    /<button class="([^"]*\badd-to-cart-btn\b[^"]*)" data-name="[^"]*" data-price="[^"]*" data-img="[^"]*">[\s\S]*?<\/button>/,
-    '<button class="$1" data-name="{{NAME}}" data-price="{{PRICE_RAW}}" data-img="{{IMAGE}}">\n              Add to cart — {{PRICE_FORMATTED}}\n            </button>',
+    /<button class="([^"]*\badd-to-cart-btn\b[^"]*)" data-name="[^"]*" data-price="45" data-variant-id="statement-45" data-size-cm="45" data-variant-label="Statement" data-img="[^"]*">[\s\S]*?<\/button>/,
+    '<button class="$1" data-name="{{NAME}}" data-price="45" data-variant-id="statement-45" data-size-cm="45" data-variant-label="Statement" data-img="{{IMAGE}}">\n              Add to cart — €45\n            </button>',
     'add-to-cart button',
   );
   html = replaceRequired(
@@ -253,10 +229,6 @@ export function renderProductPage(template, product, presentation) {
     COLLECTION: escapeHtml(product.collection),
     NAME: escapeHtml(product.name),
     STORY: escapeHtml(presentation.story),
-    PRICE_FORMATTED: formatEuro(product.price),
-    COMPARE_AT_FORMATTED: formatEuro(presentation.compareAtPrice),
-    DISCOUNT_LABEL: escapeHtml(presentation.discountLabel),
-    PRICE_RAW: Number(product.price).toFixed(2),
   };
 
   for (const [category] of CATEGORY_LINKS) {

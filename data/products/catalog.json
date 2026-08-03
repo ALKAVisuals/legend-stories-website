@@ -1,14 +1,14 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "productCount": 111,
   "products": [
     {
       "slug": "combat-balanced-mind-combat-legend-mural",
       "page": "combat-balanced-mind-combat-legend-mural.html",
       "name": "The Balanced Mind",
-      "description": "The Balanced Mind — Combat Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Balanced Mind — Combat Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/combat Legends/balanced-mind-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/combat-balanced-mind-combat-legend-mural.html",
@@ -18,15 +18,35 @@
         "number": 4
       },
       "collection": "Combat Legends",
-      "category": "combat"
+      "category": "combat",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "combat-beast-within",
       "page": "combat-beast-within.html",
       "name": "The Beast Within",
-      "description": "The Beast Within — Combat Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Beast Within — Combat Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/combat Legends/power-beast-boxing-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/combat-beast-within.html",
@@ -36,15 +56,35 @@
         "number": 1
       },
       "collection": "Combat Legends",
-      "category": "combat"
+      "category": "combat",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "combat-courageous-risk",
       "page": "combat-courageous-risk.html",
       "name": "Courageous Risk",
-      "description": "Courageous Risk — Bold matte vinyl wall sticker from the Combat Legends collection. 60×90 cm, removable, residue-free. Transform your wall into a statement.",
+      "description": "Courageous Risk — Bold matte vinyl wall sticker from the Combat Legends collection. removable, residue-free. Transform your wall into a statement. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Combat Legends/courageous-risk-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/combat-courageous-risk.html",
@@ -54,15 +94,35 @@
         "number": 3
       },
       "collection": "Combat Legends",
-      "category": "combat"
+      "category": "combat",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "combat-dream-reality",
       "page": "combat-dream-reality.html",
       "name": "Dream Reality",
-      "description": "Dream Reality — Striking matte vinyl wall sticker from the Combat Legends collection. 60×90 cm, removable, residue-free. Where vision meets the wall.",
+      "description": "Dream Reality — Striking matte vinyl wall sticker from the Combat Legends collection. removable, residue-free. Where vision meets the wall. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Combat Legends/dream-reality-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/combat-dream-reality.html",
@@ -72,15 +132,35 @@
         "number": 3
       },
       "collection": "Combat Legends",
-      "category": "combat"
+      "category": "combat",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "combat-fearless-challenger-combat-legend-mural",
       "page": "combat-fearless-challenger-combat-legend-mural.html",
       "name": "The Fearless Challenger",
-      "description": "The Fearless Challenger — Combat Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Fearless Challenger — Combat Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/combat Legends/fearless-challenger-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/combat-fearless-challenger-combat-legend-mural.html",
@@ -90,15 +170,35 @@
         "number": 4
       },
       "collection": "Combat Legends",
-      "category": "combat"
+      "category": "combat",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "combat-greatest-courage",
       "page": "combat-greatest-courage.html",
       "name": "The Greatest Courage",
-      "description": "The Greatest Courage — Powerful matte vinyl wall sticker from the Combat Legends collection. 60×90 cm, removable, residue-free. Make your wall speak.",
+      "description": "The Greatest Courage — Powerful matte vinyl wall sticker from the Combat Legends collection. removable, residue-free. Make your wall speak. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Combat Legends/greatest-courage-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/combat-greatest-courage.html",
@@ -108,15 +208,35 @@
         "number": 3
       },
       "collection": "Combat Legends",
-      "category": "combat"
+      "category": "combat",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "combat-grind-cycle",
       "page": "combat-grind-cycle.html",
       "name": "The Grind Cycle",
-      "description": "The Grind Cycle — Dynamic matte vinyl wall sticker from the Combat Legends collection. 60×90 cm, removable, residue-free. Built for the daily grind.",
+      "description": "The Grind Cycle — Dynamic matte vinyl wall sticker from the Combat Legends collection. removable, residue-free. Built for the daily grind. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Combat Legends/grind-cycle-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/combat-grind-cycle.html",
@@ -126,15 +246,35 @@
         "number": 3
       },
       "collection": "Combat Legends",
-      "category": "combat"
+      "category": "combat",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "combat-inner-vision-combat-legend-mural",
       "page": "combat-inner-vision-combat-legend-mural.html",
       "name": "Inner Vision",
-      "description": "Inner Vision — Combat Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Inner Vision — Combat Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/combat Legends/inner-vision-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/combat-inner-vision-combat-legend-mural.html",
@@ -144,15 +284,35 @@
         "number": 4
       },
       "collection": "Combat Legends",
-      "category": "combat"
+      "category": "combat",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "combat-iron-discipline",
       "page": "combat-iron-discipline.html",
       "name": "Iron Discipline",
-      "description": "Iron Discipline — Combat Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Iron Discipline — Combat Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/combat Legends/iron-discipline-boxing-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/combat-iron-discipline.html",
@@ -162,15 +322,35 @@
         "number": 1
       },
       "collection": "Combat Legends",
-      "category": "combat"
+      "category": "combat",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "combat-iron-soul-combat-legend-mural",
       "page": "combat-iron-soul-combat-legend-mural.html",
       "name": "Iron Soul",
-      "description": "Iron Soul — Combat Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Iron Soul — Combat Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/combat Legends/iron-soul-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/combat-iron-soul-combat-legend-mural.html",
@@ -180,15 +360,35 @@
         "number": 2
       },
       "collection": "Combat Legends",
-      "category": "combat"
+      "category": "combat",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "combat-stone-face",
       "page": "combat-stone-face.html",
       "name": "The Stone Face",
-      "description": "The Stone Face — Combat Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Stone Face — Combat Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/combat Legends/stone-face-chama-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/combat-stone-face.html",
@@ -198,15 +398,35 @@
         "number": 1
       },
       "collection": "Combat Legends",
-      "category": "combat"
+      "category": "combat",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "combat-total-ownership-combat-legend-mural",
       "page": "combat-total-ownership-combat-legend-mural.html",
       "name": "Total Ownership",
-      "description": "Total Ownership — Combat Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Total Ownership — Combat Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/combat Legends/total-ownership-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/combat-total-ownership-combat-legend-mural.html",
@@ -216,15 +436,35 @@
         "number": 4
       },
       "collection": "Combat Legends",
-      "category": "combat"
+      "category": "combat",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "combat-unfazed-fighter",
       "page": "combat-unfazed-fighter.html",
       "name": "The Unfazed Fighter",
-      "description": "The Unfazed Fighter — Combat Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Unfazed Fighter — Combat Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/combat Legends/unfazed-fighter-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/combat-unfazed-fighter.html",
@@ -234,15 +474,35 @@
         "number": 1
       },
       "collection": "Combat Legends",
-      "category": "combat"
+      "category": "combat",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "combat-unstoppable-will",
       "page": "combat-unstoppable-will.html",
       "name": "Unstoppable Will",
-      "description": "Unstoppable Will — Intense matte vinyl wall sticker from the Combat Legends collection. 60×90 cm, removable, residue-free. For those who never quit.",
+      "description": "Unstoppable Will — Intense matte vinyl wall sticker from the Combat Legends collection. removable, residue-free. For those who never quit. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Combat Legends/unstoppable-will-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/combat-unstoppable-will.html",
@@ -252,15 +512,35 @@
         "number": 3
       },
       "collection": "Combat Legends",
-      "category": "combat"
+      "category": "combat",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-authentic-connection-music-legend-mural",
       "page": "music-authentic-connection-music-legend-mural.html",
       "name": "Authentic Connection",
-      "description": "Authentic Connection — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Authentic Connection — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 6/Music Legends/authentic-connection-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-authentic-connection-music-legend-mural.html",
@@ -270,15 +550,35 @@
         "number": 6
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-beautiful-world-music-legend-mural",
       "page": "music-beautiful-world-music-legend-mural.html",
       "name": "The Beautiful Choice",
-      "description": "The Beautiful Choice — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Beautiful Choice — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/Music Legends/beautiful-world-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-beautiful-world-music-legend-mural.html",
@@ -288,15 +588,35 @@
         "number": 4
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-beyond-pop-music",
       "page": "music-beyond-pop-music.html",
       "name": "Beyond Pop Music",
-      "description": "Beyond Pop Music — Music Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Beyond Pop Music — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/Music Legends/beyond-pop-music-icon-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-beyond-pop-music.html",
@@ -306,15 +626,35 @@
         "number": 1
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-constant-evolution",
       "page": "music-constant-evolution.html",
       "name": "Constant Evolution",
-      "description": "Constant Evolution — Transformative matte vinyl wall sticker from the Music Legends collection. 60×90 cm, removable, residue-free. Sound shapes the soul.",
+      "description": "Constant Evolution — Transformative matte vinyl wall sticker from the Music Legends collection. removable, residue-free. Sound shapes the soul. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Music Legends/constant-evolution-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-constant-evolution.html",
@@ -324,15 +664,35 @@
         "number": 3
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-creative-vision",
       "page": "music-creative-vision.html",
       "name": "Creative Vision",
-      "description": "Creative Vision — Music Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Creative Vision — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/Music Legends/creative-vision-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-creative-vision.html",
@@ -342,15 +702,35 @@
         "number": 1
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-daily-blessing-music-legend-mural",
       "page": "music-daily-blessing-music-legend-mural.html",
       "name": "Daily Blessing",
-      "description": "Daily Blessing — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Daily Blessing — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/Music Legends/daily-blessing-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-daily-blessing-music-legend-mural.html",
@@ -360,15 +740,35 @@
         "number": 4
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-dreamers-reality-music-legend-mural",
       "page": "music-dreamers-reality-music-legend-mural.html",
       "name": "Dreamers' Reality",
-      "description": "Dreamers' Reality — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Dreamers' Reality — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Music Legends/dreamers-reality-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-dreamers-reality-music-legend-mural.html",
@@ -378,15 +778,35 @@
         "number": 2
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-dreaming-in-motion-music-legend-mural",
       "page": "music-dreaming-in-motion-music-legend-mural.html",
       "name": "Dreaming in Motion",
-      "description": "Dreaming in Motion — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Dreaming in Motion — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Music Legends/dreaming-in-motion-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-dreaming-in-motion-music-legend-mural.html",
@@ -396,15 +816,35 @@
         "number": 5
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-eternal-blessing-music-legend-mural",
       "page": "music-eternal-blessing-music-legend-mural.html",
       "name": "Eternal Blessing",
-      "description": "Eternal Blessing — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Eternal Blessing — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Music Legends/eternal-blessing-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-eternal-blessing-music-legend-mural.html",
@@ -414,15 +854,35 @@
         "number": 5
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-eternal-smile",
       "page": "music-eternal-smile.html",
       "name": "Eternal Smile",
-      "description": "Eternal Smile — Joyful matte vinyl wall sticker from the Music Legends collection. 60×90 cm, removable, residue-free. The rhythm that never fades.",
+      "description": "Eternal Smile — Joyful matte vinyl wall sticker from the Music Legends collection. removable, residue-free. The rhythm that never fades. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Music Legends/eternal-smile-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-eternal-smile.html",
@@ -432,15 +892,35 @@
         "number": 3
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-eternal-will",
       "page": "music-eternal-will.html",
       "name": "Eternal Will",
-      "description": "Eternal Will — Music Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Eternal Will — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/Music Legends/eternal-will-rap-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-eternal-will.html",
@@ -450,15 +930,35 @@
         "number": 1
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-free-spirit",
       "page": "music-free-spirit.html",
       "name": "The Free Spirit",
-      "description": "The Free Spirit — Independent matte vinyl wall sticker from the Music Legends collection. 60×90 cm, removable, residue-free. No rules. No limits. Just vibes.",
+      "description": "The Free Spirit — Independent matte vinyl wall sticker from the Music Legends collection. removable, residue-free. No rules. No limits. Just vibes. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Music Legends/free-spirit-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-free-spirit.html",
@@ -468,15 +968,35 @@
         "number": 3
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-grateful-spirit-music-legend-mural",
       "page": "music-grateful-spirit-music-legend-mural.html",
       "name": "Grateful Spirit",
-      "description": "Grateful Spirit — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Grateful Spirit — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/Music Legends/grateful-spirit-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-grateful-spirit-music-legend-mural.html",
@@ -486,15 +1006,35 @@
         "number": 4
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-heart-of-gold-music-legend-mural",
       "page": "music-heart-of-gold-music-legend-mural.html",
       "name": "Heart of Gold",
-      "description": "Heart of Gold — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Heart of Gold — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Music Legends/heart-of-gold-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-heart-of-gold-music-legend-mural.html",
@@ -504,15 +1044,35 @@
         "number": 5
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-hidden-truth-music-legend-mural",
       "page": "music-hidden-truth-music-legend-mural.html",
       "name": "The Hidden Truth",
-      "description": "The Hidden Truth — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Hidden Truth — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Music Legends/hidden-truth-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-hidden-truth-music-legend-mural.html",
@@ -522,15 +1082,35 @@
         "number": 2
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-homie-bond-music-legend-mural",
       "page": "music-homie-bond-music-legend-mural.html",
       "name": "The Eternal Bond",
-      "description": "The Eternal Bond — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Eternal Bond — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Music Legends/homie-bond-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-homie-bond-music-legend-mural.html",
@@ -540,15 +1120,35 @@
         "number": 2
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-hustler-mind-music-legend-mural",
       "page": "music-hustler-mind-music-legend-mural.html",
       "name": "The Hustler's Mindset",
-      "description": "The Hustler's Mindset — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Hustler's Mindset — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Music Legends/hustler-mind-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-hustler-mind-music-legend-mural.html",
@@ -558,15 +1158,35 @@
         "number": 2
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-inner-circle-music-legend-mural",
       "page": "music-inner-circle-music-legend-mural.html",
       "name": "Inner Circle",
-      "description": "Inner Circle — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Inner Circle — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 6/Music Legends/inner-circle-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-inner-circle-music-legend-mural.html",
@@ -576,15 +1196,35 @@
         "number": 6
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-kings-groove-music-legend-mural",
       "page": "music-kings-groove-music-legend-mural.html",
       "name": "The Royal Groove",
-      "description": "The Royal Groove — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Royal Groove — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Music Legends/kings-groove-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-kings-groove-music-legend-mural.html",
@@ -594,15 +1234,35 @@
         "number": 2
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-living-truth-music-legend-mural",
       "page": "music-living-truth-music-legend-mural.html",
       "name": "The Living Truth",
-      "description": "The Living Truth — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Living Truth — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Music Legends/living-truth-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-living-truth-music-legend-mural.html",
@@ -612,15 +1272,35 @@
         "number": 2
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-living-your-truth-music-legend-mural",
       "page": "music-living-your-truth-music-legend-mural.html",
       "name": "Living Your Truth",
-      "description": "Living Your Truth — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Living Your Truth — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 6/Music Legends/living-your-truth-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-living-your-truth-music-legend-mural.html",
@@ -630,15 +1310,35 @@
         "number": 6
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-lyric-mastery",
       "page": "music-lyric-mastery.html",
       "name": "Lyric Mastery",
-      "description": "Lyric Mastery — Expressive matte vinyl wall sticker from the Music Legends collection. 60×90 cm, removable, residue-free. Words that hit different.",
+      "description": "Lyric Mastery — Expressive matte vinyl wall sticker from the Music Legends collection. removable, residue-free. Words that hit different. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Music Legends/lyric-mastery-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-lyric-mastery.html",
@@ -648,15 +1348,35 @@
         "number": 3
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-making-dreams-real-music-legend-mural",
       "page": "music-making-dreams-real-music-legend-mural.html",
       "name": "Visionary Reality",
-      "description": "Visionary Reality — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Visionary Reality — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Music Legends/making-dreams-real-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-making-dreams-real-music-legend-mural.html",
@@ -666,15 +1386,35 @@
         "number": 5
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-mental-freedom",
       "page": "music-mental-freedom.html",
       "name": "Mental Freedom",
-      "description": "Mental Freedom — Music Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Mental Freedom — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/Music Legends/mental-freedom-reggae-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-mental-freedom.html",
@@ -684,15 +1424,35 @@
         "number": 1
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-mental-liberation-reggae-legend-mural",
       "page": "music-mental-liberation-reggae-legend-mural.html",
       "name": "Mental Liberation",
-      "description": "Mental Liberation — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Mental Liberation — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Music Legends/mental-liberation-reggae-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-mental-liberation-reggae-legend-mural.html",
@@ -702,15 +1462,35 @@
         "number": 2
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-natural-integrity-music-legend-mural",
       "page": "music-natural-integrity-music-legend-mural.html",
       "name": "Natural Integrity",
-      "description": "Natural Integrity — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Natural Integrity — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Music Legends/natural-integrity-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-natural-integrity-music-legend-mural.html",
@@ -720,15 +1500,35 @@
         "number": 5
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-noble-legacy-music-legend-mural",
       "page": "music-noble-legacy-music-legend-mural.html",
       "name": "Noble Legacy",
-      "description": "Noble Legacy — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Noble Legacy — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Music Legends/noble-legacy-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-noble-legacy-music-legend-mural.html",
@@ -738,15 +1538,35 @@
         "number": 5
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-pure-confidence",
       "page": "music-pure-confidence.html",
       "name": "Pure Confidence",
-      "description": "Pure Confidence — Bold matte vinyl wall sticker from the Music Legends collection. 60×90 cm, removable, residue-free. Walk in like you own the stage.",
+      "description": "Pure Confidence — Bold matte vinyl wall sticker from the Music Legends collection. removable, residue-free. Walk in like you own the stage. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Music Legends/pure-confidence-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-pure-confidence.html",
@@ -756,15 +1576,35 @@
         "number": 3
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-pure-soul",
       "page": "music-pure-soul.html",
       "name": "Pure Soul",
-      "description": "Pure Soul — Music Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Pure Soul — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/Music Legends/pure-soul-purple-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-pure-soul.html",
@@ -774,15 +1614,35 @@
         "number": 1
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-quiet-wisdom-music-legend-mural",
       "page": "music-quiet-wisdom-music-legend-mural.html",
       "name": "Quiet Wisdom",
-      "description": "Quiet Wisdom — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Quiet Wisdom — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Music Legends/quiet-wisdom-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-quiet-wisdom-music-legend-mural.html",
@@ -792,15 +1652,35 @@
         "number": 5
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-radiant-autonomy-music-legend-mural",
       "page": "music-radiant-autonomy-music-legend-mural.html",
       "name": "Radiant Autonomy",
-      "description": "Radiant Autonomy — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Radiant Autonomy — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Music Legends/radiant-autonomy-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-radiant-autonomy-music-legend-mural.html",
@@ -810,15 +1690,35 @@
         "number": 5
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-rebel-spirit",
       "page": "music-rebel-spirit.html",
       "name": "The Rebel Spirit",
-      "description": "The Rebel Spirit — Music Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Rebel Spirit — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/Music Legends/rebel-spirit-music-icon-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-rebel-spirit.html",
@@ -828,15 +1728,35 @@
         "number": 1
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-resilient-spirit-music-legend-mural",
       "page": "music-resilient-spirit-music-legend-mural.html",
       "name": "Resilient Spirit",
-      "description": "Resilient Spirit — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Resilient Spirit — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 6/Music Legends/resilient-spirit-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-resilient-spirit-music-legend-mural.html",
@@ -846,15 +1766,35 @@
         "number": 6
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-respect-code-green",
       "page": "music-respect-code-green.html",
       "name": "The Respect Code (Green)",
-      "description": "The Respect Code (Green) — Music Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Respect Code (Green) — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/Music Legends/respect-code-green-legend-mural.jpg.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-respect-code-green.html",
@@ -864,15 +1804,35 @@
         "number": 1
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-respect-code",
       "page": "music-respect-code.html",
       "name": "The Respect Code",
-      "description": "The Respect Code — Music Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Respect Code — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/Music Legends/respect-code-color-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-respect-code.html",
@@ -882,15 +1842,35 @@
         "number": 1
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-singular-grace-music-legend-mural",
       "page": "music-singular-grace-music-legend-mural.html",
       "name": "Singular Grace",
-      "description": "Singular Grace — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Singular Grace — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 6/Music Legends/singular-grace-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-singular-grace-music-legend-mural.html",
@@ -900,15 +1880,35 @@
         "number": 6
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-style-code",
       "page": "music-style-code.html",
       "name": "The Style Code",
-      "description": "The Style Code — Elegant matte vinyl wall sticker from the Music Legends collection. 60×90 cm, removable, residue-free. Dress like the main character.",
+      "description": "The Style Code — Elegant matte vinyl wall sticker from the Music Legends collection. removable, residue-free. Dress like the main character. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Music Legends/style-code-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-style-code.html",
@@ -918,15 +1918,35 @@
         "number": 3
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-style-prophet",
       "page": "music-style-prophet.html",
       "name": "The Style Prophet",
-      "description": "The Style Prophet — Visionary matte vinyl wall sticker from the Music Legends collection. 60×90 cm, removable, residue-free. See the future. Set the trend.",
+      "description": "The Style Prophet — Visionary matte vinyl wall sticker from the Music Legends collection. removable, residue-free. See the future. Set the trend. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Music Legends/style-prophet-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-style-prophet.html",
@@ -936,15 +1956,35 @@
         "number": 3
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-timeless-icon-music-legend-mural",
       "page": "music-timeless-icon-music-legend-mural.html",
       "name": "The Timeless Icon",
-      "description": "The Timeless Icon — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Timeless Icon — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Music Legends/timeless-icon-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-timeless-icon-music-legend-mural.html",
@@ -954,15 +1994,35 @@
         "number": 2
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-truth-runs-marathons-music-legend-mural",
       "page": "music-truth-runs-marathons-music-legend-mural.html",
       "name": "Timeless Truth",
-      "description": "Timeless Truth — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Timeless Truth — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Music Legends/truth-runs-marathons-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-truth-runs-marathons-music-legend-mural.html",
@@ -972,15 +2032,35 @@
         "number": 5
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-truth-seeker",
       "page": "music-truth-seeker.html",
       "name": "The Truth Seeker",
-      "description": "The Truth Seeker — Raw matte vinyl wall sticker from the Music Legends collection. 60×90 cm, removable, residue-free. Real talk. No filter.",
+      "description": "The Truth Seeker — Raw matte vinyl wall sticker from the Music Legends collection. removable, residue-free. Real talk. No filter. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Music Legends/truth-seeker-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-truth-seeker.html",
@@ -990,15 +2070,35 @@
         "number": 3
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-unapologetic-self-music-legend-mural-bleu",
       "page": "music-unapologetic-self-music-legend-mural-bleu.html",
       "name": "Unapologetic Self",
-      "description": "Unapologetic Self — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Unapologetic Self — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 6/Music Legends/unapologetic-self-music-legend-mural-bleu.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-unapologetic-self-music-legend-mural-bleu.html",
@@ -1008,15 +2108,35 @@
         "number": 6
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-unapologetic-self-music-legend-mural",
       "page": "music-unapologetic-self-music-legend-mural.html",
       "name": "Unapologetic Self",
-      "description": "Unapologetic Self — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Unapologetic Self — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 6/Music Legends/unapologetic-self-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-unapologetic-self-music-legend-mural.html",
@@ -1026,15 +2146,35 @@
         "number": 6
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-unbothered-mind-music-legend-mural",
       "page": "music-unbothered-mind-music-legend-mural.html",
       "name": "The Unbothered Mind",
-      "description": "The Unbothered Mind — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Unbothered Mind — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Music Legends/unbothered-mind-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-unbothered-mind-music-legend-mural.html",
@@ -1044,15 +2184,35 @@
         "number": 2
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-unwavering-spirit-music-legend-mural",
       "page": "music-unwavering-spirit-music-legend-mural.html",
       "name": "Unwavering Spirit",
-      "description": "Unwavering Spirit — Music Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Unwavering Spirit — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Music Legends/unwavering-spirit-music-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-unwavering-spirit-music-legend-mural.html",
@@ -1062,15 +2222,35 @@
         "number": 5
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-west-coast-loyalty-grey",
       "page": "music-west-coast-loyalty-grey.html",
       "name": "West Coast Loyalty (Grey)",
-      "description": "West Coast Loyalty (Grey) — Music Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "West Coast Loyalty (Grey) — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/Music Legends/west-coast-loyalty-grey-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-west-coast-loyalty-grey.html",
@@ -1080,15 +2260,35 @@
         "number": 1
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "music-west-coast-loyalty",
       "page": "music-west-coast-loyalty.html",
       "name": "West Coast Loyalty",
-      "description": "West Coast Loyalty — Music Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "West Coast Loyalty — Music Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/Music Legends/west-coast-loyalty-color-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/music-west-coast-loyalty.html",
@@ -1098,15 +2298,35 @@
         "number": 1
       },
       "collection": "Music Legends",
-      "category": "music"
+      "category": "music",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-beyond-possible-sport-legend-mural",
       "page": "sport-beyond-possible-sport-legend-mural.html",
       "name": "Beyond Possible",
-      "description": "Beyond Possible — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Beyond Possible — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Sport Legends/beyond-possible-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-beyond-possible-sport-legend-mural.html",
@@ -1116,15 +2336,35 @@
         "number": 2
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-clutch-player",
       "page": "sport-clutch-player.html",
       "name": "The Clutch Player",
-      "description": "The Clutch Player — Sport Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Clutch Player — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/Sport Legends/clutch-player-basketball-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-clutch-player.html",
@@ -1134,15 +2374,35 @@
         "number": 1
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-court-dominance-sport-legend-mural",
       "page": "sport-court-dominance-sport-legend-mural.html",
       "name": "Court Dominance",
-      "description": "Court Dominance — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Court Dominance — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Sport Legends/court-dominance-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-court-dominance-sport-legend-mural.html",
@@ -1152,15 +2412,35 @@
         "number": 2
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-dedicated-vision-sport-legend-mural",
       "page": "sport-dedicated-vision-sport-legend-mural.html",
       "name": "Dedicated Vision",
-      "description": "Dedicated Vision — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Dedicated Vision — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/Sport Legends/dedicated-vision-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-dedicated-vision-sport-legend-mural.html",
@@ -1170,15 +2450,35 @@
         "number": 4
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-divine-touch-sport-legend-mural",
       "page": "sport-divine-touch-sport-legend-mural.html",
       "name": "The Divine Touch",
-      "description": "The Divine Touch — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Divine Touch — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Sport Legends/divine-touch-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-divine-touch-sport-legend-mural.html",
@@ -1188,15 +2488,35 @@
         "number": 2
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-failure-into-triumph-sport-legend-mural",
       "page": "sport-failure-into-triumph-sport-legend-mural.html",
       "name": "Rising from Failure",
-      "description": "Rising from Failure — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Rising from Failure — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/Sport Legends/failure-into-triumph-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-failure-into-triumph-sport-legend-mural.html",
@@ -1206,15 +2526,35 @@
         "number": 4
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-fearless-respect-sport-legend-mural",
       "page": "sport-fearless-respect-sport-legend-mural.html",
       "name": "Fearless Respect",
-      "description": "Fearless Respect — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Fearless Respect — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/Sport Legends/fearless-respect-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-fearless-respect-sport-legend-mural.html",
@@ -1224,15 +2564,35 @@
         "number": 4
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-game-changer",
       "page": "sport-game-changer.html",
       "name": "The Game Changer",
-      "description": "The Game Changer — Sport Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Game Changer — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/Sport Legends/game-changer-art-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-game-changer.html",
@@ -1242,15 +2602,35 @@
         "number": 1
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-hand-of-destiny-sport-legend-mural",
       "page": "sport-hand-of-destiny-sport-legend-mural.html",
       "name": "Hand of Destiny",
-      "description": "Hand of Destiny — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Hand of Destiny — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Sport Legends/hand-of-destiny-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-hand-of-destiny-sport-legend-mural.html",
@@ -1260,15 +2640,35 @@
         "number": 2
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-hard-work-reward-sport-legend-mural",
       "page": "sport-hard-work-reward-sport-legend-mural.html",
       "name": "The Reward of Effort",
-      "description": "The Reward of Effort — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Reward of Effort — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/Sport Legends/hard-work-reward-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-hard-work-reward-sport-legend-mural.html",
@@ -1278,15 +2678,35 @@
         "number": 4
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-height-of-success-sport-legend-mural",
       "page": "sport-height-of-success-sport-legend-mural.html",
       "name": "The Height of Success",
-      "description": "The Height of Success — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Height of Success — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/Sport Legends/height-of-success-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-height-of-success-sport-legend-mural.html",
@@ -1296,15 +2716,35 @@
         "number": 4
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-intuitive-wisdom-sport-legend-mural",
       "page": "sport-intuitive-wisdom-sport-legend-mural.html",
       "name": "Pure Instinct",
-      "description": "Pure Instinct — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Pure Instinct — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/Sport Legends/intuitive-wisdom-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-intuitive-wisdom-sport-legend-mural.html",
@@ -1314,15 +2754,35 @@
         "number": 4
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-king-of-pitch",
       "page": "sport-king-of-pitch.html",
       "name": "The King of Pitch",
-      "description": "The King of Pitch — Sport Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The King of Pitch — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/Sport Legends/king-of-pitch-football-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-king-of-pitch.html",
@@ -1332,15 +2792,35 @@
         "number": 1
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-lions-pride",
       "page": "sport-lions-pride.html",
       "name": "The Lion's Pride",
-      "description": "The Lion's Pride — Bold matte vinyl wall sticker from the Sport Legends collection. 60×90 cm, removable, residue-free. Lead the pack.",
+      "description": "The Lion's Pride — Bold matte vinyl wall sticker from the Sport Legends collection. removable, residue-free. Lead the pack. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Sport Legends/lions-pride-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-lions-pride.html",
@@ -1350,15 +2830,35 @@
         "number": 3
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-luxury-standard",
       "page": "sport-luxury-standard.html",
       "name": "The Luxury Standard",
-      "description": "The Luxury Standard — Premium matte vinyl wall sticker from the Sport Legends collection. 60×90 cm, removable, residue-free. Elite performance.",
+      "description": "The Luxury Standard — Premium matte vinyl wall sticker from the Sport Legends collection. removable, residue-free. Elite performance. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Sport Legends/football-luxury-performance-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-luxury-standard.html",
@@ -1368,15 +2868,35 @@
         "number": 3
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-mamba-mindset",
       "page": "sport-mamba-mindset.html",
       "name": "Mamba Mindset",
-      "description": "Mamba Mindset — Intense matte vinyl wall sticker from the Sport Legends collection. 60×90 cm, removable, residue-free. Relentless focus.",
+      "description": "Mamba Mindset — Intense matte vinyl wall sticker from the Sport Legends collection. removable, residue-free. Relentless focus. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Sport Legends/mamba-mindset-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-mamba-mindset.html",
@@ -1386,15 +2906,35 @@
         "number": 3
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-overcoming-fear-sport-legend-mural",
       "page": "sport-overcoming-fear-sport-legend-mural.html",
       "name": "Beyond Fear",
-      "description": "Beyond Fear — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Beyond Fear — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/Sport Legends/overcoming-fear-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-overcoming-fear-sport-legend-mural.html",
@@ -1404,15 +2944,35 @@
         "number": 4
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-peak-performer",
       "page": "sport-peak-performer.html",
       "name": "The Peak Performer",
-      "description": "The Peak Performer — Focused matte vinyl wall sticker from the Sport Legends collection. 60×90 cm, removable, residue-free. Maximum output.",
+      "description": "The Peak Performer — Focused matte vinyl wall sticker from the Sport Legends collection. removable, residue-free. Maximum output. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Sport Legends/peak-performer-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-peak-performer.html",
@@ -1422,15 +2982,35 @@
         "number": 3
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-pressure-into-power-sport-legend-mural",
       "page": "sport-pressure-into-power-sport-legend-mural.html",
       "name": "Pressure into Power",
-      "description": "Pressure into Power — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Pressure into Power — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/Sport Legends/pressure-into-power-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-pressure-into-power-sport-legend-mural.html",
@@ -1440,15 +3020,35 @@
         "number": 4
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-pure-ambition-sport-legend-mural",
       "page": "sport-pure-ambition-sport-legend-mural.html",
       "name": "Pure Ambition",
-      "description": "Pure Ambition — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Pure Ambition — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Sport Legends/pure-ambition-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-pure-ambition-sport-legend-mural.html",
@@ -1458,15 +3058,35 @@
         "number": 5
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-pursuit-greatness",
       "page": "sport-pursuit-greatness.html",
       "name": "Pursuit of Greatness",
-      "description": "Pursuit of Greatness — Determined matte vinyl wall sticker from the Sport Legends collection. 60×90 cm, removable, residue-free. The grind never stops.",
+      "description": "Pursuit of Greatness — Determined matte vinyl wall sticker from the Sport Legends collection. removable, residue-free. The grind never stops. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Sport Legends/pursuit-greatness-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-pursuit-greatness.html",
@@ -1476,15 +3096,35 @@
         "number": 3
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-relentless-spirit-sport-legend-mural",
       "page": "sport-relentless-spirit-sport-legend-mural.html",
       "name": "Relentless Spirit",
-      "description": "Relentless Spirit — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Relentless Spirit — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Sport Legends/relentless-spirit-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-relentless-spirit-sport-legend-mural.html",
@@ -1494,15 +3134,35 @@
         "number": 2
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-respect-and-dignity-sport-legend-mural",
       "page": "sport-respect-and-dignity-sport-legend-mural.html",
       "name": "Eternal Respect",
-      "description": "Eternal Respect — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Eternal Respect — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/Sport Legends/respect-and-dignity-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-respect-and-dignity-sport-legend-mural.html",
@@ -1512,15 +3172,35 @@
         "number": 4
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-sacrifice-for-dreams-sport-legend-mural",
       "page": "sport-sacrifice-for-dreams-sport-legend-mural.html",
       "name": "The Dreamer's Sacrifice",
-      "description": "The Dreamer's Sacrifice — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Dreamer's Sacrifice — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/Sport Legends/sacrifice-for-dreams-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-sacrifice-for-dreams-sport-legend-mural.html",
@@ -1530,15 +3210,35 @@
         "number": 4
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-silent-answer-sport-legend-mural",
       "page": "sport-silent-answer-sport-legend-mural.html",
       "name": "The Silent Answer",
-      "description": "The Silent Answer — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Silent Answer — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Sport Legends/silent-answer-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-silent-answer-sport-legend-mural.html",
@@ -1548,15 +3248,35 @@
         "number": 2
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-simple-belief-sport-legend-mural",
       "page": "sport-simple-belief-sport-legend-mural.html",
       "name": "Simple Belief",
-      "description": "Simple Belief — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Simple Belief — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 6/Sport Legends/simple-belief-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-simple-belief-sport-legend-mural.html",
@@ -1566,15 +3286,35 @@
         "number": 6
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-simple-wisdom-sport-legend-mural",
       "page": "sport-simple-wisdom-sport-legend-mural.html",
       "name": "Simple Wisdom",
-      "description": "Simple Wisdom — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Simple Wisdom — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Sport Legends/simple-wisdom-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-simple-wisdom-sport-legend-mural.html",
@@ -1584,15 +3324,35 @@
         "number": 5
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-supreme-confidence-sport-legend-mural",
       "page": "sport-supreme-confidence-sport-legend-mural.html",
       "name": "Silent Confidence",
-      "description": "Silent Confidence — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Silent Confidence — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/Sport Legends/supreme-confidence-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-supreme-confidence-sport-legend-mural.html",
@@ -1602,15 +3362,35 @@
         "number": 4
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-unforgettable-roots",
       "page": "sport-unforgettable-roots.html",
       "name": "Unforgettable Roots",
-      "description": "Unforgettable Roots — Grounded matte vinyl wall sticker from the Sport Legends collection. 60×90 cm, removable, residue-free. Where you come from.",
+      "description": "Unforgettable Roots — Grounded matte vinyl wall sticker from the Sport Legends collection. removable, residue-free. Where you come from. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Sport Legends/unforgettable-roots-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-unforgettable-roots.html",
@@ -1620,15 +3400,35 @@
         "number": 3
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-unstoppable-resilience-sport-legend-mural",
       "page": "sport-unstoppable-resilience-sport-legend-mural.html",
       "name": "Unstoppable Resilience",
-      "description": "Unstoppable Resilience — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Unstoppable Resilience — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Sport Legends/unstoppable-resilience-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-unstoppable-resilience-sport-legend-mural.html",
@@ -1638,15 +3438,35 @@
         "number": 5
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-unstoppable-will-sport-legend-mural",
       "page": "sport-unstoppable-will-sport-legend-mural.html",
       "name": "Unstoppable Will",
-      "description": "Unstoppable Will — Sport Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Unstoppable Will — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 4/Sport Legends/unstoppable-will-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-unstoppable-will-sport-legend-mural.html",
@@ -1656,15 +3476,35 @@
         "number": 4
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-unstoppable-will",
       "page": "sport-unstoppable-will.html",
       "name": "Unstoppable Will",
-      "description": "Unstoppable Will — Driven matte vinyl wall sticker from the Sport Legends collection. 60×90 cm, removable, residue-free. Champions are made when nobody watches.",
+      "description": "Unstoppable Will — Driven matte vinyl wall sticker from the Sport Legends collection. removable, residue-free. Champions are made when nobody watches. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch 3/Sport Legends/unstoppable-will-sport-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-unstoppable-will.html",
@@ -1674,15 +3514,35 @@
         "number": 3
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "sport-winners-mindset",
       "page": "sport-winners-mindset.html",
       "name": "The Winner's Mindset",
-      "description": "The Winner's Mindset — Sport Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "The Winner's Mindset — Sport Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/Sport Legends/winners-mindset-basketball-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/sport-winners-mindset.html",
@@ -1692,15 +3552,35 @@
         "number": 1
       },
       "collection": "Sport Legends",
-      "category": "sport"
+      "category": "sport",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "wisdom-absolute-freedom-wisdom-legend-mural",
       "page": "wisdom-absolute-freedom-wisdom-legend-mural.html",
       "name": "Absolute Freedom",
-      "description": "Absolute Freedom — Wisdom Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Absolute Freedom — Wisdom Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Wisdom Legends/absolute-freedom-wisdom-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/wisdom-absolute-freedom-wisdom-legend-mural.html",
@@ -1710,15 +3590,35 @@
         "number": 2
       },
       "collection": "Wisdom Legends",
-      "category": "wisdom"
+      "category": "wisdom",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "wisdom-boundless-ambition-wisdom-legend-mural",
       "page": "wisdom-boundless-ambition-wisdom-legend-mural.html",
       "name": "Boundless Ambition",
-      "description": "Boundless Ambition — Wisdom Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Boundless Ambition — Wisdom Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Wisdom Legends/boundless-ambition-wisdom-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/wisdom-boundless-ambition-wisdom-legend-mural.html",
@@ -1728,15 +3628,35 @@
         "number": 5
       },
       "collection": "Wisdom Legends",
-      "category": "wisdom"
+      "category": "wisdom",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "wisdom-chaos-theory-wisdom-legend-mural",
       "page": "wisdom-chaos-theory-wisdom-legend-mural.html",
       "name": "Chaos Theory",
-      "description": "Chaos Theory — Wisdom Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Chaos Theory — Wisdom Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Wisdom Legends/chaos-theory-wisdom-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/wisdom-chaos-theory-wisdom-legend-mural.html",
@@ -1746,15 +3666,35 @@
         "number": 2
       },
       "collection": "Wisdom Legends",
-      "category": "wisdom"
+      "category": "wisdom",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "wisdom-consistent-excellence-combat-legend-mural",
       "page": "wisdom-consistent-excellence-combat-legend-mural.html",
       "name": "Consistent Excellence",
-      "description": "Consistent Excellence — Wisdom Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Consistent Excellence — Wisdom Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Wisdom Legends/consistent-excellence-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/wisdom-consistent-excellence-combat-legend-mural.html",
@@ -1764,15 +3704,35 @@
         "number": 5
       },
       "collection": "Wisdom Legends",
-      "category": "wisdom"
+      "category": "wisdom",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "wisdom-contender-spirit-combat-legend-mural",
       "page": "wisdom-contender-spirit-combat-legend-mural.html",
       "name": "The Undying Contender",
-      "description": "The Undying Contender — Wisdom Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "The Undying Contender — Wisdom Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 6/Wisdom Legends/contender-spirit-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/wisdom-contender-spirit-combat-legend-mural.html",
@@ -1782,15 +3742,35 @@
         "number": 6
       },
       "collection": "Wisdom Legends",
-      "category": "wisdom"
+      "category": "wisdom",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "wisdom-creative-integrity-wisdom-legend-mural",
       "page": "wisdom-creative-integrity-wisdom-legend-mural.html",
       "name": "Creative Integrity",
-      "description": "Creative Integrity — Wisdom Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Creative Integrity — Wisdom Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Wisdom Legends/creative-integrity-wisdom-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/wisdom-creative-integrity-wisdom-legend-mural.html",
@@ -1800,15 +3780,35 @@
         "number": 5
       },
       "collection": "Wisdom Legends",
-      "category": "wisdom"
+      "category": "wisdom",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "wisdom-evolving-warrior-combat-legend-mural",
       "page": "wisdom-evolving-warrior-combat-legend-mural.html",
       "name": "Evolving Warrior",
-      "description": "Evolving Warrior — Wisdom Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Evolving Warrior — Wisdom Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 6/Wisdom Legends/evolving-warrior-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/wisdom-evolving-warrior-combat-legend-mural.html",
@@ -1818,15 +3818,35 @@
         "number": 6
       },
       "collection": "Wisdom Legends",
-      "category": "wisdom"
+      "category": "wisdom",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "wisdom-independent-spirit-wisdom-legend-mural",
       "page": "wisdom-independent-spirit-wisdom-legend-mural.html",
       "name": "Independent Spirit",
-      "description": "Independent Spirit — Wisdom Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Independent Spirit — Wisdom Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Wisdom Legends/independent-spirit-wisdom-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/wisdom-independent-spirit-wisdom-legend-mural.html",
@@ -1836,15 +3856,35 @@
         "number": 5
       },
       "collection": "Wisdom Legends",
-      "category": "wisdom"
+      "category": "wisdom",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "wisdom-material-illusion",
       "page": "wisdom-material-illusion.html",
       "name": "Material Illusion",
-      "description": "Material Illusion — Wisdom Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Material Illusion — Wisdom Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/Wisdom Legends/material-illusion-mindset-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/wisdom-material-illusion.html",
@@ -1854,15 +3894,35 @@
         "number": 1
       },
       "collection": "Wisdom Legends",
-      "category": "wisdom"
+      "category": "wisdom",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "wisdom-original-vision-wisdom-legend-mural",
       "page": "wisdom-original-vision-wisdom-legend-mural.html",
       "name": "Original Vision",
-      "description": "Original Vision — Wisdom Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Original Vision — Wisdom Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Wisdom Legends/original-vision-wisdom-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/wisdom-original-vision-wisdom-legend-mural.html",
@@ -1872,15 +3932,35 @@
         "number": 5
       },
       "collection": "Wisdom Legends",
-      "category": "wisdom"
+      "category": "wisdom",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "wisdom-relentless-power-combat-legend-mural",
       "page": "wisdom-relentless-power-combat-legend-mural.html",
       "name": "Relentless Power",
-      "description": "Relentless Power — Wisdom Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Relentless Power — Wisdom Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Wisdom Legends/relentless-power-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/wisdom-relentless-power-combat-legend-mural.html",
@@ -1890,15 +3970,35 @@
         "number": 5
       },
       "collection": "Wisdom Legends",
-      "category": "wisdom"
+      "category": "wisdom",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "wisdom-relentless-will-combat-legend-mural",
       "page": "wisdom-relentless-will-combat-legend-mural.html",
       "name": "Relentless Will",
-      "description": "Relentless Will — Wisdom Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Relentless Will — Wisdom Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 6/Wisdom Legends/relentless-will-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/wisdom-relentless-will-combat-legend-mural.html",
@@ -1908,15 +4008,35 @@
         "number": 6
       },
       "collection": "Wisdom Legends",
-      "category": "wisdom"
+      "category": "wisdom",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "wisdom-rule-breaker",
       "page": "wisdom-rule-breaker.html",
       "name": "Rule Breaker",
-      "description": "Rule Breaker — Wisdom Legends Wall Sticker. Matte vinyl mural, 60×90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Rule Breaker — Wisdom Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/batch1/Wisdom Legends/rule-breaker-mindset-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/wisdom-rule-breaker.html",
@@ -1926,15 +4046,35 @@
         "number": 1
       },
       "collection": "Wisdom Legends",
-      "category": "wisdom"
+      "category": "wisdom",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "wisdom-total-liberation-mindset-legend-mural",
       "page": "wisdom-total-liberation-mindset-legend-mural.html",
       "name": "Total Liberation",
-      "description": "Total Liberation — Wisdom Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "Total Liberation — Wisdom Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Wisdom Legends/total-liberation-mindset-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/wisdom-total-liberation-mindset-legend-mural.html",
@@ -1944,15 +4084,35 @@
         "number": 2
       },
       "collection": "Wisdom Legends",
-      "category": "wisdom"
+      "category": "wisdom",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "wisdom-true-freedom-mindset-legend-mural",
       "page": "wisdom-true-freedom-mindset-legend-mural.html",
       "name": "True Freedom",
-      "description": "True Freedom — Wisdom Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality from Legend Stories.",
+      "description": "True Freedom — Wisdom Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality from Legend Stories. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch2/Wisdom Legends/true-freedom-mindset-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/wisdom-true-freedom-mindset-legend-mural.html",
@@ -1962,15 +4122,35 @@
         "number": 2
       },
       "collection": "Wisdom Legends",
-      "category": "wisdom"
+      "category": "wisdom",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "wisdom-unstoppable-drive-combat-legend-mural",
       "page": "wisdom-unstoppable-drive-combat-legend-mural.html",
       "name": "Unstoppable Drive",
-      "description": "Unstoppable Drive — Wisdom Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Unstoppable Drive — Wisdom Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 6/Wisdom Legends/unstoppable-drive-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/wisdom-unstoppable-drive-combat-legend-mural.html",
@@ -1980,15 +4160,35 @@
         "number": 6
       },
       "collection": "Wisdom Legends",
-      "category": "wisdom"
+      "category": "wisdom",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     },
     {
       "slug": "wisdom-unyielding-drive-combat-legend-mural",
       "page": "wisdom-unyielding-drive-combat-legend-mural.html",
       "name": "Unyielding Drive",
-      "description": "Unyielding Drive — Wisdom Legends Wall Sticker. Matte vinyl mural, 60x90 cm, removable, residue-free. Premium quality.",
+      "description": "Unyielding Drive — Wisdom Legends Wall Sticker. Matte vinyl mural, removable, residue-free. Premium quality. Available in 30 cm and 45 cm, measured along the longest side.",
       "image": "media/stikkers/2026/Batch 5/Wisdom Legends/unyielding-drive-combat-legend-mural.png",
-      "price": 49.95,
+      "price": 45,
       "currency": "EUR",
       "availability": "https://schema.org/InStock",
       "canonical": "https://alkavisuals.github.io/legend-stories-website/wisdom-unyielding-drive-combat-legend-mural.html",
@@ -1998,7 +4198,49 @@
         "number": 5
       },
       "collection": "Wisdom Legends",
-      "category": "wisdom"
+      "category": "wisdom",
+      "fromPrice": 35,
+      "defaultVariantId": "statement-45",
+      "variants": [
+        {
+          "id": "statement-45",
+          "label": "Statement",
+          "sizeCm": 45,
+          "price": 45,
+          "skuSuffix": "45",
+          "isDefault": true
+        },
+        {
+          "id": "compact-30",
+          "label": "Compact",
+          "sizeCm": 30,
+          "price": 35,
+          "skuSuffix": "30",
+          "isDefault": false
+        }
+      ]
     }
-  ]
+  ],
+  "variantPolicy": {
+    "defaultVariantId": "statement-45",
+    "sizeMeasurement": "longest_side",
+    "variants": [
+      {
+        "id": "statement-45",
+        "label": "Statement",
+        "sizeCm": 45,
+        "price": 45,
+        "skuSuffix": "45",
+        "isDefault": true
+      },
+      {
+        "id": "compact-30",
+        "label": "Compact",
+        "sizeCm": 30,
+        "price": 35,
+        "skuSuffix": "30",
+        "isDefault": false
+      }
+    ]
+  }
 }

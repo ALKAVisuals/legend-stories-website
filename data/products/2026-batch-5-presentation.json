@@ -4,167 +4,127 @@
   "template": {
     "path": "templates/product-page.html",
     "referencePage": "music-dreaming-in-motion-music-legend-mural.html",
-    "sha256": "e855f6e510f8998c79c681caa215d89dca3f09c49413a63b5e9ab5975aefd24d"
+    "sha256": "a0934823de1210354903c6d66d532360c93edabe5519df13055a4c704a01b7b2"
   },
   "products": [
     {
       "page": "music-dreaming-in-motion-music-legend-mural.html",
       "story": "A vibrant spirit showing that the path to reality is paved with the passion of our dreams.",
       "imageAlt": "Dreaming in Motion — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-eternal-blessing-music-legend-mural.html",
       "story": "A classic soul whose presence continues to bless and inspire generations.",
       "imageAlt": "Eternal Blessing — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-heart-of-gold-music-legend-mural.html",
       "story": "An icon who shows that the true measure of a person is the positive impact they leave.",
       "imageAlt": "Heart of Gold — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-making-dreams-real-music-legend-mural.html",
       "story": "An artist who reminds us that dreams only gain life when we find the courage to act on them.",
       "imageAlt": "Visionary Reality — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-natural-integrity-music-legend-mural.html",
       "story": "A soul who teaches that true power comes from living in alignment with one's spirit.",
       "imageAlt": "Natural Integrity — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-noble-legacy-music-legend-mural.html",
       "story": "A guiding light who proves that true greatness is found in integrity.",
       "imageAlt": "Noble Legacy — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-quiet-wisdom-music-legend-mural.html",
       "story": "A powerhouse who reminds us to judge only what we truly understand.",
       "imageAlt": "Quiet Wisdom — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-radiant-autonomy-music-legend-mural.html",
       "story": "A luminous icon who defined success on her own terms.",
       "imageAlt": "Radiant Autonomy — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-truth-runs-marathons-music-legend-mural.html",
       "story": "A legend who proved that while falsehoods may move quickly, the power of truth endures forever.",
       "imageAlt": "Timeless Truth — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-unwavering-spirit-music-legend-mural.html",
       "story": "A voice of courage that inspires us to stand firm in our truths.",
       "imageAlt": "Unwavering Spirit — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "sport-pure-ambition-sport-legend-mural.html",
       "story": "A leader who demonstrates that true excellence comes from being unapologetically driven.",
       "imageAlt": "Pure Ambition — Sport Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "sport-simple-wisdom-sport-legend-mural.html",
       "story": "A joyful spirit who proves that greatness is found by embracing the simple truths of life.",
       "imageAlt": "Simple Wisdom — Sport Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "sport-unstoppable-resilience-sport-legend-mural.html",
       "story": "A powerhouse who transforms both support and opposition into fuel for legendary success.",
       "imageAlt": "Unstoppable Resilience — Sport Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "wisdom-boundless-ambition-wisdom-legend-mural.html",
       "story": "A bold reminder that the world belongs to those with the courage to claim it.",
       "imageAlt": "Boundless Ambition — Wisdom Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "wisdom-consistent-excellence-combat-legend-mural.html",
       "story": "A champion who teaches that mastery is found in the discipline of daily effort.",
       "imageAlt": "Consistent Excellence — Wisdom Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "wisdom-creative-integrity-wisdom-legend-mural.html",
       "story": "A visionary mind who understands that true genius lies in the ability to create.",
       "imageAlt": "Creative Integrity — Wisdom Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "wisdom-independent-spirit-wisdom-legend-mural.html",
       "story": "A luminous icon who defines true strength through self-reliance.",
       "imageAlt": "Independent Spirit — Wisdom Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "wisdom-original-vision-wisdom-legend-mural.html",
       "story": "An intellect that proves the power of original thought is an inexhaustible resource.",
       "imageAlt": "Original Vision — Wisdom Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "wisdom-relentless-power-combat-legend-mural.html",
       "story": "An embodiment of pure determination, proving that true strength is found in the refusal to quit.",
       "imageAlt": "Relentless Power — Wisdom Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "wisdom-unyielding-drive-combat-legend-mural.html",
       "story": "A force of nature who views setbacks not as endings, but as essential steps toward greatness.",
       "imageAlt": "Unyielding Drive — Wisdom Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 5 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     }
   ]

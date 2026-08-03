@@ -30,7 +30,7 @@
     discountPercent: 0,
   };
 
-  const CART_SCHEMA_VERSION = '2';
+  const CART_SCHEMA_VERSION = '3';
 
   // ==========================================
   // LOCAL STORAGE - Cart Persistence
@@ -51,7 +51,7 @@
       try {
         const parsedCart = JSON.parse(savedCart);
         state.cart = Array.isArray(parsedCart)
-          ? parsedCart.filter((item) => item && item.page && Number(item.quantity) > 0)
+          ? parsedCart.filter((item) => item && item.page && item.variantId && Number(item.quantity) > 0)
           : [];
       } catch (e) {
         state.cart = [];
@@ -86,12 +86,14 @@
         import('./commerce/discounts.mjs'),
         import('./commerce/order-request.mjs'),
         import('./commerce/checkout-client.mjs'),
-      ]).then(([totals, discounts, orderRequest, checkoutClient]) => {
+        import('./commerce/product-variants.mjs'),
+      ]).then(([totals, discounts, orderRequest, checkoutClient, productVariants]) => {
         commerceModule = Object.freeze({
           ...totals,
           ...discounts,
           ...orderRequest,
           ...checkoutClient,
+          ...productVariants,
         });
         return commerceModule;
       });
@@ -344,15 +346,18 @@ function loadDialogAccessibilityModule() {
     return '€' + price.toFixed(2).replace('.', ',');
   }
 
-  function addToCart(page, name, price, image) {
+  function addToCart(page, name, image, variant) {
     if (!page) {
       throw new Error('A stable product page is required before adding an item to the cart.');
     }
     const product = {
-      id: page,
-      page: page,
-      name: name,
-      price: parseFloat(price),
+      id: commerceModule.createCartLineId(page, variant.id),
+      page,
+      name,
+      price: variant.price,
+      variantId: variant.id,
+      variantLabel: variant.label,
+      sizeCm: variant.sizeCm,
       quantity: 1,
       image: image || '🎨',
     };
@@ -544,6 +549,30 @@ function loadDialogAccessibilityModule() {
     }
   }
 
+  const EU_COUNTRY_CODES = new Set([
+    'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR',
+    'GR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PL', 'PT', 'RO',
+    'SE', 'SI', 'SK',
+  ]);
+
+  function updateInternationalShippingNotice(countryCode = state.shippingCountry) {
+    const notice = document.getElementById('checkout-import-note');
+    if (!notice) return;
+    const code = String(countryCode || '').toUpperCase();
+    notice.classList.toggle('hidden', !code || EU_COUNTRY_CODES.has(code));
+  }
+
+  function initInternationalShippingNotice() {
+    const country = document.getElementById('checkout-country');
+    if (!country || document.getElementById('checkout-import-note')) return;
+    const notice = document.createElement('p');
+    notice.id = 'checkout-import-note';
+    notice.className = 'hidden text-[11px] leading-relaxed text-text-muted mt-2';
+    notice.textContent = 'Local import duties and taxes may apply outside the EU and are paid by the recipient.';
+    country.insertAdjacentElement('afterend', notice);
+    updateInternationalShippingNotice(country.value || state.shippingCountry);
+  }
+
   function updateCheckoutTotals() {
     const totals = getCommerceTotals();
     const subtotalEl = document.getElementById('checkout-subtotal');
@@ -566,6 +595,7 @@ function loadDialogAccessibilityModule() {
         noteEl.textContent = 'Add ' + formatPrice(totals.freeShippingRemaining) + ' more for free shipping to ' + totals.zone.name;
       }
     }
+    updateInternationalShippingNotice(totals.countryCode);
   }
 
   let validatedAddress = null;
@@ -830,6 +860,9 @@ function loadDialogAccessibilityModule() {
         price: item.price,
         quantity: item.quantity,
         image: item.image,
+        variantId: item.variantId,
+        variantLabel: item.variantLabel,
+        sizeCm: item.sizeCm,
       })),
       customer: displayCustomer,
       shipping: { zone: totals.zone.name, cost: totals.shipping },
@@ -1029,12 +1062,49 @@ function loadDialogAccessibilityModule() {
     });
   }
 
+  function formatVariantPrice(price) {
+    return '€' + Number(price).toFixed(0);
+  }
+
+  function initProductVariantSelectors() {
+    document.querySelectorAll('[data-product-variant-selector]').forEach((selector) => {
+      const container = selector.closest('.flex.flex-col') || selector.parentElement;
+      const addButton = container?.querySelector('.add-to-cart-btn');
+      const priceOutput = container?.querySelector('[data-selected-price]');
+      const sizeOutput = container?.querySelector('[data-selected-size]');
+      const cards = selector.querySelectorAll('[data-variant-card]');
+      if (!addButton) return;
+
+      function applySelection(input) {
+        const variant = commerceModule.resolveProductVariant(input?.value);
+        addButton.dataset.price = String(variant.price);
+        addButton.dataset.variantId = variant.id;
+        addButton.dataset.sizeCm = String(variant.sizeCm);
+        addButton.dataset.variantLabel = variant.label;
+        addButton.textContent = 'Add to cart — ' + formatVariantPrice(variant.price);
+        if (priceOutput) priceOutput.textContent = formatVariantPrice(variant.price);
+        if (sizeOutput) sizeOutput.textContent = variant.label + ' · ' + variant.sizeCm + ' cm';
+        cards.forEach((card) => {
+          const selected = card.contains(input);
+          card.classList.toggle('border-mint/60', selected);
+          card.classList.toggle('bg-mint/10', selected);
+          card.classList.toggle('border-surface-border/40', !selected);
+          card.classList.toggle('bg-surface-light/20', !selected);
+        });
+      }
+
+      selector.addEventListener('change', (event) => {
+        if (event.target?.matches?.('input[type="radio"]')) applySelection(event.target);
+      });
+      applySelection(selector.querySelector('input[type="radio"]:checked'));
+    });
+  }
+
   function initAddToCart() {
     const btns = document.querySelectorAll('.add-to-cart-btn');
     btns.forEach((btn) => {
       btn.addEventListener('click', () => {
         const name = btn.dataset.name;
-        const price = btn.dataset.price;
         const image = btn.dataset.emoji || btn.dataset.img;
         const page = resolveCartProductPage(btn, name);
         if (!page) {
@@ -1042,7 +1112,17 @@ function loadDialogAccessibilityModule() {
           announcePurchaseFeedback('This product could not be added safely. Please open its product page and try again.', { assertive: true });
           return;
         }
-        addToCart(page, name, price, image);
+
+        let variant;
+        try {
+          variant = commerceModule.resolveProductVariant(btn.dataset.variantId);
+        } catch (error) {
+          console.error('Cannot add product with an invalid size:', error);
+          announcePurchaseFeedback('Please choose a valid size before adding this product.', { assertive: true });
+          return;
+        }
+
+        addToCart(page, name, image, variant);
         const originalText = btn.innerHTML;
         btn.innerHTML = '✅ Added!';
         btn.style.background = '#16a34a';
@@ -1717,9 +1797,11 @@ function initStickerModalClose() {
       initScrollAnimations,
       initTestimonials,
       initFilters,
+      initProductVariantSelectors,
       initAddToCart,
       initProductCards,
       initThemeToggle,
+      initInternationalShippingNotice,
       initParticleCanvas,
       initScrollReveal,
       initRelatedProducts,
