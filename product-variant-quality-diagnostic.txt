@@ -1,0 +1,320 @@
+ok 178 - authoritative order quote resolves server-side variant prices
+  ---
+  duration_ms: 0.190877
+  type: 'test'
+  ...
+# Subtest: product variant policy exposes the approved sizes and prices
+ok 179 - product variant policy exposes the approved sizes and prices
+  ---
+  duration_ms: 1.4061
+  type: 'test'
+  ...
+# Subtest: variant resolution rejects unknown or malformed options
+ok 180 - variant resolution rejects unknown or malformed options
+  ---
+  duration_ms: 0.544679
+  type: 'test'
+  ...
+# Subtest: catalog variants control authoritative pricing and sku creation
+ok 181 - catalog variants control authoritative pricing and sku creation
+  ---
+  duration_ms: 0.35788
+  type: 'test'
+  ...
+# Subtest: legacy catalog fixtures remain quote-compatible
+ok 182 - legacy catalog fixtures remain quote-compatible
+  ---
+  duration_ms: 0.190336
+  type: 'test'
+  ...
+# Subtest: recognizes supported raster image extensions
+ok 183 - recognizes supported raster image extensions
+  ---
+  duration_ms: 1.764711
+  type: 'test'
+  ...
+# Subtest: classifies product, marketing, brand and hero media paths
+ok 184 - classifies product, marketing, brand and hero media paths
+  ---
+  duration_ms: 0.393547
+  type: 'test'
+  ...
+# Subtest: detects alpha-capable ffmpeg pixel formats
+ok 185 - detects alpha-capable ffmpeg pixel formats
+  ---
+  duration_ms: 0.58817
+  type: 'test'
+  ...
+# Subtest: calculates raster density metrics deterministically
+ok 186 - calculates raster density metrics deterministically
+  ---
+  duration_ms: 1.61468
+  type: 'test'
+  ...
+# Subtest: finds the current product by page before duplicate name
+ok 187 - finds the current product by page before duplicate name
+  ---
+  duration_ms: 1.367529
+  type: 'test'
+  ...
+# Subtest: falls back to product name when a page is unavailable
+ok 188 - falls back to product name when a page is unavailable
+  ---
+  duration_ms: 0.312725
+  type: 'test'
+  ...
+# Subtest: selects only other products from the same collection
+ok 189 - selects only other products from the same collection
+  ---
+  duration_ms: 1.072967
+  type: 'test'
+  ...
+# Subtest: applies a deterministic related-product limit
+ok 190 - applies a deterministic related-product limit
+  ---
+  duration_ms: 1.167324
+  type: 'test'
+  ...
+# Subtest: resolves the registry relative to the current document
+ok 191 - resolves the registry relative to the current document
+  ---
+  duration_ms: 0.277659
+  type: 'test'
+  ...
+# Subtest: loads and caches a valid product registry
+ok 192 - loads and caches a valid product registry
+  ---
+  duration_ms: 0.618828
+  type: 'test'
+  ...
+# Subtest: rejects unsupported registry schemas and clears failed cache entries
+ok 193 - rejects unsupported registry schemas and clears failed cache entries
+  ---
+  duration_ms: 1.153198
+  type: 'test'
+  ...
+# Subtest: extracts classic, module and non-executable script contracts
+ok 194 - extracts classic, module and non-executable script contracts
+  ---
+  duration_ms: 3.146897
+  type: 'test'
+  ...
+# Subtest: extracts inline event handlers from markup only
+ok 195 - extracts inline event handlers from markup only
+  ---
+  duration_ms: 1.806861
+  type: 'test'
+  ...
+# Subtest: extracts browser global assignments and dynamic handler dependencies
+ok 196 - extracts browser global assignments and dynamic handler dependencies
+  ---
+  duration_ms: 0.666126
+  type: 'test'
+  ...
+# Subtest: extracts static local HTML routes from JavaScript
+ok 197 - extracts static local HTML routes from JavaScript
+  ---
+  duration_ms: 0.579604
+  type: 'test'
+  ...
+# Subtest: accepts an initializer containing function identifiers only
+ok 198 - accepts an initializer containing function identifiers only
+  ---
+  duration_ms: 0.419876
+  type: 'test'
+  ...
+# Subtest: rejects product records inside the initializer
+ok 199 - rejects product records inside the initializer
+  ---
+  duration_ms: 0.331711
+  type: 'test'
+  ...
+# Subtest: production runtime contains no inert video or mobile placeholder initializer
+ok 200 - production runtime contains no inert video or mobile placeholder initializer
+  ---
+  duration_ms: 1.362088
+  type: 'test'
+  ...
+# Subtest: initializer list references concrete functions only
+ok 201 - initializer list references concrete functions only
+  ---
+  duration_ms: 1.480289
+  type: 'test'
+  ...
+# Subtest: the permanent quality chain validates runtime placeholders once
+ok 202 - the permanent quality chain validates runtime placeholders once
+  ---
+  duration_ms: 1.045256
+  type: 'test'
+  ...
+# Subtest: Stripe form encoding supports nested Checkout Session parameters
+ok 203 - Stripe form encoding supports nested Checkout Session parameters
+  ---
+  duration_ms: 1.189034
+  type: 'test'
+  ...
+# Subtest: Stripe client creates test Checkout Sessions with idempotency headers
+ok 204 - Stripe client creates test Checkout Sessions with idempotency headers
+  ---
+  duration_ms: 36.618693
+  type: 'test'
+  ...
+# Subtest: live Stripe keys are blocked unless explicitly enabled
+ok 205 - live Stripe keys are blocked unless explicitly enabled
+  ---
+  duration_ms: 0.794957
+  type: 'test'
+  ...
+# Subtest: Stripe API errors are normalized without exposing the secret key
+ok 206 - Stripe API errors are normalized without exposing the secret key
+  ---
+  duration_ms: 1.023935
+  type: 'test'
+  ...
+# Subtest: discount allocation reconciles exactly to the authoritative quote
+ok 207 - discount allocation reconciles exactly to the authoritative quote
+  ---
+  duration_ms: 14.925255
+  type: 'test'
+  ...
+# Subtest: hosted Checkout Session uses authoritative totals, shipping and customer data
+ok 208 - hosted Checkout Session uses authoritative totals, shipping and customer data
+  ---
+  duration_ms: 2.874146
+  type: 'test'
+  ...
+# Subtest: rest-of-world countries retain their ISO delivery country in Stripe
+ok 209 - rest-of-world countries retain their ISO delivery country in Stripe
+  ---
+  duration_ms: 0.884695
+  type: 'test'
+  ...
+# Subtest: identical checkout requests produce stable idempotency references
+ok 210 - identical checkout requests produce stable idempotency references
+  ---
+  duration_ms: 0.981667
+  type: 'test'
+  ...
+# Subtest: idempotency reference changes when Stripe request parameters change
+ok 211 - idempotency reference changes when Stripe request parameters change
+  ---
+  duration_ms: 1.312596
+  type: 'test'
+  ...
+# Subtest: customer country must match the requested shipping country
+ok 212 - customer country must match the requested shipping country
+  ---
+  duration_ms: 1.20314
+  type: 'test'
+  ...
+# Subtest: test mode rejects live or unexpected Checkout Session responses
+ok 213 - test mode rejects live or unexpected Checkout Session responses
+  ---
+  duration_ms: 0.766103
+  type: 'test'
+  ...
+# Subtest: signed webhook atomically marks the matching order paid
+ok 214 - signed webhook atomically marks the matching order paid
+  ---
+  duration_ms: 39.261848
+  type: 'test'
+  ...
+# Subtest: duplicate Stripe event IDs are acknowledged without applying a second transition
+ok 215 - duplicate Stripe event IDs are acknowledged without applying a second transition
+  ---
+  duration_ms: 2.617336
+  type: 'test'
+  ...
+# Subtest: invalid signatures are rejected before the payment store is called
+ok 216 - invalid signatures are rejected before the payment store is called
+  ---
+  duration_ms: 1.652431
+  type: 'test'
+  ...
+# Subtest: supported events fail closed when persistent atomic storage is absent
+ok 217 - supported events fail closed when persistent atomic storage is absent
+  ---
+  duration_ms: 2.370204
+  type: 'test'
+  ...
+# Subtest: unsupported signed event types are safely acknowledged without storage
+ok 218 - unsupported signed event types are safely acknowledged without storage
+  ---
+  duration_ms: 1.263253
+  type: 'test'
+  ...
+# Subtest: webhook handler requires a secret and blocks live events by default
+ok 219 - webhook handler requires a secret and blocks live events by default
+  ---
+  duration_ms: 1.116087
+  type: 'test'
+  ...
+# Subtest: verifies the exact raw Stripe webhook body and normalizes payment status
+ok 220 - verifies the exact raw Stripe webhook body and normalizes payment status
+  ---
+  duration_ms: 2.208752
+  type: 'test'
+  ...
+# Subtest: rejects modified webhook bodies and stale signatures
+ok 221 - rejects modified webhook bodies and stale signatures
+  ---
+  duration_ms: 0.849018
+  type: 'test'
+  ...
+# Subtest: normalizes asynchronous and expired Checkout events
+ok 222 - normalizes asynchronous and expired Checkout events
+  ---
+  duration_ms: 0.308247
+  type: 'test'
+  ...
+# Subtest: acknowledges unsupported signed event types without payment data
+ok 223 - acknowledges unsupported signed event types without payment data
+  ---
+  duration_ms: 0.170488
+  type: 'test'
+  ...
+# Subtest: rejects mode, reference and currency mismatches
+ok 224 - rejects mode, reference and currency mismatches
+  ---
+  duration_ms: 0.333153
+  type: 'test'
+  ...
+# Subtest: parses an exact deferred data-src attribute
+ok 225 - parses an exact deferred data-src attribute
+  ---
+  duration_ms: 1.84419
+  type: 'test'
+  ...
+# Subtest: parses an eager src attribute separately
+ok 226 - parses an eager src attribute separately
+  ---
+  duration_ms: 0.267461
+  type: 'test'
+  ...
+# Subtest: does not misclassify the src suffix inside data-src
+ok 227 - does not misclassify the src suffix inside data-src
+  ---
+  duration_ms: 0.355004
+  type: 'test'
+  ...
+# Subtest: rejects repeated data prefixes and ambiguous source attributes
+ok 228 - rejects repeated data prefixes and ambiguous source attributes
+  ---
+  duration_ms: 0.535612
+  type: 'test'
+  ...
+# Subtest: requires one active source when a video contains source tags
+ok 229 - requires one active source when a video contains source tags
+  ---
+  duration_ms: 0.232956
+  type: 'test'
+  ...
+1..229
+# tests 229
+# suites 0
+# pass 223
+# fail 6
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1560.236825
