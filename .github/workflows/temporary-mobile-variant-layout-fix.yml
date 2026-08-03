@@ -1,9 +1,6 @@
 name: Temporary mobile variant layout fix
 
 on:
-  push:
-    branches:
-      - fix/mobile-variant-price-overlap
   pull_request:
     branches:
       - main
@@ -15,20 +12,24 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: mobile-variant-layout-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   materialize-fix:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      TARGET_BRANCH: ${{ github.head_ref || github.ref_name }}
+      TARGET_BRANCH: ${{ github.head_ref }}
 
     steps:
       - name: Check out branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.head_ref || github.ref_name }}
+          ref: ${{ github.head_ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
