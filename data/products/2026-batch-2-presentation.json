@@ -4,167 +4,127 @@
   "template": {
     "path": "templates/product-page.html",
     "referencePage": "combat-iron-soul-combat-legend-mural.html",
-    "sha256": "e855f6e510f8998c79c681caa215d89dca3f09c49413a63b5e9ab5975aefd24d"
+    "sha256": "a0934823de1210354903c6d66d532360c93edabe5519df13055a4c704a01b7b2"
   },
   "products": [
     {
       "page": "combat-iron-soul-combat-legend-mural.html",
       "story": "A force of nature who combined explosive power with a terrifying intensity, proving that raw strength is nothing without a disciplined mind.",
       "imageAlt": "Iron Soul — Combat Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-dreamers-reality-music-legend-mural.html",
       "story": "Proven that the visions in our mind are more real than the walls that try to contain us.",
       "imageAlt": "Dreamers' Reality — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-hidden-truth-music-legend-mural.html",
       "story": "A soul who showed the world that behind every strong facade lies a depth of emotion that defines true humanity.",
       "imageAlt": "The Hidden Truth — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-homie-bond-music-legend-mural.html",
       "story": "Taught the world that loyalty to your circle is the greatest wealth you can ever possess.",
       "imageAlt": "The Eternal Bond — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-hustler-mind-music-legend-mural.html",
       "story": "Mastered the art of the game, proving that focus and ambition are the keys to unlocking every door.",
       "imageAlt": "The Hustler's Mindset — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-kings-groove-music-legend-mural.html",
       "story": "Exuded a natural charisma that redefined cool and taught the world how to move with absolute confidence.",
       "imageAlt": "The Royal Groove — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-living-truth-music-legend-mural.html",
       "story": "Inspired millions by proving that the life you lead speaks louder than any words you could ever say.",
       "imageAlt": "The Living Truth — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-mental-liberation-reggae-legend-mural.html",
       "story": "A global symbol of peace who taught us that the only true prison is the one we build in our own minds.",
       "imageAlt": "Mental Liberation — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-timeless-icon-music-legend-mural.html",
       "story": "Refused to be categorized, proving that true artistry is about breaking the rules, not following them.",
       "imageAlt": "The Timeless Icon — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "music-unbothered-mind-music-legend-mural.html",
       "story": "Taught us that knowing your own value means you never have to trip over the opinions of others.",
       "imageAlt": "The Unbothered Mind — Music Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "sport-beyond-possible-sport-legend-mural.html",
       "story": "Proved that limits are only an illusion and that absolute dedication makes the impossible a reality.",
       "imageAlt": "Beyond Possible — Sport Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "sport-court-dominance-sport-legend-mural.html",
       "story": "A master of adaptation who turned every obstacle into an opportunity for total victory.",
       "imageAlt": "Court Dominance — Sport Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "sport-divine-touch-sport-legend-mural.html",
       "story": "Believe that greatness is a partnership between hard work and a higher destiny.",
       "imageAlt": "The Divine Touch — Sport Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "sport-hand-of-destiny-sport-legend-mural.html",
       "story": "Created one of the most debated moments in history, proving that legends are defined by their boldness.",
       "imageAlt": "Hand of Destiny — Sport Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "sport-relentless-spirit-sport-legend-mural.html",
       "story": "An unbreakable mind that finds joy in the pressure and confidence in the face of the crowd.",
       "imageAlt": "Relentless Spirit — Sport Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "sport-silent-answer-sport-legend-mural.html",
       "story": "Used success as the only response to criticism, letting the results speak louder than any words.",
       "imageAlt": "The Silent Answer — Sport Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "wisdom-absolute-freedom-wisdom-legend-mural.html",
       "story": "A voice of rebellion who taught the world that true liberty is found only when you stop fearing the loss of everything.",
       "imageAlt": "Absolute Freedom — Wisdom Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "wisdom-chaos-theory-wisdom-legend-mural.html",
       "story": "A catalyst for disruption who proved that sometimes you have to break the system to discover your true self.",
       "imageAlt": "Chaos Theory — Wisdom Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "wisdom-total-liberation-mindset-legend-mural.html",
       "story": "An icon of anti-materialism who revealed the invisible chains of ownership and the path to mental liberation.",
       "imageAlt": "Total Liberation — Wisdom Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     },
     {
       "page": "wisdom-true-freedom-mindset-legend-mural.html",
       "story": "The embodiment of raw authenticity, reminding us that the greatest risk in life is playing it safe.",
       "imageAlt": "True Freedom — Wisdom Legends Wall Sticker",
-      "compareAtPrice": 59.95,
-      "discountLabel": "Save 17%",
       "announcementHtml": "🔥 Batch 2 collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off"
     }
   ]

@@ -47,13 +47,14 @@ export function createOrderRequest({
     items: Object.freeze(items.map((item) => {
       const page = pageFileFromPath(item.page || item.id || '');
       const quantity = Number(item.quantity);
+      const variantId = String(item.variantId || '').trim().toLowerCase();
       if (!page) {
         throw new Error(`Cart item "${item.name || 'Unknown product'}" has no stable product page.`);
       }
       if (!Number.isInteger(quantity) || quantity < 1) {
         throw new Error(`${page} has an invalid quantity.`);
       }
-      return Object.freeze({ page, quantity });
+      return Object.freeze(variantId ? { page, variantId, quantity } : { page, quantity });
     })),
     countryCode: String(countryCode || 'NL').trim().toUpperCase(),
     discountCode: String(discountCode || '').trim().toUpperCase(),

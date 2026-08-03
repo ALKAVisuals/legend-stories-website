@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
 const source = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
+const orderRequestSource = await readFile(new URL('../js/commerce/order-request.mjs', import.meta.url), 'utf8');
 const errors = [];
 
 if (!source.includes("import('./commerce/totals.mjs')")) {
@@ -11,6 +12,9 @@ if (!source.includes("import('./commerce/discounts.mjs')")) {
 }
 if (!source.includes("import('./commerce/order-request.mjs')")) {
   errors.push('app.js must load the trusted order request builder.');
+}
+if (!source.includes("import('./commerce/product-variants.mjs')")) {
+  errors.push('app.js must load the centralized product variant policy.');
 }
 if (!source.includes('commerceModule.calculateCommerceTotals')) {
   errors.push('app.js must delegate totals to calculateCommerceTotals().');
@@ -24,8 +28,23 @@ if (!source.includes('commerceModule.createOrderRequest')) {
 if (!source.includes("sessionStorage.setItem('legendOrderRequest'")) {
   errors.push('app.js must store the minimal order request separately from display data.');
 }
-if (!source.includes('page: page,')) {
+if (!/const product = \{[\s\S]*?\bpage,/.test(source)) {
   errors.push('cart items must store a stable product page identifier.');
+}
+if (!source.includes('commerceModule.createCartLineId(page, variant.id)')) {
+  errors.push('cart line identity must combine the stable product page and selected variant.');
+}
+if (!/const product = \{[\s\S]*?variantId: variant\.id,/.test(source)) {
+  errors.push('cart items must store the selected product variant.');
+}
+if (!/const product = \{[\s\S]*?sizeCm: variant\.sizeCm,/.test(source)) {
+  errors.push('cart items must store the selected size for display and persistence.');
+}
+if (!/variantId = String\(item\.variantId \|\| ''\)/.test(orderRequestSource)) {
+  errors.push('trusted order requests must normalize the selected variant.');
+}
+if (!/variantId \? \{ page, variantId, quantity \} : \{ page, quantity \}/.test(orderRequestSource)) {
+  errors.push('trusted order requests must preserve variants while retaining legacy fixture compatibility.');
 }
 if (!source.includes("const savedDiscount = commerceModule.resolveDiscount(savedDiscountCode || '')")) {
   errors.push('stored discount codes must be revalidated through the central policy.');
@@ -61,4 +80,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Commerce runtime validation passed with stable product identities, revalidated discounts and single-write cart persistence.');
+console.log('Commerce runtime validation passed with stable product-and-variant identities, revalidated discounts and single-write cart persistence.');

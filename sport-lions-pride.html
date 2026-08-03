@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="The Lion's Pride — Bold matte vinyl wall sticker from the Sport Legends collection. 60×90 cm, removable, residue-free. Lead the pack.">
+  <meta name="description" content="The Lion's Pride — Bold matte vinyl wall sticker from the Sport Legends collection. removable, residue-free. Lead the pack. Available in 30 cm and 45 cm, measured along the longest side.">
   <title>The Lion's Pride — Sport Legends | Legend Stories</title>
 
   <!-- Open Graph -->
   <meta property="og:title" content="The Lion's Pride — Sport Legends | Legend Stories">
-  <meta property="og:description" content="The Lion's Pride — Bold matte vinyl wall sticker from the Sport Legends collection. 60×90 cm, removable, residue-free. Lead the pack.">
+  <meta property="og:description" content="The Lion's Pride — Bold matte vinyl wall sticker from the Sport Legends collection. removable, residue-free. Lead the pack. Available in 30 cm and 45 cm, measured along the longest side.">
   <meta property="og:image" content="https://alkavisuals.github.io/legend-stories-website/media/stikkers/2026/batch 3/Sport Legends/lions-pride-sport-legend-mural.png">
   <meta property="og:url" content="https://alkavisuals.github.io/legend-stories-website/sport-lions-pride.html">
   <meta property="og:type" content="product">
   <meta property="og:site_name" content="Legend Stories">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="The Lion's Pride — Sport Legends | Legend Stories">
-  <meta name="twitter:description" content="The Lion's Pride — Bold matte vinyl wall sticker from the Sport Legends collection. 60×90 cm, removable, residue-free. Lead the pack.">
+  <meta name="twitter:description" content="The Lion's Pride — Bold matte vinyl wall sticker from the Sport Legends collection. removable, residue-free. Lead the pack. Available in 30 cm and 45 cm, measured along the longest side.">
   <meta name="twitter:image" content="https://alkavisuals.github.io/legend-stories-website/media/stikkers/2026/batch 3/Sport Legends/lions-pride-sport-legend-mural.png">
   <link rel="canonical" href="https://alkavisuals.github.io/legend-stories-website/sport-lions-pride.html">
   <script type="application/ld+json">
@@ -24,18 +24,31 @@
   "@type": "Product",
   "name": "The Lion's Pride",
   "image": "https://alkavisuals.github.io/legend-stories-website/media/stikkers/2026/batch 3/Sport Legends/lions-pride-sport-legend-mural.png",
-  "description": "The Lion's Pride — Bold matte vinyl wall sticker from the Sport Legends collection. 60×90 cm, removable, residue-free. Lead the pack.",
+  "description": "The Lion's Pride — Bold matte vinyl wall sticker from the Sport Legends collection. removable, residue-free. Lead the pack. Available in 30 cm and 45 cm, measured along the longest side.",
   "brand": {
     "@type": "Brand",
     "name": "Legend Stories"
   },
-  "offers": {
-    "@type": "Offer",
-    "price": "49.95",
-    "priceCurrency": "EUR",
-    "availability": "https://schema.org/InStock",
-    "url": "https://alkavisuals.github.io/legend-stories-website/sport-lions-pride.html"
-  }
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "The Lion's Pride — 45 cm",
+      "sku": "sport-lions-pride-45",
+      "price": "45.00",
+      "priceCurrency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "url": "https://alkavisuals.github.io/legend-stories-website/sport-lions-pride.html?size=45"
+    },
+    {
+      "@type": "Offer",
+      "name": "The Lion's Pride — 30 cm",
+      "sku": "sport-lions-pride-30",
+      "price": "35.00",
+      "priceCurrency": "EUR",
+      "availability": "https://schema.org/InStock",
+      "url": "https://alkavisuals.github.io/legend-stories-website/sport-lions-pride.html?size=30"
+    }
+  ]
 }
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -128,15 +141,48 @@
               <p class="text-text-secondary text-base md:text-lg leading-relaxed italic">Lead the pack. This mural roars with confidence — premium matte vinyl that dominates any wall it's on.</p>
             </div>
 
-            <!-- PRICE + CTA -->
-            <div class="flex items-center gap-6 mb-8">
-              <span class="font-display text-3xl font-bold">€49,95</span>
-              <span class="text-text-muted text-sm line-through">€59,95</span>
-              <span class="px-2 py-0.5 rounded bg-mint/10 text-mint text-xs font-bold">Save 17%</span>
+            <!-- SIZE + PRICE -->
+            <fieldset class="mb-6" data-product-variant-selector>
+              <legend class="text-sm font-semibold text-text-primary mb-3">Choose your size</legend>
+              <div class="grid sm:grid-cols-2 gap-3">
+                <label data-variant-card class="relative cursor-pointer rounded-xl border border-surface-border/40 bg-surface-light/20 p-4 transition-colors hover:border-mint/40">
+                  <input class="sr-only" type="radio" name="product-size" value="compact-30">
+                  <span class="flex items-start justify-between gap-3">
+                    <span>
+                      <span class="block text-sm font-semibold text-text-primary">Compact</span>
+                      <span class="block text-xs text-text-muted mt-1">30 cm · subtle wall accent</span>
+                    </span>
+                    <span class="font-display text-xl font-bold">€35</span>
+                  </span>
+                </label>
+                <label data-variant-card class="relative cursor-pointer rounded-xl border border-mint/60 bg-mint/10 p-4 transition-colors">
+                  <input class="sr-only" type="radio" name="product-size" value="statement-45" checked>
+                  <span class="absolute -top-2.5 right-3 rounded-full bg-mint px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-void">Most chosen</span>
+                  <span class="flex items-start justify-between gap-3">
+                    <span>
+                      <span class="block text-sm font-semibold text-text-primary">Statement</span>
+                      <span class="block text-xs text-text-muted mt-1">45 cm · maximum visual impact</span>
+                    </span>
+                    <span class="font-display text-xl font-bold">€45</span>
+                  </span>
+                </label>
+              </div>
+              <p class="mt-3 text-xs text-text-muted">Size is measured along the longest side. The original proportions of the design are preserved.</p>
+            </fieldset>
+
+            <div class="flex items-end justify-between gap-4 mb-6">
+              <div>
+                <p class="text-xs uppercase tracking-wider text-text-muted">Selected size</p>
+                <p class="text-sm font-medium text-text-secondary" data-selected-size>Statement · 45 cm</p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs text-text-muted">From €35</p>
+                <span class="font-display text-3xl font-bold" data-selected-price>€45</span>
+              </div>
             </div>
 
-            <button class="btn-primary w-full sm:w-auto text-base !px-8 !py-3 add-to-cart-btn" data-name="The Lion's Pride" data-price="49.95" data-img="media/browser-products/2026/batch 3/Sport Legends/lions-pride-sport-legend-mural.webp">
-              Add to cart — €49,95
+            <button class="btn-primary w-full sm:w-auto text-base !px-8 !py-3 add-to-cart-btn" data-name="The Lion's Pride" data-price="45" data-variant-id="statement-45" data-size-cm="45" data-variant-label="Statement" data-img="media/browser-products/2026/batch 3/Sport Legends/lions-pride-sport-legend-mural.webp">
+              Add to cart — €45
             </button>
 
             <!-- SPECS -->
@@ -147,7 +193,7 @@
               </div>
               <div class="p-3 rounded-xl bg-surface-light/30 border border-surface-border/20">
                 <p class="text-text-muted text-xs mb-1">Size</p>
-                <p class="text-sm font-medium">60 × 90 cm</p>
+                <p class="text-sm font-medium">30 cm or 45 cm · longest side</p>
               </div>
               <div class="p-3 rounded-xl bg-surface-light/30 border border-surface-border/20">
                 <p class="text-text-muted text-xs mb-1">Removable</p>

@@ -1,6 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+
 import { buildProductInventory } from './product-inventory.mjs';
+import {
+  DEFAULT_PRODUCT_VARIANT_ID,
+  PRODUCT_VARIANTS,
+  resolveCatalogProductVariant,
+} from '../js/commerce/product-variants.mjs';
 
 const ROOT = process.cwd();
 const CATALOG_PATH = join(ROOT, 'data', 'products', 'catalog.json');
@@ -26,12 +32,35 @@ function comparableInventoryProduct(product) {
   };
 }
 
+function comparableCatalogProduct(product) {
+  return {
+    slug: product.slug,
+    page: product.page,
+    name: product.name,
+    description: product.description,
+    image: product.image,
+    price: product.price,
+    currency: product.currency || 'EUR',
+    availability: product.availability,
+    canonical: product.canonical,
+    batch: product.batch,
+    collection: product.collection,
+    category: product.category,
+  };
+}
+
 const inventory = await buildProductInventory(ROOT);
 const catalog = JSON.parse(await readFile(CATALOG_PATH, 'utf8'));
 const errors = [];
 
-if (catalog.schemaVersion !== 1) errors.push('catalog schemaVersion must be 1.');
+if (catalog.schemaVersion !== 2) errors.push('catalog schemaVersion must be 2.');
 if (!Array.isArray(catalog.products)) errors.push('catalog products must be an array.');
+if (catalog.variantPolicy?.defaultVariantId !== DEFAULT_PRODUCT_VARIANT_ID) {
+  errors.push('catalog variant policy has an invalid default.');
+}
+if (catalog.variantPolicy?.sizeMeasurement !== 'longest_side') {
+  errors.push('catalog variant policy must measure the longest side.');
+}
 
 const expected = inventory.products
   .map(comparableInventoryProduct)
@@ -48,6 +77,35 @@ for (const product of actual) {
   if (!product.slug || seenSlugs.has(product.slug)) errors.push(`duplicate or missing slug: ${product.slug || '(empty)'}.`);
   seenPages.add(product.page);
   seenSlugs.add(product.slug);
+
+  if (product.fromPrice !== 35 || product.price !== 45) {
+    errors.push(`${product.page}: expected fromPrice 35 and default price 45.`);
+  }
+  if (product.defaultVariantId !== DEFAULT_PRODUCT_VARIANT_ID) {
+    errors.push(`${product.page}: default variant must be ${DEFAULT_PRODUCT_VARIANT_ID}.`);
+  }
+  if (!Array.isArray(product.variants) || product.variants.length !== PRODUCT_VARIANTS.length) {
+    errors.push(`${product.page}: expected ${PRODUCT_VARIANTS.length} variants.`);
+  } else {
+    for (const expectedVariant of PRODUCT_VARIANTS) {
+      const actualVariant = product.variants.find((entry) => entry.id === expectedVariant.id);
+      if (!actualVariant) {
+        errors.push(`${product.page}: missing ${expectedVariant.id}.`);
+        continue;
+      }
+      for (const key of ['label', 'sizeCm', 'price', 'skuSuffix', 'isDefault']) {
+        if (actualVariant[key] !== expectedVariant[key]) {
+          errors.push(`${product.page}: ${expectedVariant.id}.${key} differs from policy.`);
+        }
+      }
+    }
+  }
+  try {
+    resolveCatalogProductVariant(product, 'compact-30');
+    resolveCatalogProductVariant(product, 'statement-45');
+  } catch (error) {
+    errors.push(`${product.page}: ${error.message}`);
+  }
 }
 
 const expectedByPage = new Map(expected.map((product) => [product.page, product]));
@@ -57,7 +115,7 @@ for (const product of actual) {
     errors.push(`${product.page}: not found in live product inventory.`);
     continue;
   }
-  if (JSON.stringify(product) !== JSON.stringify(reference)) {
+  if (JSON.stringify(comparableCatalogProduct(product)) !== JSON.stringify(reference)) {
     errors.push(`${product.page}: central catalog differs from live product data.`);
   }
 }

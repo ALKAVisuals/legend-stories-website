@@ -12,6 +12,12 @@ const catalog = JSON.parse(
 ).products;
 const firstProduct = catalog[0];
 const secondProduct = catalog[1];
+const firstDefaultVariant = firstProduct.variants?.find((variant) => (
+  variant.id === firstProduct.defaultVariantId || variant.isDefault
+));
+const expectedFirstProductName = firstDefaultVariant?.sizeCm
+  ? `${firstProduct.name} — ${firstDefaultVariant.sizeCm} cm`
+  : firstProduct.name;
 
 function expectOrderError(fn, code) {
   assert.throws(fn, (error) => {
@@ -32,12 +38,14 @@ test('builds totals from authoritative catalog prices and ignores browser price 
     countryCode: 'NL',
   }, catalog);
 
-  assert.equal(quote.items[0].name, firstProduct.name);
-  assert.equal(quote.items[0].unitPrice, firstProduct.price);
-  assert.equal(quote.totals.subtotal, 49.95);
+  assert.equal(quote.items[0].name, expectedFirstProductName);
+  assert.equal(quote.items[0].variantId, 'statement-45');
+  assert.equal(quote.items[0].sizeCm, 45);
+  assert.equal(quote.items[0].unitPrice, 45);
+  assert.equal(quote.totals.subtotal, 45);
   assert.equal(quote.totals.shipping, 3.95);
-  assert.equal(quote.totals.grandTotal, 53.9);
-  assert.equal(quote.amountInCents.grandTotal, 5390);
+  assert.equal(quote.totals.grandTotal, 48.95);
+  assert.equal(quote.amountInCents.grandTotal, 4895);
 });
 
 test('resolves products by slug and validates discount codes centrally', () => {
@@ -49,10 +57,10 @@ test('resolves products by slug and validates discount codes centrally', () => {
 
   assert.equal(quote.discount.code, 'LEGEND10');
   assert.equal(quote.discount.percent, 10);
-  assert.equal(quote.discount.amount, 5);
-  assert.equal(quote.totals.discountedSubtotal, 44.95);
-  assert.equal(quote.totals.grandTotal, 48.9);
-  assert.equal(quote.amountInCents.grandTotal, 4890);
+  assert.equal(quote.discount.amount, 4.5);
+  assert.equal(quote.totals.discountedSubtotal, 40.5);
+  assert.equal(quote.totals.grandTotal, 44.45);
+  assert.equal(quote.amountInCents.grandTotal, 4445);
   assert.equal(
     quote.amountInCents.subtotal
       - quote.amountInCents.discount
@@ -73,9 +81,9 @@ test('aggregates duplicate product lines without trusting client totals', () => 
 
   assert.equal(quote.items.length, 2);
   assert.equal(quote.items.find((item) => item.page === firstProduct.page).quantity, 5);
-  assert.equal(quote.totals.subtotal, 299.7);
+  assert.equal(quote.totals.subtotal, 270);
   assert.equal(quote.totals.shipping, 0);
-  assert.equal(quote.amountInCents.grandTotal, 29970);
+  assert.equal(quote.amountInCents.grandTotal, 27000);
 });
 
 test('rejects empty carts, unknown products and invalid discount codes', () => {

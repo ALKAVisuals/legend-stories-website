@@ -19,14 +19,18 @@
       <p>{{collection}}</p>
       <h1>{{name}}</h1>
       <p>{{description}}</p>
-      <p><strong>€{{priceFormatted}}</strong></p>
+      <p>Available in 30 cm and 45 cm, measured along the longest side.</p>
+      <p><small>From €{{fromPriceFormatted}}</small> <strong>€{{priceFormatted}}</strong></p>
       <button
         type="button"
         class="add-to-cart-btn"
         data-name="{{name}}"
         data-price="{{price}}"
+        data-variant-id="{{variantId}}"
+        data-variant-label="{{variantLabel}}"
+        data-size-cm="{{sizeCm}}"
         data-img="{{image}}"
-      >Add to cart — €{{priceFormatted}}</button>
+      >Add {{sizeCm}} cm — €{{priceFormatted}}</button>
     </article>
   </main>
 </body>

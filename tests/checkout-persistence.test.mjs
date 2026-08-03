@@ -13,6 +13,13 @@ const catalog = JSON.parse(
   await readFile(new URL('../data/products/catalog.json', import.meta.url), 'utf8'),
 ).products;
 const product = catalog[0];
+const defaultVariant = product.variants?.find((variant) => (
+  variant.id === product.defaultVariantId || variant.isDefault
+));
+const expectedProductName = defaultVariant?.sizeCm
+  ? `${product.name} — ${defaultVariant.sizeCm} cm`
+  : product.name;
+const expectedUnitPrice = defaultVariant?.price ?? product.price;
 
 const request = Object.freeze({
   items: [{
@@ -85,8 +92,8 @@ test('durable checkout persists an authoritative pending order before returning'
   assert.equal(storeCapture.order.status, 'payment_pending');
   assert.equal(storeCapture.order.amountTotal, checkout.quote.grandTotal);
   assert.equal(storeCapture.order.paymentSessionId, checkout.sessionId);
-  assert.equal(storeCapture.order.items[0].name, product.name);
-  assert.equal(storeCapture.order.items[0].unitPrice, product.price);
+  assert.equal(storeCapture.order.items[0].name, expectedProductName);
+  assert.equal(storeCapture.order.items[0].unitPrice, expectedUnitPrice);
   assert.equal(storeCapture.order.customer.email, customer.email);
   assert.equal(storeCapture.order.discount.code, 'LEGEND10');
   assert.equal(storeCapture.order.version, 0);

@@ -124,8 +124,12 @@ function createPendingCheckoutRecord({
     items: Object.freeze(quote.items.map((item) => Object.freeze({
       slug: item.slug,
       page: item.page,
+      sku: item.sku,
       name: item.name,
       image: item.image,
+      variantId: item.variantId,
+      variantLabel: item.variantLabel,
+      sizeCm: item.sizeCm,
       unitPrice: item.unitPrice,
       quantity: item.quantity,
       lineTotal: item.lineTotal,
