@@ -1,5 +1,9 @@
 import { resolveDiscount } from '../../js/commerce/discounts.mjs';
 import { calculateCommerceTotals } from '../../js/commerce/totals.mjs';
+import {
+  createProductSku,
+  resolveCatalogProductVariant,
+} from '../../js/commerce/product-variants.mjs';
 
 const MAX_LINE_ITEMS = 50;
 const MAX_QUANTITY_PER_LINE = 10;
@@ -101,6 +105,17 @@ function resolveProduct(line, catalogIndex) {
   return product;
 }
 
+function resolveVariant(product, variantId) {
+  try {
+    return resolveCatalogProductVariant(product, variantId);
+  } catch (error) {
+    fail('UNKNOWN_PRODUCT_VARIANT', error.message, {
+      page: product.page,
+      variantId: normalizeIdentifier(variantId),
+    });
+  }
+}
+
 export function createAuthoritativeOrderQuote(payload = {}, catalogProducts = []) {
   const requestedItems = payload?.items;
   if (!Array.isArray(requestedItems) || requestedItems.length === 0) {
@@ -111,41 +126,58 @@ export function createAuthoritativeOrderQuote(payload = {}, catalogProducts = []
   }
 
   const catalogIndex = createCatalogIndex(catalogProducts);
-  const quantitiesByPage = new Map();
+  const quantitiesByLine = new Map();
   let totalQuantity = 0;
 
   for (const line of requestedItems) {
     const product = resolveProduct(line, catalogIndex);
+    const variant = resolveVariant(product, line?.variantId);
     const quantity = normalizeQuantity(line.quantity);
     totalQuantity += quantity;
     if (totalQuantity > MAX_TOTAL_QUANTITY) {
       fail('TOO_MANY_ITEMS', `No more than ${MAX_TOTAL_QUANTITY} products are allowed per order.`);
     }
-    quantitiesByPage.set(product.page, (quantitiesByPage.get(product.page) || 0) + quantity);
+
+    const key = `${product.page}::${variant.id}`;
+    const existing = quantitiesByLine.get(key);
+    quantitiesByLine.set(key, {
+      product,
+      variant,
+      quantity: (existing?.quantity || 0) + quantity,
+    });
   }
 
-  const authoritativeItems = [...quantitiesByPage.entries()]
-    .map(([page, quantity]) => {
-      const product = catalogIndex.byPage.get(page);
+  const authoritativeItems = [...quantitiesByLine.values()]
+    .map(({ product, variant, quantity }) => {
       if (quantity > MAX_QUANTITY_PER_LINE) {
         fail(
           'INVALID_QUANTITY',
-          `Combined quantity per product may not exceed ${MAX_QUANTITY_PER_LINE}.`,
-          { page, quantity },
+          `Combined quantity per product variant may not exceed ${MAX_QUANTITY_PER_LINE}.`,
+          { page: product.page, variantId: variant.id, quantity },
         );
       }
-      const unitPrice = roundMoney(product.price);
+      const unitPrice = roundMoney(variant.price);
+      const displayName = variant.id === 'legacy'
+        ? product.name
+        : `${product.name} — ${variant.sizeCm} cm`;
       return Object.freeze({
         slug: product.slug,
         page: product.page,
-        name: product.name,
+        name: displayName,
         image: product.image,
+        sku: variant.id === 'legacy' ? product.slug : createProductSku(product, variant),
+        variantId: variant.id,
+        variantLabel: variant.label,
+        sizeCm: variant.sizeCm,
         unitPrice,
         quantity,
         lineTotal: roundMoney(unitPrice * quantity),
       });
     })
-    .sort((left, right) => left.page.localeCompare(right.page));
+    .sort((left, right) => (
+      left.page.localeCompare(right.page)
+      || left.variantId.localeCompare(right.variantId)
+    ));
 
   const requestedDiscountCode = String(payload?.discountCode || '').trim();
   const discount = resolveDiscount(requestedDiscountCode);
