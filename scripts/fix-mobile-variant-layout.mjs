@@ -1,8 +1,13 @@
 // Triggered after the temporary workflow is present on the branch.
+import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 
 const templateUrl = new URL('../templates/product-page.html', import.meta.url);
 const testUrl = new URL('../tests/product-variants-contract.test.mjs', import.meta.url);
+const presentationPaths = Array.from(
+  { length: 6 },
+  (_, index) => `../data/products/2026-batch-${index + 1}-presentation.json`,
+);
 
 const oldBlock = `                <label data-variant-card class="relative cursor-pointer rounded-xl border border-mint/60 bg-mint/10 p-4 transition-colors">
                   <input class="sr-only" type="radio" name="product-size" value="statement-45" checked>
@@ -40,6 +45,17 @@ if (updatedTemplate === template || updatedTemplate.includes('absolute -top-2.5 
 }
 await writeFile(templateUrl, updatedTemplate);
 
+const templateSha256 = createHash('sha256').update(updatedTemplate).digest('hex');
+for (const presentationPath of presentationPaths) {
+  const presentationUrl = new URL(presentationPath, import.meta.url);
+  const manifest = JSON.parse(await readFile(presentationUrl, 'utf8'));
+  if (manifest.template?.path !== 'templates/product-page.html') {
+    throw new Error(`${manifest.batchId ?? presentationPath}: unexpected product template path.`);
+  }
+  manifest.template.sha256 = templateSha256;
+  await writeFile(presentationUrl, `${JSON.stringify(manifest, null, 2)}\n`);
+}
+
 const testSource = await readFile(testUrl, 'utf8');
 const testNeedle = "  assert.match(templateSource, /Most chosen/);\n";
 const testAddition = "  assert.match(templateSource, /data-variant-badge/);\n  assert.match(templateSource, /flex shrink-0 flex-col items-end gap-2/);\n  assert.doesNotMatch(templateSource, /absolute -top-2\\.5 right-3/);\n";
@@ -50,4 +66,4 @@ if (!testSource.includes('data-variant-badge')) {
   await writeFile(testUrl, testSource.replace(testNeedle, `${testNeedle}${testAddition}`));
 }
 
-console.log('Applied mobile-safe product variant badge and price layout.');
+console.log(`Applied mobile-safe variant layout and synchronized ${presentationPaths.length} template hashes.`);
