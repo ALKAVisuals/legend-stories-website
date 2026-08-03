@@ -40,6 +40,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Align migration with current regression contract
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFile, writeFile } from 'node:fs/promises';
+          const file = 'scripts/apply-premium-size-selector.mjs';
+          let source = await readFile(file, 'utf8');
+          const current = `  assert.match(templateSource, /data-variant-badge/);
+            assert.match(templateSource, /flex shrink-0 flex-col items-end gap-2/);`;
+          const aligned = `  assert.match(templateSource, /data-variant-badge/);
+            assert.match(templateSource, /data-variant-price[^>]*>€45/);
+            assert.match(templateSource, /flex shrink-0 flex-col items-end gap-2/);`;
+          if (source.includes(current)) {
+            source = source.replace(current, aligned);
+            await writeFile(file, source);
+          } else if (!source.includes('data-variant-price[^>]*>€45')) {
+            throw new Error('Could not align the migration with the current regression contract.');
+          }
+          NODE
+
       - name: Apply premium size selector
         run: node scripts/apply-premium-size-selector.mjs
 
