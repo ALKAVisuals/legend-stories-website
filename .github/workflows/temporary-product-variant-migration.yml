@@ -61,9 +61,11 @@ jobs:
           set -euo pipefail
           node scripts/migrate-product-variants.mjs
           python - <<'PY'
+          import json
           from pathlib import Path
-          path = Path('scripts/product-page-generation.mjs')
-          source = path.read_text()
+
+          generator = Path('scripts/product-page-generation.mjs')
+          source = generator.read_text()
           for before, after in (
               (r'\\s', r'\s'),
               (r'\\S', r'\S'),
@@ -72,7 +74,15 @@ jobs:
               (r'\\n', r'\n'),
           ):
               source = source.replace(before, after)
-          path.write_text(source)
+          generator.write_text(source)
+
+          for batch in range(1, 7):
+              path = Path(f'data/products/2026-batch-{batch}-presentation.json')
+              manifest = json.loads(path.read_text())
+              for product in manifest.get('products', []):
+                  product.pop('compareAtPrice', None)
+                  product.pop('discountLabel', None)
+              path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + '\n')
           PY
           node --check scripts/product-page-generation.mjs
           npm run generate:managed-product-pages:live
