@@ -51,6 +51,28 @@ function findUniqueLine(source, needle, label, failures, sourceLabel = 'js/app.j
   return lines[0];
 }
 
+function findRelatedProductImageLine(source, failures) {
+  const block = String(source).match(
+    /async function initRelatedProducts\(\)[\s\S]*?(?=\n  function initCarousel\(\))/,
+  )?.[0] || '';
+  if (!block) {
+    failures.push('js/app.js: related-products initializer was not found');
+    return '';
+  }
+
+  const lines = block.split('\n').filter((line) => (
+    line.includes('<img')
+    && line.includes('loading=')
+    && line.includes('decoding=')
+    && line.includes('fetchpriority=')
+  ));
+  if (lines.length !== 1) {
+    failures.push(`js/app.js: expected one related-product image line, found ${lines.length}`);
+    return '';
+  }
+  return lines[0];
+}
+
 function requireTokens(line, tokens, label, failures, sourceLabel = 'js/app.js') {
   for (const token of tokens) {
     if (!line.includes(token)) failures.push(`${sourceLabel}: ${label} is missing ${token}`);
@@ -122,12 +144,7 @@ const [app, cartControls] = await Promise.all([
   readFile(join(ROOT, 'js/app.js'), 'utf8'),
   readFile(join(ROOT, 'js/cart-controls.mjs'), 'utf8'),
 ]);
-const relatedLine = findUniqueLine(
-  app,
-  'group-hover:scale-105 transition-transform duration-500',
-  'related-product image',
-  failures,
-);
+const relatedLine = findRelatedProductImageLine(app, failures);
 requireTokens(
   relatedLine,
   ['loading=', 'lazy', 'decoding=', 'async', 'fetchpriority=', 'low'],
