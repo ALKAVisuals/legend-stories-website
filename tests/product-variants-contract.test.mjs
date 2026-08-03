@@ -12,6 +12,9 @@ test('product page defaults to the 45 cm statement variant', () => {
   assert.match(templateSource, /value="statement-45" checked/);
   assert.match(templateSource, /value="compact-30"/);
   assert.match(templateSource, /Most chosen/);
+  assert.match(templateSource, /data-variant-badge/);
+  assert.match(templateSource, /flex shrink-0 flex-col items-end gap-2/);
+  assert.doesNotMatch(templateSource, /absolute -top-2\.5 right-3/);
   assert.match(templateSource, /measured along the longest side/i);
   assert.doesNotMatch(templateSource, /line-through|Save 17%|60\s*[×x]\s*90/);
 });
