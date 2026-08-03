@@ -1,7 +1,12 @@
 const DEFAULT_BREAKPOINT = 768;
+const PREMIUM_NAVIGATION_STYLESHEET = 'css/premium-navigation.css';
 
 function setAttribute(element, name, value) {
   if (element?.setAttribute) element.setAttribute(name, String(value));
+}
+
+function toggleClass(element, name, enabled) {
+  element?.classList?.toggle?.(name, Boolean(enabled));
 }
 
 function focusTrigger(trigger) {
@@ -11,6 +16,72 @@ function focusTrigger(trigger) {
   } catch {
     trigger.focus();
   }
+}
+
+function ensurePremiumNavigationStyles(documentRef) {
+  if (!documentRef?.head || !documentRef?.createElement || !documentRef?.querySelector) return;
+  if (documentRef.querySelector('link[data-premium-navigation-styles]')) return;
+
+  const link = documentRef.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = PREMIUM_NAVIGATION_STYLESHEET;
+  link.dataset.premiumNavigationStyles = 'true';
+  documentRef.head.append(link);
+}
+
+function enhanceAnnouncementBar(documentRef) {
+  const announcement = documentRef?.querySelector?.('body > div[role="banner"]');
+  const paragraph = announcement?.querySelector?.('p');
+  if (!announcement || !paragraph || announcement.dataset?.premiumAnnouncement === 'true') return;
+
+  announcement.classList?.add?.('premium-announcement');
+  if (announcement.dataset) announcement.dataset.premiumAnnouncement = 'true';
+
+  const text = paragraph.textContent || '';
+  if (!/Combat Legends/i.test(text) || !documentRef?.createElement) return;
+
+  const kicker = documentRef.createElement('span');
+  kicker.className = 'premium-announcement-kicker';
+  kicker.textContent = 'New release';
+
+  const collection = documentRef.createElement('span');
+  collection.className = 'premium-announcement-collection';
+  collection.textContent = 'Combat Legends';
+
+  const offer = documentRef.createElement('span');
+  offer.className = 'premium-announcement-offer';
+  offer.textContent = '·';
+
+  const code = documentRef.createElement('span');
+  code.className = 'premium-announcement-code';
+  code.textContent = 'LEGEND10';
+
+  const discount = documentRef.createElement('span');
+  discount.className = 'premium-announcement-offer';
+  discount.textContent = '— 10% off';
+
+  paragraph.replaceChildren?.(kicker, collection, offer, code, discount);
+}
+
+function enhanceNavigationMarkup({ button, menu, documentRef }) {
+  const header = button?.closest?.('header');
+  header?.classList?.add?.('premium-site-header');
+  header?.querySelector?.('nav')?.classList?.add?.('premium-site-navigation');
+  header?.querySelector?.('a[href="shop.html"]')?.classList?.add?.('premium-nav-control');
+
+  const panel = menu?.firstElementChild;
+  panel?.classList?.add?.('premium-mobile-menu-panel');
+  setAttribute(menu, 'aria-label', 'Mobile navigation');
+
+  if (!panel?.querySelector || !documentRef?.createElement) return;
+  if (panel.querySelector('[data-mobile-menu-shop]')) return;
+
+  const shopLink = documentRef.createElement('a');
+  shopLink.href = 'shop.html';
+  shopLink.className = 'premium-mobile-menu-cta';
+  shopLink.dataset.mobileMenuShop = 'true';
+  shopLink.textContent = 'Shop the collection';
+  panel.append(shopLink);
 }
 
 export function createMobileNavigationController({
@@ -28,6 +99,10 @@ export function createMobileNavigationController({
     throw new Error('Mobile navigation requires document and window event targets.');
   }
 
+  ensurePremiumNavigationStyles(documentRef);
+  enhanceAnnouncementBar(documentRef);
+  enhanceNavigationMarkup({ button, menu, documentRef });
+
   const closedLabel = button.getAttribute?.('aria-label') || 'Open menu';
   const menuId = menu.id || 'mobile-menu';
   let open = false;
@@ -42,6 +117,9 @@ export function createMobileNavigationController({
     setAttribute(button, 'aria-expanded', open ? 'true' : 'false');
     setAttribute(button, 'aria-controls', menuId);
     setAttribute(button, 'aria-label', open ? openLabel : closedLabel);
+    toggleClass(menu, 'is-open', open);
+    toggleClass(button, 'is-open', open);
+    toggleClass(documentRef.body, 'mobile-menu-open', open);
   }
 
   function openMenu() {
@@ -67,6 +145,10 @@ export function createMobileNavigationController({
   }
 
   function handleMenuClick(event) {
+    if (event?.target === menu) {
+      close({ restoreFocus: true });
+      return;
+    }
     const link = event?.target?.closest?.('a[href]');
     if (link && menu.contains?.(link)) close();
   }
