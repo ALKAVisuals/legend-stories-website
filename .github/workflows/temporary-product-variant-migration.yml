@@ -49,6 +49,10 @@ jobs:
           from pathlib import Path
           path = Path('scripts/migrate-product-variants.mjs')
           source = path.read_text()
+          marker = 'function newStructuredDataFunction() {'
+          first = source.index(marker)
+          second = source.index(marker, first + 1)
+          source = source[:first] + source[second:]
           source = source.replace(r"].join('\\n');", r"].join('\n');")
           path.write_text(source)
           PY
