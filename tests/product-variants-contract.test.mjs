@@ -13,12 +13,14 @@ test('product page defaults to the 45 cm statement variant', () => {
   assert.match(templateSource, /value="statement-45" checked/);
   assert.match(templateSource, /value="compact-30"/);
   assert.match(templateSource, /product-variant-card is-selected/);
+  assert.match(templateSource, /product-variant-choice/);
   assert.match(templateSource, /product-variant-recommendation/);
   assert.match(templateSource, />Recommended</);
   assert.doesNotMatch(templateSource, /Most chosen|data-variant-badge/);
   assert.match(appSource, /classList\.toggle\('is-selected', selected\)/);
   assert.match(sharedStylesSource, /\.product-variant-card\.is-selected/);
   assert.match(sharedStylesSource, /\.product-variant-recommendation/);
+  assert.match(sharedStylesSource, /\[data-theme="light"\] \.product-variant-card\.is-selected/);
   assert.match(templateSource, /measured along the longest side/i);
   assert.doesNotMatch(templateSource, /line-through|Save 17%|60\s*[×x]\s*90/);
 });
