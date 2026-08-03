@@ -8,6 +8,12 @@ const catalog = JSON.parse(
   await readFile(new URL('../data/products/catalog.json', import.meta.url), 'utf8'),
 ).products;
 const product = catalog[0];
+const defaultVariant = product.variants?.find((variant) => (
+  variant.id === product.defaultVariantId || variant.isDefault
+));
+const expectedProductName = defaultVariant?.sizeCm
+  ? `${product.name} — ${defaultVariant.sizeCm} cm`
+  : product.name;
 
 const payload = Object.freeze({
   request: {
@@ -99,7 +105,7 @@ test('endpoint returns Checkout only after the pending order is durably stored',
   assert.equal(storeCapture.order.status, 'payment_pending');
   assert.equal(storeCapture.order.amountTotal > 1, true);
   assert.equal(storeCapture.order.customer.email, payload.customer.email);
-  assert.equal(storeCapture.order.items[0].name, product.name);
+  assert.equal(storeCapture.order.items[0].name, expectedProductName);
 });
 
 test('endpoint fails before contacting Stripe when durable storage is missing', async () => {
