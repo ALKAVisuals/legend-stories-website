@@ -1,0 +1,196 @@
+function newStructuredDataFunction() {
+  return [
+    "function structuredData(product) {",
+    "  const variants = Array.isArray(product.variants) && product.variants.length",
+    "    ? product.variants",
+    "    : [{ id: 'legacy', label: 'Standard', sizeCm: null, price: product.price, skuSuffix: 'standard', isDefault: true }];",
+    "  const orderedVariants = [...variants].sort((left, right) => Number(Boolean(right.isDefault)) - Number(Boolean(left.isDefault)));",
+    "  return JSON.stringify({",
+    "    '@context': 'https://schema.org/',",
+    "    '@type': 'Product',",
+    "    name: product.name,",
+    "    image: absoluteImageUrl(product),",
+    "    description: product.description,",
+    "    brand: { '@type': 'Brand', name: 'Legend Stories' },",
+    "    offers: orderedVariants.map((variant) => ({",
+    "      '@type': 'Offer',",
+    "      name: variant.sizeCm ? `${product.name} — ${variant.sizeCm} cm` : product.name,",
+    "      sku: `${product.slug}-${variant.skuSuffix || variant.sizeCm || 'standard'}`,",
+    "      price: Number(variant.price).toFixed(2),",
+    "      priceCurrency: product.currency || 'EUR',",
+    "      availability: product.availability,",
+    "      url: variant.sizeCm ? `${product.canonical}?size=${variant.sizeCm}` : product.canonical,",
+    "    })),",
+    "  }, null, 2).replaceAll('<', '\\\\u003c');",
+    "}",
+  ].join('\\n');
+}
+
+function newPresentationFunction() {
+  return [
+    "export function extractProductPresentation(html, product) {",
+    "  const story = matchRequired(",
+    "    html,",
+    "    /<!-- FACT -->[\\\\s\\\\S]*?<p class=\\\"text-text-secondary text-base md:text-lg leading-relaxed italic\\\">([\\\\s\\\\S]*?)<\\\\/p>/,",
+    "    `${product.page} story`,",
+    "  ).trim();",
+    "  const imageAlt = matchRequired(",
+    "    html,",
+    "    /<!-- IMAGE -->[\\\\s\\\\S]*?<img\\\\s+src=\\\"[^\\\"]*\\\"\\\\s+alt=\\\"([^\\\"]*)\\\"\\\\s+class=\\\"w-full h-full object-contain\\\"[^>]*>/,",
+    "    `${product.page} image alt`,",
+    "  );",
+    "  const announcementHtml = matchRequired(",
+    "    html,",
+    "    /<div class=\\\"w-full bg-gradient-mint[^>]*\\\" role=\\\"banner\\\">\\\\s*<p>([\\\\s\\\\S]*?)<\\\\/p>\\\\s*<\\\\/div>/,",
+    "    `${product.page} announcement`,",
+    "  ).trim();",
+    "  const pageTitle = decodeHtmlText(matchRequired(",
+    "    html,",
+    "    /<title>([\\\\s\\\\S]*?)<\\\\/title>/,",
+    "    `${product.page} page title`,",
+    "  ).trim());",
+    "  const defaultPageTitle = `${product.name} — ${product.collection} | Legend Stories`;",
+    "  const presentation = { page: product.page, story, imageAlt, announcementHtml };",
+    "  if (pageTitle !== defaultPageTitle) presentation.pageTitle = pageTitle;",
+    "  return presentation;",
+    "}",
+  ].join('\\n');
+}
+
+async function migrateProductGenerator() {
+  const path = 'scripts/product-page-generation.mjs';
+  let source = await read(path);
+  source = replaceOnce(
+    source,
+    /function structuredData\(product\) \{[\s\S]*?\n\}\n\nexport function extractProductPresentation/,
+    `${newStructuredDataFunction()}\n\nexport function extractProductPresentation`,
+    'structured data function',
+  );
+  source = replaceOnce(
+    source,
+    /export function extractProductPresentation\(html, product\) \{[\s\S]*?\n\}\n\nexport function templatizeProductPage/,
+    `${newPresentationFunction()}\n\nexport function templatizeProductPage`,
+    'presentation extraction function',
+  );
+
+  for (const line of [
+    "  html = replaceRequired(html, /<span class=\"font-display text-3xl font-bold\">[^<]+<\\/span>/, '<span class=\"font-display text-3xl font-bold\">{{PRICE_FORMATTED}}</span>', 'current price');\n",
+    "  html = replaceRequired(html, /<span class=\"text-text-muted text-sm line-through\">[^<]+<\\/span>/, '<span class=\"text-text-muted text-sm line-through\">{{COMPARE_AT_FORMATTED}}</span>', 'compare-at price');\n",
+    "  html = replaceRequired(html, /<span class=\"px-2 py-0\\.5 rounded bg-mint\\/10 text-mint text-xs font-bold\">[^<]+<\\/span>/, '<span class=\"px-2 py-0.5 rounded bg-mint/10 text-mint text-xs font-bold\">{{DISCOUNT_LABEL}}</span>', 'discount label');\n",
+  ]) {
+    if (!source.includes(line)) throw new Error('product generator: legacy price templatizer line missing.');
+    source = source.replace(line, '');
+  }
+
+  source = replaceOnce(
+    source,
+    /  html = replaceRequired\(\n    html,\n    \/<button class="[\s\S]*?    'add-to-cart button',\n  \);/,
+    `  html = replaceRequired(
+    html,
+    /<button class="([^"]*\\\\badd-to-cart-btn\\\\b[^"]*)" data-name="[^"]*" data-price="45" data-variant-id="statement-45" data-size-cm="45" data-variant-label="Statement" data-img="[^"]*">[\\\\s\\\\S]*?<\\\\/button>/,
+    '<button class="$1" data-name="{{NAME}}" data-price="45" data-variant-id="statement-45" data-size-cm="45" data-variant-label="Statement" data-img="{{IMAGE}}">\\\\n              Add to cart — €45\\\\n            </button>',
+    'add-to-cart button',
+  );`,
+    'add-to-cart templatizer',
+  );
+
+  source = source.replace(
+    `    PRICE_FORMATTED: formatEuro(product.price),
+    COMPARE_AT_FORMATTED: formatEuro(presentation.compareAtPrice),
+    DISCOUNT_LABEL: escapeHtml(presentation.discountLabel),
+    PRICE_RAW: Number(product.price).toFixed(2),
+`,
+    '',
+  );
+  await write(path, source);
+}
+
+function variantSelectorFunction() {
+  return `  function formatVariantPrice(price) {
+    return '€' + Number(price).toFixed(0);
+  }
+
+  function initProductVariantSelectors() {
+    document.querySelectorAll('[data-product-variant-selector]').forEach((selector) => {
+      const container = selector.closest('.flex.flex-col') || selector.parentElement;
+      const addButton = container?.querySelector('.add-to-cart-btn');
+      const priceOutput = container?.querySelector('[data-selected-price]');
+      const sizeOutput = container?.querySelector('[data-selected-size]');
+      const cards = selector.querySelectorAll('[data-variant-card]');
+      if (!addButton) return;
+
+      function applySelection(input) {
+        const variant = commerceModule.resolveProductVariant(input?.value);
+        addButton.dataset.price = String(variant.price);
+        addButton.dataset.variantId = variant.id;
+        addButton.dataset.sizeCm = String(variant.sizeCm);
+        addButton.dataset.variantLabel = variant.label;
+        addButton.textContent = 'Add to cart — ' + formatVariantPrice(variant.price);
+        if (priceOutput) priceOutput.textContent = formatVariantPrice(variant.price);
+        if (sizeOutput) sizeOutput.textContent = variant.label + ' · ' + variant.sizeCm + ' cm';
+        cards.forEach((card) => {
+          const selected = card.contains(input);
+          card.classList.toggle('border-mint/60', selected);
+          card.classList.toggle('bg-mint/10', selected);
+          card.classList.toggle('border-surface-border/40', !selected);
+          card.classList.toggle('bg-surface-light/20', !selected);
+        });
+      }
+
+      selector.addEventListener('change', (event) => {
+        if (event.target?.matches?.('input[type="radio"]')) applySelection(event.target);
+      });
+      applySelection(selector.querySelector('input[type="radio"]:checked'));
+    });
+  }
+
+`;
+}
+
+function internationalNoticeFunctions() {
+  return `  const EU_COUNTRY_CODES = new Set([
+    'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR',
+    'GR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PL', 'PT', 'RO',
+    'SE', 'SI', 'SK',
+  ]);
+
+  function updateInternationalShippingNotice(countryCode = state.shippingCountry) {
+    const notice = document.getElementById('checkout-import-note');
+    if (!notice) return;
+    const code = String(countryCode || '').toUpperCase();
+    notice.classList.toggle('hidden', !code || EU_COUNTRY_CODES.has(code));
+  }
+
+  function initInternationalShippingNotice() {
+    const country = document.getElementById('checkout-country');
+    if (!country || document.getElementById('checkout-import-note')) return;
+    const notice = document.createElement('p');
+    notice.id = 'checkout-import-note';
+    notice.className = 'hidden text-[11px] leading-relaxed text-text-muted mt-2';
+    notice.textContent = 'Local import duties and taxes may apply outside the EU and are paid by the recipient.';
+    country.insertAdjacentElement('afterend', notice);
+    updateInternationalShippingNotice(country.value || state.shippingCountry);
+  }
+
+`;
+}
+
+async function migrateApp() {
+  const path = 'js/app.js';
+  let source = await read(path);
+  source = source.replace("const CART_SCHEMA_VERSION = '2';", "const CART_SCHEMA_VERSION = '3';");
+  source = replaceOnce(
+    source,
+    `        import('./commerce/checkout-client.mjs'),
+      ]).then(([totals, discounts, orderRequest, checkoutClient]) => {`,
+    `        import('./commerce/checkout-client.mjs'),
+        import('./commerce/product-variants.mjs'),
+      ]).then(([totals, discounts, orderRequest, checkoutClient, productVariants]) => {`,
+    'commerce variant import',
+  );
+  source = replaceOnce(
+    source,
+    `          ...checkoutClient,
+        });`,
+    `          ...checkoutClient,
+          ...productVariants,
