@@ -9,12 +9,12 @@ function toggleClass(element, name, enabled) {
   element?.classList?.toggle?.(name, Boolean(enabled));
 }
 
-function focusTrigger(trigger) {
-  if (!trigger?.focus) return;
+function focusElement(element) {
+  if (!element?.focus) return;
   try {
-    trigger.focus({ preventScroll: true });
+    element.focus({ preventScroll: true });
   } catch {
-    trigger.focus();
+    element.focus();
   }
 }
 
@@ -29,6 +29,14 @@ function ensurePremiumNavigationStyles(documentRef) {
   documentRef.head.append(link);
 }
 
+function removeEmoji(value) {
+  return String(value || '')
+    .replace(/\p{Extended_Pictographic}/gu, '')
+    .replace(/[\uFE0E\uFE0F]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function enhanceAnnouncementBar(documentRef) {
   const announcement = documentRef?.querySelector?.('body > div[role="banner"]');
   const paragraph = announcement?.querySelector?.('p');
@@ -36,9 +44,14 @@ function enhanceAnnouncementBar(documentRef) {
 
   announcement.classList?.add?.('premium-announcement');
   if (announcement.dataset) announcement.dataset.premiumAnnouncement = 'true';
+  if (!documentRef?.createElement) return;
 
-  const text = paragraph.textContent || '';
-  if (!/Combat Legends/i.test(text) || !documentRef?.createElement) return;
+  const sourceText = removeEmoji(paragraph.textContent);
+  const collectionName = sourceText.match(/new\s+drop:\s*(.+?)\s+collection/i)?.[1]?.trim()
+    || sourceText.match(/new\s+release:\s*(.+?)(?:\s+[—-]|$)/i)?.[1]?.trim()
+    || 'LegendMural';
+  const promotionCode = sourceText.match(/\bLEGEND\d+\b/i)?.[0]?.toUpperCase() || 'LEGEND10';
+  const discountText = sourceText.match(/\b\d+%\s*off\b/i)?.[0] || '10% off';
 
   const kicker = documentRef.createElement('span');
   kicker.className = 'premium-announcement-kicker';
@@ -46,21 +59,60 @@ function enhanceAnnouncementBar(documentRef) {
 
   const collection = documentRef.createElement('span');
   collection.className = 'premium-announcement-collection';
-  collection.textContent = 'Combat Legends';
+  collection.textContent = `${collectionName} collection`;
 
   const offer = documentRef.createElement('span');
   offer.className = 'premium-announcement-offer';
-  offer.textContent = '·';
+  offer.textContent = 'Use';
 
   const code = documentRef.createElement('span');
   code.className = 'premium-announcement-code';
-  code.textContent = 'LEGEND10';
+  code.textContent = promotionCode;
 
   const discount = documentRef.createElement('span');
-  discount.className = 'premium-announcement-offer';
-  discount.textContent = '— 10% off';
+  discount.className = 'premium-announcement-discount';
+  discount.textContent = `for ${discountText}`;
 
   paragraph.replaceChildren?.(kicker, collection, offer, code, discount);
+}
+
+function createMobileMenuTopbar(panel, documentRef) {
+  if (!panel?.querySelector || !documentRef?.createElement) return null;
+
+  const existingClose = panel.querySelector('[data-mobile-menu-close]');
+  if (existingClose) return existingClose;
+
+  const topbar = documentRef.createElement('div');
+  topbar.className = 'premium-mobile-menu-topbar';
+
+  const brand = documentRef.createElement('a');
+  brand.href = 'index.html';
+  brand.className = 'premium-mobile-menu-brand';
+  brand.textContent = 'legendmural.';
+
+  const closeButton = documentRef.createElement('button');
+  closeButton.type = 'button';
+  closeButton.className = 'premium-mobile-menu-close';
+  closeButton.dataset.mobileMenuClose = 'true';
+  closeButton.setAttribute('aria-label', 'Close menu');
+
+  const closeLineOne = documentRef.createElement('span');
+  closeLineOne.setAttribute('aria-hidden', 'true');
+  const closeLineTwo = documentRef.createElement('span');
+  closeLineTwo.setAttribute('aria-hidden', 'true');
+  closeButton.append(closeLineOne, closeLineTwo);
+
+  topbar.append(brand, closeButton);
+  if (panel.prepend) panel.prepend(topbar);
+  else panel.insertBefore?.(topbar, panel.firstChild || null);
+
+  return closeButton;
+}
+
+function portalMobileMenu(menu, documentRef) {
+  const body = documentRef?.body;
+  if (!body?.append || menu?.parentElement === body) return;
+  body.append(menu);
 }
 
 function enhanceNavigationMarkup({ button, menu, documentRef }) {
@@ -72,16 +124,22 @@ function enhanceNavigationMarkup({ button, menu, documentRef }) {
   const panel = menu?.firstElementChild;
   panel?.classList?.add?.('premium-mobile-menu-panel');
   setAttribute(menu, 'aria-label', 'Mobile navigation');
+  setAttribute(menu, 'role', 'dialog');
+  setAttribute(menu, 'aria-modal', 'true');
 
-  if (!panel?.querySelector || !documentRef?.createElement) return;
-  if (panel.querySelector('[data-mobile-menu-shop]')) return;
+  const closeButton = createMobileMenuTopbar(panel, documentRef);
 
-  const shopLink = documentRef.createElement('a');
-  shopLink.href = 'shop.html';
-  shopLink.className = 'premium-mobile-menu-cta';
-  shopLink.dataset.mobileMenuShop = 'true';
-  shopLink.textContent = 'Shop the collection';
-  panel.append(shopLink);
+  if (panel?.querySelector && documentRef?.createElement && !panel.querySelector('[data-mobile-menu-shop]')) {
+    const shopLink = documentRef.createElement('a');
+    shopLink.href = 'shop.html';
+    shopLink.className = 'premium-mobile-menu-cta';
+    shopLink.dataset.mobileMenuShop = 'true';
+    shopLink.textContent = 'Shop the collection';
+    panel.append(shopLink);
+  }
+
+  portalMobileMenu(menu, documentRef);
+  return { closeButton, header, panel };
 }
 
 export function createMobileNavigationController({
@@ -101,7 +159,7 @@ export function createMobileNavigationController({
 
   ensurePremiumNavigationStyles(documentRef);
   enhanceAnnouncementBar(documentRef);
-  enhanceNavigationMarkup({ button, menu, documentRef });
+  const { closeButton } = enhanceNavigationMarkup({ button, menu, documentRef });
 
   const closedLabel = button.getAttribute?.('aria-label') || 'Open menu';
   const menuId = menu.id || 'mobile-menu';
@@ -125,13 +183,14 @@ export function createMobileNavigationController({
   function openMenu() {
     if (open) return false;
     sync(true);
+    focusElement(closeButton);
     return true;
   }
 
   function close({ restoreFocus = false } = {}) {
     if (!open) return false;
     sync(false);
-    if (restoreFocus) focusTrigger(button);
+    if (restoreFocus) focusElement(button);
     return true;
   }
 
@@ -145,11 +204,19 @@ export function createMobileNavigationController({
   }
 
   function handleMenuClick(event) {
-    if (event?.target === menu) {
+    const target = event?.target;
+    if (target === menu) {
       close({ restoreFocus: true });
       return;
     }
-    const link = event?.target?.closest?.('a[href]');
+
+    const closeControl = target?.closest?.('[data-mobile-menu-close]');
+    if (closeControl && menu.contains?.(closeControl)) {
+      close({ restoreFocus: true });
+      return;
+    }
+
+    const link = target?.closest?.('a[href]');
     if (link && menu.contains?.(link)) close();
   }
 
