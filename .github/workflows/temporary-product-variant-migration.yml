@@ -1,0 +1,80 @@
+name: Temporary product variant migration
+
+on:
+  push:
+    branches:
+      - feat/product-size-variants
+
+permissions:
+  contents: write
+
+concurrency:
+  group: product-variant-migration
+  cancel-in-progress: false
+
+jobs:
+  migrate-validate-publish:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/product-size-variants
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Assemble and verify migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat scripts/product-variant-migration.00.part \
+              scripts/product-variant-migration.01.part \
+              scripts/product-variant-migration.02.part \
+              > scripts/migrate-product-variants.mjs
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/migrate-product-variants.mjs')
+          source = path.read_text()
+          source = source.replace(r"].join('\\n');", r"].join('\n');")
+          path.write_text(source)
+          PY
+          node --check scripts/migrate-product-variants.mjs
+
+      - name: Apply product variants
+        run: |
+          node scripts/migrate-product-variants.mjs
+          npm run generate:managed-product-pages:live
+
+      - name: Install media inspection tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Run complete quality gate
+        run: npm run quality
+
+      - name: Publish validated implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm scripts/migrate-product-variants.mjs
+          rm scripts/product-variant-migration.00.part
+          rm scripts/product-variant-migration.01.part
+          rm scripts/product-variant-migration.02.part
+          rm .github/workflows/temporary-product-variant-migration.yml
+          git add -A
+          git commit -m "Implement 30 cm and 45 cm product variants"
+          git push origin HEAD:feat/product-size-variants
