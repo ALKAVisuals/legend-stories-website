@@ -27,6 +27,11 @@ test('cart markup remains escaped and product-labelled', () => {
   assert.match(moduleSource, /data-cart-action="remove"/);
 });
 
+test('delegated controls stay scoped to the cart and support cleanup', () => {
+  assert.match(moduleSource, /container\.contains\?\.\(control\)/);
+  assert.match(moduleSource, /container\.removeEventListener\?\.\('click', handleClick\)/);
+});
+
 test('the permanent quality chain validates delegated cart controls once', () => {
   assert.equal(packageJson.scripts['validate:cart-controls'], 'node scripts/validate-cart-controls.mjs');
   assert.equal(count(packageJson.scripts.quality, 'npm run validate:cart-controls'), 1);
