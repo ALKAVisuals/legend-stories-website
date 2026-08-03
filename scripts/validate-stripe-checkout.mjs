@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 
+import { resolveCatalogProductVariant } from '../js/commerce/product-variants.mjs';
 import { createHostedCheckoutSession } from '../server/payments/checkout-session.mjs';
 
 const catalog = JSON.parse(
@@ -7,10 +8,36 @@ const catalog = JSON.parse(
 ).products;
 const errors = [];
 
+function validationCustomer(index, country) {
+  return {
+    firstname: 'Validation',
+    lastname: 'Buyer',
+    email: `validation-${index}@example.com`,
+    street: country === 'NL' ? 'Teststraat 10' : 'Ermou 10',
+    zip: country === 'NL' ? '1234 AB' : '10563',
+    city: country === 'NL' ? 'Amsterdam' : 'Athens',
+    country,
+  };
+}
+
+function expectedVariantName(product, variant) {
+  return variant.id === 'legacy'
+    ? product.name
+    : `${product.name} — ${variant.sizeCm} cm`;
+}
+
+function productLineItems(payload) {
+  return payload.line_items.filter(
+    (item) => item.price_data.product_data.metadata?.type !== 'shipping',
+  );
+}
+
 for (const [index, product] of catalog.entries()) {
   let capturedPayload = null;
   const deliveryCountry = index % 2 === 0 ? 'NL' : 'GR';
   const expectedShippingZoneCode = deliveryCountry === 'NL' ? 'NL' : 'OTHER';
+  const requestedVariantId = index % 2 === 0 ? 'statement-45' : 'compact-30';
+  const variant = resolveCatalogProductVariant(product, requestedVariantId);
   const stripeClient = {
     mode: 'test',
     async createCheckoutSession(payload, { idempotencyKey }) {
@@ -31,6 +58,7 @@ for (const [index, product] of catalog.entries()) {
       request: {
         items: [{
           page: product.page,
+          variantId: variant.id,
           quantity: 1,
           price: 0.01,
           name: 'Tampered browser product',
@@ -38,15 +66,7 @@ for (const [index, product] of catalog.entries()) {
         countryCode: deliveryCountry,
         discountCode: 'LEGEND10',
       },
-      customer: {
-        firstname: 'Validation',
-        lastname: 'Buyer',
-        email: `validation-${index}@example.com`,
-        street: deliveryCountry === 'NL' ? 'Teststraat 10' : 'Ermou 10',
-        zip: deliveryCountry === 'NL' ? '1234 AB' : '10563',
-        city: deliveryCountry === 'NL' ? 'Amsterdam' : 'Athens',
-        country: deliveryCountry,
-      },
+      customer: validationCustomer(index, deliveryCountry),
       catalogProducts: catalog,
       stripeClient,
       successUrl: 'https://example.com/order-success.html',
@@ -60,8 +80,24 @@ for (const [index, product] of catalog.entries()) {
     if (stripeTotal !== checkout.quote.grandTotal) {
       errors.push(`${product.page}: Stripe line items do not reconcile to the quote.`);
     }
-    if (capturedPayload.line_items[0].price_data.product_data.name !== product.name) {
-      errors.push(`${product.page}: Stripe trusted a browser-supplied product name.`);
+
+    const [productLine] = productLineItems(capturedPayload);
+    const metadata = productLine?.price_data.product_data.metadata || {};
+    if (productLine?.price_data.product_data.name !== expectedVariantName(product, variant)) {
+      errors.push(`${product.page}: Stripe trusted a browser-supplied product or variant name.`);
+    }
+    const expectedDiscountedUnitAmount = Math.round(variant.price * 100 * 0.9);
+    if (productLine?.price_data.unit_amount !== expectedDiscountedUnitAmount) {
+      errors.push(`${product.page}: Stripe did not use the authoritative ${variant.sizeCm} cm price.`);
+    }
+    if (metadata.page !== product.page || metadata.slug !== product.slug) {
+      errors.push(`${product.page}: Stripe lost the authoritative product identity.`);
+    }
+    if (metadata.variant_id !== variant.id || metadata.size_cm !== String(variant.sizeCm)) {
+      errors.push(`${product.page}: Stripe lost the authoritative selected size.`);
+    }
+    if (metadata.sku !== `${product.slug}-${variant.skuSuffix}`) {
+      errors.push(`${product.page}: Stripe used the wrong variant SKU.`);
     }
     if (capturedPayload.metadata.delivery_country !== deliveryCountry) {
       errors.push(`${product.page}: Stripe lost the ISO delivery country.`);
@@ -80,6 +116,72 @@ for (const [index, product] of catalog.entries()) {
   }
 }
 
+try {
+  const product = catalog[0];
+  const captured = [];
+  const idempotencyKeys = [];
+  const stripeClient = {
+    mode: 'test',
+    async createCheckoutSession(payload, { idempotencyKey }) {
+      captured.push(payload);
+      idempotencyKeys.push(idempotencyKey);
+      return {
+        id: `cs_test_dual_variant_${captured.length}`,
+        url: `https://checkout.stripe.com/c/pay/cs_test_dual_variant_${captured.length}`,
+        livemode: false,
+      };
+    },
+  };
+  const customer = validationCustomer('dual', 'NL');
+  const base = {
+    customer,
+    catalogProducts: catalog,
+    stripeClient,
+    successUrl: 'https://example.com/order-success.html',
+    cancelUrl: 'https://example.com/order-cancelled.html',
+  };
+
+  await createHostedCheckoutSession({
+    ...base,
+    request: {
+      items: [
+        { page: product.page, variantId: 'compact-30', quantity: 1 },
+        { page: product.page, variantId: 'statement-45', quantity: 1 },
+      ],
+      countryCode: 'NL',
+      discountCode: 'LEGEND10',
+    },
+  });
+  await createHostedCheckoutSession({
+    ...base,
+    request: {
+      items: [{ page: product.page, variantId: 'compact-30', quantity: 1 }],
+      countryCode: 'NL',
+      discountCode: 'LEGEND10',
+    },
+  });
+
+  const dualLines = productLineItems(captured[0]);
+  if (dualLines.length !== 2) {
+    errors.push(`${product.page}: Stripe merged the 30 cm and 45 cm variants into one line.`);
+  } else {
+    const byVariant = new Map(
+      dualLines.map((line) => [line.price_data.product_data.metadata.variant_id, line]),
+    );
+    if (byVariant.get('compact-30')?.price_data.unit_amount !== 3150) {
+      errors.push(`${product.page}: dual-variant checkout priced the 30 cm line incorrectly.`);
+    }
+    if (byVariant.get('statement-45')?.price_data.unit_amount !== 4050) {
+      errors.push(`${product.page}: dual-variant checkout priced the 45 cm line incorrectly.`);
+    }
+  }
+  if (idempotencyKeys[0] === idempotencyKeys[1]) {
+    errors.push(`${product.page}: checkout reference does not distinguish selected variants.`);
+  }
+} catch (error) {
+  errors.push(`Dual-variant Stripe checkout: ${error.code || error.name}: ${error.message}`);
+}
+
 if (errors.length) {
   console.error('Stripe Checkout validation failed:');
   errors.forEach((error) => console.error(`- ${error}`));
@@ -87,5 +189,5 @@ if (errors.length) {
 }
 
 console.log(
-  `Stripe Checkout validation passed for ${catalog.length} products across explicit and fallback shipping zones with test-only sessions and exact cent reconciliation.`,
+  `Stripe Checkout validation passed for ${catalog.length} products and a dual-size cart with authoritative names, prices, SKUs, metadata, variant-aware references, test-only sessions and exact cent reconciliation.`,
 );
