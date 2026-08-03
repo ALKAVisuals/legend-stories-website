@@ -118,11 +118,29 @@ jobs:
           quality_status=$?
           set -e
           if [ "$quality_status" -ne 0 ]; then
-            tail -n 320 /tmp/product-variant-quality.log > product-variant-quality-diagnostic.txt
+            python - <<'PY'
+            from pathlib import Path
+
+            lines = Path('/tmp/product-variant-quality.log').read_text(errors='replace').splitlines()
+            selected = []
+            seen = set()
+            for index, line in enumerate(lines):
+                if line.startswith('not ok ') or 'ERR_ASSERTION' in line or line.lstrip().startswith('failureType:'):
+                    start = max(0, index - 8)
+                    end = min(len(lines), index + 45)
+                    for position in range(start, end):
+                        if position not in seen:
+                            selected.append(f'{position + 1}: {lines[position]}')
+                            seen.add(position)
+                    selected.append('---')
+            selected.append('=== QUALITY LOG TAIL ===')
+            selected.extend(lines[-120:])
+            Path('product-variant-quality-diagnostic.txt').write_text('\n'.join(selected) + '\n')
+            PY
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add product-variant-quality-diagnostic.txt
-            git commit -m "Record product variant quality diagnostic"
+            git commit -m "Record focused product variant quality diagnostic"
             git push origin HEAD:feat/product-size-variants
             exit "$quality_status"
           fi
