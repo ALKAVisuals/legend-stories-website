@@ -12,6 +12,8 @@ function count(source, needle) {
 test('production runtime contains no inert video or mobile placeholder initializer', () => {
   assert.doesNotMatch(appSource, /function initHoverExpandMobile/);
   assert.doesNotMatch(appSource, /function initVideoPlayer/);
+  assert.doesNotMatch(appSource, /\binitHoverExpandMobile\b/);
+  assert.doesNotMatch(appSource, /\binitVideoPlayer\b/);
   assert.doesNotMatch(appSource, /console\.log\('Play video:'/);
   assert.doesNotMatch(appSource, /Placeholder: show alert or expand to modal/);
 });
