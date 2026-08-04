@@ -49,6 +49,9 @@ jobs:
       - name: Apply launch commerce implementation from current main baseline
         run: node /tmp/apply-launch-commerce-v2.mjs
 
+      - name: Apply v2 contract corrections
+        run: node scripts/apply-launch-commerce-v2-fixes.mjs
+
       - name: Regenerate managed product pages
         run: npm run generate:managed-product-pages:live
 
