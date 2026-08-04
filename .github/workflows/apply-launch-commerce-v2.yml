@@ -1,9 +1,6 @@
 name: Apply launch commerce v2
 
 on:
-  push:
-    branches:
-      - agent/launch-commerce-v2
   pull_request:
     branches:
       - main
