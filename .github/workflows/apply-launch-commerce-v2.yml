@@ -17,12 +17,20 @@ jobs:
   apply-and-verify:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout clean v2 branch
         uses: actions/checkout@v4
         with:
           ref: agent/launch-commerce-v2
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
 
       - name: Configure commit identity
         run: |
@@ -35,17 +43,14 @@ jobs:
           git fetch --no-tags origin agent/launch-commerce-v1
           git show FETCH_HEAD:scripts/migrate-launch-commerce-v1.mjs > /tmp/apply-launch-commerce-v2.mjs
 
-      - name: Apply launch commerce implementation from current main baseline
-        run: node /tmp/apply-launch-commerce-v2.mjs
-
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate managed product pages
-        run: npm run generate:product-pages
+      - name: Apply launch commerce implementation from current main baseline
+        run: node /tmp/apply-launch-commerce-v2.mjs
 
-      - name: Generate central product catalog
-        run: npm run migrate:product-catalog
+      - name: Regenerate managed product pages
+        run: npm run generate:managed-product-pages:live
 
       - name: Verify launch implementation
         id: verify
@@ -64,9 +69,9 @@ jobs:
 
           failed=0
           run_check 'validate product variants' npm run validate:product-variants || failed=1
-          run_check 'validate full product catalog' npm run validate:product-catalog || failed=1
-          run_check 'validate live managed pages' npm run validate:product-pages || failed=1
-          run_check 'validate commerce runtime' npm run validate:commerce || failed=1
+          run_check 'validate full product catalog' npm run validate:full-catalog || failed=1
+          run_check 'validate live managed pages' npm run validate:managed-product-pages:live || failed=1
+          run_check 'validate commerce runtime' npm run validate:commerce-runtime || failed=1
           run_check 'validate Stripe checkout' npm run validate:stripe-checkout || failed=1
           run_check 'full test suite' npm test || failed=1
           run_check 'production build' npm run build || failed=1
