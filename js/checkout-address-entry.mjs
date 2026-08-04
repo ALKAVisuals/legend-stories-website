@@ -63,3 +63,26 @@ export function resetValidatedAddressFields({ streetInput, zipInput, cityInput, 
     countryInput.title = '';
   }
 }
+
+
+export function bindEditableAddressFields({
+  streetInput,
+  zipInput,
+  cityInput,
+  countryInput,
+  onEdit,
+} = {}) {
+  const fields = [streetInput, zipInput, cityInput, countryInput].filter(Boolean);
+
+  fields.forEach((input) => {
+    if (!input?.addEventListener || input.dataset?.addressEditBound === 'true') return;
+    if (input.dataset) input.dataset.addressEditBound = 'true';
+    const eventName = String(input.tagName || '').toUpperCase() === 'SELECT' ? 'change' : 'input';
+    input.addEventListener(eventName, () => {
+      resetValidatedAddressFields({ streetInput, zipInput, cityInput, countryInput });
+      onEdit?.(input);
+    });
+  });
+
+  return fields.length;
+}

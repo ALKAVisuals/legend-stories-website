@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  bindEditableAddressFields,
   configureStreetAddressInput,
   createManualAddress,
   resetValidatedAddressFields,
@@ -19,6 +20,11 @@ class FakeInput {
   setAttribute(name, value) { this.attributes.set(name, String(value)); }
   removeAttribute(name) { this.attributes.delete(name); }
   setCustomValidity(value) { this.customValidity = value; }
+  addEventListener(name, handler) {
+    this.listeners ||= {};
+    this.listeners[name] = handler;
+  }
+  trigger(name) { this.listeners?.[name]?.(); }
 }
 
 test('configures the street field for Google suggestions without Safari address autofill conflicts', () => {
@@ -78,4 +84,35 @@ test('editing a selected address unlocks and clears validated field state', () =
   assert.equal('validated' in cityInput.dataset, false);
   assert.equal(countryInput.disabled, false);
   assert.equal(countryInput.title, '');
+});
+
+
+test('every address field stays editable and invalidates a selected address when changed', () => {
+  const streetInput = new FakeInput();
+  const zipInput = new FakeInput();
+  const cityInput = new FakeInput();
+  const countryInput = new FakeInput();
+  countryInput.tagName = 'SELECT';
+  countryInput.disabled = true;
+  let edits = 0;
+
+  assert.equal(bindEditableAddressFields({
+    streetInput,
+    zipInput,
+    cityInput,
+    countryInput,
+    onEdit: () => { edits += 1; },
+  }), 4);
+
+  zipInput.trigger('input');
+  assert.equal(edits, 1);
+  assert.equal(countryInput.disabled, false);
+  assert.equal('validated' in streetInput.dataset, false);
+  assert.equal('validated' in zipInput.dataset, false);
+  assert.equal('validated' in cityInput.dataset, false);
+
+  countryInput.disabled = true;
+  countryInput.trigger('change');
+  assert.equal(edits, 2);
+  assert.equal(countryInput.disabled, false);
 });

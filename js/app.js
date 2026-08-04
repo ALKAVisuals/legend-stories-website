@@ -527,25 +527,23 @@ function loadDialogAccessibilityModule() {
       };
     }
 
-    // Keep manual entry usable and invalidate a selected suggestion when it is edited.
+    // Google suggestions only pre-fill the form. Every address field stays editable.
     const streetField = document.getElementById('checkout-street');
-    if (streetField) {
-      checkoutAddressModule.configureStreetAddressInput(streetField);
-      ensureCheckoutAddressStatus();
-      if (streetField.dataset.addressEntryBound !== 'true') {
-        streetField.dataset.addressEntryBound = 'true';
-        streetField.addEventListener('input', function() {
-          validatedAddress = null;
-          checkoutAddressModule.resetValidatedAddressFields({
-            streetInput: this,
-            zipInput: document.getElementById('checkout-zip'),
-            cityInput: document.getElementById('checkout-city'),
-            countryInput: document.getElementById('checkout-country'),
-          });
-          setCheckoutAddressStatus('');
-        });
-      }
-    }
+    const zipField = document.getElementById('checkout-zip');
+    const cityField = document.getElementById('checkout-city');
+    const countryField = document.getElementById('checkout-country');
+    if (streetField) checkoutAddressModule.configureStreetAddressInput(streetField);
+    ensureCheckoutAddressStatus();
+    checkoutAddressModule.bindEditableAddressFields({
+      streetInput: streetField,
+      zipInput: zipField,
+      cityInput: cityField,
+      countryInput: countryField,
+      onEdit: () => {
+        validatedAddress = null;
+        setCheckoutAddressStatus('');
+      },
+    });
   }
 
   function closeCheckoutModal({ restoreFocus = true } = {}) {
@@ -1326,9 +1324,9 @@ function initProductCards() {
         if (state) state.shippingCountry = codeUpper;
         updateCheckoutTotals();
       }
-      // Lock country field — it's determined by the validated address
-      countryInput.disabled = true;
-      countryInput.title = 'Country is set based on your address. Clear the street field to change.';
+      // Google pre-fills the country, but every address field remains editable.
+      countryInput.disabled = false;
+      countryInput.title = '';
     }
 
     // Lock street, zip, city — they come from the validated address
@@ -1344,6 +1342,7 @@ function initProductCards() {
       country: country_code.toUpperCase(),
       formatted: place.formatted_address || '',
     };
+    setCheckoutAddressStatus('Address selected. You can edit any field before continuing.');
   }
 
   // ==========================================
