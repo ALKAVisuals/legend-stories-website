@@ -128,10 +128,12 @@ async function patchSuccessfulOrderMutationTest() {
   const patchedBlock = originalBlock
     .replace(/(countryCode\s*:\s*['"])[A-Z]{2}(['"])/g, '$1NL$2')
     .replace(/(country\s*:\s*['"])[A-Z]{2}(['"])/g, '$1NL$2')
-    .replace(/(country_code\s*:\s*['"])[A-Z]{2}(['"])/g, '$1NL$2');
+    .replace(/(country_code\s*:\s*['"])[A-Z]{2}(['"])/g, '$1NL$2')
+    .replace(/(['"])GR\1/g, '$1NL$1');
 
   if (patchedBlock === originalBlock) {
-    if (!/(countryCode|country|country_code)\s*:\s*['"]NL['"]/.test(originalBlock)) {
+    if (!/(countryCode|country|country_code)\s*:\s*['"]NL['"]/.test(originalBlock)
+      || /(['"])GR\1/.test(originalBlock)) {
       throw new Error('The successful order mutation test contains no patchable delivery country.');
     }
     return;
