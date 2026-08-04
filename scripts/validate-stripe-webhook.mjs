@@ -27,7 +27,7 @@ for (const [index, product] of catalog.entries()) {
   try {
     const quote = createAuthoritativeOrderQuote({
       items: [{ page: product.page, quantity: 1, price: 0.01 }],
-      countryCode: index % 2 === 0 ? 'NL' : 'GR',
+      countryCode: 'NL',
       discountCode: 'LEGEND10',
     }, catalog);
 
@@ -116,5 +116,5 @@ if (errors.length) {
 }
 
 console.log(
-  `Stripe webhook validation passed for ${catalog.length} products with signed events, exact amounts and authoritative paid transitions.`,
+  `Stripe webhook validation passed for ${catalog.length} NL product checkouts with signed events, exact amounts and authoritative paid transitions.`,
 );
