@@ -76,7 +76,7 @@ test('aggregates duplicate product lines without trusting client totals', () => 
       { slug: firstProduct.slug, quantity: 3, lineTotal: 9999 },
       { page: secondProduct.page, quantity: 1 },
     ],
-    countryCode: 'DE',
+    countryCode: 'NL',
   }, catalog);
 
   assert.equal(quote.items.length, 2);

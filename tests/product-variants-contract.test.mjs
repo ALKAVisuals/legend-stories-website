@@ -22,7 +22,7 @@ test('product page defaults to the Statement 50 × 50 cm variant', () => {
   assert.match(sharedStylesSource, /\.product-variant-recommendation/);
   assert.match(sharedStylesSource, /\[data-theme="light"\] \.product-variant-card\.is-selected/);
   assert.match(templateSource, /Up to 50 × 50 cm/i);
-  assert.match(templateSource, /original proportions are preserved/i);
+  assert.match(templateSource, /Original proportions are always preserved/i);
   assert.doesNotMatch(templateSource, /line-through|Save 17%|60\s*[×x]\s*90/);
 });
 
