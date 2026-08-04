@@ -35,6 +35,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Restore canonical launch contracts
+        run: node scripts/apply-launch-commerce-v2-fixes.mjs
+
       - name: Regenerate managed product pages
         run: npm run generate:managed-product-pages:live
 
