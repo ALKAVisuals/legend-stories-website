@@ -42,6 +42,9 @@ jobs:
       - name: Apply approved launch migration
         run: node scripts/migrate-launch-commerce-v1.mjs
 
+      - name: Align commerce validator
+        run: node scripts/patch-launch-commerce-validator.mjs
+
       - name: Regenerate managed product pages
         run: npm run generate:managed-product-pages:live
 
