@@ -37,8 +37,10 @@ if (!source.includes('commerceModule.createCartLineId(page, variant.id)')) {
 if (!/const product = \{[\s\S]*?variantId: variant\.id,/.test(source)) {
   errors.push('cart items must store the selected product variant.');
 }
-if (!/const product = \{[\s\S]*?sizeCm: variant\.sizeCm,/.test(source)) {
-  errors.push('cart items must store the selected size for display and persistence.');
+if (!/const product = \{[\s\S]*?sizeLabel: variant\.sizeLabel,/.test(source)
+  || !/const product = \{[\s\S]*?widthCm: variant\.widthCm,/.test(source)
+  || !/const product = \{[\s\S]*?heightCm: variant\.heightCm,/.test(source)) {
+  errors.push('cart items must store the selected production box for display and persistence.');
 }
 if (!/variantId = String\(item\.variantId \|\| ''\)/.test(orderRequestSource)) {
   errors.push('trusted order requests must normalize the selected variant.');

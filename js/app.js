@@ -211,45 +211,9 @@ function loadDialogAccessibilityModule() {
     });
   }
 
-  const COUNTRY_OPTIONS = [
-    { code: 'NL', flag: '🇳🇱', name: 'Netherlands' },
-    { code: 'BE', flag: '🇧🇪', name: 'Belgium' },
-    { code: 'DE', flag: '🇩🇪', name: 'Germany' },
-    { code: 'FR', flag: '🇫🇷', name: 'France' },
-    { code: 'LU', flag: '🇱🇺', name: 'Luxembourg' },
-    { code: 'AT', flag: '🇦🇹', name: 'Austria' },
-    { code: 'GB', flag: '🇬🇧', name: 'United Kingdom' },
-    { code: 'IE', flag: '🇮🇪', name: 'Ireland' },
-    { code: 'DK', flag: '🇩🇰', name: 'Denmark' },
-    { code: 'SE', flag: '🇸🇪', name: 'Sweden' },
-    { code: 'NO', flag: '🇳🇴', name: 'Norway' },
-    { code: 'FI', flag: '🇫🇮', name: 'Finland' },
-    { code: 'ES', flag: '🇪🇸', name: 'Spain' },
-    { code: 'PT', flag: '🇵🇹', name: 'Portugal' },
-    { code: 'IT', flag: '🇮🇹', name: 'Italy' },
-    { code: 'GR', flag: '🇬🇷', name: 'Greece' },
-    { code: 'PL', flag: '🇵🇱', name: 'Poland' },
-    { code: 'CZ', flag: '🇨🇿', name: 'Czech Republic' },
-    { code: 'HU', flag: '🇭🇺', name: 'Hungary' },
-    { code: 'RO', flag: '🇷🇴', name: 'Romania' },
-    { code: 'BG', flag: '🇧🇬', name: 'Bulgaria' },
-    { code: 'HR', flag: '🇭🇷', name: 'Croatia' },
-    { code: 'SK', flag: '🇸🇰', name: 'Slovakia' },
-    { code: 'SI', flag: '🇸🇮', name: 'Slovenia' },
-    { code: 'EE', flag: '🇪🇪', name: 'Estonia' },
-    { code: 'LV', flag: '🇱🇻', name: 'Latvia' },
-    { code: 'LT', flag: '🇱🇹', name: 'Lithuania' },
-    { code: 'CH', flag: '🇨🇭', name: 'Switzerland' },
-    { code: 'US', flag: '🇺🇸', name: 'United States' },
-    { code: 'CA', flag: '🇨🇦', name: 'Canada' },
-    { code: 'AU', flag: '🇦🇺', name: 'Australia' },
-    { code: 'NZ', flag: '🇳🇿', name: 'New Zealand' },
-    { code: 'JP', flag: '🇯🇵', name: 'Japan' },
-    { code: 'KR', flag: '🇰🇷', name: 'South Korea' },
-    { code: 'SG', flag: '🇸🇬', name: 'Singapore' },
-    { code: 'AE', flag: '🇦🇪', name: 'United Arab Emirates' },
-    { code: 'OTHER', flag: '🌍', name: 'Rest of World' },
-  ];
+  const COUNTRY_OPTIONS = Object.freeze([
+    Object.freeze({ code: 'NL', flag: '🇳🇱', name: 'Netherlands' }),
+  ]);
 
   const PRODUCT_PAGE_BY_NAME = Object.freeze({
     'The Grind Cycle': 'combat-grind-cycle.html',

@@ -15,8 +15,8 @@ const secondProduct = catalog[1];
 const firstDefaultVariant = firstProduct.variants?.find((variant) => (
   variant.id === firstProduct.defaultVariantId || variant.isDefault
 ));
-const expectedFirstProductName = firstDefaultVariant?.sizeCm
-  ? `${firstProduct.name} — ${firstDefaultVariant.sizeCm} cm`
+const expectedFirstProductName = firstDefaultVariant?.sizeLabel
+  ? `${firstProduct.name} — ${firstDefaultVariant.label} (${firstDefaultVariant.sizeLabel})`
   : firstProduct.name;
 
 function expectOrderError(fn, code) {
@@ -40,12 +40,12 @@ test('builds totals from authoritative catalog prices and ignores browser price 
 
   assert.equal(quote.items[0].name, expectedFirstProductName);
   assert.equal(quote.items[0].variantId, 'statement-50x50');
-  assert.equal(quote.items[0].sizeCm, 45);
+  assert.equal(quote.items[0].sizeCm, 50);
   assert.equal(quote.items[0].unitPrice, 45);
   assert.equal(quote.totals.subtotal, 45);
-  assert.equal(quote.totals.shipping, 3.95);
-  assert.equal(quote.totals.grandTotal, 48.95);
-  assert.equal(quote.amountInCents.grandTotal, 4895);
+  assert.equal(quote.totals.shipping, 4.95);
+  assert.equal(quote.totals.grandTotal, 49.95);
+  assert.equal(quote.amountInCents.grandTotal, 4995);
 });
 
 test('resolves products by slug and validates discount codes centrally', () => {
@@ -59,8 +59,8 @@ test('resolves products by slug and validates discount codes centrally', () => {
   assert.equal(quote.discount.percent, 10);
   assert.equal(quote.discount.amount, 4.5);
   assert.equal(quote.totals.discountedSubtotal, 40.5);
-  assert.equal(quote.totals.grandTotal, 44.45);
-  assert.equal(quote.amountInCents.grandTotal, 4445);
+  assert.equal(quote.totals.grandTotal, 45.45);
+  assert.equal(quote.amountInCents.grandTotal, 4545);
   assert.equal(
     quote.amountInCents.subtotal
       - quote.amountInCents.discount

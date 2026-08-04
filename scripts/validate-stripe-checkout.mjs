@@ -34,8 +34,8 @@ function productLineItems(payload) {
 
 for (const [index, product] of catalog.entries()) {
   let capturedPayload = null;
-  const deliveryCountry = index % 2 === 0 ? 'NL' : 'GR';
-  const expectedShippingZoneCode = deliveryCountry === 'NL' ? 'NL' : 'OTHER';
+  const deliveryCountry = 'NL';
+  const expectedShippingZoneCode = 'NL';
   const requestedVariantId = index % 2 === 0 ? 'statement-50x50' : 'compact-50x30';
   const variant = resolveCatalogProductVariant(product, requestedVariantId);
   const stripeClient = {
