@@ -38,48 +38,6 @@ jobs:
       - name: Apply launch commerce implementation from current main baseline
         run: node /tmp/apply-launch-commerce-v2.mjs
 
-      - name: Normalize the exact checkout shipping fixture
-        shell: bash
-        run: |
-          title='successful checkout forwards Stripe shipping details into the canonical order'
-          mapfile -t matches < <(grep -RIlF \
-            --include='*.mjs' \
-            --exclude-dir=.git \
-            --exclude-dir=node_modules \
-            --exclude-dir=dist \
-            -- "$title" .)
-
-          if [ "${#matches[@]}" -ne 1 ]; then
-            printf 'Matching files:\n%s\n' "${matches[*]:-none}"
-            echo "Expected exactly one checkout shipping test, found ${#matches[@]}."
-            exit 1
-          fi
-
-          node --input-type=module - "${matches[0]}" <<'NODE'
-          import { readFile, writeFile } from 'node:fs/promises';
-
-          const matchPath = process.argv[2];
-          const title = 'successful checkout forwards Stripe shipping details into the canonical order';
-          const source = await readFile(matchPath, 'utf8');
-          const titleIndex = source.indexOf(title);
-          const testStart = Math.max(source.lastIndexOf('test(', titleIndex), source.lastIndexOf('it(', titleIndex));
-          const nextTest = source.slice(titleIndex + title.length).search(/\n(?:test|it)\(/);
-          const testEnd = nextTest === -1 ? source.length : titleIndex + title.length + nextTest;
-          const originalBlock = source.slice(testStart, testEnd);
-          const migratedBlock = originalBlock
-            .replaceAll("'GR'", "'NL'")
-            .replaceAll('"GR"', '"NL"')
-            .replaceAll("'Greece'", "'Netherlands'")
-            .replaceAll('"Greece"', '"Netherlands"');
-
-          if (migratedBlock.includes("'GR'") || migratedBlock.includes('"GR"') || migratedBlock.includes('Greece')) {
-            throw new Error(`The checkout shipping fixture still contains legacy Greece values in ${matchPath}.`);
-          }
-
-          await writeFile(matchPath, source.slice(0, testStart) + migratedBlock + source.slice(testEnd), 'utf8');
-          console.log(`Normalized checkout shipping fixture: ${matchPath}`);
-          NODE
-
       - name: Install dependencies
         run: npm ci
 
