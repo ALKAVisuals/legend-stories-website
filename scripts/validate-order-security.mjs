@@ -25,7 +25,16 @@ function validateCentReconciliation(quote, label, errors) {
 function expectedAuthoritativeName(product, variant) {
   return variant.id === 'legacy'
     ? product.name
-    : `${product.name} — ${variant.sizeCm} cm`;
+    : `${product.name} — ${variant.label} (${variant.sizeLabel})`;
+}
+
+function preservesVariantIdentity(item, variant) {
+  return item.variantId === variant.id
+    && item.variantLabel === variant.label
+    && item.sizeLabel === variant.sizeLabel
+    && item.widthCm === variant.widthCm
+    && item.heightCm === variant.heightCm
+    && item.longestSideCm === variant.longestSideCm;
 }
 
 export async function validateOrderSecurity(root = ROOT) {
@@ -41,7 +50,7 @@ export async function validateOrderSecurity(root = ROOT) {
   for (const product of catalog.products) {
     try {
       const defaultVariant = resolveCatalogProductVariant(product, product.defaultVariantId);
-      const compactVariant = resolveCatalogProductVariant(product, 'compact-30');
+      const compactVariant = resolveCatalogProductVariant(product, 'compact-50x30');
       const byPage = createAuthoritativeOrderQuote({
         items: [{
           page: product.page,
@@ -62,7 +71,7 @@ export async function validateOrderSecurity(root = ROOT) {
           name: 'Another tampered browser name',
           lineTotal: 9999,
         }],
-        countryCode: 'DE',
+        countryCode: 'NL',
         discountCode: 'LEGEND10',
       }, catalog.products);
 
@@ -72,8 +81,8 @@ export async function validateOrderSecurity(root = ROOT) {
       if (byPage.items[0].name !== expectedAuthoritativeName(product, defaultVariant)) {
         errors.push(`${product.page}: page quote trusted the browser product name.`);
       }
-      if (byPage.items[0].variantId !== defaultVariant.id || byPage.items[0].sizeCm !== defaultVariant.sizeCm) {
-        errors.push(`${product.page}: page quote did not preserve the authoritative default variant.`);
+      if (!preservesVariantIdentity(byPage.items[0], defaultVariant)) {
+        errors.push(`${product.page}: page quote did not preserve the authoritative default production box.`);
       }
       if (bySlug.items[0].page !== product.page) {
         errors.push(`${product.page}: slug quote resolved to a different product.`);
@@ -84,8 +93,8 @@ export async function validateOrderSecurity(root = ROOT) {
       if (bySlug.items[0].name !== expectedAuthoritativeName(product, compactVariant)) {
         errors.push(`${product.page}: compact quote trusted the browser product name.`);
       }
-      if (bySlug.items[0].variantId !== compactVariant.id || bySlug.items[0].sizeCm !== compactVariant.sizeCm) {
-        errors.push(`${product.page}: compact quote did not preserve the authoritative selected variant.`);
+      if (!preservesVariantIdentity(bySlug.items[0], compactVariant)) {
+        errors.push(`${product.page}: compact quote did not preserve the authoritative selected production box.`);
       }
       if (bySlug.discount.code !== 'LEGEND10' || bySlug.discount.percent !== 10) {
         errors.push(`${product.page}: central discount policy was not applied.`);
@@ -113,7 +122,7 @@ async function main() {
     return;
   }
   console.log(
-    `Order security validation passed for ${result.productCount} products; client names and prices were ignored, selected variants were resolved from the catalog and cent totals reconciled exactly.`,
+    `Order security validation passed for ${result.productCount} products; client names and prices were ignored, production-box dimensions were resolved from the catalog and cent totals reconciled exactly.`,
   );
 }
 

@@ -19,7 +19,7 @@
       <p>{{collection}}</p>
       <h1>{{name}}</h1>
       <p>{{description}}</p>
-      <p>Available in 30 cm and 45 cm, measured along the longest side.</p>
+      <p>Compact: up to 50 × 30 cm. Statement: up to 50 × 50 cm. Original proportions are preserved.</p>
       <p><small>From €{{fromPriceFormatted}}</small> <strong>€{{priceFormatted}}</strong></p>
       <button
         type="button"
@@ -28,9 +28,13 @@
         data-price="{{price}}"
         data-variant-id="{{variantId}}"
         data-variant-label="{{variantLabel}}"
+        data-size-label="{{sizeLabel}}"
+        data-width-cm="{{widthCm}}"
+        data-height-cm="{{heightCm}}"
+        data-longest-side-cm="{{longestSideCm}}"
         data-size-cm="{{sizeCm}}"
         data-img="{{image}}"
-      >Add {{sizeCm}} cm — €{{priceFormatted}}</button>
+      >Add {{variantLabel}} ({{sizeLabel}}) — €{{priceFormatted}}</button>
     </article>
   </main>
 </body>

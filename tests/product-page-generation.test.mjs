@@ -19,10 +19,10 @@ test('rendered product values preserve SEO title overrides, apostrophes and cano
     image: 'media/stikkers/test.png',
     price: 45,
     fromPrice: 35,
-    defaultVariantId: 'statement-45',
+    defaultVariantId: 'statement-50x50',
     variants: [
       {
-        id: 'statement-45',
+        id: 'statement-50x50',
         label: 'Statement',
         sizeCm: 45,
         price: 45,
@@ -30,7 +30,7 @@ test('rendered product values preserve SEO title overrides, apostrophes and cano
         isDefault: true,
       },
       {
-        id: 'compact-30',
+        id: 'compact-50x30',
         label: 'Compact',
         sizeCm: 30,
         price: 35,

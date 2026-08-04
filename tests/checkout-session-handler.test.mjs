@@ -11,8 +11,8 @@ const product = catalog[0];
 const defaultVariant = product.variants?.find((variant) => (
   variant.id === product.defaultVariantId || variant.isDefault
 ));
-const expectedProductName = defaultVariant?.sizeCm
-  ? `${product.name} — ${defaultVariant.sizeCm} cm`
+const expectedProductName = defaultVariant?.sizeLabel
+  ? `${product.name} — ${defaultVariant.label} (${defaultVariant.sizeLabel})`
   : product.name;
 
 const payload = Object.freeze({

@@ -53,13 +53,13 @@ const inventory = await buildProductInventory(ROOT);
 const catalog = JSON.parse(await readFile(CATALOG_PATH, 'utf8'));
 const errors = [];
 
-if (catalog.schemaVersion !== 2) errors.push('catalog schemaVersion must be 2.');
+if (catalog.schemaVersion !== 3) errors.push('catalog schemaVersion must be 3.');
 if (!Array.isArray(catalog.products)) errors.push('catalog products must be an array.');
 if (catalog.variantPolicy?.defaultVariantId !== DEFAULT_PRODUCT_VARIANT_ID) {
   errors.push('catalog variant policy has an invalid default.');
 }
-if (catalog.variantPolicy?.sizeMeasurement !== 'longest_side') {
-  errors.push('catalog variant policy must measure the longest side.');
+if (catalog.variantPolicy?.sizeMeasurement !== 'production_box') {
+  errors.push('catalog variant policy must use production boxes.');
 }
 
 const expected = inventory.products
@@ -93,7 +93,7 @@ for (const product of actual) {
         errors.push(`${product.page}: missing ${expectedVariant.id}.`);
         continue;
       }
-      for (const key of ['label', 'sizeCm', 'price', 'skuSuffix', 'isDefault']) {
+      for (const key of ['label', 'sizeLabel', 'widthCm', 'heightCm', 'longestSideCm', 'price', 'skuSuffix', 'isDefault']) {
         if (actualVariant[key] !== expectedVariant[key]) {
           errors.push(`${product.page}: ${expectedVariant.id}.${key} differs from policy.`);
         }
@@ -101,8 +101,8 @@ for (const product of actual) {
     }
   }
   try {
-    resolveCatalogProductVariant(product, 'compact-30');
-    resolveCatalogProductVariant(product, 'statement-45');
+    resolveCatalogProductVariant(product, 'compact-50x30');
+    resolveCatalogProductVariant(product, 'statement-50x50');
   } catch (error) {
     errors.push(`${product.page}: ${error.message}`);
   }

@@ -1,5 +1,6 @@
 import { resolveDiscount } from '../../js/commerce/discounts.mjs';
 import { calculateCommerceTotals } from '../../js/commerce/totals.mjs';
+import { getShippingZone } from '../../js/commerce/shipping.mjs';
 import {
   createProductSku,
   resolveCatalogProductVariant,
@@ -159,7 +160,7 @@ export function createAuthoritativeOrderQuote(payload = {}, catalogProducts = []
       const unitPrice = roundMoney(variant.price);
       const displayName = variant.id === 'legacy'
         ? product.name
-        : `${product.name} — ${variant.sizeCm} cm`;
+        : `${product.name} — ${variant.label} (${variant.sizeLabel})`;
       return Object.freeze({
         slug: product.slug,
         page: product.page,
@@ -168,7 +169,11 @@ export function createAuthoritativeOrderQuote(payload = {}, catalogProducts = []
         sku: variant.id === 'legacy' ? product.slug : createProductSku(product, variant),
         variantId: variant.id,
         variantLabel: variant.label,
-        sizeCm: variant.sizeCm,
+        sizeLabel: variant.sizeLabel,
+        widthCm: variant.widthCm,
+        heightCm: variant.heightCm,
+        longestSideCm: variant.longestSideCm,
+        sizeCm: variant.longestSideCm,
         unitPrice,
         quantity,
         lineTotal: roundMoney(unitPrice * quantity),
@@ -185,9 +190,17 @@ export function createAuthoritativeOrderQuote(payload = {}, catalogProducts = []
     fail('INVALID_DISCOUNT_CODE', 'The discount code is invalid.');
   }
 
+  const requestedCountryCode = String(payload?.countryCode || 'NL').trim().toUpperCase();
+  const requestedZone = getShippingZone(requestedCountryCode);
+  if (!requestedZone.enabled) {
+    fail('SHIPPING_COUNTRY_UNAVAILABLE', 'Checkout is not enabled for this delivery country yet.', {
+      countryCode: requestedCountryCode,
+    });
+  }
+
   const totals = calculateCommerceTotals({
     items: authoritativeItems.map((item) => ({ price: item.unitPrice, quantity: item.quantity })),
-    countryCode: String(payload?.countryCode || 'NL').trim().toUpperCase(),
+    countryCode: requestedCountryCode,
     discountPercent: discount.percent,
   });
 

@@ -92,8 +92,7 @@ test('hosted Checkout Session uses authoritative totals, shipping and customer d
   assert.equal(checkout.mode, 'test');
 });
 
-test('rest-of-world countries retain their ISO delivery country in Stripe', async () => {
-  const capture = {};
+test('international checkout remains unavailable until a market is enabled', async () => {
   const greekCustomer = {
     ...customer,
     street: 'Ermou 10',
@@ -102,24 +101,23 @@ test('rest-of-world countries retain their ISO delivery country in Stripe', asyn
     country: 'GR',
   };
 
-  await createHostedCheckoutSession({
-    request: {
-      items: [{ page: firstProduct.page, quantity: 1 }],
-      countryCode: 'GR',
+  await assert.rejects(
+    () => createHostedCheckoutSession({
+      request: {
+        items: [{ page: firstProduct.page, quantity: 1 }],
+        countryCode: 'GR',
+      },
+      customer: greekCustomer,
+      catalogProducts: catalog,
+      stripeClient: createFakeStripeClient(),
+      successUrl: 'https://example.com/success',
+      cancelUrl: 'https://example.com/cancel',
+    }),
+    (error) => {
+      assert.equal(error.code, 'SHIPPING_COUNTRY_UNAVAILABLE');
+      return true;
     },
-    customer: greekCustomer,
-    catalogProducts: catalog,
-    stripeClient: createFakeStripeClient(capture),
-    successUrl: 'https://example.com/success',
-    cancelUrl: 'https://example.com/cancel',
-  });
-
-  assert.equal(capture.payload.metadata.delivery_country, 'GR');
-  assert.equal(capture.payload.metadata.shipping_zone_code, 'OTHER');
-  assert.equal(capture.payload.payment_intent_data.shipping.address.country, 'GR');
-  const shippingLine = capture.payload.line_items.at(-1);
-  assert.equal(shippingLine.price_data.product_data.metadata.delivery_country, 'GR');
-  assert.equal(shippingLine.price_data.product_data.metadata.shipping_zone_code, 'OTHER');
+  );
 });
 
 test('identical checkout requests produce stable idempotency references', async () => {
@@ -174,9 +172,9 @@ test('customer country must match the requested shipping country', async () => {
     () => createHostedCheckoutSession({
       request: {
         items: [{ page: firstProduct.page, quantity: 1 }],
-        countryCode: 'DE',
+        countryCode: 'NL',
       },
-      customer,
+      customer: { ...customer, country: 'DE' },
       catalogProducts: catalog,
       stripeClient: createFakeStripeClient(),
       successUrl: 'https://example.com/success',

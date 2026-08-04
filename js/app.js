@@ -30,7 +30,7 @@
     discountPercent: 0,
   };
 
-  const CART_SCHEMA_VERSION = '3';
+  const CART_SCHEMA_VERSION = '4';
 
   // ==========================================
   // LOCAL STORAGE - Cart Persistence
@@ -61,8 +61,11 @@
       localStorage.setItem('legendCartVersion', CART_SCHEMA_VERSION);
       state.cart = [];
     }
-    if (savedCountry) {
-      state.shippingCountry = savedCountry;
+    if (savedCountry === 'NL') {
+      state.shippingCountry = 'NL';
+    } else {
+      state.shippingCountry = 'NL';
+      localStorage.removeItem('legendShippingCountry');
     }
     const savedDiscount = commerceModule.resolveDiscount(savedDiscountCode || '');
     state.discountCode = savedDiscount.code;
@@ -208,45 +211,9 @@ function loadDialogAccessibilityModule() {
     });
   }
 
-  const COUNTRY_OPTIONS = [
-    { code: 'NL', flag: '🇳🇱', name: 'Netherlands' },
-    { code: 'BE', flag: '🇧🇪', name: 'Belgium' },
-    { code: 'DE', flag: '🇩🇪', name: 'Germany' },
-    { code: 'FR', flag: '🇫🇷', name: 'France' },
-    { code: 'LU', flag: '🇱🇺', name: 'Luxembourg' },
-    { code: 'AT', flag: '🇦🇹', name: 'Austria' },
-    { code: 'GB', flag: '🇬🇧', name: 'United Kingdom' },
-    { code: 'IE', flag: '🇮🇪', name: 'Ireland' },
-    { code: 'DK', flag: '🇩🇰', name: 'Denmark' },
-    { code: 'SE', flag: '🇸🇪', name: 'Sweden' },
-    { code: 'NO', flag: '🇳🇴', name: 'Norway' },
-    { code: 'FI', flag: '🇫🇮', name: 'Finland' },
-    { code: 'ES', flag: '🇪🇸', name: 'Spain' },
-    { code: 'PT', flag: '🇵🇹', name: 'Portugal' },
-    { code: 'IT', flag: '🇮🇹', name: 'Italy' },
-    { code: 'GR', flag: '🇬🇷', name: 'Greece' },
-    { code: 'PL', flag: '🇵🇱', name: 'Poland' },
-    { code: 'CZ', flag: '🇨🇿', name: 'Czech Republic' },
-    { code: 'HU', flag: '🇭🇺', name: 'Hungary' },
-    { code: 'RO', flag: '🇷🇴', name: 'Romania' },
-    { code: 'BG', flag: '🇧🇬', name: 'Bulgaria' },
-    { code: 'HR', flag: '🇭🇷', name: 'Croatia' },
-    { code: 'SK', flag: '🇸🇰', name: 'Slovakia' },
-    { code: 'SI', flag: '🇸🇮', name: 'Slovenia' },
-    { code: 'EE', flag: '🇪🇪', name: 'Estonia' },
-    { code: 'LV', flag: '🇱🇻', name: 'Latvia' },
-    { code: 'LT', flag: '🇱🇹', name: 'Lithuania' },
-    { code: 'CH', flag: '🇨🇭', name: 'Switzerland' },
-    { code: 'US', flag: '🇺🇸', name: 'United States' },
-    { code: 'CA', flag: '🇨🇦', name: 'Canada' },
-    { code: 'AU', flag: '🇦🇺', name: 'Australia' },
-    { code: 'NZ', flag: '🇳🇿', name: 'New Zealand' },
-    { code: 'JP', flag: '🇯🇵', name: 'Japan' },
-    { code: 'KR', flag: '🇰🇷', name: 'South Korea' },
-    { code: 'SG', flag: '🇸🇬', name: 'Singapore' },
-    { code: 'AE', flag: '🇦🇪', name: 'United Arab Emirates' },
-    { code: 'OTHER', flag: '🌍', name: 'Rest of World' },
-  ];
+  const COUNTRY_OPTIONS = Object.freeze([
+    Object.freeze({ code: 'NL', flag: '🇳🇱', name: 'Netherlands' }),
+  ]);
 
   const PRODUCT_PAGE_BY_NAME = Object.freeze({
     'The Grind Cycle': 'combat-grind-cycle.html',
@@ -371,7 +338,10 @@ function loadDialogAccessibilityModule() {
       price: variant.price,
       variantId: variant.id,
       variantLabel: variant.label,
-      sizeCm: variant.sizeCm,
+      sizeCm: variant.longestSideCm,
+      sizeLabel: variant.sizeLabel,
+      widthCm: variant.widthCm,
+      heightCm: variant.heightCm,
       quantity: 1,
       image: image || '🎨',
     };
@@ -466,7 +436,7 @@ function loadDialogAccessibilityModule() {
       '<div class="border-t border-surface-border/30 pt-3 mt-3">' +
       '<div class="flex justify-between text-sm"><span class="text-text-muted">Subtotal</span><span class="text-text-primary font-medium">' + formatPrice(cartSubtotal) + '</span></div>' +
       (state.discountPercent > 0 ? '<div class="flex justify-between text-sm"><span class="text-text-muted">Discount (' + state.discountPercent + '%)</span><span class="text-red-400 font-medium">-' + formatPrice(totals.discount) + '</span></div>' : '') +
-      '<p class="text-[11px] text-text-muted mt-1.5">🚚 Shipping calculated at checkout based on your country. Free shipping available from €50+ (NL) / €75+ (EU) / €150+ (World)</p>' +
+      '<p class="text-[11px] text-text-muted mt-1.5">🚚 Shipping calculated at checkout based on your country. Netherlands shipping is €4,95 and free from €69. International checkout opens per validated market.</p>' +
       '</div>';
 
     // Cart drawer total excludes shipping because shipping is shown at checkout.
@@ -905,6 +875,9 @@ function loadDialogAccessibilityModule() {
         variantId: item.variantId,
         variantLabel: item.variantLabel,
         sizeCm: item.sizeCm,
+        sizeLabel: item.sizeLabel,
+        widthCm: item.widthCm,
+        heightCm: item.heightCm,
       })),
       customer: displayCustomer,
       shipping: { zone: totals.zone.name, cost: totals.shipping },
@@ -1121,11 +1094,14 @@ function loadDialogAccessibilityModule() {
         const variant = commerceModule.resolveProductVariant(input?.value);
         addButton.dataset.price = String(variant.price);
         addButton.dataset.variantId = variant.id;
-        addButton.dataset.sizeCm = String(variant.sizeCm);
+        addButton.dataset.sizeCm = String(variant.longestSideCm);
+        addButton.dataset.sizeLabel = variant.sizeLabel;
+        addButton.dataset.widthCm = String(variant.widthCm);
+        addButton.dataset.heightCm = String(variant.heightCm);
         addButton.dataset.variantLabel = variant.label;
         addButton.textContent = 'Add to cart — ' + formatVariantPrice(variant.price);
         if (priceOutput) priceOutput.textContent = formatVariantPrice(variant.price);
-        if (sizeOutput) sizeOutput.textContent = variant.label + ' · ' + variant.sizeCm + ' cm';
+        if (sizeOutput) sizeOutput.textContent = variant.label + ' · ' + variant.sizeLabel;
         cards.forEach((card) => {
           const selected = card.contains(input);
           card.classList.toggle('is-selected', selected);

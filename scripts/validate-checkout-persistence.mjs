@@ -11,14 +11,24 @@ const errors = [];
 function expectedVariantName(product, variant) {
   return variant.id === 'legacy'
     ? product.name
-    : `${product.name} — ${variant.sizeCm} cm`;
+    : `${product.name} — ${variant.label} (${variant.sizeLabel})`;
+}
+
+function preservesVariantIdentity(item, variant) {
+  return item.variantId === variant.id
+    && item.variantLabel === variant.label
+    && item.sizeLabel === variant.sizeLabel
+    && item.widthCm === variant.widthCm
+    && item.heightCm === variant.heightCm
+    && item.longestSideCm === variant.longestSideCm
+    && item.sizeCm === variant.longestSideCm;
 }
 
 for (const [index, product] of catalog.entries()) {
   let storedOrder = null;
-  const deliveryCountry = index % 2 === 0 ? 'NL' : 'GR';
+  const deliveryCountry = 'NL';
   const sessionId = `cs_test_persistence_validation_${index}`;
-  const variantId = index % 2 === 0 ? 'statement-45' : 'compact-30';
+  const variantId = index % 2 === 0 ? 'statement-50x50' : 'compact-50x30';
   const variant = resolveCatalogProductVariant(product, variantId);
 
   try {
@@ -38,9 +48,9 @@ for (const [index, product] of catalog.entries()) {
         firstname: 'Persistence',
         lastname: 'Validation',
         email: `persistence-${index}@example.com`,
-        street: deliveryCountry === 'NL' ? 'Teststraat 10' : 'Ermou 10',
-        zip: deliveryCountry === 'NL' ? '1234 AB' : '10563',
-        city: deliveryCountry === 'NL' ? 'Amsterdam' : 'Athens',
+        street: 'Teststraat 10',
+        zip: '1234 AB',
+        city: 'Amsterdam',
         country: deliveryCountry,
       },
       catalogProducts: catalog,
@@ -87,16 +97,15 @@ for (const [index, product] of catalog.entries()) {
       || storedItem.unitPrice !== variant.price) {
       errors.push(`${product.page}: stored order trusted browser product data.`);
     }
-    if (storedItem.variantId !== variant.id
-      || storedItem.variantLabel !== variant.label
-      || storedItem.sizeCm !== variant.sizeCm) {
-      errors.push(`${product.page}: stored order lost the selected product size.`);
+    if (!preservesVariantIdentity(storedItem, variant)) {
+      errors.push(`${product.page}: stored order lost the selected production-box identity.`);
     }
     if (storedItem.sku !== `${product.slug}-${variant.skuSuffix}`) {
       errors.push(`${product.page}: stored order used the wrong variant SKU.`);
     }
-    if (storedOrder.shipping.deliveryCountry !== deliveryCountry) {
-      errors.push(`${product.page}: stored delivery country is incorrect.`);
+    if (storedOrder.shipping.deliveryCountry !== deliveryCountry
+      || storedOrder.shipping.zoneCode !== 'NL') {
+      errors.push(`${product.page}: stored NL delivery information is incorrect.`);
     }
     if (checkout.reservationCreated !== true) {
       errors.push(`${product.page}: new Checkout was not marked as a new reservation.`);
@@ -112,8 +121,8 @@ try {
   await createDurableHostedCheckoutSession({
     request: {
       items: [
-        { page: product.page, variantId: 'compact-30', quantity: 1 },
-        { page: product.page, variantId: 'statement-45', quantity: 1 },
+        { page: product.page, variantId: 'compact-50x30', quantity: 1 },
+        { page: product.page, variantId: 'statement-50x50', quantity: 1 },
       ],
       countryCode: 'NL',
       discountCode: 'LEGEND10',
@@ -149,8 +158,14 @@ try {
   });
 
   const variantIds = storedOrder?.items.map((item) => item.variantId).sort();
-  if (JSON.stringify(variantIds) !== JSON.stringify(['compact-30', 'statement-45'])) {
+  if (JSON.stringify(variantIds) !== JSON.stringify(['compact-50x30', 'statement-50x50'])) {
     errors.push(`${product.page}: pending order did not preserve both selected sizes.`);
+  }
+  for (const item of storedOrder?.items || []) {
+    const variant = resolveCatalogProductVariant(product, item.variantId);
+    if (!preservesVariantIdentity(item, variant)) {
+      errors.push(`${product.page}: dual-size pending order lost production-box metadata.`);
+    }
   }
 } catch (error) {
   errors.push(`Dual-size pending order: ${error.code || error.name}: ${error.message}`);
@@ -160,7 +175,7 @@ let stripeCalledWithoutStore = false;
 try {
   await createDurableHostedCheckoutSession({
     request: {
-      items: [{ page: catalog[0].page, variantId: 'statement-45', quantity: 1 }],
+      items: [{ page: catalog[0].page, variantId: 'statement-50x50', quantity: 1 }],
       countryCode: 'NL',
     },
     customer: {
@@ -199,5 +214,5 @@ if (errors.length) {
 }
 
 console.log(
-  `Checkout persistence validation passed for ${catalog.length} products and a dual-size order with authoritative variant records and fail-closed storage.`,
+  `Checkout persistence validation passed for ${catalog.length} products and a dual-size order with authoritative production-box records, NL delivery data and fail-closed storage.`,
 );

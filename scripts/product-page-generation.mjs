@@ -69,7 +69,7 @@ function absoluteImageUrl(product, image = product.image) {
 function structuredData(product) {
   const variants = Array.isArray(product.variants) && product.variants.length
     ? product.variants
-    : [{ id: 'legacy', label: 'Standard', sizeCm: null, price: product.price, skuSuffix: 'standard', isDefault: true }];
+    : [{ id: 'legacy', label: 'Standard', sizeLabel: '', widthCm: 1, heightCm: 1, longestSideCm: 1, price: product.price, skuSuffix: 'standard', isDefault: true }];
   const orderedVariants = [...variants].sort((left, right) => Number(Boolean(right.isDefault)) - Number(Boolean(left.isDefault)));
   return JSON.stringify({
     '@context': 'https://schema.org/',
@@ -80,12 +80,12 @@ function structuredData(product) {
     brand: { '@type': 'Brand', name: 'Legend Stories' },
     offers: orderedVariants.map((variant) => ({
       '@type': 'Offer',
-      name: variant.sizeCm ? `${product.name} — ${variant.sizeCm} cm` : product.name,
-      sku: `${product.slug}-${variant.skuSuffix || variant.sizeCm || 'standard'}`,
+      name: variant.id === 'legacy' ? product.name : `${product.name} — ${variant.label} (${variant.sizeLabel})`,
+      sku: `${product.slug}-${variant.skuSuffix || variant.id || 'standard'}`,
       price: Number(variant.price).toFixed(2),
       priceCurrency: product.currency || 'EUR',
       availability: product.availability,
-      url: variant.sizeCm ? `${product.canonical}?size=${variant.sizeCm}` : product.canonical,
+      url: variant.id === 'legacy' ? product.canonical : `${product.canonical}?variant=${encodeURIComponent(variant.id)}`,
     })),
   }, null, 2).replaceAll('<', '\\u003c');
 }
@@ -178,8 +178,8 @@ export function templatizeProductPage(input) {
   );
   html = replaceRequired(
     html,
-    /<button class="([^"]*\badd-to-cart-btn\b[^"]*)" data-name="[^"]*" data-price="45" data-variant-id="statement-45" data-size-cm="45" data-variant-label="Statement" data-img="[^"]*">[\s\S]*?<\/button>/,
-    '<button class="$1" data-name="{{NAME}}" data-price="45" data-variant-id="statement-45" data-size-cm="45" data-variant-label="Statement" data-img="{{IMAGE}}">\n              Add to cart — €45\n            </button>',
+    /<button class="([^"]*\badd-to-cart-btn\b[^"]*)" data-name="[^"]*" data-price="45" data-variant-id="statement-50x50" data-size-label="50 × 50 cm" data-width-cm="50" data-height-cm="50" data-longest-side-cm="50" data-variant-label="Statement" data-img="[^"]*">[\s\S]*?<\/button>/,
+    '<button class="$1" data-name="{{NAME}}" data-price="45" data-variant-id="statement-50x50" data-size-label="50 × 50 cm" data-width-cm="50" data-height-cm="50" data-longest-side-cm="50" data-variant-label="Statement" data-img="{{IMAGE}}">\n              Add to cart — €45\n            </button>',
     'add-to-cart button',
   );
   html = replaceRequired(

@@ -23,7 +23,7 @@ function validationCustomer(index, country) {
 function expectedVariantName(product, variant) {
   return variant.id === 'legacy'
     ? product.name
-    : `${product.name} — ${variant.sizeCm} cm`;
+    : `${product.name} — ${variant.label} (${variant.sizeLabel})`;
 }
 
 function productLineItems(payload) {
@@ -34,9 +34,9 @@ function productLineItems(payload) {
 
 for (const [index, product] of catalog.entries()) {
   let capturedPayload = null;
-  const deliveryCountry = index % 2 === 0 ? 'NL' : 'GR';
-  const expectedShippingZoneCode = deliveryCountry === 'NL' ? 'NL' : 'OTHER';
-  const requestedVariantId = index % 2 === 0 ? 'statement-45' : 'compact-30';
+  const deliveryCountry = 'NL';
+  const expectedShippingZoneCode = 'NL';
+  const requestedVariantId = index % 2 === 0 ? 'statement-50x50' : 'compact-50x30';
   const variant = resolveCatalogProductVariant(product, requestedVariantId);
   const stripeClient = {
     mode: 'test',
@@ -93,8 +93,11 @@ for (const [index, product] of catalog.entries()) {
     if (metadata.page !== product.page || metadata.slug !== product.slug) {
       errors.push(`${product.page}: Stripe lost the authoritative product identity.`);
     }
-    if (metadata.variant_id !== variant.id || metadata.size_cm !== String(variant.sizeCm)) {
-      errors.push(`${product.page}: Stripe lost the authoritative selected size.`);
+    if (metadata.variant_id !== variant.id
+      || metadata.size_label !== variant.sizeLabel
+      || metadata.width_cm !== String(variant.widthCm)
+      || metadata.height_cm !== String(variant.heightCm)) {
+      errors.push(`${product.page}: Stripe lost the authoritative selected production box.`);
     }
     if (metadata.sku !== `${product.slug}-${variant.skuSuffix}`) {
       errors.push(`${product.page}: Stripe used the wrong variant SKU.`);
@@ -145,8 +148,8 @@ try {
     ...base,
     request: {
       items: [
-        { page: product.page, variantId: 'compact-30', quantity: 1 },
-        { page: product.page, variantId: 'statement-45', quantity: 1 },
+        { page: product.page, variantId: 'compact-50x30', quantity: 1 },
+        { page: product.page, variantId: 'statement-50x50', quantity: 1 },
       ],
       countryCode: 'NL',
       discountCode: 'LEGEND10',
@@ -155,7 +158,7 @@ try {
   await createHostedCheckoutSession({
     ...base,
     request: {
-      items: [{ page: product.page, variantId: 'compact-30', quantity: 1 }],
+      items: [{ page: product.page, variantId: 'compact-50x30', quantity: 1 }],
       countryCode: 'NL',
       discountCode: 'LEGEND10',
     },
@@ -163,16 +166,16 @@ try {
 
   const dualLines = productLineItems(captured[0]);
   if (dualLines.length !== 2) {
-    errors.push(`${product.page}: Stripe merged the 30 cm and 45 cm variants into one line.`);
+    errors.push(`${product.page}: Stripe merged the Compact and Statement variants into one line.`);
   } else {
     const byVariant = new Map(
       dualLines.map((line) => [line.price_data.product_data.metadata.variant_id, line]),
     );
-    if (byVariant.get('compact-30')?.price_data.unit_amount !== 3150) {
-      errors.push(`${product.page}: dual-variant checkout priced the 30 cm line incorrectly.`);
+    if (byVariant.get('compact-50x30')?.price_data.unit_amount !== 3150) {
+      errors.push(`${product.page}: dual-variant checkout priced the Compact line incorrectly.`);
     }
-    if (byVariant.get('statement-45')?.price_data.unit_amount !== 4050) {
-      errors.push(`${product.page}: dual-variant checkout priced the 45 cm line incorrectly.`);
+    if (byVariant.get('statement-50x50')?.price_data.unit_amount !== 4050) {
+      errors.push(`${product.page}: dual-variant checkout priced the Statement line incorrectly.`);
     }
   }
   if (idempotencyKeys[0] === idempotencyKeys[1]) {

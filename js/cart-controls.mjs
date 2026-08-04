@@ -24,9 +24,9 @@ export function renderCartItemMarkup({ item, index, formatPrice } = {}) {
   }
 
   const safeName = escapeCartHtml(item.name || 'Product');
-  const variantText = item.sizeCm
-    ? `${item.sizeCm} cm${item.variantLabel ? ` · ${item.variantLabel}` : ''}`
-    : '';
+  const variantText = item.sizeLabel
+    ? `${item.variantLabel || 'Size'} · ${item.sizeLabel}`
+    : (item.sizeCm ? `${item.sizeCm} cm${item.variantLabel ? ` · ${item.variantLabel}` : ''}` : '');
   const safeVariant = escapeCartHtml(variantText);
   const accessibleName = safeVariant ? `${safeName}, ${safeVariant}` : safeName;
   const safeImage = escapeCartHtml(item.image || '🎨');
