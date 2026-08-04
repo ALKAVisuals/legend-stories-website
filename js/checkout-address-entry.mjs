@@ -2,9 +2,18 @@ function normalizeWhitespace(value = '') {
   return String(value).replace(/\s+/g, ' ').trim();
 }
 
+function keepFieldEditable(input) {
+  if (!input) return;
+  input.disabled = false;
+  if ('readOnly' in input) input.readOnly = false;
+  input.removeAttribute?.('disabled');
+  input.removeAttribute?.('readonly');
+}
+
 export function configureStreetAddressInput(input) {
   if (!input?.setAttribute) return input;
 
+  keepFieldEditable(input);
   input.setAttribute('name', 'shipping-address-line1');
   input.setAttribute('autocomplete', 'off');
   input.setAttribute('inputmode', 'text');
@@ -51,15 +60,35 @@ export function createManualAddress({ street, postalCode, city, country } = {}) 
 }
 
 export function resetValidatedAddressFields({ streetInput, zipInput, cityInput, countryInput } = {}) {
-  [streetInput, zipInput, cityInput].forEach((input) => {
+  [streetInput, zipInput, cityInput, countryInput].forEach((input) => {
     if (!input) return;
-    delete input.dataset.validated;
-    input.removeAttribute('aria-invalid');
+    keepFieldEditable(input);
+    if (input.dataset) delete input.dataset.validated;
+    input.removeAttribute?.('aria-invalid');
     input.setCustomValidity?.('');
+    input.title = '';
+  });
+}
+
+export function bindEditableAddressFields({
+  streetInput,
+  zipInput,
+  cityInput,
+  countryInput,
+  onEdit,
+} = {}) {
+  const fields = [streetInput, zipInput, cityInput, countryInput].filter(Boolean);
+
+  fields.forEach((input) => {
+    keepFieldEditable(input);
+    if (!input?.addEventListener || input.dataset?.addressEditBound === 'true') return;
+    if (input.dataset) input.dataset.addressEditBound = 'true';
+    const eventName = String(input.tagName || '').toUpperCase() === 'SELECT' ? 'change' : 'input';
+    input.addEventListener(eventName, () => {
+      resetValidatedAddressFields({ streetInput, zipInput, cityInput, countryInput });
+      onEdit?.(input);
+    });
   });
 
-  if (countryInput) {
-    countryInput.disabled = false;
-    countryInput.title = '';
-  }
+  return fields.length;
 }
