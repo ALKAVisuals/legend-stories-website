@@ -1,4 +1,5 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { readFile, readdir, writeFile } from 'node:fs/promises';
 
 async function updateTextFile(path, transform) {
   const source = await readFile(path, 'utf8');
@@ -12,7 +13,8 @@ async function updateTextFile(path, transform) {
   return updated;
 }
 
-const template = await updateTextFile('templates/product-page.html', (source) => (
+const templatePath = 'templates/product-page.html';
+const template = await updateTextFile(templatePath, (source) => (
   source.replaceAll('Up to 50 × Up to 50 × 30 cm', 'Up to 50 × 30 cm')
 ));
 
@@ -27,6 +29,27 @@ if (!template.includes('Original proportions are always preserved.')) {
 }
 if (template.includes('Up to 50 × Up to')) {
   throw new Error('Duplicated production-box copy is still present in the product template.');
+}
+
+const templateSha256 = createHash('sha256').update(template).digest('hex');
+const presentationFiles = (await readdir('data/products'))
+  .filter((name) => name.endsWith('-presentation.json'))
+  .sort();
+
+if (presentationFiles.length !== 6) {
+  throw new Error(`Expected 6 presentation manifests, found ${presentationFiles.length}.`);
+}
+
+for (const name of presentationFiles) {
+  const path = `data/products/${name}`;
+  await updateTextFile(path, (source) => {
+    const manifest = JSON.parse(source);
+    if (manifest.template?.path !== templatePath) {
+      throw new Error(`${manifest.batchId || name}: unexpected product template path.`);
+    }
+    manifest.template.sha256 = templateSha256;
+    return `${JSON.stringify(manifest, null, 2)}\n`;
+  });
 }
 
 const orderQuoteTest = await updateTextFile('tests/order-quote.test.mjs', (source) => {
