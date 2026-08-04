@@ -109,11 +109,16 @@ async function patchSuccessfulOrderMutationTest() {
   const { file } = matchingFiles[0];
   let { source } = matchingFiles[0];
   const titleIndex = source.indexOf(title);
-  const blockStart = source.lastIndexOf("test('", titleIndex);
-  const nextSingleQuotedTest = source.indexOf("\ntest('", titleIndex + title.length);
-  const nextDoubleQuotedTest = source.indexOf('\ntest("', titleIndex + title.length);
-  const candidates = [nextSingleQuotedTest, nextDoubleQuotedTest].filter((index) => index >= 0);
-  const blockEnd = candidates.length ? Math.min(...candidates) : source.length;
+  const testStartCandidates = [
+    source.lastIndexOf('test(', titleIndex),
+    source.lastIndexOf('it(', titleIndex),
+  ].filter((index) => index >= 0);
+  const blockStart = testStartCandidates.length ? Math.max(...testStartCandidates) : -1;
+  const remainder = source.slice(titleIndex + title.length);
+  const nextTestMatch = remainder.match(/\n\s*(?:test|it)\s*\(/);
+  const blockEnd = nextTestMatch
+    ? titleIndex + title.length + nextTestMatch.index
+    : source.length;
 
   if (blockStart < 0 || blockEnd <= blockStart) {
     throw new Error('Could not isolate the successful order mutation test block.');
