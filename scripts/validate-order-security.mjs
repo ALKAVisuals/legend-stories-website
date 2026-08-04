@@ -41,7 +41,7 @@ export async function validateOrderSecurity(root = ROOT) {
   for (const product of catalog.products) {
     try {
       const defaultVariant = resolveCatalogProductVariant(product, product.defaultVariantId);
-      const compactVariant = resolveCatalogProductVariant(product, 'compact-30');
+      const compactVariant = resolveCatalogProductVariant(product, 'compact-50x30');
       const byPage = createAuthoritativeOrderQuote({
         items: [{
           page: product.page,

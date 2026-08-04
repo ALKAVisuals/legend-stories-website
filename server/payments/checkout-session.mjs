@@ -148,7 +148,7 @@ export function allocateDiscountCents(quote) {
 
 function productDescription(item) {
   const parts = [];
-  if (item.sizeCm) parts.push(`Size: ${item.sizeCm} cm`);
+  if (item.sizeLabel) parts.push(`Size: ${item.sizeLabel}`);
   parts.push(`Quantity: ${item.quantity}`);
   return parts.join(' · ');
 }
@@ -179,7 +179,11 @@ function buildStripeLineItems(quote, deliveryCountry) {
             sku: item.sku || item.slug,
             variant_id: item.variantId || 'legacy',
             variant_label: item.variantLabel || 'Standard',
-            size_cm: item.sizeCm ? String(item.sizeCm) : 'legacy',
+            size_label: item.sizeLabel || 'legacy',
+            width_cm: item.widthCm ? String(item.widthCm) : 'legacy',
+            height_cm: item.heightCm ? String(item.heightCm) : 'legacy',
+            longest_side_cm: item.longestSideCm ? String(item.longestSideCm) : 'legacy',
+            size_cm: item.longestSideCm ? String(item.longestSideCm) : 'legacy',
             quantity: String(item.quantity),
           },
         },
@@ -231,7 +235,10 @@ function createReference({ quote, customer, successUrl, cancelUrl, deliveryCount
       name: item.name,
       variantId: item.variantId,
       variantLabel: item.variantLabel,
-      sizeCm: item.sizeCm,
+      sizeLabel: item.sizeLabel,
+      widthCm: item.widthCm,
+      heightCm: item.heightCm,
+      longestSideCm: item.longestSideCm,
       unitPrice: item.unitPrice,
       quantity: item.quantity,
       lineTotal: item.lineTotal,

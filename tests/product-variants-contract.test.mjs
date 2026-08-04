@@ -10,8 +10,8 @@ const orderQuoteSource = await readFile(new URL('../server/commerce/order-quote.
 
 test('product page defaults to the 45 cm statement variant', () => {
   assert.match(templateSource, /data-product-variant-selector/);
-  assert.match(templateSource, /value="statement-45" checked/);
-  assert.match(templateSource, /value="compact-30"/);
+  assert.match(templateSource, /value="statement-50x50" checked/);
+  assert.match(templateSource, /value="compact-50x30"/);
   assert.match(templateSource, /product-variant-card is-selected/);
   assert.match(templateSource, /product-variant-choice/);
   assert.match(templateSource, /product-variant-recommendation/);

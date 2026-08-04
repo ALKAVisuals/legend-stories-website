@@ -18,7 +18,7 @@ for (const [index, product] of catalog.entries()) {
   let storedOrder = null;
   const deliveryCountry = index % 2 === 0 ? 'NL' : 'GR';
   const sessionId = `cs_test_persistence_validation_${index}`;
-  const variantId = index % 2 === 0 ? 'statement-45' : 'compact-30';
+  const variantId = index % 2 === 0 ? 'statement-50x50' : 'compact-50x30';
   const variant = resolveCatalogProductVariant(product, variantId);
 
   try {
@@ -112,8 +112,8 @@ try {
   await createDurableHostedCheckoutSession({
     request: {
       items: [
-        { page: product.page, variantId: 'compact-30', quantity: 1 },
-        { page: product.page, variantId: 'statement-45', quantity: 1 },
+        { page: product.page, variantId: 'compact-50x30', quantity: 1 },
+        { page: product.page, variantId: 'statement-50x50', quantity: 1 },
       ],
       countryCode: 'NL',
       discountCode: 'LEGEND10',
@@ -149,7 +149,7 @@ try {
   });
 
   const variantIds = storedOrder?.items.map((item) => item.variantId).sort();
-  if (JSON.stringify(variantIds) !== JSON.stringify(['compact-30', 'statement-45'])) {
+  if (JSON.stringify(variantIds) !== JSON.stringify(['compact-50x30', 'statement-50x50'])) {
     errors.push(`${product.page}: pending order did not preserve both selected sizes.`);
   }
 } catch (error) {
@@ -160,7 +160,7 @@ let stripeCalledWithoutStore = false;
 try {
   await createDurableHostedCheckoutSession({
     request: {
-      items: [{ page: catalog[0].page, variantId: 'statement-45', quantity: 1 }],
+      items: [{ page: catalog[0].page, variantId: 'statement-50x50', quantity: 1 }],
       countryCode: 'NL',
     },
     customer: {
