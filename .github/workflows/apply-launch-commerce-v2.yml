@@ -64,7 +64,7 @@ jobs:
             }
           }
 
-          await walk(join(root, 'tests'));
+          await walk(root);
           if (matches.length !== 1) {
             throw new Error(`Expected exactly one checkout shipping test, found ${matches.length}.`);
           }
