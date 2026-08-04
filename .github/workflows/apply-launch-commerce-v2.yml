@@ -41,37 +41,31 @@ jobs:
       - name: Normalize the exact checkout shipping fixture
         shell: bash
         run: |
-          node --input-type=module <<'NODE'
-          import { readFile, readdir, writeFile } from 'node:fs/promises';
-          import { extname, join } from 'node:path';
+          title='successful checkout forwards Stripe shipping details into the canonical order'
+          mapfile -t matches < <(grep -RIlF \
+            --include='*.mjs' \
+            --exclude-dir=.git \
+            --exclude-dir=node_modules \
+            --exclude-dir=dist \
+            -- "$title" .)
 
-          const root = process.cwd();
+          if [ "${#matches[@]}" -ne 1 ]; then
+            printf 'Matching files:\n%s\n' "${matches[*]:-none}"
+            echo "Expected exactly one checkout shipping test, found ${#matches[@]}."
+            exit 1
+          fi
+
+          node --input-type=module - "${matches[0]}" <<'NODE'
+          import { readFile, writeFile } from 'node:fs/promises';
+
+          const matchPath = process.argv[2];
           const title = 'successful checkout forwards Stripe shipping details into the canonical order';
-          const matches = [];
-
-          async function walk(directory) {
-            for (const entry of await readdir(directory, { withFileTypes: true })) {
-              if (['.git', 'node_modules', 'dist'].includes(entry.name)) continue;
-              const path = join(directory, entry.name);
-              if (entry.isDirectory()) await walk(path);
-              else if (extname(path) === '.mjs') {
-                const source = await readFile(path, 'utf8');
-                if (source.includes(title)) matches.push({ path, source });
-              }
-            }
-          }
-
-          await walk(root);
-          if (matches.length !== 1) {
-            throw new Error(`Expected exactly one checkout shipping test, found ${matches.length}.`);
-          }
-
-          const match = matches[0];
-          const titleIndex = match.source.indexOf(title);
-          const testStart = Math.max(match.source.lastIndexOf('test(', titleIndex), match.source.lastIndexOf('it(', titleIndex));
-          const nextTest = match.source.slice(titleIndex + title.length).search(/\n(?:test|it)\(/);
-          const testEnd = nextTest === -1 ? match.source.length : titleIndex + title.length + nextTest;
-          const originalBlock = match.source.slice(testStart, testEnd);
+          const source = await readFile(matchPath, 'utf8');
+          const titleIndex = source.indexOf(title);
+          const testStart = Math.max(source.lastIndexOf('test(', titleIndex), source.lastIndexOf('it(', titleIndex));
+          const nextTest = source.slice(titleIndex + title.length).search(/\n(?:test|it)\(/);
+          const testEnd = nextTest === -1 ? source.length : titleIndex + title.length + nextTest;
+          const originalBlock = source.slice(testStart, testEnd);
           const migratedBlock = originalBlock
             .replaceAll("'GR'", "'NL'")
             .replaceAll('"GR"', '"NL"')
@@ -79,11 +73,11 @@ jobs:
             .replaceAll('"Greece"', '"Netherlands"');
 
           if (migratedBlock.includes("'GR'") || migratedBlock.includes('"GR"') || migratedBlock.includes('Greece')) {
-            throw new Error(`The checkout shipping fixture still contains legacy Greece values in ${match.path}.`);
+            throw new Error(`The checkout shipping fixture still contains legacy Greece values in ${matchPath}.`);
           }
 
-          await writeFile(match.path, match.source.slice(0, testStart) + migratedBlock + match.source.slice(testEnd), 'utf8');
-          console.log(`Normalized checkout shipping fixture: ${match.path}`);
+          await writeFile(matchPath, source.slice(0, testStart) + migratedBlock + source.slice(testEnd), 'utf8');
+          console.log(`Normalized checkout shipping fixture: ${matchPath}`);
           NODE
 
       - name: Install dependencies
