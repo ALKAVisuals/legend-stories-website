@@ -144,6 +144,20 @@ function loadGooglePlacesLoaderModule() {
   return googlePlacesLoaderModulePromise;
 }
 
+let checkoutAddressModule = null;
+let checkoutAddressModulePromise = null;
+
+function loadCheckoutAddressModule() {
+  if (!checkoutAddressModulePromise) {
+    checkoutAddressModulePromise = import('./checkout-address-entry.mjs')
+      .then((module) => {
+        checkoutAddressModule = module;
+        return module;
+      });
+  }
+  return checkoutAddressModulePromise;
+}
+
 let cartControlsModule = null;
 let cartControlsModulePromise = null;
 
@@ -513,20 +527,24 @@ function loadDialogAccessibilityModule() {
       };
     }
 
-    // Watch for street field being cleared — re-enable fields
+    // Keep manual entry usable and invalidate a selected suggestion when it is edited.
     const streetField = document.getElementById('checkout-street');
     if (streetField) {
-      streetField.addEventListener('input', function() {
-        if (this.value.trim() === '') {
+      checkoutAddressModule.configureStreetAddressInput(streetField);
+      ensureCheckoutAddressStatus();
+      if (streetField.dataset.addressEntryBound !== 'true') {
+        streetField.dataset.addressEntryBound = 'true';
+        streetField.addEventListener('input', function() {
           validatedAddress = null;
-          const countryEl = document.getElementById('checkout-country');
-          if (countryEl) { countryEl.disabled = false; countryEl.title = ''; }
-          const zipEl = document.getElementById('checkout-zip');
-          const cityEl = document.getElementById('checkout-city');
-          if (zipEl) zipEl.dataset.validated = '';
-          if (cityEl) cityEl.dataset.validated = '';
-        }
-      });
+          checkoutAddressModule.resetValidatedAddressFields({
+            streetInput: this,
+            zipInput: document.getElementById('checkout-zip'),
+            cityInput: document.getElementById('checkout-city'),
+            countryInput: document.getElementById('checkout-country'),
+          });
+          setCheckoutAddressStatus('');
+        });
+      }
     }
   }
 
@@ -753,11 +771,27 @@ function loadDialogAccessibilityModule() {
   }
 
   function validateAddressWithGoogle(street, zip, city, country, callback) {
+    const useManualFallback = () => {
+      const result = manualAddressFallback(street, zip, city, country);
+      if (result.error) {
+        callback(result.error);
+        return;
+      }
+      setCheckoutAddressStatus('Address entered manually because suggestions are unavailable.', { warning: true });
+      callback(null, result.address);
+    };
+
+    if (googlePlacesUnavailable) {
+      useManualFallback();
+      return;
+    }
+
     loadGooglePlaces().then(() => {
       doGoogleValidation(street, zip, city, country, callback);
     }).catch((error) => {
+      googlePlacesUnavailable = true;
       console.warn('Google address validation could not start:', error);
-      callback('Address verification is temporarily unavailable. Please try again.');
+      useManualFallback();
     });
   }
 
@@ -769,7 +803,17 @@ function loadDialogAccessibilityModule() {
       query: query,
       fields: ['address_components', 'formatted_address', 'geometry', 'name']
     }, function(results, status) {
-      if (status !== window.google.maps.places.PlacesServiceStatus.OK || !results || results.length === 0) {
+      if (status !== window.google.maps.places.PlacesServiceStatus.OK) {
+        if (status === window.google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+          callback('Address not found. Please check your street, postal code, city and country, or select an address from the suggestions.');
+          return;
+        }
+        googlePlacesUnavailable = true;
+        const fallback = manualAddressFallback(street, zip, city, country);
+        callback(fallback.error, fallback.address);
+        return;
+      }
+      if (!results || results.length === 0) {
         callback('Address not found. Please check your street, postal code, city and country, or select an address from the suggestions.');
         return;
       }
@@ -1173,8 +1217,46 @@ function initProductCards() {
   // ==========================================
   let placeAutocomplete = null;
   let placeAutocompleteInitialized = false;
+  let googlePlacesUnavailable = false;
 
   const GP_API_KEY = 'V5yqGyVnJ1IFk3fpZojBuvxMAic=';
+
+  function ensureCheckoutAddressStatus() {
+    const streetInput = document.getElementById('checkout-street');
+    if (!streetInput?.parentElement) return null;
+    let status = document.getElementById('checkout-address-status');
+    if (!status) {
+      status = document.createElement('p');
+      status.id = 'checkout-address-status';
+      status.className = 'hidden text-[11px] leading-relaxed mt-1.5 text-text-muted';
+      status.setAttribute('role', 'status');
+      status.setAttribute('aria-live', 'polite');
+      streetInput.parentElement.appendChild(status);
+    }
+    streetInput.setAttribute('aria-describedby', status.id);
+    return status;
+  }
+
+  function setCheckoutAddressStatus(message, { warning = false } = {}) {
+    const status = ensureCheckoutAddressStatus();
+    if (!status) return;
+    status.textContent = message || '';
+    status.classList.toggle('hidden', !message);
+    status.classList.toggle('text-amber-300', Boolean(message) && warning);
+    status.classList.toggle('text-text-muted', !warning);
+  }
+
+  function manualAddressFallback(street, zip, city, country) {
+    if (!checkoutAddressModule) {
+      return { address: null, error: 'Address entry is temporarily unavailable. Please reload the page.' };
+    }
+    return checkoutAddressModule.createManualAddress({
+      street,
+      postalCode: zip,
+      city,
+      country,
+    });
+  }
 
   async function loadGooglePlaces() {
     if (placeAutocompleteInitialized) return;
@@ -1183,6 +1265,7 @@ function initProductCards() {
     }
     await googlePlacesLoader.load();
     initGooglePlacesAutocomplete();
+    googlePlacesUnavailable = false;
   }
 
   function initGooglePlacesAutocomplete() {
@@ -1283,34 +1366,31 @@ function initProductCards() {
       openCheckoutModal();
       // Google Places will be loaded lazily when the user focuses the street field after filling required info.
     });
-    // Add lazy loading for Google Places Autocomplete on street field focus
+    // Load Google suggestions as an optional enhancement. Manual typing always remains available.
     const streetInput = document.getElementById('checkout-street');
     if (streetInput) {
+      checkoutAddressModule.configureStreetAddressInput(streetInput);
       streetInput.addEventListener('focus', async function() {
-        const fn = document.getElementById('checkout-firstname')?.value.trim();
-        const ln = document.getElementById('checkout-lastname')?.value.trim();
-        const email = document.getElementById('checkout-email')?.value.trim();
-        if (!fn || !ln || !email) {
-          const firstMissing = !fn
-            ? document.getElementById('checkout-firstname')
-            : !ln
-              ? document.getElementById('checkout-lastname')
-              : document.getElementById('checkout-email');
-          announcePurchaseFeedback('Fill in your first name, last name and email before entering the address.', {
-            assertive: true,
-            focusTarget: firstMissing,
-          });
+        if (placeAutocompleteInitialized || streetInput.dataset.placesLoading === 'true') return;
+
+        const failedAt = Number(streetInput.dataset.placesFailedAt || 0);
+        if (googlePlacesUnavailable && Date.now() - failedAt < 30000) {
+          setCheckoutAddressStatus('Address suggestions are unavailable. You can enter the address manually.', { warning: true });
           return;
         }
 
+        streetInput.dataset.placesLoading = 'true';
+        setCheckoutAddressStatus('Loading address suggestions...');
         try {
           await loadGooglePlaces();
+          setCheckoutAddressStatus('Choose a suggestion or continue typing the address manually.');
         } catch (error) {
+          googlePlacesUnavailable = true;
+          streetInput.dataset.placesFailedAt = String(Date.now());
           console.warn('Google Places autocomplete could not be loaded:', error);
-          announcePurchaseFeedback(
-            'Google address suggestions are temporarily unavailable. You can try focusing the address field again.',
-            { assertive: true, focusTarget: streetInput },
-          );
+          setCheckoutAddressStatus('Address suggestions are unavailable. You can enter the address manually.', { warning: true });
+        } finally {
+          delete streetInput.dataset.placesLoading;
         }
       });
     }
@@ -1673,6 +1753,7 @@ function initStickerModalClose() {
     await loadMotionPreferencesModule();
     await loadCartControlsModule();
     await loadGooglePlacesLoaderModule();
+    await loadCheckoutAddressModule();
     googlePlacesLoader = googlePlacesLoader || googlePlacesLoaderModule.createGooglePlacesLoader({
       apiKey: GP_API_KEY,
       windowRef: window,
