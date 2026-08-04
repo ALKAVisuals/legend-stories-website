@@ -29,6 +29,8 @@ const REQUIRED_FIELDS = [
   'image',
 ];
 const ALLOWED_CATEGORIES = new Set(['music', 'combat', 'sport', 'wisdom']);
+const COMPATIBLE_SOURCE_DEFAULTS = new Set([DEFAULT_PRODUCT_VARIANT_ID, 'statement-45']);
+const COMPATIBLE_SOURCE_MEASUREMENTS = new Set(['production_box', 'width_height', 'longest_side']);
 
 function escapeHtml(value) {
   return String(value)
@@ -63,12 +65,12 @@ const errors = [];
 
 if (schemaVersion !== 2) errors.push('Batch 3 compatibility catalog schemaVersion must be 2.');
 if (catalog.variantPolicy?.defaultVariantId
-  && catalog.variantPolicy.defaultVariantId !== DEFAULT_PRODUCT_VARIANT_ID) {
-  errors.push('Batch 3 catalog has an invalid explicit default variant policy.');
+  && !COMPATIBLE_SOURCE_DEFAULTS.has(catalog.variantPolicy.defaultVariantId)) {
+  errors.push('Batch 3 catalog has an unrecognized source default variant policy.');
 }
 if (catalog.variantPolicy?.sizeMeasurement
-  && !['production_box', 'width_height'].includes(catalog.variantPolicy.sizeMeasurement)) {
-  errors.push('Batch 3 catalog has an invalid explicit size-measurement policy.');
+  && !COMPATIBLE_SOURCE_MEASUREMENTS.has(catalog.variantPolicy.sizeMeasurement)) {
+  errors.push('Batch 3 catalog has an unrecognized source size-measurement policy.');
 }
 if (!batch?.id || !Number.isInteger(batch.year) || !Number.isInteger(batch.number)) {
   errors.push('Invalid batch metadata.');
@@ -232,5 +234,5 @@ const categoryCounts = safeProducts.reduce((counts, product) => {
 }, {});
 
 console.log(
-  `Launch-variant product catalog validation passed for ${safeProducts.length} products in ${batch.id}: ${JSON.stringify(categoryCounts)}. Legacy aliases resolve to the approved production boxes.`,
+  `Launch-variant product catalog validation passed for ${safeProducts.length} products in ${batch.id}: ${JSON.stringify(categoryCounts)}. Legacy source policy and aliases resolve to the approved production boxes.`,
 );
