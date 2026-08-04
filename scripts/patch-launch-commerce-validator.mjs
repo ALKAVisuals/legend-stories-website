@@ -1,4 +1,18 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { extname, join } from 'node:path';
+
+const ROOT = process.cwd();
+
+async function walkFiles(directory) {
+  const output = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    if (['node_modules', '.git', 'dist'].includes(entry.name)) continue;
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) output.push(...await walkFiles(path));
+    else if (extname(entry.name) === '.mjs') output.push(path);
+  }
+  return output;
+}
 
 async function patchCommerceRuntimeValidator() {
   const file = new URL('./validate-commerce-runtime.mjs', import.meta.url);
@@ -78,6 +92,51 @@ if (errors.length) {
   await writeFile(file, source, 'utf8');
 }
 
+async function patchSuccessfulOrderMutationTest() {
+  const title = 'successful checkout forwards Stripe shipping details into the canonical order';
+  const files = await walkFiles(ROOT);
+  const matchingFiles = [];
+
+  for (const file of files) {
+    const source = await readFile(file, 'utf8');
+    if (source.includes(title)) matchingFiles.push({ file, source });
+  }
+
+  if (matchingFiles.length !== 1) {
+    throw new Error(`Expected exactly one successful order mutation test, found ${matchingFiles.length}.`);
+  }
+
+  const { file } = matchingFiles[0];
+  let { source } = matchingFiles[0];
+  const titleIndex = source.indexOf(title);
+  const blockStart = source.lastIndexOf("test('", titleIndex);
+  const nextSingleQuotedTest = source.indexOf("\ntest('", titleIndex + title.length);
+  const nextDoubleQuotedTest = source.indexOf('\ntest("', titleIndex + title.length);
+  const candidates = [nextSingleQuotedTest, nextDoubleQuotedTest].filter((index) => index >= 0);
+  const blockEnd = candidates.length ? Math.min(...candidates) : source.length;
+
+  if (blockStart < 0 || blockEnd <= blockStart) {
+    throw new Error('Could not isolate the successful order mutation test block.');
+  }
+
+  const originalBlock = source.slice(blockStart, blockEnd);
+  const patchedBlock = originalBlock
+    .replace(/(countryCode\s*:\s*['"])[A-Z]{2}(['"])/g, '$1NL$2')
+    .replace(/(country\s*:\s*['"])[A-Z]{2}(['"])/g, '$1NL$2')
+    .replace(/(country_code\s*:\s*['"])[A-Z]{2}(['"])/g, '$1NL$2');
+
+  if (patchedBlock === originalBlock) {
+    if (!/(countryCode|country|country_code)\s*:\s*['"]NL['"]/.test(originalBlock)) {
+      throw new Error('The successful order mutation test contains no patchable delivery country.');
+    }
+    return;
+  }
+
+  source = `${source.slice(0, blockStart)}${patchedBlock}${source.slice(blockEnd)}`;
+  await writeFile(file, source, 'utf8');
+}
+
 await patchCommerceRuntimeValidator();
 await patchStripeCheckoutValidator();
-console.log('Launch commerce validators are aligned with production boxes and gated markets.');
+await patchSuccessfulOrderMutationTest();
+console.log('Launch commerce validators and order mutation fixtures are aligned with production boxes and gated markets.');
