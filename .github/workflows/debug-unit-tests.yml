@@ -1,0 +1,57 @@
+name: Debug unit tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  debug-unit-tests:
+    name: Capture unit-test failure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests and capture output
+        id: tests
+        shell: bash
+        run: |
+          set +e
+          npm test > unit-test-output.txt 2>&1
+          status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Post failure output to the pull request
+        if: steps.tests.outputs.status != '0'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const output = fs.readFileSync('unit-test-output.txt', 'utf8');
+            const tail = output.slice(-50000);
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `<!-- debug-unit-tests -->\n### Unit-test failure output\n\n\`\`\`text\n${tail}\n\`\`\``,
+            });
+
+      - name: Preserve failing status
+        if: steps.tests.outputs.status != '0'
+        run: exit 1
