@@ -61,10 +61,11 @@
       localStorage.setItem('legendCartVersion', CART_SCHEMA_VERSION);
       state.cart = [];
     }
-    if (savedCountry === 'NL') {
-      state.shippingCountry = 'NL';
-    } else {
-      state.shippingCountry = 'NL';
+    const savedCountryCode = String(savedCountry || '').trim().toUpperCase();
+    state.shippingCountry = commerceModule.isShippingCountryEnabled(savedCountryCode)
+      ? savedCountryCode
+      : commerceModule.DEFAULT_SHIPPING_COUNTRY;
+    if (savedCountryCode && savedCountryCode !== state.shippingCountry) {
       localStorage.removeItem('legendShippingCountry');
     }
     const savedDiscount = commerceModule.resolveDiscount(savedDiscountCode || '');
@@ -90,13 +91,15 @@
         import('./commerce/order-request.mjs'),
         import('./commerce/checkout-client.mjs'),
         import('./commerce/product-variants.mjs'),
-      ]).then(([totals, discounts, orderRequest, checkoutClient, productVariants]) => {
+        import('./commerce/shipping.mjs'),
+      ]).then(([totals, discounts, orderRequest, checkoutClient, productVariants, shipping]) => {
         commerceModule = Object.freeze({
           ...totals,
           ...discounts,
           ...orderRequest,
           ...checkoutClient,
           ...productVariants,
+          ...shipping,
         });
         return commerceModule;
       });
@@ -211,9 +214,10 @@ function loadDialogAccessibilityModule() {
     });
   }
 
-  const COUNTRY_OPTIONS = Object.freeze([
-    Object.freeze({ code: 'NL', flag: '🇳🇱', name: 'Netherlands' }),
-  ]);
+  function getCheckoutCountryOptions() {
+    if (!commerceModule?.getCheckoutCountryOptions) return [];
+    return commerceModule.getCheckoutCountryOptions({ includePending: true });
+  }
 
   const PRODUCT_PAGE_BY_NAME = Object.freeze({
     'The Grind Cycle': 'combat-grind-cycle.html',
@@ -415,11 +419,6 @@ function loadDialogAccessibilityModule() {
     const upsell = document.getElementById('cart-upsell');
     if (upsell) upsell.classList.remove('hidden');
 
-    // Country selector HTML
-    const countryOptions = COUNTRY_OPTIONS.map(c =>
-      '<option value="' + c.code + '"' + (state.shippingCountry === c.code ? ' selected' : '') + '>' + c.flag + ' ' + c.name + '</option>'
-    ).join('');
-
     const totals = getCommerceTotals();
     const cartSubtotal = totals.subtotal;
     const shippingCost = totals.shipping;
@@ -436,7 +435,7 @@ function loadDialogAccessibilityModule() {
       '<div class="border-t border-surface-border/30 pt-3 mt-3">' +
       '<div class="flex justify-between text-sm"><span class="text-text-muted">Subtotal</span><span class="text-text-primary font-medium">' + formatPrice(cartSubtotal) + '</span></div>' +
       (state.discountPercent > 0 ? '<div class="flex justify-between text-sm"><span class="text-text-muted">Discount (' + state.discountPercent + '%)</span><span class="text-red-400 font-medium">-' + formatPrice(totals.discount) + '</span></div>' : '') +
-      '<p class="text-[11px] text-text-muted mt-1.5">🚚 Shipping calculated at checkout based on your country. Netherlands shipping is €4,95 and free from €69. International checkout opens per validated market.</p>' +
+      '<p class="text-[11px] text-text-muted mt-1.5">Shipping within the Netherlands is €4,95 and free from €69. United States shipping opens after tracked rates and import charges are confirmed.</p>' +
       '</div>';
 
     // Cart drawer total excludes shipping because shipping is shown at checkout.
@@ -470,21 +469,26 @@ function loadDialogAccessibilityModule() {
 
     validatedAddress = null;
 
-    // Populate country dropdown
+    // Build the country list from the shared browser/server shipping policy.
     const countrySelect = document.getElementById('checkout-country');
-    if (countrySelect && countrySelect.options.length === 0) {
-      COUNTRY_OPTIONS.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.code;
-        opt.textContent = c.flag + ' ' + c.name;
-        if (c.code === 'NL') opt.selected = true;
-        countrySelect.appendChild(opt);
-      });
-    }
-
-    // Set saved country
     if (countrySelect) {
-      countrySelect.value = state.shippingCountry || 'NL';
+      countrySelect.replaceChildren();
+      getCheckoutCountryOptions().forEach((country) => {
+        const option = document.createElement('option');
+        option.value = country.code;
+        option.textContent = country.label;
+        option.disabled = !country.enabled;
+        option.dataset.status = country.status;
+        option.title = country.notice;
+        countrySelect.appendChild(option);
+      });
+
+      const requestedCountry = String(state.shippingCountry || '').toUpperCase();
+      state.shippingCountry = commerceModule.isShippingCountryEnabled(requestedCountry)
+        ? requestedCountry
+        : commerceModule.DEFAULT_SHIPPING_COUNTRY;
+      countrySelect.value = state.shippingCountry;
+      updateShippingMarketNotice(state.shippingCountry);
     }
 
     updateCheckoutTotals();
@@ -492,7 +496,17 @@ function loadDialogAccessibilityModule() {
     // Country change listener
     if (countrySelect) {
       countrySelect.onchange = function() {
-        state.shippingCountry = this.value;
+        const nextCountry = String(this.value || '').toUpperCase();
+        if (!commerceModule.isShippingCountryEnabled(nextCountry)) {
+          this.value = state.shippingCountry;
+          updateShippingMarketNotice(state.shippingCountry);
+          return;
+        }
+        state.shippingCountry = nextCountry;
+        validatedAddress = null;
+        saveCart();
+        updateGooglePlacesCountryRestriction(nextCountry);
+        updateShippingMarketNotice(nextCountry);
         updateCheckoutTotals();
       };
     }
@@ -533,6 +547,31 @@ function loadDialogAccessibilityModule() {
       }
       document.body.style.overflow = '';
     }
+  }
+
+  function ensureShippingMarketNotice() {
+    const country = document.getElementById('checkout-country');
+    if (!country?.parentElement) return null;
+    let notice = document.getElementById('checkout-market-note');
+    if (!notice) {
+      notice = document.createElement('p');
+      notice.id = 'checkout-market-note';
+      notice.className = 'text-[11px] leading-relaxed text-text-muted mt-2';
+      notice.setAttribute('role', 'status');
+      country.insertAdjacentElement('afterend', notice);
+    }
+    return notice;
+  }
+
+  function updateShippingMarketNotice(countryCode = state.shippingCountry) {
+    const notice = ensureShippingMarketNotice();
+    if (!notice || !commerceModule) return;
+    const activeMessage = commerceModule.getShippingMarketNotice(countryCode);
+    const pendingMarkets = getCheckoutCountryOptions().filter((market) => !market.enabled);
+    const pendingMessage = pendingMarkets.length > 0
+      ? pendingMarkets.map((market) => market.notice).join(' ')
+      : '';
+    notice.textContent = [activeMessage, pendingMessage].filter(Boolean).join(' ');
   }
 
   const EU_COUNTRY_CODES = new Set([
@@ -582,6 +621,7 @@ function loadDialogAccessibilityModule() {
       }
     }
     updateInternationalShippingNotice(totals.countryCode);
+    updateShippingMarketNotice(totals.countryCode);
   }
 
   let validatedAddress = null;
@@ -714,6 +754,14 @@ function loadDialogAccessibilityModule() {
       return;
     }
 
+    if (!commerceModule.isShippingCountryEnabled(country)) {
+      announcePurchaseFeedback(commerceModule.getShippingMarketNotice(country), {
+        assertive: true,
+        focusTarget: document.getElementById('checkout-country'),
+      });
+      return;
+    }
+
     // Address validation: use Google Places validated address if available,
     // otherwise validate manually entered address via Google Places API
     if (validatedAddress) {
@@ -831,7 +879,11 @@ function loadDialogAccessibilityModule() {
   }
 
   async function processOrder(address, firstname, lastname, email) {
-    const validatedCountry = address.country;
+    const validatedCountry = String(address.country || '').toUpperCase();
+    if (!commerceModule.isShippingCountryEnabled(validatedCountry)) {
+      announcePurchaseFeedback(commerceModule.getShippingMarketNotice(validatedCountry), { assertive: true });
+      return;
+    }
     const totals = getCommerceTotals(validatedCountry);
     let orderRequest;
     try {
@@ -1249,15 +1301,26 @@ function initProductCards() {
     placeAutocomplete = new window.google.maps.places.Autocomplete(streetInput, {
       types: ['address'],
       fields: ['address_components', 'formatted_address', 'geometry', 'name'],
+      componentRestrictions: {
+        country: commerceModule.getPlacesCountryRestriction(state.shippingCountry),
+      },
     });
 
     placeAutocompleteInitialized = true;
+    updateGooglePlacesCountryRestriction(state.shippingCountry);
 
     placeAutocomplete.addListener('place_changed', function() {
       const place = placeAutocomplete.getPlace();
       if (!place || !place.address_components) return;
 
       parseAndFillAddress(place);
+    });
+  }
+
+  function updateGooglePlacesCountryRestriction(countryCode = state.shippingCountry) {
+    if (!placeAutocomplete?.setComponentRestrictions || !commerceModule) return;
+    placeAutocomplete.setComponentRestrictions({
+      country: commerceModule.getPlacesCountryRestriction(countryCode),
     });
   }
 
@@ -1276,6 +1339,13 @@ function initProductCards() {
       if (types.includes('postal_code')) postal_code = comp.long_name;
       if (types.includes('locality') || types.includes('postal_town')) city = comp.long_name;
       if (types.includes('country')) country_code = comp.short_name.toLowerCase();
+    }
+
+    const resolvedCountry = country_code.toUpperCase();
+    if (!commerceModule.isShippingCountryEnabled(resolvedCountry)) {
+      validatedAddress = null;
+      setCheckoutAddressStatus(commerceModule.getShippingMarketNotice(resolvedCountry), { warning: true });
+      return;
     }
 
     // Fill street
@@ -1315,7 +1385,7 @@ function initProductCards() {
       street: (route + ' ' + street_number).trim(),
       postal_code: postal_code,
       city: city,
-      country: country_code.toUpperCase(),
+      country: resolvedCountry,
       formatted: place.formatted_address || '',
     };
     setCheckoutAddressStatus('Address selected. You can edit any field before continuing.');
