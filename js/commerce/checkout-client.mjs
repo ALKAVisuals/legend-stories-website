@@ -1,7 +1,11 @@
+import { COMMERCE_RUNTIME_CONFIG } from './runtime-config.mjs';
+
 const DEFAULT_TIMEOUT_MS = 15_000;
 const MAX_ERROR_MESSAGE_LENGTH = 240;
 
-export const HOSTED_CHECKOUT_ENDPOINT = '';
+export const HOSTED_CHECKOUT_ENDPOINT = String(
+  COMMERCE_RUNTIME_CONFIG.hostedCheckoutEndpoint || '',
+).trim();
 
 export class HostedCheckoutClientError extends Error {
   constructor(code, message, details = {}) {
