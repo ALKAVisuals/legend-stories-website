@@ -92,7 +92,8 @@ test('hosted Checkout Session uses authoritative totals, shipping and customer d
   assert.equal(checkout.mode, 'test');
 });
 
-test('international checkout remains unavailable until a market is enabled', async () => {
+test('enabled EU checkout uses the approved shipping country and rate', async () => {
+  const capture = {};
   const greekCustomer = {
     ...customer,
     street: 'Ermou 10',
@@ -101,13 +102,38 @@ test('international checkout remains unavailable until a market is enabled', asy
     country: 'GR',
   };
 
+  const checkout = await createHostedCheckoutSession({
+    request: {
+      items: [{ page: firstProduct.page, quantity: 1 }],
+      countryCode: 'GR',
+    },
+    customer: greekCustomer,
+    catalogProducts: catalog,
+    stripeClient: createFakeStripeClient(capture),
+    successUrl: 'https://example.com/success',
+    cancelUrl: 'https://example.com/cancel',
+  });
+
+  assert.equal(checkout.quote.shipping, 995);
+  assert.equal(capture.payload.payment_intent_data.shipping.address.country, 'GR');
+});
+
+test('checkout remains unavailable outside the launch markets', async () => {
+  const canadianCustomer = {
+    ...customer,
+    street: '100 Queen Street West',
+    zip: 'M5H 2N2',
+    city: 'Toronto',
+    country: 'CA',
+  };
+
   await assert.rejects(
     () => createHostedCheckoutSession({
       request: {
         items: [{ page: firstProduct.page, quantity: 1 }],
-        countryCode: 'GR',
+        countryCode: 'CA',
       },
-      customer: greekCustomer,
+      customer: canadianCustomer,
       catalogProducts: catalog,
       stripeClient: createFakeStripeClient(),
       successUrl: 'https://example.com/success',
