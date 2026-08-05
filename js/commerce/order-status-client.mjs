@@ -1,3 +1,5 @@
+import { COMMERCE_RUNTIME_CONFIG } from './runtime-config.mjs';
+
 const DEFAULT_TIMEOUT_MS = 10_000;
 const ORDER_STATUSES = new Set([
   'payment_pending',
@@ -7,7 +9,9 @@ const ORDER_STATUSES = new Set([
   'paid',
 ]);
 
-export const ORDER_STATUS_ENDPOINT = '';
+export const ORDER_STATUS_ENDPOINT = String(
+  COMMERCE_RUNTIME_CONFIG.orderStatusEndpoint || '',
+).trim();
 
 export class OrderStatusClientError extends Error {
   constructor(code, message, details = {}) {
