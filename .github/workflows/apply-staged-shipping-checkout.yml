@@ -1,0 +1,49 @@
+name: Apply staged shipping checkout
+
+on:
+  push:
+    branches:
+      - fix/shipping-country-selector
+    paths:
+      - scripts/apply-staged-shipping-checkout.mjs
+      - .github/workflows/apply-staged-shipping-checkout.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/shipping-country-selector
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply staged checkout changes
+        run: node scripts/apply-staged-shipping-checkout.mjs
+
+      - name: Run focused shipping and checkout tests
+        run: node --test tests/commerce.test.mjs tests/order-quote.test.mjs tests/shipping-market-rollout.test.mjs tests/shipping-checkout-ui-contract.test.mjs
+
+      - name: Remove temporary migration files
+        run: rm scripts/apply-staged-shipping-checkout.mjs .github/workflows/apply-staged-shipping-checkout.yml
+
+      - name: Commit final implementation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Prepare staged US and international shipping checkout"
+          git push origin HEAD:fix/shipping-country-selector
