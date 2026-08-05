@@ -41,12 +41,17 @@ class FakeDocument {
   }
 }
 
-function setup({ ready = false, timeoutMs = 10000 } = {}) {
+function setup({
+  ready = false,
+  timeoutMs = 10000,
+  requestTimeoutMs = 2500,
+  places = {},
+} = {}) {
   const documentRef = new FakeDocument();
   const timers = new Map();
   let nextTimer = 1;
   const windowRef = {
-    google: ready ? { maps: { places: {} } } : undefined,
+    google: ready ? { maps: { places } } : undefined,
     setTimeout(callback) {
       const id = nextTimer++;
       timers.set(id, callback);
@@ -61,14 +66,16 @@ function setup({ ready = false, timeoutMs = 10000 } = {}) {
     windowRef,
     documentRef,
     timeoutMs,
+    requestTimeoutMs,
   });
   return {
     documentRef,
     loader,
     timers,
     windowRef,
-    triggerTimeout() {
-      const callback = [...timers.values()][0];
+    triggerNextTimer() {
+      const [id, callback] = [...timers.entries()][0] || [];
+      if (id !== undefined) timers.delete(id);
       callback?.();
     },
   };
@@ -117,9 +124,9 @@ test('rejects script errors, removes the failed script and permits retry', async
 });
 
 test('rejects and cleans up when loading times out', async () => {
-  const { documentRef, loader, triggerTimeout, windowRef } = setup({ timeoutMs: 1500 });
+  const { documentRef, loader, triggerNextTimer, windowRef } = setup({ timeoutMs: 1500 });
   const promise = loader.load();
-  triggerTimeout();
+  triggerNextTimer();
   await assert.rejects(promise, /timed out/);
   assert.equal(documentRef.scripts.length, 0);
   assert.equal('__legendGooglePlacesReady' in windowRef, false);
@@ -130,4 +137,73 @@ test('rejects a callback that arrives without the Places library', async () => {
   const promise = loader.load();
   windowRef.__legendGooglePlacesReady();
   await assert.rejects(promise, /without the Places library/);
+});
+
+test('times out a Places address lookup and ignores a late Google callback', async () => {
+  class PlacesService {
+    findPlaceFromQuery(request, callback) {
+      this.request = request;
+      this.googleCallback = callback;
+      return 'request-handle';
+    }
+  }
+
+  const places = {
+    PlacesService,
+    PlacesServiceStatus: {
+      OK: 'OK',
+      UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+    },
+  };
+  const { loader, timers, triggerNextTimer } = setup({
+    ready: true,
+    requestTimeoutMs: 1200,
+    places,
+  });
+
+  await loader.load();
+  const service = new PlacesService();
+  const callbacks = [];
+  const requestHandle = service.findPlaceFromQuery(
+    { query: 'Schutkolk 4d, 6582 DB Heumen, NL' },
+    (results, status) => callbacks.push({ results, status }),
+  );
+
+  assert.equal(requestHandle, 'request-handle');
+  assert.equal(timers.size, 1);
+  triggerNextTimer();
+  assert.deepEqual(callbacks, [{ results: null, status: 'UNKNOWN_ERROR' }]);
+
+  service.googleCallback([{ formatted_address: 'Schutkolk 4d' }], 'OK');
+  assert.equal(callbacks.length, 1);
+});
+
+test('clears the Places lookup timeout after a normal Google response', async () => {
+  class PlacesService {
+    findPlaceFromQuery(request, callback) {
+      this.googleCallback = callback;
+    }
+  }
+
+  const places = {
+    PlacesService,
+    PlacesServiceStatus: {
+      OK: 'OK',
+      UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+    },
+  };
+  const { loader, timers } = setup({ ready: true, places });
+
+  await loader.load();
+  const service = new PlacesService();
+  const callbacks = [];
+  service.findPlaceFromQuery({}, (results, status) => callbacks.push({ results, status }));
+  assert.equal(timers.size, 1);
+
+  service.googleCallback([{ formatted_address: 'Schutkolk 4d' }], 'OK');
+  assert.equal(timers.size, 0);
+  assert.deepEqual(callbacks, [{
+    results: [{ formatted_address: 'Schutkolk 4d' }],
+    status: 'OK',
+  }]);
 });
