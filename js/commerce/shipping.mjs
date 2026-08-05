@@ -3,6 +3,7 @@ const freezeMarket = (market) => Object.freeze(market);
 export const DEFAULT_SHIPPING_COUNTRY = 'NL';
 export const FREE_SHIPPING_THRESHOLD = 69;
 
+// Checkout keeps exact ISO country codes; rates are grouped into commercial zones internally.
 const EU_COUNTRIES = Object.freeze({
   AT: 'Austria',
   BE: 'Belgium',
