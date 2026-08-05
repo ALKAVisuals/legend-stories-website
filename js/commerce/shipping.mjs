@@ -1,6 +1,7 @@
 const freezeMarket = (market) => Object.freeze(market);
 
 export const DEFAULT_SHIPPING_COUNTRY = 'NL';
+export const FREE_SHIPPING_THRESHOLD = 69;
 
 const EU_COUNTRIES = Object.freeze({
   AT: 'Austria',
@@ -38,14 +39,14 @@ function createEuMarket(code, name) {
     checkoutLabel: name,
     region: 'eu',
     cost: 9.95,
-    freeFrom: Number.POSITIVE_INFINITY,
+    freeFrom: FREE_SHIPPING_THRESHOLD,
     enabled: true,
     visibleInCheckout: true,
     status: 'active',
     customs: false,
     trackedShippingRequired: true,
     placesCountry: code.toLowerCase(),
-    notice: `Shipping to ${name} is €9,95.`,
+    notice: `Shipping to ${name} is €9,95 and free from €69.`,
   });
 }
 
@@ -60,7 +61,7 @@ export const SHIPPING_ZONES = Object.freeze({
     checkoutLabel: 'Netherlands',
     region: 'domestic',
     cost: 4.95,
-    freeFrom: 69,
+    freeFrom: FREE_SHIPPING_THRESHOLD,
     enabled: true,
     visibleInCheckout: true,
     status: 'active',
@@ -75,14 +76,14 @@ export const SHIPPING_ZONES = Object.freeze({
     checkoutLabel: 'United States',
     region: 'international',
     cost: 9.95,
-    freeFrom: Number.POSITIVE_INFINITY,
+    freeFrom: FREE_SHIPPING_THRESHOLD,
     enabled: true,
     visibleInCheckout: true,
     status: 'active',
     customs: true,
     trackedShippingRequired: true,
     placesCountry: 'us',
-    notice: 'Tracked shipping to the United States is €9,95. Local import duties and taxes may apply.',
+    notice: 'Tracked shipping to the United States is €9,95 and free from €69. Local import duties and taxes may apply.',
   }),
   ...EU_SHIPPING_ZONES,
   OTHER: freezeMarket({
