@@ -1,42 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
-
-const adapterPath = new URL('../server/adapters/neon-order-store.mjs', import.meta.url);
-let adapter = await readFile(adapterPath, 'utf8');
-
-function replaceOrThrow(source, search, replacement, label) {
-  if (!source.includes(search)) {
-    throw new Error(`Could not find ${label}.`);
-  }
-  return source.replace(search, replacement);
-}
-
-adapter = replaceOrThrow(
-  adapter,
-  `function clone(value) {\n  return structuredClone(value);\n}\n\nfunction canonicalize(value) {`,
-  `function clone(value) {\n  return structuredClone(value);\n}\n\nfunction serializeJsonb(value, field) {\n  const serialized = JSON.stringify(clone(value));\n  if (serialized === undefined) {\n    fail('INVALID_ORDER_STORE_RECORD', \`Stored \${field} is not JSON serializable.\`, { field });\n  }\n  return serialized;\n}\n\nfunction canonicalize(value) {`,
-  'JSONB serialization helper insertion point',
-);
-
-adapter = replaceOrThrow(
-  adapter,
-  `    clone(order.customer),\n    clone(order.items),\n    clone(order.discount),\n    clone(order.shipping),\n    clone(order.totals),`,
-  `    serializeJsonb(order.customer, 'customer'),\n    serializeJsonb(order.items, 'items'),\n    serializeJsonb(order.discount, 'discount'),\n    serializeJsonb(order.shipping, 'shipping'),\n    serializeJsonb(order.totals, 'totals'),`,
-  'pending order JSONB values',
-);
-
-await writeFile(adapterPath, adapter);
-
-const unitTestPath = new URL('../tests/neon-order-store.test.mjs', import.meta.url);
-let unitTest = await readFile(unitTestPath, 'utf8');
-unitTest = replaceOrThrow(
-  unitTest,
-  `        assert.equal(values[13].email, order.customer.email);`,
-  `        assert.equal(JSON.parse(values[13]).email, order.customer.email);`,
-  'existing JSONB parameter assertion',
-);
-await writeFile(unitTestPath, unitTest);
-
-const regressionTest = `import test from 'node:test';
+import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { createNeonOrderStore } from '../server/adapters/neon-order-store.mjs';
@@ -124,14 +86,14 @@ test('serializes every pending-order JSONB parameter as JSON text', async () => 
   const clientFactory = async () => ({
     async connect() {},
     async query(sql, values = []) {
-      const normalized = String(sql).replace(/\\s+/g, ' ').trim();
+      const normalized = String(sql).replace(/\s+/g, ' ').trim();
       if (normalized === 'BEGIN ISOLATION LEVEL SERIALIZABLE') return { rows: [] };
       if (normalized.startsWith('INSERT INTO legend_commerce.orders')) {
         insertValues = values;
         return { rows: [databaseRow(order, values)] };
       }
       if (normalized === 'COMMIT') return { rows: [] };
-      throw new Error(\`Unexpected SQL query: \${normalized}\`);
+      throw new Error(`Unexpected SQL query: ${normalized}`);
     },
     async end() {},
   });
@@ -161,8 +123,5 @@ test('serializes every pending-order JSONB parameter as JSON text', async () => 
     assert.deepEqual(JSON.parse(parameter), expectedJsonValues[offset]);
   }
 
-  assert.match(insertValues[14], /^\\[/, 'items must be a JSON array, not a PostgreSQL array literal');
+  assert.match(insertValues[14], /^\[/, 'items must be a JSON array, not a PostgreSQL array literal');
 });
-`;
-
-await writeFile(new URL('../tests/neon-jsonb-serialization.test.mjs', import.meta.url), regressionTest);

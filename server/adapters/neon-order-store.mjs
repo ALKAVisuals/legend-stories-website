@@ -38,6 +38,14 @@ function clone(value) {
   return structuredClone(value);
 }
 
+function serializeJsonb(value, field) {
+  const serialized = JSON.stringify(clone(value));
+  if (serialized === undefined) {
+    fail('INVALID_ORDER_STORE_RECORD', `Stored ${field} is not JSON serializable.`, { field });
+  }
+  return serialized;
+}
+
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize);
   if (value && typeof value === 'object') {
@@ -205,11 +213,11 @@ function pendingOrderValues(order) {
     order.lastStripeEventType || null,
     order.lastStripeEventCreated,
     order.version,
-    clone(order.customer),
-    clone(order.items),
-    clone(order.discount),
-    clone(order.shipping),
-    clone(order.totals),
+    serializeJsonb(order.customer, 'customer'),
+    serializeJsonb(order.items, 'items'),
+    serializeJsonb(order.discount, 'discount'),
+    serializeJsonb(order.shipping, 'shipping'),
+    serializeJsonb(order.totals, 'totals'),
   ];
 }
 
