@@ -24,7 +24,8 @@ test('Google Places follows the active enabled shipping market', () => {
   assert.match(app, /setComponentRestrictions/);
 });
 
-test('cart and checkout explain the staged United States rollout without emoji flags', () => {
-  assert.match(app, /United States shipping opens after tracked rates and import charges are confirmed/);
+test('cart explains the active launch shipping rates without emoji flags', () => {
+  assert.match(app, /€9,95 to the EU and United States/);
+  assert.doesNotMatch(app, /United States shipping opens/);
   assert.doesNotMatch(app, /Shipping calculated at checkout based on your country/);
 });

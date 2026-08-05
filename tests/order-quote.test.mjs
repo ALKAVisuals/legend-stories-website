@@ -48,6 +48,19 @@ test('builds totals from authoritative catalog prices and ignores browser price 
   assert.equal(quote.amountInCents.grandTotal, 4995);
 });
 
+test('quotes the approved EU and United States shipping rates server-side', () => {
+  const item = { page: firstProduct.page, quantity: 1 };
+  const euQuote = createAuthoritativeOrderQuote({ items: [item], countryCode: 'DE' }, catalog);
+  const usQuote = createAuthoritativeOrderQuote({ items: [item], countryCode: 'US' }, catalog);
+
+  assert.equal(euQuote.shipping.countryCode, 'DE');
+  assert.equal(euQuote.shipping.cost, 9.95);
+  assert.equal(euQuote.totals.grandTotal, 54.95);
+  assert.equal(usQuote.shipping.countryCode, 'US');
+  assert.equal(usQuote.shipping.cost, 9.95);
+  assert.equal(usQuote.totals.grandTotal, 54.95);
+});
+
 test('resolves products by slug and validates discount codes centrally', () => {
   const quote = createAuthoritativeOrderQuote({
     items: [{ slug: firstProduct.slug, quantity: 1 }],

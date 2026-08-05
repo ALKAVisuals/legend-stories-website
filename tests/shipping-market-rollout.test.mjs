@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   DEFAULT_SHIPPING_COUNTRY,
+  FREE_SHIPPING_THRESHOLD,
   SHIPPING_ZONES,
   calculateShipping,
   getCheckoutCountryOptions,
@@ -13,39 +14,61 @@ import {
 
 test('Netherlands remains the active default shipping market', () => {
   assert.equal(DEFAULT_SHIPPING_COUNTRY, 'NL');
+  assert.equal(FREE_SHIPPING_THRESHOLD, 69);
   assert.equal(isShippingCountryEnabled('NL'), true);
   assert.equal(calculateShipping({ countryCode: 'NL', subtotal: 45 }), 4.95);
   assert.equal(calculateShipping({ countryCode: 'NL', subtotal: 69 }), 0);
 });
 
-test('United States is visible as the priority pilot without an invented rate', () => {
+test('United States is active at the approved launch rate', () => {
   const options = getCheckoutCountryOptions();
   const us = options.find((option) => option.code === 'US');
 
   assert.ok(us);
-  assert.equal(us.enabled, false);
-  assert.equal(us.status, 'preparing');
-  assert.match(us.label, /launching soon/i);
-  assert.equal(SHIPPING_ZONES.US.cost, null);
+  assert.equal(us.enabled, true);
+  assert.equal(us.status, 'active');
+  assert.equal(us.label, 'United States');
+  assert.equal(SHIPPING_ZONES.US.cost, 9.95);
+  assert.equal(SHIPPING_ZONES.US.freeFrom, 69);
   assert.equal(SHIPPING_ZONES.US.customs, true);
   assert.equal(SHIPPING_ZONES.US.trackedShippingRequired, true);
-  assert.throws(() => calculateShipping({ countryCode: 'US', subtotal: 200 }), /not enabled/);
-  assert.match(getShippingMarketNotice('US'), /tracked rates and import charges/i);
+  assert.equal(calculateShipping({ countryCode: 'US', subtotal: 45 }), 9.95);
+  assert.equal(calculateShipping({ countryCode: 'US', subtotal: 69 }), 0);
+  assert.match(getShippingMarketNotice('US'), /€9,95/i);
+  assert.match(getShippingMarketNotice('US'), /free from €69/i);
+  assert.match(getShippingMarketNotice('US'), /import duties and taxes/i);
 });
 
-test('planned European markets stay hidden until a validated rate is configured', () => {
-  const visibleCodes = getCheckoutCountryOptions().map((option) => option.code);
+test('all European Union delivery countries use the shared €9,95 rate', () => {
+  const options = getCheckoutCountryOptions();
+  const visibleCodes = options.map((option) => option.code);
+  const euCodes = [
+    'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR',
+    'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'PL', 'PT', 'RO', 'SK', 'SI',
+    'ES', 'SE',
+  ];
 
-  assert.deepEqual(visibleCodes, ['NL', 'US']);
-  assert.equal(SHIPPING_ZONES.BE.status, 'planned');
-  assert.equal(SHIPPING_ZONES.DE.status, 'planned');
-  assert.equal(SHIPPING_ZONES.FR.status, 'planned');
-  assert.equal(SHIPPING_ZONES.BE.visibleInCheckout, false);
-  assert.equal(isShippingCountryEnabled('DE'), false);
+  assert.equal(options.length, 28);
+  assert.equal(visibleCodes[0], 'NL');
+  assert.equal(visibleCodes[1], 'US');
+  euCodes.forEach((code) => {
+    assert.equal(visibleCodes.includes(code), true);
+    assert.equal(isShippingCountryEnabled(code), true);
+    assert.equal(SHIPPING_ZONES[code].region, 'eu');
+    assert.equal(calculateShipping({ countryCode: code, subtotal: 45 }), 9.95);
+    assert.equal(calculateShipping({ countryCode: code, subtotal: 69 }), 0);
+  });
 });
 
-test('Google Places remains restricted to an enabled checkout market', () => {
+test('destinations outside the launch markets remain unavailable', () => {
+  assert.equal(isShippingCountryEnabled('CA'), false);
+  assert.equal(SHIPPING_ZONES.OTHER.visibleInCheckout, false);
+  assert.throws(() => calculateShipping({ countryCode: 'CA', subtotal: 45 }), /not enabled/);
+});
+
+test('Google Places follows each enabled checkout country', () => {
   assert.equal(getPlacesCountryRestriction('NL'), 'nl');
-  assert.equal(getPlacesCountryRestriction('US'), 'nl');
+  assert.equal(getPlacesCountryRestriction('US'), 'us');
+  assert.equal(getPlacesCountryRestriction('DE'), 'de');
   assert.equal(getPlacesCountryRestriction('unknown'), 'nl');
 });
