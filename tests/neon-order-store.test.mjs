@@ -131,7 +131,7 @@ test('persists a new pending order inside a serializable transaction', async () 
       parameters(values) {
         assert.equal(values[0], reference);
         assert.equal(values[2], order.amountTotal);
-        assert.equal(values[13].email, order.customer.email);
+        assert.equal(JSON.parse(values[13]).email, order.customer.email);
       },
       result: { rows: [databaseRow(order)] },
     },

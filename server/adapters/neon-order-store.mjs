@@ -38,6 +38,14 @@ function clone(value) {
   return structuredClone(value);
 }
 
+function serializeJsonb(value, field) {
+  const serialized = JSON.stringify(clone(value));
+  if (serialized === undefined) {
+    fail('INVALID_ORDER_STORE_RECORD', `Stored ${field} is not JSON serializable.`, { field });
+  }
+  return serialized;
+}
+
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize);
   if (value && typeof value === 'object') {
@@ -205,11 +213,11 @@ function pendingOrderValues(order) {
     order.lastStripeEventType || null,
     order.lastStripeEventCreated,
     order.version,
-    clone(order.customer),
-    clone(order.items),
-    clone(order.discount),
-    clone(order.shipping),
-    clone(order.totals),
+    serializeJsonb(order.customer, 'customer'),
+    serializeJsonb(order.items, 'items'),
+    serializeJsonb(order.discount, 'discount'),
+    serializeJsonb(order.shipping, 'shipping'),
+    serializeJsonb(order.totals, 'totals'),
   ];
 }
 
@@ -275,29 +283,61 @@ async function closeClient(client) {
   }
 }
 
+const MAX_SERIALIZABLE_ATTEMPTS = 4;
+const SERIALIZABLE_RETRY_BASE_DELAY_MS = 15;
+
+function isRetryableTransactionError(error) {
+  return error instanceof NeonOrderStoreError
+    && error.code === 'ORDER_STORE_RETRYABLE';
+}
+
+function transactionRetryDelay(attempt) {
+  return SERIALIZABLE_RETRY_BASE_DELAY_MS * (2 ** (attempt - 1));
+}
+
+async function waitForTransactionRetry(attempt) {
+  await new Promise((resolve) => {
+    setTimeout(resolve, transactionRetryDelay(attempt));
+  });
+}
+
 async function withSerializableTransaction(clientFactory, connectionString, action) {
-  const client = validateClient(await clientFactory(connectionString));
-  let transactionStarted = false;
-  try {
-    await client.connect();
-    await client.query('BEGIN ISOLATION LEVEL SERIALIZABLE');
-    transactionStarted = true;
-    const result = await action(client);
-    await client.query('COMMIT');
-    transactionStarted = false;
-    return result;
-  } catch (error) {
-    if (transactionStarted) {
-      try {
-        await client.query('ROLLBACK');
-      } catch {
-        // Preserve the original transaction error.
+  let lastError;
+
+  for (let attempt = 1; attempt <= MAX_SERIALIZABLE_ATTEMPTS; attempt += 1) {
+    const client = validateClient(await clientFactory(connectionString));
+    let transactionStarted = false;
+    try {
+      await client.connect();
+      await client.query('BEGIN ISOLATION LEVEL SERIALIZABLE');
+      transactionStarted = true;
+      const result = await action(client);
+      await client.query('COMMIT');
+      transactionStarted = false;
+      return result;
+    } catch (error) {
+      if (transactionStarted) {
+        try {
+          await client.query('ROLLBACK');
+        } catch {
+          // Preserve the original transaction error.
+        }
       }
+
+      const normalized = normalizeDatabaseError(error);
+      lastError = normalized;
+      if (!isRetryableTransactionError(normalized)
+        || attempt === MAX_SERIALIZABLE_ATTEMPTS) {
+        throw normalized;
+      }
+    } finally {
+      await closeClient(client);
     }
-    throw normalizeDatabaseError(error);
-  } finally {
-    await closeClient(client);
+
+    await waitForTransactionRetry(attempt);
   }
+
+  throw lastError;
 }
 
 async function withClient(clientFactory, connectionString, action) {

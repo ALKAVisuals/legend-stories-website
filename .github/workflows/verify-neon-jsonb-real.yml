@@ -1,0 +1,57 @@
+name: Verify Neon JSONB fix against isolated database
+
+on:
+  push:
+    branches:
+      - fix/neon-jsonb-serialization
+    paths:
+      - scripts/neon-jsonb-real-verification.trigger
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-neon-jsonb-fix-real
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Real Neon JSONB verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: neon-integration
+    env:
+      NEON_TEST_DATABASE_URL: ${{ secrets.NEON_TEST_DATABASE_URL }}
+      NEON_TEST_MIGRATION_URL: ${{ secrets.NEON_TEST_MIGRATION_URL }}
+
+    steps:
+      - name: Check out fix branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Verify integration secrets
+        shell: bash
+        run: |
+          if [[ -z "$NEON_TEST_DATABASE_URL" || -z "$NEON_TEST_MIGRATION_URL" ]]; then
+            echo "::error::The isolated Neon integration secrets are not configured."
+            exit 1
+          fi
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Apply isolated test migrations
+        run: npm run migrate:neon:test
+
+      - name: Run real Neon store conformance
+        run: npm run test:neon:integration
+
+      - name: Validate Neon architecture
+        run: |
+          npm run validate:neon-order-store
+          npm run validate:neon-integration
