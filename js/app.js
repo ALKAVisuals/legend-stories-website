@@ -435,7 +435,7 @@ function loadDialogAccessibilityModule() {
       '<div class="border-t border-surface-border/30 pt-3 mt-3">' +
       '<div class="flex justify-between text-sm"><span class="text-text-muted">Subtotal</span><span class="text-text-primary font-medium">' + formatPrice(cartSubtotal) + '</span></div>' +
       (state.discountPercent > 0 ? '<div class="flex justify-between text-sm"><span class="text-text-muted">Discount (' + state.discountPercent + '%)</span><span class="text-red-400 font-medium">-' + formatPrice(totals.discount) + '</span></div>' : '') +
-      '<p class="text-[11px] text-text-muted mt-1.5">Shipping within the Netherlands is €4,95 and free from €69. United States shipping opens after tracked rates and import charges are confirmed.</p>' +
+      '<p class="text-[11px] text-text-muted mt-1.5">Shipping is €4,95 within the Netherlands and €9,95 to the EU and United States. Free shipping from €69.</p>' +
       '</div>';
 
     // Cart drawer total excludes shipping because shipping is shown at checkout.
