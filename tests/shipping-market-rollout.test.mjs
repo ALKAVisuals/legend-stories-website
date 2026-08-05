@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   DEFAULT_SHIPPING_COUNTRY,
+  FREE_SHIPPING_THRESHOLD,
   SHIPPING_ZONES,
   calculateShipping,
   getCheckoutCountryOptions,
@@ -13,6 +14,7 @@ import {
 
 test('Netherlands remains the active default shipping market', () => {
   assert.equal(DEFAULT_SHIPPING_COUNTRY, 'NL');
+  assert.equal(FREE_SHIPPING_THRESHOLD, 69);
   assert.equal(isShippingCountryEnabled('NL'), true);
   assert.equal(calculateShipping({ countryCode: 'NL', subtotal: 45 }), 4.95);
   assert.equal(calculateShipping({ countryCode: 'NL', subtotal: 69 }), 0);
@@ -27,10 +29,13 @@ test('United States is active at the approved launch rate', () => {
   assert.equal(us.status, 'active');
   assert.equal(us.label, 'United States');
   assert.equal(SHIPPING_ZONES.US.cost, 9.95);
+  assert.equal(SHIPPING_ZONES.US.freeFrom, 69);
   assert.equal(SHIPPING_ZONES.US.customs, true);
   assert.equal(SHIPPING_ZONES.US.trackedShippingRequired, true);
-  assert.equal(calculateShipping({ countryCode: 'US', subtotal: 200 }), 9.95);
+  assert.equal(calculateShipping({ countryCode: 'US', subtotal: 45 }), 9.95);
+  assert.equal(calculateShipping({ countryCode: 'US', subtotal: 69 }), 0);
   assert.match(getShippingMarketNotice('US'), /€9,95/i);
+  assert.match(getShippingMarketNotice('US'), /free from €69/i);
   assert.match(getShippingMarketNotice('US'), /import duties and taxes/i);
 });
 
@@ -50,7 +55,8 @@ test('all European Union delivery countries use the shared €9,95 rate', () => 
     assert.equal(visibleCodes.includes(code), true);
     assert.equal(isShippingCountryEnabled(code), true);
     assert.equal(SHIPPING_ZONES[code].region, 'eu');
-    assert.equal(calculateShipping({ countryCode: code, subtotal: 200 }), 9.95);
+    assert.equal(calculateShipping({ countryCode: code, subtotal: 45 }), 9.95);
+    assert.equal(calculateShipping({ countryCode: code, subtotal: 69 }), 0);
   });
 });
 
