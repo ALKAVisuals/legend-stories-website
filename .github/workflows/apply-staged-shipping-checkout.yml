@@ -34,6 +34,19 @@ jobs:
       - name: Apply staged checkout changes
         run: node scripts/apply-staged-shipping-checkout.mjs
 
+      - name: Correct generated contract assertion
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tests/shipping-checkout-ui-contract.test.mjs')
+          text = path.read_text()
+          text = text.replace(
+              "  assert.match(app, /import('./commerce/shipping.mjs')/);",
+              "  assert.ok(app.includes(\"import('./commerce/shipping.mjs')\"));",
+          )
+          path.write_text(text)
+          PY
+
       - name: Run focused shipping and checkout tests
         run: node --test tests/commerce.test.mjs tests/order-quote.test.mjs tests/shipping-market-rollout.test.mjs tests/shipping-checkout-ui-contract.test.mjs
 
@@ -47,5 +60,3 @@ jobs:
           git add -A
           git commit -m "Prepare staged US and international shipping checkout"
           git push origin HEAD:fix/shipping-country-selector
-
-# Triggered after the workflow definition existed on the feature branch.
