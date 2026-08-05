@@ -1,17 +1,19 @@
 import { readFile } from 'node:fs/promises';
 
 const ROOT = new URL('../', import.meta.url);
-const [appSource, clientSource, successPage, cancelledPage] = await Promise.all([
+const [appSource, clientSource, runtimeConfigSource, successPage, cancelledPage] = await Promise.all([
   readFile(new URL('js/app.js', ROOT), 'utf8'),
   readFile(new URL('js/commerce/checkout-client.mjs', ROOT), 'utf8'),
+  readFile(new URL('js/commerce/runtime-config.mjs', ROOT), 'utf8'),
   readFile(new URL('order-success.html', ROOT), 'utf8'),
   readFile(new URL('order-cancelled.html', ROOT), 'utf8'),
 ]);
 
 const errors = [];
 
-if (!clientSource.includes("export const HOSTED_CHECKOUT_ENDPOINT = '';")) {
-  errors.push('Hosted checkout must remain disabled until a deployment endpoint is explicitly configured.');
+if (!runtimeConfigSource.includes("hostedCheckoutEndpoint: ''")
+  || !clientSource.includes('COMMERCE_RUNTIME_CONFIG.hostedCheckoutEndpoint')) {
+  errors.push('Hosted checkout must remain disabled in tracked source until a deployment endpoint is generated.');
 }
 if (!clientSource.includes("checkoutUrl.hostname !== 'checkout.stripe.com'")) {
   errors.push('Browser checkout responses must be restricted to checkout.stripe.com.');
@@ -25,8 +27,8 @@ if (!clientSource.includes("redirect: 'error'")) {
 if (!clientSource.includes('setTimeout(() => controller.abort(), safeTimeout)')) {
   errors.push('Hosted checkout must use a real abort signal for request timeouts.');
 }
-if (/STRIPE_SECRET_KEY|sk_(test|live)_/.test(clientSource)) {
-  errors.push('The browser checkout module must never contain Stripe secret-key material.');
+if (/STRIPE_SECRET_KEY|sk_(test|live)_/.test(`${clientSource}\n${runtimeConfigSource}`)) {
+  errors.push('The browser checkout modules must never contain Stripe secret-key material.');
 }
 
 if (!appSource.includes("import('./commerce/checkout-client.mjs')")) {
@@ -96,4 +98,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Browser checkout validation passed with dormant endpoint configuration, minimal payloads and verified Stripe redirects.');
+console.log('Browser checkout validation passed with deployment-generated endpoints, minimal payloads and verified Stripe redirects.');
