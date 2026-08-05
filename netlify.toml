@@ -4,12 +4,13 @@
   functions = "netlify/functions"
 
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "22"
   LEGENDMURAL_HOSTED_CHECKOUT_ENDPOINT = "/api/checkout"
   LEGENDMURAL_ORDER_STATUS_ENDPOINT = "/api/order-status"
 
 [functions]
   node_bundler = "esbuild"
+  included_files = ["data/products/catalog.json"]
 
 [[redirects]]
   from = "/api/checkout"
