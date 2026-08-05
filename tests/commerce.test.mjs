@@ -24,16 +24,20 @@ test('launch markets use the approved shipping rates', () => {
   assert.equal(SHIPPING_ZONES.NL.freeFrom, 69);
   assert.equal(SHIPPING_ZONES.NL.enabled, true);
   assert.equal(getShippingZone('DE').cost, 9.95);
+  assert.equal(getShippingZone('DE').freeFrom, 69);
   assert.equal(getShippingZone('DE').enabled, true);
   assert.equal(getShippingZone('US').cost, 9.95);
+  assert.equal(getShippingZone('US').freeFrom, 69);
   assert.equal(getShippingZone('US').enabled, true);
 });
 
 test('shipping applies the approved country-zone policy', () => {
   assert.equal(calculateShipping({ countryCode: 'NL', subtotal: 68.99 }), 4.95);
   assert.equal(calculateShipping({ countryCode: 'NL', subtotal: 69 }), 0);
-  assert.equal(calculateShipping({ countryCode: 'DE', subtotal: 200 }), 9.95);
-  assert.equal(calculateShipping({ countryCode: 'US', subtotal: 200 }), 9.95);
+  assert.equal(calculateShipping({ countryCode: 'DE', subtotal: 45 }), 9.95);
+  assert.equal(calculateShipping({ countryCode: 'DE', subtotal: 69 }), 0);
+  assert.equal(calculateShipping({ countryCode: 'US', subtotal: 45 }), 9.95);
+  assert.equal(calculateShipping({ countryCode: 'US', subtotal: 69 }), 0);
   assert.throws(() => calculateShipping({ countryCode: 'CA', subtotal: 200 }), /not enabled/);
   assert.equal(calculateShipping({ hasItems: false }), 0);
 });
@@ -49,14 +53,16 @@ test('canonical totals apply discount before the free-shipping threshold', () =>
   assert.equal(totals.qualifiesForFreeShipping, false);
 });
 
-test('orders at the €69 Netherlands threshold receive free shipping', () => {
-  const totals = calculateCommerceTotals({ items: [{ price: 69, quantity: 1 }], countryCode: 'NL' });
-  assert.equal(totals.shipping, 0);
-  assert.equal(totals.grandTotal, 69);
-  assert.equal(totals.qualifiesForFreeShipping, true);
+test('orders at the €69 threshold receive free shipping', () => {
+  ['NL', 'FR', 'US'].forEach((countryCode) => {
+    const totals = calculateCommerceTotals({ items: [{ price: 69, quantity: 1 }], countryCode });
+    assert.equal(totals.shipping, 0);
+    assert.equal(totals.grandTotal, 69);
+    assert.equal(totals.qualifiesForFreeShipping, true);
+  });
 });
 
-test('EU and United States totals use €9,95 without a free-shipping threshold', () => {
+test('EU and United States totals use €9,95 below the threshold', () => {
   const eu = calculateCommerceTotals({ items: [{ price: 45, quantity: 1 }], countryCode: 'FR' });
   const us = calculateCommerceTotals({ items: [{ price: 45, quantity: 1 }], countryCode: 'US' });
 
