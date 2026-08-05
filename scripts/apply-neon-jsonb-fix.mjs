@@ -26,6 +26,16 @@ adapter = replaceOrThrow(
 
 await writeFile(adapterPath, adapter);
 
+const unitTestPath = new URL('../tests/neon-order-store.test.mjs', import.meta.url);
+let unitTest = await readFile(unitTestPath, 'utf8');
+unitTest = replaceOrThrow(
+  unitTest,
+  `        assert.equal(values[13].email, order.customer.email);`,
+  `        assert.equal(JSON.parse(values[13]).email, order.customer.email);`,
+  'existing JSONB parameter assertion',
+);
+await writeFile(unitTestPath, unitTest);
+
 const regressionTest = `import test from 'node:test';
 import assert from 'node:assert/strict';
 
