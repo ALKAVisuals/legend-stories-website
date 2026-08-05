@@ -7,8 +7,9 @@ import { handleOrderStatus } from '../server/api/order-status.mjs';
 const catalog = JSON.parse(
   await readFile(new URL('../data/products/catalog.json', import.meta.url), 'utf8'),
 ).products;
-const [clientSource, returnSource, returnPage] = await Promise.all([
+const [clientSource, runtimeConfigSource, returnSource, returnPage] = await Promise.all([
   readFile(new URL('../js/commerce/order-status-client.mjs', import.meta.url), 'utf8'),
+  readFile(new URL('../js/commerce/runtime-config.mjs', import.meta.url), 'utf8'),
   readFile(new URL('../js/order-return.js', import.meta.url), 'utf8'),
   readFile(new URL('../order-success.html', import.meta.url), 'utf8'),
 ]);
@@ -26,14 +27,20 @@ function memoryStorage(initial = {}) {
   };
 }
 
-if (!clientSource.includes("export const ORDER_STATUS_ENDPOINT = '';")) {
-  errors.push('Order status endpoint must remain disabled until deployment is configured.');
+if (!runtimeConfigSource.includes("orderStatusEndpoint: ''")
+  || !clientSource.includes('COMMERCE_RUNTIME_CONFIG.orderStatusEndpoint')) {
+  errors.push('Order status must remain disabled in tracked source until a deployment endpoint is generated.');
 }
 if (!clientSource.includes("credentials: 'omit'")) {
   errors.push('Order status requests must omit ambient browser credentials.');
 }
 if (!clientSource.includes("redirect: 'error'")) {
   errors.push('Order status requests must reject unexpected HTTP redirects.');
+}
+if (/NEON_DATABASE_URL|postgres(?:ql)?:\/\/|STRIPE_SECRET_KEY|sk_(?:test|live)_|whsec_/.test(
+  `${clientSource}\n${runtimeConfigSource}`,
+)) {
+  errors.push('Public order-status modules must not contain database or Stripe credentials.');
 }
 if (!returnSource.includes('sessionId !== storedSessionId')) {
   errors.push('Return page must match the URL session to the stored Checkout Session.');
@@ -123,5 +130,5 @@ if (errors.length) {
 }
 
 console.log(
-  `Verified order return validation passed for ${catalog.length} products with privacy-minimal status responses and paid-only cart clearing.`,
+  `Verified order return validation passed for ${catalog.length} products with deployment-generated endpoints, privacy-minimal status responses and paid-only cart clearing.`,
 );
