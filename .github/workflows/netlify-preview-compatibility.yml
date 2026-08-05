@@ -1,0 +1,101 @@
+name: Netlify preview compatibility
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/netlify-preview-compatibility.yml'
+      - 'netlify.toml'
+      - 'netlify/functions/**'
+      - 'server/netlify/**'
+      - 'server/api/**'
+      - 'server/adapters/neon-order-store.mjs'
+      - 'js/commerce/**'
+      - 'scripts/generate-commerce-runtime-config.mjs'
+      - 'scripts/validate-browser-checkout.mjs'
+      - 'scripts/validate-order-return.mjs'
+      - 'tests/commerce-runtime-config.test.mjs'
+      - 'tests/netlify-commerce-runtime.test.mjs'
+      - 'tests/netlify-commerce-config.test.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/netlify-preview-compatibility.yml'
+      - 'netlify.toml'
+      - 'netlify/functions/**'
+      - 'server/netlify/**'
+      - 'server/api/**'
+      - 'server/adapters/neon-order-store.mjs'
+      - 'js/commerce/**'
+      - 'scripts/generate-commerce-runtime-config.mjs'
+      - 'scripts/validate-browser-checkout.mjs'
+      - 'scripts/validate-order-return.mjs'
+      - 'tests/commerce-runtime-config.test.mjs'
+      - 'tests/netlify-commerce-runtime.test.mjs'
+      - 'tests/netlify-commerce-config.test.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: netlify-preview-compatibility-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compatibility:
+    name: Node 22 commerce preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Validate checkout boundaries
+        run: |
+          npm run validate:browser-checkout
+          npm run validate:order-return
+
+      - name: Run Netlify commerce tests
+        run: |
+          node --test \
+            tests/commerce-runtime-config.test.mjs \
+            tests/netlify-commerce-runtime.test.mjs \
+            tests/netlify-commerce-config.test.mjs
+
+      - name: Build storefront
+        run: npm run build
+
+      - name: Generate Netlify public runtime config
+        env:
+          LEGENDMURAL_HOSTED_CHECKOUT_ENDPOINT: /api/checkout
+          LEGENDMURAL_ORDER_STATUS_ENDPOINT: /api/order-status
+        run: node scripts/generate-commerce-runtime-config.mjs
+
+      - name: Verify generated runtime routes
+        run: |
+          node --input-type=module <<'NODE'
+          const { COMMERCE_RUNTIME_CONFIG } = await import('./dist/js/commerce/runtime-config.mjs');
+          if (COMMERCE_RUNTIME_CONFIG.hostedCheckoutEndpoint !== '/api/checkout') {
+            throw new Error('Generated checkout route is invalid.');
+          }
+          if (COMMERCE_RUNTIME_CONFIG.orderStatusEndpoint !== '/api/order-status') {
+            throw new Error('Generated order-status route is invalid.');
+          }
+          NODE
