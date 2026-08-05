@@ -27,6 +27,8 @@ test('Netlify config builds the validated site before generating public API rout
   );
   assert.match(config, /publish\s*=\s*"dist"/);
   assert.match(config, /functions\s*=\s*"netlify\/functions"/);
+  assert.match(config, /NODE_VERSION\s*=\s*"22"/);
+  assert.match(config, /included_files\s*=\s*\["data\/products\/catalog\.json"\]/);
   assert.match(config, /LEGENDMURAL_HOSTED_CHECKOUT_ENDPOINT\s*=\s*"\/api\/checkout"/);
   assert.match(config, /LEGENDMURAL_ORDER_STATUS_ENDPOINT\s*=\s*"\/api\/order-status"/);
 
