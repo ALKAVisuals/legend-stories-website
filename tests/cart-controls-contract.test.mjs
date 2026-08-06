@@ -20,16 +20,26 @@ test('cart controls use one shared delegated runtime', () => {
 
 test('cart markup remains escaped and product-labelled', () => {
   assert.match(moduleSource, /escapeCartHtml\(item\.name/);
-  assert.match(moduleSource, /escapeCartHtml\(item\.image/);
+  assert.match(moduleSource, /escapeCartHtml\(resolvedImage/);
   assert.match(moduleSource, /aria-label="Decrease quantity for /);
   assert.match(moduleSource, /aria-label="Increase quantity for /);
   assert.match(moduleSource, /aria-label="Remove /);
   assert.match(moduleSource, /data-cart-action="remove"/);
+  assert.match(moduleSource, /data-cart-product-page=/);
+  assert.match(moduleSource, /data-cart-image-recovery=/);
 });
 
 test('delegated controls stay scoped to the cart and support cleanup', () => {
   assert.match(moduleSource, /container\.contains\?\.\(control\)/);
   assert.match(moduleSource, /container\.removeEventListener\?\.\('click', handleClick\)/);
+  assert.match(moduleSource, /container\.addEventListener\('error', handleImageError, true\)/);
+  assert.match(moduleSource, /container\.removeEventListener\?\.\('error', handleImageError, true\)/);
+});
+
+test('stale cart images recover through the runtime product registry', () => {
+  assert.match(moduleSource, /loadProductRegistry/);
+  assert.match(moduleSource, /export async function recoverCartImage/);
+  assert.match(moduleSource, /persistRecoveredCartImage\(safePage, replacement, storage\)/);
 });
 
 test('the permanent quality chain validates delegated cart controls once', () => {
