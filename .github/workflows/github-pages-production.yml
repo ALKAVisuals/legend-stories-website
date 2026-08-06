@@ -34,6 +34,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install image optimization tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends ffmpeg
+
       - name: Validate standard production output
         run: npm run build
 
@@ -43,6 +48,9 @@ jobs:
           npx vite build --base="${GITHUB_PAGES_BASE_PATH}"
           node scripts/copy-static-js.mjs
           touch dist/.nojekyll
+
+      - name: Optimize GitHub Pages assets
+        run: node scripts/optimize-github-pages-assets.mjs
 
       - name: Validate GitHub Pages output
         run: node scripts/validate-github-pages-build.mjs
@@ -58,7 +66,7 @@ jobs:
     if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 15
     permissions:
       pages: write
       id-token: write
@@ -70,4 +78,4 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v5
         with:
-          timeout: 1200000
+          timeout: 600000
