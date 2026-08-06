@@ -1,12 +1,12 @@
 import { createHash } from 'node:crypto';
-import { cp, copyFile, mkdir, readFile, stat } from 'node:fs/promises';
+import { cp, copyFile, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join, normalize, relative } from 'node:path';
 
 const ROOT = process.cwd();
 const SOURCE = join(ROOT, 'js');
 const TARGET = join(ROOT, 'dist/js');
 const COLLECTION_VIDEO_MANIFEST_PATH = join(ROOT, 'data/video/collection-video-optimization.json');
-const PRODUCT_DERIVATIVE_MANIFEST_PATH = join(ROOT, 'data/media/product-browser-derivatives.json');
+const PRODUCT_REGISTRY_PATH = join(ROOT, 'data/product-registry.json');
 const RELATED_PRODUCTS_STYLES_PATH = 'css/related-products.css';
 
 function safeRepositoryPath(value, label) {
@@ -21,16 +21,15 @@ function safeRepositoryPath(value, label) {
   return normalized;
 }
 
-function safeDynamicAssetPath(value, label) {
+function safeProductPagePath(value, label) {
   const normalized = normalize(String(value || '')).replaceAll('\\', '/');
-  const approved = normalized === RELATED_PRODUCTS_STYLES_PATH
-    || normalized.startsWith('media/browser-products/');
   if (!normalized
     || normalized.startsWith('../')
     || normalized.includes('/../')
     || normalized.startsWith('/')
-    || !approved) {
-    throw new Error(`${label} is outside the approved dynamic storefront asset paths.`);
+    || normalized.includes('/')
+    || !normalized.endsWith('.html')) {
+    throw new Error(`${label} is not an approved root product page.`);
   }
   return normalized;
 }
@@ -69,7 +68,7 @@ async function copyRepositoryAsset(path) {
   const targetPath = join(ROOT, 'dist', path);
   const sourceInfo = await stat(sourcePath);
   if (!sourceInfo.isFile()) {
-    throw new Error(`${path}: dynamic storefront asset is not a file.`);
+    throw new Error(`${path}: runtime asset is not a file.`);
   }
 
   await mkdir(dirname(targetPath), { recursive: true });
@@ -78,7 +77,7 @@ async function copyRepositoryAsset(path) {
   const outputInfo = await stat(targetPath);
   const sourceHash = await sha256(sourcePath);
   if (outputInfo.size !== sourceInfo.size || await sha256(targetPath) !== sourceHash) {
-    throw new Error(`${path}: copied dynamic storefront asset failed integrity validation.`);
+    throw new Error(`${path}: copied runtime asset failed integrity validation.`);
   }
   return relative(ROOT, targetPath).replaceAll('\\', '/');
 }
@@ -99,34 +98,82 @@ async function copyDeferredCollectionMedia() {
   return copied;
 }
 
-async function copyDynamicStorefrontAssets() {
-  const manifest = JSON.parse(await readFile(PRODUCT_DERIVATIVE_MANIFEST_PATH, 'utf8'));
-  if (!Array.isArray(manifest.images) || manifest.images.length < 100) {
-    throw new Error('Product browser derivative manifest must contain the complete storefront catalog.');
+function readAttribute(tag, name) {
+  const match = String(tag).match(new RegExp(`\\b${name}=(['\"])(.*?)\\1`, 'i'));
+  return match?.[2] || '';
+}
+
+function replaceAttribute(tag, name, value) {
+  const escaped = String(value).replaceAll('&', '&amp;').replaceAll('"', '&quot;');
+  const pattern = new RegExp(`(\\b${name}=)(['\"])(.*?)\\2`, 'i');
+  if (!pattern.test(tag)) {
+    throw new Error(`Built product button is missing ${name}.`);
+  }
+  return tag.replace(pattern, `$1"${escaped}"`);
+}
+
+function builtHeroImageSource(html, page) {
+  const heroTag = Array.from(String(html).matchAll(/<img\b[^>]*>/gi))
+    .map((match) => match[0])
+    .find((tag) => /\bdata-product-hero=(['\"])true\1/i.test(tag));
+  const source = readAttribute(heroTag || '', 'src');
+  if (!source || !/^(?:\/|\.\/)?assets\//.test(source)) {
+    throw new Error(`${page}: Vite did not produce a valid built hero image URL.`);
+  }
+  return source;
+}
+
+function rewriteBuiltCartImage(html, image, page) {
+  let replaced = false;
+  const updated = String(html).replace(/<button\b[^>]*>/gi, (tag) => {
+    if (replaced || !/\badd-to-cart-btn\b/.test(tag)) return tag;
+    replaced = true;
+    return replaceAttribute(tag, 'data-img', image);
+  });
+  if (!replaced) {
+    throw new Error(`${page}: built product page is missing its add-to-cart button.`);
+  }
+  return updated;
+}
+
+async function finalizeRuntimeProductRegistry() {
+  const registry = JSON.parse(await readFile(PRODUCT_REGISTRY_PATH, 'utf8'));
+  if (!Array.isArray(registry.products) || registry.products.length === 0) {
+    throw new Error('Runtime product registry must contain at least one product.');
   }
 
-  const paths = new Set([RELATED_PRODUCTS_STYLES_PATH]);
-  for (const entry of manifest.images) {
-    paths.add(safeDynamicAssetPath(entry.derivative, `${entry.productPage || 'product'} derivative`));
+  const finalizedProducts = [];
+  for (const product of registry.products) {
+    const page = safeProductPagePath(product.page, `${product.name || 'product'} page`);
+    const outputPath = join(ROOT, 'dist', page);
+    const html = await readFile(outputPath, 'utf8');
+    const builtImage = builtHeroImageSource(html, page);
+    await writeFile(outputPath, rewriteBuiltCartImage(html, builtImage, page), 'utf8');
+    finalizedProducts.push({
+      ...product,
+      image: builtImage,
+      browserImage: builtImage,
+    });
   }
 
-  const copied = [];
-  for (const path of paths) {
-    copied.push(await copyRepositoryAsset(path));
-  }
-  return copied;
+  const outputPath = join(ROOT, 'dist/data/product-registry.json');
+  await mkdir(dirname(outputPath), { recursive: true });
+  await writeFile(outputPath, `${JSON.stringify({ ...registry, products: finalizedProducts }, null, 2)}\n`, 'utf8');
+  return finalizedProducts.length;
 }
 
 async function main() {
   await mkdir(TARGET, { recursive: true });
   await cp(SOURCE, TARGET, { recursive: true, force: true });
   const copiedMedia = await copyDeferredCollectionMedia();
-  const copiedDynamicAssets = await copyDynamicStorefrontAssets();
+  const copiedStyles = await copyRepositoryAsset(RELATED_PRODUCTS_STYLES_PATH);
+  const finalizedProducts = await finalizeRuntimeProductRegistry();
 
   console.log('Copied classic JavaScript and browser modules to dist/js/.');
   console.log(`Copied ${copiedMedia.length} manifest-approved deferred media assets:`);
   copiedMedia.forEach((path) => console.log(`- ${path}`));
-  console.log(`Copied ${copiedDynamicAssets.length} dynamic storefront assets.`);
+  console.log(`Copied runtime stylesheet: ${copiedStyles}.`);
+  console.log(`Finalized built image URLs for ${finalizedProducts} products.`);
 }
 
 main().catch((error) => {
