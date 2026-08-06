@@ -1,9 +1,13 @@
+import { loadProductRegistry } from './catalog/related-products.mjs';
+
 const ACTION_DELTAS = Object.freeze({
   decrement: -1,
   increment: 1,
 });
 
 const CART_IMAGE_PATH_PATTERN = /^(?:media\/(?!\/)|(?:\.\/)?assets\/(?!\/)|\/(?:[A-Za-z0-9._~-]+\/)*assets\/(?!\/))/;
+const PRODUCT_PAGE_PATTERN = /^[A-Za-z0-9._~-]+\.html$/;
+const recoveredCartImages = new Map();
 
 export function escapeCartHtml(value = '') {
   return String(value)
@@ -19,8 +23,82 @@ function parseCartIndex(value) {
   return Number.isInteger(index) && index >= 0 ? index : null;
 }
 
+function normalizeProductPage(value = '') {
+  const page = String(value).trim();
+  return PRODUCT_PAGE_PATTERN.test(page) ? page : '';
+}
+
 export function isCartImagePath(value = '') {
   return CART_IMAGE_PATH_PATTERN.test(String(value).trim());
+}
+
+export function persistRecoveredCartImage(
+  page,
+  image,
+  storage = globalThis.localStorage,
+) {
+  const safePage = normalizeProductPage(page);
+  const safeImage = String(image || '').trim();
+  if (!safePage || !isCartImagePath(safeImage) || !storage?.getItem || !storage?.setItem) {
+    return false;
+  }
+
+  try {
+    const savedCart = JSON.parse(storage.getItem('legendCart') || '[]');
+    if (!Array.isArray(savedCart)) return false;
+
+    let changed = false;
+    const updatedCart = savedCart.map((item) => {
+      if (!item || item.page !== safePage || item.image === safeImage) return item;
+      changed = true;
+      return { ...item, image: safeImage };
+    });
+
+    if (changed) storage.setItem('legendCart', JSON.stringify(updatedCart));
+    return changed;
+  } catch {
+    return false;
+  }
+}
+
+export async function recoverCartImage({
+  imageElement,
+  page,
+  baseUri = globalThis.document?.baseURI,
+  fetchImpl = globalThis.fetch,
+  storage = globalThis.localStorage,
+  registryLoader = loadProductRegistry,
+} = {}) {
+  const safePage = normalizeProductPage(page);
+  if (!imageElement || !safePage || typeof registryLoader !== 'function') return null;
+
+  const recoveryState = imageElement.dataset?.cartImageRecovery;
+  if (recoveryState === 'pending' || recoveryState === 'done' || recoveryState === 'failed') {
+    return null;
+  }
+
+  if (imageElement.dataset) imageElement.dataset.cartImageRecovery = 'pending';
+
+  try {
+    const products = await registryLoader(baseUri, fetchImpl);
+    const product = Array.isArray(products)
+      ? products.find((entry) => entry?.page === safePage)
+      : null;
+    const replacement = String(product?.browserImage || product?.image || '').trim();
+
+    if (!isCartImagePath(replacement)) {
+      throw new Error('The product registry does not contain a safe browser image path.');
+    }
+
+    recoveredCartImages.set(safePage, replacement);
+    persistRecoveredCartImage(safePage, replacement, storage);
+    imageElement.src = replacement;
+    if (imageElement.dataset) imageElement.dataset.cartImageRecovery = 'done';
+    return replacement;
+  } catch {
+    if (imageElement.dataset) imageElement.dataset.cartImageRecovery = 'failed';
+    return null;
+  }
 }
 
 export function renderCartItemMarkup({ item, index, formatPrice } = {}) {
@@ -29,17 +107,23 @@ export function renderCartItemMarkup({ item, index, formatPrice } = {}) {
     throw new Error('Cart item markup requires an item, non-negative index and price formatter.');
   }
 
+  const productPage = normalizeProductPage(item.page);
+  const resolvedImage = recoveredCartImages.get(productPage) || item.image;
   const safeName = escapeCartHtml(item.name || 'Product');
   const variantText = item.sizeLabel
     ? `${item.variantLabel || 'Size'} · ${item.sizeLabel}`
     : (item.sizeCm ? `${item.sizeCm} cm${item.variantLabel ? ` · ${item.variantLabel}` : ''}` : '');
   const safeVariant = escapeCartHtml(variantText);
   const accessibleName = safeVariant ? `${safeName}, ${safeVariant}` : safeName;
-  const safeImage = escapeCartHtml(item.image || '🎨');
+  const safeImage = escapeCartHtml(resolvedImage || '🎨');
+  const safeProductPage = escapeCartHtml(productPage);
   const quantity = Math.max(1, Number.parseInt(String(item.quantity), 10) || 1);
   const lineTotal = Number(item.price) * quantity;
-  const imageMarkup = isCartImagePath(item.image)
-    ? `<img src="${safeImage}" alt="${safeName}" class="w-12 h-12 object-contain rounded" decoding="async">`
+  const recoveryAttribute = safeProductPage
+    ? ` data-cart-product-page="${safeProductPage}" data-cart-image-recovery="idle"`
+    : '';
+  const imageMarkup = isCartImagePath(resolvedImage)
+    ? `<img src="${safeImage}" alt="${safeName}" class="w-12 h-12 object-contain rounded" decoding="async"${recoveryAttribute}>`
     : safeImage;
 
   return '<div class="flex gap-4 mb-3 p-3 rounded-xl bg-surface-light/50 border border-surface-border/30">' +
@@ -60,6 +144,10 @@ export function initCartControlDelegation({
   container,
   onUpdateQuantity,
   onRemoveItem,
+  baseUri = globalThis.document?.baseURI,
+  fetchImpl = globalThis.fetch,
+  storage = globalThis.localStorage,
+  registryLoader = loadProductRegistry,
 } = {}) {
   if (!container?.addEventListener) {
     throw new Error('Cart control delegation requires a container.');
@@ -84,11 +172,27 @@ export function initCartControlDelegation({
     onUpdateQuantity(index, ACTION_DELTAS[action]);
   }
 
+  function handleImageError(event) {
+    const image = event?.target;
+    if (!image?.matches?.('img[data-cart-product-page]') || !container.contains?.(image)) return;
+
+    void recoverCartImage({
+      imageElement: image,
+      page: image.dataset?.cartProductPage,
+      baseUri,
+      fetchImpl,
+      storage,
+      registryLoader,
+    });
+  }
+
   container.addEventListener('click', handleClick);
+  container.addEventListener('error', handleImageError, true);
 
   return Object.freeze({
     destroy() {
       container.removeEventListener?.('click', handleClick);
+      container.removeEventListener?.('error', handleImageError, true);
     },
   });
 }
