@@ -1,5 +1,5 @@
-import { access, readFile } from 'node:fs/promises';
-import { join, normalize } from 'node:path';
+import { access, readdir, readFile } from 'node:fs/promises';
+import { extname, join, normalize, relative } from 'node:path';
 
 const ROOT = process.cwd();
 const DIST = join(ROOT, 'dist');
@@ -26,6 +26,57 @@ function safeDistAssetPath(source, basePath) {
   return relativePath;
 }
 
+async function walk(directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const files = [];
+  for (const entry of entries) {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) files.push(...await walk(path));
+    else files.push(path);
+  }
+  return files;
+}
+
+function extractBuiltAssetReferences(html) {
+  const references = [];
+  const pattern = /(?:href|src|data-src|poster)=["']([^"']+)["']/gi;
+  let match;
+  while ((match = pattern.exec(String(html)))) {
+    const reference = match[1].split('#')[0].split('?')[0].trim();
+    if (reference.includes('/assets/')) references.push(reference);
+  }
+  return references;
+}
+
+async function validateHtmlAssetReferences(basePath) {
+  const files = await walk(DIST);
+  const htmlFiles = files.filter((file) => extname(file) === '.html');
+  if (htmlFiles.length < 100) {
+    throw new Error(`Expected at least 100 GitHub Pages HTML files, found ${htmlFiles.length}.`);
+  }
+
+  let checkedReferences = 0;
+  for (const htmlFile of htmlFiles) {
+    const html = await readFile(htmlFile, 'utf8');
+    for (const source of extractBuiltAssetReferences(html)) {
+      let decoded;
+      try {
+        decoded = decodeURIComponent(source);
+      } catch {
+        throw new Error(`${relative(DIST, htmlFile)} contains invalid asset URI encoding: ${source}`);
+      }
+      const relativePath = safeDistAssetPath(decoded, basePath);
+      await access(join(DIST, relativePath));
+      checkedReferences += 1;
+    }
+  }
+
+  if (checkedReferences === 0) {
+    throw new Error('GitHub Pages HTML contains no repository-prefixed built asset references.');
+  }
+  return { htmlFiles: htmlFiles.length, checkedReferences };
+}
+
 async function main() {
   const basePath = validateBasePath(BASE_PATH);
   const registryPath = join(DIST, 'data/product-registry.json');
@@ -41,11 +92,15 @@ async function main() {
     await access(join(DIST, relativePath));
   }
 
+  const htmlValidation = await validateHtmlAssetReferences(basePath);
   await access(join(DIST, 'css/related-products.css'));
   await access(join(DIST, 'js/cart-controls.mjs'));
   await access(join(DIST, '.nojekyll'));
 
-  console.log(`Validated GitHub Pages output for ${registry.products.length} products at ${basePath}.`);
+  console.log(
+    `Validated GitHub Pages output for ${registry.products.length} products, ` +
+    `${htmlValidation.htmlFiles} HTML pages and ${htmlValidation.checkedReferences} built asset references at ${basePath}.`,
+  );
 }
 
 main().catch((error) => {
