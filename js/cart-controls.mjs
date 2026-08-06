@@ -17,6 +17,11 @@ function parseCartIndex(value) {
   return Number.isInteger(index) && index >= 0 ? index : null;
 }
 
+export function isCartImagePath(value = '') {
+  const source = String(value).trim();
+  return /^(?:media\/|assets\/|\.\/assets\/|\/assets\/)/.test(source);
+}
+
 export function renderCartItemMarkup({ item, index, formatPrice } = {}) {
   const cartIndex = parseCartIndex(index);
   if (!item || cartIndex === null || typeof formatPrice !== 'function') {
@@ -32,7 +37,7 @@ export function renderCartItemMarkup({ item, index, formatPrice } = {}) {
   const safeImage = escapeCartHtml(item.image || '🎨');
   const quantity = Math.max(1, Number.parseInt(String(item.quantity), 10) || 1);
   const lineTotal = Number(item.price) * quantity;
-  const imageMarkup = String(item.image || '').startsWith('media/')
+  const imageMarkup = isCartImagePath(item.image)
     ? `<img src="${safeImage}" alt="${safeName}" class="w-12 h-12 object-contain rounded" decoding="async">`
     : safeImage;
 
