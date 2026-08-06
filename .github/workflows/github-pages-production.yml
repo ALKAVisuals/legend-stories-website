@@ -1,0 +1,73 @@
+name: GitHub Pages production deployment
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages-production
+  cancel-in-progress: false
+
+env:
+  GITHUB_PAGES_BASE_PATH: /legend-stories-website/
+
+jobs:
+  build:
+    name: Build GitHub Pages output
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate standard production output
+        run: npm run build
+
+      - name: Build repository-prefixed production output
+        run: |
+          npm run generate:runtime-products
+          npx vite build --base="${GITHUB_PAGES_BASE_PATH}"
+          node scripts/copy-static-js.mjs
+          touch dist/.nojekyll
+
+      - name: Validate GitHub Pages output
+        run: node scripts/validate-github-pages-build.mjs
+
+      - name: Upload GitHub Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy GitHub Pages output
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+        with:
+          timeout: 1200000

@@ -3,6 +3,8 @@ const ACTION_DELTAS = Object.freeze({
   increment: 1,
 });
 
+const CART_IMAGE_PATH_PATTERN = /^(?:media\/(?!\/)|(?:\.\/)?assets\/(?!\/)|\/(?:[A-Za-z0-9._~-]+\/)*assets\/(?!\/))/;
+
 export function escapeCartHtml(value = '') {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -18,8 +20,7 @@ function parseCartIndex(value) {
 }
 
 export function isCartImagePath(value = '') {
-  const source = String(value).trim();
-  return /^(?:media\/|assets\/|\.\/assets\/|\/assets\/)/.test(source);
+  return CART_IMAGE_PATH_PATTERN.test(String(value).trim());
 }
 
 export function renderCartItemMarkup({ item, index, formatPrice } = {}) {

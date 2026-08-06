@@ -8,6 +8,7 @@ const TARGET = join(ROOT, 'dist/js');
 const COLLECTION_VIDEO_MANIFEST_PATH = join(ROOT, 'data/video/collection-video-optimization.json');
 const PRODUCT_REGISTRY_PATH = join(ROOT, 'generated/public/data/product-registry.json');
 const RELATED_PRODUCTS_STYLES_PATH = 'css/related-products.css';
+const BUILT_ASSET_PATH_PATTERN = /^(?:assets\/(?!\/)|\.\/assets\/(?!\/)|\/(?:[A-Za-z0-9._~-]+\/)*assets\/(?!\/))/;
 
 function safeRepositoryPath(value, label) {
   const normalized = normalize(String(value || '')).replaceAll('\\', '/');
@@ -117,8 +118,8 @@ function builtHeroImageSource(html, page) {
     .map((match) => match[0])
     .find((tag) => /\bdata-product-hero=(['\"])true\1/i.test(tag));
   const source = readAttribute(heroTag || '', 'src');
-  if (!source || !/^(?:\/|\.\/)?assets\//.test(source)) {
-    throw new Error(`${page}: Vite did not produce a valid built hero image URL.`);
+  if (!source || !BUILT_ASSET_PATH_PATTERN.test(source)) {
+    throw new Error(`${page}: Vite did not produce a valid same-origin built hero image URL.`);
   }
   return source;
 }
