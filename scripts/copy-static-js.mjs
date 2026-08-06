@@ -6,7 +6,7 @@ const ROOT = process.cwd();
 const SOURCE = join(ROOT, 'js');
 const TARGET = join(ROOT, 'dist/js');
 const COLLECTION_VIDEO_MANIFEST_PATH = join(ROOT, 'data/video/collection-video-optimization.json');
-const PRODUCT_REGISTRY_PATH = join(ROOT, 'data/product-registry.json');
+const PRODUCT_REGISTRY_PATH = join(ROOT, 'generated/public/data/product-registry.json');
 const RELATED_PRODUCTS_STYLES_PATH = 'css/related-products.css';
 
 function safeRepositoryPath(value, label) {
