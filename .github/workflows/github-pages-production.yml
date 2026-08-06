@@ -11,8 +11,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: github-pages-production
-  cancel-in-progress: false
+  group: github-pages-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'production' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   GITHUB_PAGES_BASE_PATH: /legend-stories-website/
