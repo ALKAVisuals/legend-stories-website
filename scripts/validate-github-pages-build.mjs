@@ -1,8 +1,15 @@
-import { access, readdir, readFile } from 'node:fs/promises';
+import { access, readdir, readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, relative } from 'node:path';
+
+import {
+  MAX_ASSET_BYTES,
+  MIN_PNG_BYTES,
+  assertAssetBudget,
+} from './optimize-github-pages-assets.mjs';
 
 const ROOT = process.cwd();
 const DIST = join(ROOT, 'dist');
+const ASSETS = join(DIST, 'assets');
 const BASE_PATH = process.env.GITHUB_PAGES_BASE_PATH || '/legend-stories-website/';
 
 function validateBasePath(value) {
@@ -46,6 +53,37 @@ function extractBuiltAssetReferences(html) {
     if (reference.includes('/assets/')) references.push(reference);
   }
   return references;
+}
+
+async function validateAssetBudget() {
+  const files = await walk(ASSETS);
+  let bytes = 0;
+  const oversizedPngs = [];
+
+  for (const file of files) {
+    const info = await stat(file);
+    bytes += info.size;
+    if (/\.png$/i.test(file) && info.size >= MIN_PNG_BYTES) {
+      oversizedPngs.push({
+        path: relative(DIST, file).replaceAll('\\', '/'),
+        bytes: info.size,
+      });
+    }
+  }
+
+  if (oversizedPngs.length > 0) {
+    const sample = oversizedPngs
+      .slice(0, 10)
+      .map((item) => `${item.path} (${item.bytes} bytes)`)
+      .join(', ');
+    throw new Error(
+      `GitHub Pages output still contains ${oversizedPngs.length} PNG assets at or above ` +
+      `${MIN_PNG_BYTES} bytes: ${sample}`,
+    );
+  }
+
+  assertAssetBudget(bytes, MAX_ASSET_BYTES);
+  return { bytes, files: files.length };
 }
 
 async function validateHtmlAssetReferences(basePath) {
@@ -92,6 +130,7 @@ async function main() {
     await access(join(DIST, relativePath));
   }
 
+  const assetValidation = await validateAssetBudget();
   const htmlValidation = await validateHtmlAssetReferences(basePath);
   await access(join(DIST, 'css/related-products.css'));
   await access(join(DIST, 'js/cart-controls.mjs'));
@@ -99,7 +138,8 @@ async function main() {
 
   console.log(
     `Validated GitHub Pages output for ${registry.products.length} products, ` +
-    `${htmlValidation.htmlFiles} HTML pages and ${htmlValidation.checkedReferences} built asset references at ${basePath}.`,
+    `${htmlValidation.htmlFiles} HTML pages, ${htmlValidation.checkedReferences} built asset references ` +
+    `and ${assetValidation.files} assets totaling ${assetValidation.bytes} bytes at ${basePath}.`,
   );
 }
 
