@@ -1,6 +1,7 @@
 export const ORDER_STORE_CAPABILITIES = Object.freeze({
   persistPendingCheckout: 'persistPendingCheckout',
   processStripeEvent: 'processStripeEvent',
+  processPaypalCapture: 'processPaypalCapture',
   getOrderByReference: 'getOrderByReference',
 });
 
@@ -67,6 +68,16 @@ export function requirePaymentEventStore(adapter) {
   return validateOrderStoreAdapter(adapter, {
     requiredMethods: [ORDER_STORE_CAPABILITIES.processStripeEvent],
     label: 'Stripe payment-event store',
+  });
+}
+
+export function requirePaypalCaptureStore(adapter) {
+  return validateOrderStoreAdapter(adapter, {
+    requiredMethods: [
+      ORDER_STORE_CAPABILITIES.processPaypalCapture,
+      ORDER_STORE_CAPABILITIES.getOrderByReference,
+    ],
+    label: 'PayPal capture store',
   });
 }
 
