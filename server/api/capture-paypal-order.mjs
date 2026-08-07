@@ -172,6 +172,24 @@ export async function handleCapturePayPalOrder(request, {
     if (reservedOrder.paymentSessionId !== lookup.orderId) {
       return errorResponse(404, 'ORDER_NOT_FOUND', 'No matching PayPal order was found.', corsOrigin);
     }
+    if (!['test', 'live'].includes(reservedOrder.mode)) {
+      throw new PayPalCaptureError(
+        'PAYPAL_CAPTURE_MODE_MISMATCH',
+        'Stored PayPal order mode is invalid.',
+      );
+    }
+    if (reservedOrder.status === 'paid') {
+      return jsonResponse(200, {
+        provider: 'paypal',
+        reference: lookup.reference,
+        orderId: lookup.orderId,
+        mode: reservedOrder.mode,
+        status: 'paid',
+        paid: true,
+        duplicate: true,
+        captureIds: [],
+      }, corsOrigin);
+    }
 
     const client = paypalClient || paypalClientFactory({
       clientId: env.PAYPAL_CLIENT_ID,
