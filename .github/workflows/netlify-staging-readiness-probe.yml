@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     env:
-      LEGENDMURAL_STAGING_BASE_URL: https://deploy-preview-81--legendmural.netlify.app
+      LEGENDMURAL_STAGING_BASE_URL: https://legendmural.netlify.app
       LEGENDMURAL_STAGING_RETRY_ATTEMPTS: '24'
       LEGENDMURAL_STAGING_RETRY_DELAY_MS: '10000'
 
