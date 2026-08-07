@@ -5,9 +5,17 @@ export const ORDER_STORE_CAPABILITIES = Object.freeze({
   getOrderByReference: 'getOrderByReference',
 });
 
-export const COMPLETE_ORDER_STORE_METHODS = Object.freeze(
+const KNOWN_ORDER_STORE_METHODS = Object.freeze(
   Object.values(ORDER_STORE_CAPABILITIES),
 );
+
+// Keep the established core contract stable. PayPal capture is an additive
+// capability required only by the PayPal capture endpoint.
+export const COMPLETE_ORDER_STORE_METHODS = Object.freeze([
+  ORDER_STORE_CAPABILITIES.persistPendingCheckout,
+  ORDER_STORE_CAPABILITIES.processStripeEvent,
+  ORDER_STORE_CAPABILITIES.getOrderByReference,
+]);
 
 export class OrderStoreContractError extends Error {
   constructor(code, message, details = {}) {
@@ -35,7 +43,7 @@ export function validateOrderStoreAdapter(adapter, {
   const required = [...new Set(requiredMethods.map((method) => String(method).trim()))]
     .filter(Boolean);
   const unknown = required.filter(
-    (method) => !COMPLETE_ORDER_STORE_METHODS.includes(method),
+    (method) => !KNOWN_ORDER_STORE_METHODS.includes(method),
   );
   if (unknown.length) {
     throw new OrderStoreContractError(
