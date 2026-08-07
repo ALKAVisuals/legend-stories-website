@@ -56,6 +56,7 @@ De workflow:
 - Zij gebruikt `contents: read`.
 - Zij maakt, verwijdert of reset geen Neon-branches.
 - Zij mag alleen synthetische testdata gebruiken.
+- Deze handmatige Neon-integratieworkflow does not touch Netlify; Netlify staging is een afzonderlijke operationele releasefase.
 - Zij activeert geen Stripe live-modus.
 - Productiecredentials horen nooit in de testenvironment.
 
