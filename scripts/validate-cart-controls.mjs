@@ -40,7 +40,7 @@ for (const signal of [
   'aria-label="Increase quantity for ',
   'aria-label="Remove ',
   'escapeCartHtml(item.name',
-  'escapeCartHtml(item.image',
+  'escapeCartHtml(resolvedImage',
   'aria-hidden="true" focusable="false"',
 ]) {
   if (!moduleSource.includes(signal)) {
@@ -60,6 +60,24 @@ for (const signal of [
   }
 }
 
+for (const signal of [
+  "import { loadProductRegistry } from './catalog/related-products.mjs'",
+  'data-cart-product-page=',
+  'data-cart-image-recovery=',
+  'export async function recoverCartImage',
+  'persistRecoveredCartImage(safePage, replacement, storage)',
+  "container.addEventListener('error', handleImageError, true)",
+  "container.removeEventListener?.('error', handleImageError, true)",
+]) {
+  if (!moduleSource.includes(signal)) {
+    errors.push(`js/cart-controls.mjs is missing required image recovery behavior: ${signal}`);
+  }
+}
+
+if (moduleSource.includes('(?:[A-Za-z0-9._~-]+\\/)*assets')) {
+  errors.push('Cart image recovery must not contain GitHub Pages repository-prefixed asset support.');
+}
+
 if (packageJson.scripts?.['validate:cart-controls'] !== 'node scripts/validate-cart-controls.mjs') {
   errors.push('package.json must expose validate:cart-controls.');
 }
@@ -73,4 +91,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Cart control validation passed with delegated controls and centralized escaped markup.');
+console.log('Cart control validation passed with delegated controls, escaped markup and Netlify cart image recovery.');
