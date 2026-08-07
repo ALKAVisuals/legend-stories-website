@@ -1,4 +1,5 @@
 const REFERENCE_PATTERN = /^[a-f0-9]{64}$/;
+const PAYPAL_ORDER_ID_PATTERN = /^[A-Z0-9]{1,36}$/;
 const ORDER_STATUSES = new Set([
   'payment_pending',
   'payment_processing',
@@ -28,6 +29,13 @@ function normalizeTimestamp(value, field, fallback = 0) {
   return timestamp;
 }
 
+export function paymentProviderForSessionId(value) {
+  const sessionId = String(value || '').trim();
+  if (/^cs_(test|live)_[A-Za-z0-9_-]+$/.test(sessionId)) return 'stripe';
+  if (PAYPAL_ORDER_ID_PATTERN.test(sessionId)) return 'paypal';
+  return '';
+}
+
 function normalizeOrder(order = {}) {
   const reference = String(order.reference || '').trim().toLowerCase();
   if (!REFERENCE_PATTERN.test(reference)) {
@@ -55,9 +63,15 @@ function normalizeOrder(order = {}) {
   }
 
   const paymentSessionId = String(order.paymentSessionId || '').trim();
-  const expectedSessionPrefix = mode === 'live' ? 'cs_live_' : 'cs_test_';
-  if (paymentSessionId && !paymentSessionId.startsWith(expectedSessionPrefix)) {
-    fail('INVALID_ORDER', 'The stored Checkout Session does not match the order mode.');
+  const provider = paymentSessionId ? paymentProviderForSessionId(paymentSessionId) : '';
+  if (paymentSessionId && !provider) {
+    fail('INVALID_ORDER', 'The stored payment session identifier is invalid.');
+  }
+  if (provider === 'stripe') {
+    const expectedSessionPrefix = mode === 'live' ? 'cs_live_' : 'cs_test_';
+    if (!paymentSessionId.startsWith(expectedSessionPrefix)) {
+      fail('INVALID_ORDER', 'The stored Checkout Session does not match the order mode.');
+    }
   }
 
   const createdAt = normalizeTimestamp(order.createdAt, 'creation timestamp');
@@ -123,8 +137,9 @@ export function createOrderStatusUpdate(orderInput, paymentEvent = {}) {
   }
 
   const sessionId = String(paymentEvent.sessionId || '').trim();
-  if (!sessionId) {
-    fail('INVALID_PAYMENT_EVENT', 'The Stripe event has no Checkout Session ID.');
+  const expectedStripePrefix = eventMode === 'live' ? 'cs_live_' : 'cs_test_';
+  if (!sessionId.startsWith(expectedStripePrefix)) {
+    fail('INVALID_PAYMENT_EVENT', 'The Stripe event has no valid Checkout Session ID.');
   }
   if (order.paymentSessionId && order.paymentSessionId !== sessionId) {
     fail('ORDER_SESSION_MISMATCH', 'The Stripe event belongs to a different Checkout Session.');
