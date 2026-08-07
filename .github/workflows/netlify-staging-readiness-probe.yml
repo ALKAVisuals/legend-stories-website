@@ -1,0 +1,36 @@
+name: Netlify staging readiness probe
+
+on:
+  push:
+    branches:
+      - test/netlify-staging-readiness
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: netlify-staging-readiness-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  readiness:
+    name: Side-effect-free staging probe
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      LEGENDMURAL_STAGING_BASE_URL: https://deploy-preview-81--legendmural.netlify.app
+      LEGENDMURAL_STAGING_RETRY_ATTEMPTS: '24'
+      LEGENDMURAL_STAGING_RETRY_DELAY_MS: '10000'
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Probe deployed Netlify staging configuration
+        run: node scripts/validate-netlify-staging-readiness.mjs
