@@ -1,3 +1,6 @@
+# LegendMural uses Netlify as the single intended production host.
+# GitHub Pages is not maintained as a parallel production target.
+
 [build]
   command = "npm run build && node scripts/generate-commerce-runtime-config.mjs"
   publish = "dist"
