@@ -2,13 +2,15 @@
 
 ## 1. Doel
 
-Dit document beschrijft hoe wijzigingen veilig worden ontwikkeld, gevalideerd en vrijgegeven. De repository bevat storefrontcode én voorbereide servercontracten; daardoor moet iedere wijziging duidelijk aangeven of zij alleen frontend, repositorylogica, testinfrastructuur, staging of productie raakt.
+Dit document beschrijft hoe LegendMural veilig wordt ontwikkeld, gevalideerd en vrijgegeven. De repository bevat storefrontcode, server-side commerce, een Neon order-store en Netlify Function-adapters. Iedere wijziging moet daarom duidelijk aangeven of zij frontend, repositorylogica, testinfrastructuur, staging of productie raakt.
+
+Netlify is de enige beoogde production host. GitHub wordt gebruikt voor broncode, branches, PR’s, CI en reviews; GitHub Pages wordt niet als parallel production target onderhouden.
 
 ## 2. Lokale omgeving
 
 Vereisten:
 
-- Node.js 20;
+- Node.js 20 voor de standaard lokale kwaliteitsketen;
 - npm;
 - FFmpeg en FFprobe voor volledige mediavalidatie;
 - een schone Git-branch vanaf de actuele `main`.
@@ -20,7 +22,7 @@ npm ci
 npm run dev
 ```
 
-De lokale Vite-server gebruikt standaard poort 3001.
+De lokale Vite-server gebruikt standaard poort 3001. De Netlify-build zelf draait op Node.js 22 en heeft een aparte compatibiliteitsworkflow.
 
 ## 3. Branch- en PR-beleid
 
@@ -29,11 +31,11 @@ Gebruik één beperkte scope per branch.
 Voorbeelden:
 
 ```text
-agent/project-documentation
+fix/cart-image-recovery
 refactor/inline-handler-audit
 fix/checkout-focus-management
 perf/responsive-product-derivatives
-feat/netlify-checkout-staging
+feat/netlify-staging-hardening
 ```
 
 Iedere PR bevat minimaal:
@@ -58,7 +60,7 @@ npm run quality
 
 De volledige quality chain omvat repository-, CSS-, dependency-, media-, product-, commerce-, Stripe-, Neon-, unit- en buildvalidatie.
 
-Bij een beperkte documentatie-PR is een volledige build functioneel niet noodzakelijk, maar de GitHub quality gate blijft de definitieve integriteitscontrole.
+Daarnaast zijn er aparte GitHub Actions voor accessibility/purchase flow en Node 22 Netlify-compatibiliteit.
 
 ## 5. Productcatalogus wijzigen
 
@@ -85,7 +87,7 @@ npm run generate:runtime-products
 npm run validate:runtime-products
 ```
 
-Pas gegenereerde root-productpagina’s niet handmatig aan. Een wijziging moet terug te voeren zijn op centrale data of de gedeelde template.
+Pas gegenereerde root-productpagina’s niet handmatig aan.
 
 ## 6. Commerce wijzigen
 
@@ -93,7 +95,7 @@ Wijzigingen aan prijs, korting, shipping of checkout vereisen altijd:
 
 - centnauwkeurige server-side validatie;
 - tests met gemanipuleerde browserprijzen;
-- controle van expliciete en fallback shipping zones;
+- controle van shipping zones en ondersteunde landen;
 - controle van idempotency en conflictsituaties;
 - catalogusbrede validatie voor alle 111 producten.
 
@@ -119,92 +121,66 @@ De browser mag nooit de autoriteit worden voor een geldbedrag of betaalstatus.
 - verwijder alleen media na een bewezen referentieaudit;
 - overschrijf geen originele product- of printbronnen;
 - gebruik derivatives voor browserdelivery;
-- behoud URL’s wanneer bestaande pagina’s ervan afhankelijk zijn;
+- behoud URL’s wanneer bestaande browserdata ervan afhankelijk kan zijn of voeg een gecontroleerde migratie/fallback toe;
 - leg encoderinstellingen en kwaliteitsmetingen reproduceerbaar vast;
 - voeg permanente driftvalidatie toe.
 
 ### Afbeeldingen
 
-Controleer minimaal:
-
-- codec;
-- afmetingen;
-- transparantie;
-- bestandsgrootte en ratio;
-- SSIM wanneer een lossy derivative wordt gebruikt;
-- exacte HTML/CSS-referenties;
-- fallbackgedrag.
+Controleer minimaal codec, afmetingen, transparantie, bestandsgrootte, relevante kwaliteitsgrenzen, HTML/CSS-referenties en fallbackgedrag.
 
 ### Video
 
-Controleer minimaal:
+Controleer minimaal codec/profiel, frame rate, duur, pixel format, fast start, audio, poster, SSIM/PSNR en loading policy inclusief Reduced Motion en Save-Data.
 
-- codec en profiel;
-- frame rate, duur en frame count;
-- pixel format en kleurmetadata;
-- MP4 fast start;
-- audio-aanwezigheid;
-- poster;
-- SSIM en PSNR;
-- loading policy en Reduced Motion/Save-Data.
+## 8. Neon-integratie
 
-## 8. Neon-testactivatie
+De echte geïsoleerde Neon-integratie is uitgevoerd. Daarbij zijn migraties, provider-neutrale order-store conformance en concurrent transact gedrag tegen echte PostgreSQL gevalideerd. De gevonden JSONB-serialisatie- en serializable-retryproblemen zijn in PR #74 opgelost.
 
-De echte Neon-integratie mag alleen draaien tegen de geïsoleerde branch uit issue #31.
+De handmatige integratieworkflow blijft beschikbaar voor regressievalidatie. Een herhaalde echte run mag alleen tegen een geïsoleerde testbranch met synthetische data draaien.
 
-Voorwaarden:
+Voorwaarden voor zo’n run:
 
-- ALKAVisuals is eigenaar van de Neon-organisatie;
+- ALKAVisuals beheert de Neon-organisatie;
 - MFA staat aan;
-- regio is Frankfurt (`aws-eu-central-1`);
-- branch bevat geen productiegegevens;
-- aparte migratie- en runtimecredentials;
-- secrets staan in de GitHub environment `neon-integration`;
+- testomgeving staat in Frankfurt (`aws-eu-central-1`);
+- de integratiebranch bevat geen productiegegevens;
+- migratie- en runtimecredentials zijn gescheiden waar de omgeving dit ondersteunt;
+- secrets staan alleen in de GitHub environment `neon-integration`;
 - secrets worden nergens geprint.
 
-Vereiste secrets:
+Vereiste testsecrets:
 
 ```text
 NEON_TEST_DATABASE_URL
 NEON_TEST_MIGRATION_URL
 ```
 
-Start daarna handmatig de workflow **Neon order-store integration**.
+Voor productie blijft een dedicated least-privilege runtime-rol vereist, plus vastgesteld backup-/restore- en privacybeleid.
 
-Acceptatie:
+## 9. Netlify staging
 
-- migratie slaagt en is repeatable;
-- echte Neon-adapter haalt alle conformance-scenario’s;
-- concurrentietests slagen;
-- runtime-rol kan niet verwijderen of truncaten;
-- synthetische testdata is na afloop verwijderd;
-- geen checkoutendpoint, Netlifyinstelling of Stripekey is geactiveerd.
+De repository bevat inmiddels dunne Netlify Function-adapters voor:
 
-## 9. Netlify staging-sprint
+- checkout;
+- Stripe webhook;
+- orderstatus.
 
-Deze sprint start alleen na een groene Neon-integratietest en afzonderlijke toestemming.
+`netlify.toml` configureert de same-origin routes en Node.js 22. De adapters gebruiken de bestaande serverhandlers en falen gesloten wanneer noodzakelijke configuratie ontbreekt.
 
-Scope:
+De resterende stagingstap is operationeel: configureer een geïsoleerde Netlify stagingomgeving met uitsluitend testdata, Stripe-testkeys en een geïsoleerde Neon-omgeving.
 
-- dunne Netlify Function-adapters voor checkout, webhook en orderstatus;
-- staging-only environment variables;
-- Stripe-testkeys;
-- staging-Neonbranch;
-- origin- en CORS-beperking;
-- logging zonder secrets of onnodige persoonsgegevens;
-- browser-endpoints uitsluitend voor staging.
-
-Niet toegestaan in dezelfde stap:
+Niet toegestaan tijdens staging:
 
 - productie-Neoncredentials;
-- `sk_live_`;
+- `sk_live_`-keys;
 - live webhookenablement;
-- productiecanonical- of domeinmigratie;
-- echte klantgegevens.
+- echte klantgegevens;
+- GitHub Pages als tweede checkoutomgeving.
 
 ## 10. End-to-end stagingacceptatie
 
-Een stagingrelease is pas geslaagd wanneer de volgende flow bewezen is:
+Een stagingrelease is pas geslaagd wanneer deze flow aantoonbaar werkt:
 
 1. gebruiker voegt een product toe;
 2. server herberekent producten en bedragen;
@@ -228,7 +204,8 @@ Test daarnaast:
 - webhook vóór of na returnpagina;
 - verkeerde Checkout Session bij geldige orderreference;
 - tijdelijke database- of Stripefout;
-- trage verbinding en requesttimeout.
+- trage verbinding en requesttimeout;
+- oude winkelwagenafbeeldingen uit `localStorage` na een assetwijziging.
 
 ## 11. Productierelease
 
@@ -236,7 +213,8 @@ Productie vereist een apart goedkeuringsmoment.
 
 Checklist:
 
-- productie-Neonbranch en least-privilege rollen;
+- productie-Neonbranch;
+- dedicated least-privilege runtime-rol;
 - backup- en herstelbeleid vastgesteld;
 - retentie- en privacybeleid vastgesteld;
 - DPA en relevante voorwaarden beoordeeld;
@@ -298,5 +276,6 @@ Een wijziging is pas gereed wanneer:
 - tijdelijke tooling is verwijderd of veilig permanent gemaakt;
 - secrets en productieconfiguratie afwezig zijn tenzij expliciet onderdeel van een goedgekeurde infrastructuursprint;
 - documentatie is bijgewerkt wanneer architectuur of workflow verandert;
+- GitHub Pages niet als parallel production target wordt toegevoegd;
 - PR review-ready is;
 - merge expliciet is goedgekeurd.

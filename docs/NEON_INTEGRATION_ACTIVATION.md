@@ -1,56 +1,74 @@
-# Neon integration activation
+# Neon integration validation
 
-This repository already contains a dormant Neon Postgres order-store adapter and the provider-neutral order-store conformance suite. This document defines the remaining activation work without enabling checkout or changing Netlify.
+De echte geïsoleerde Neon Postgres-integratie is uitgevoerd. Dit document beschrijft de blijvende testharness, de veiligheidsgrenzen en de voorwaarden voor een toekomstige regressierun.
+
+## Status
+
+De integratie heeft tegen echte PostgreSQL gevalideerd:
+
+- schema-migraties;
+- provider-neutrale order-store conformance;
+- concurrent pending-ordergedrag;
+- duplicate Stripe-eventgedrag;
+- synthetische fixture-cleanup;
+- Neon architectuurvalidatie.
+
+Tijdens de eerste echte run zijn twee productiepadproblemen gevonden en daarna in PR #74 opgelost:
+
+- JSONB-velden worden nu expliciet geserialiseerd voordat zij naar de PostgreSQL-driver gaan;
+- retryable SERIALIZABLE-conflicten krijgen bounded retries met backoff.
 
 ## Pinned runtime dependencies
 
-The integration uses:
+De integratie gebruikt:
 
-- `@neondatabase/serverless` `1.0.2`
-- `ws` `8.21.1`
+- `@neondatabase/serverless` `1.0.2`;
+- `ws` `8.21.1`.
 
-The Neon driver requires Node.js 19 or newer. Repository CI currently uses Node.js 20.
+De hoofd-repository-CI draait op Node.js 20. De Netlify-build en Netlify-compatibiliteitscontrole draaien op Node.js 22.
 
-## Required test secrets
+## Vereiste testsecrets voor een herhaalde run
 
-The manual integration workflow requires both repository or environment secrets:
+De handmatige integratieworkflow vereist:
 
-- `NEON_TEST_DATABASE_URL`: pooled TLS URL for the isolated runtime branch.
-- `NEON_TEST_MIGRATION_URL`: direct TLS URL for schema migrations and fixture cleanup.
+- `NEON_TEST_DATABASE_URL`: gepoolde TLS-URL voor de geïsoleerde runtimebranch;
+- `NEON_TEST_MIGRATION_URL`: directe TLS-URL voor schema-migraties en fixture-cleanup.
 
-Never print either value. The workflow passes them only through process environment variables.
+Print of commit deze waarden nooit. De workflow geeft ze uitsluitend via environment variables door.
 
-## Manual integration workflow
+## Handmatige integratieworkflow
 
-Run **Neon order-store integration** through GitHub Actions after issue #31 is complete.
+Run **Neon order-store integration** alleen wanneer een echte regressietest tegen de geïsoleerde testomgeving nodig is.
 
-The workflow:
+De workflow:
 
-1. refuses to run when either secret is absent;
-2. installs the exact dependency lock;
-3. applies `server/db/migrations/001_create_order_store.sql` through the direct migration URL;
-4. clears only synthetic records in the isolated branch;
-5. runs the complete provider-neutral conformance suite against the real Neon adapter;
-6. clears synthetic records again even after test failure;
-7. runs the normal credential-free Neon architecture validation.
+1. weigert te starten wanneer een vereiste secret ontbreekt;
+2. installeert de exacte dependency lock;
+3. past `server/db/migrations/001_create_order_store.sql` toe via de directe migration-URL;
+4. verwijdert alleen synthetische records uit de geïsoleerde testomgeving;
+5. draait de complete provider-neutrale conformance-suite tegen de echte Neon-adapter;
+6. ruimt synthetische records ook na een testfout op;
+7. draait de normale credential-free Neon architectuurvalidatie.
 
-## Safety boundaries
+## Veiligheidsgrenzen
 
-- The workflow is `workflow_dispatch` only.
-- It uses `contents: read`.
-- It does not create, delete, or reset Neon branches.
-- It does not touch Netlify.
-- It does not configure browser endpoint constants.
-- It does not use Stripe keys.
-- It must only target the isolated `order-store-integration` branch with synthetic data.
+- De workflow is `workflow_dispatch` only.
+- Zij gebruikt `contents: read`.
+- Zij maakt, verwijdert of reset geen Neon-branches.
+- Zij mag alleen synthetische testdata gebruiken.
+- Deze handmatige Neon-integratieworkflow does not touch Netlify; Netlify staging is een afzonderlijke operationele releasefase.
+- Zij activeert geen Stripe live-modus.
+- Productiecredentials horen nooit in de testenvironment.
 
-## Activation sequence after a green integration run
+## Productiegrens
 
-A later, separately approved deployment sprint may:
+Een geslaagde integratietest betekent niet dat de database automatisch productieklaar is. Voor productie blijven minimaal vereist:
 
-1. create thin serverless adapters for checkout, webhook, and status handlers;
-2. configure a staging deployment with test Stripe keys;
-3. set browser endpoint URLs only for staging;
-4. complete an end-to-end test payment;
-5. verify webhook-driven `paid` status and paid-only cart cleanup;
-6. keep production and live Stripe mode disabled until a separate launch approval.
+- een gescheiden productiebranch;
+- een dedicated least-privilege runtime-rol;
+- vastgesteld backup- en restorebeleid;
+- vastgesteld privacy- en retentiebeleid;
+- gescheiden Netlify-productievariabelen;
+- monitoring en incidentprocedures.
+
+De eerstvolgende operationele stap is niet opnieuw Neon provisionen, maar de bestaande Netlify Function-adapters end-to-end valideren in staging met Stripe-testmodus.

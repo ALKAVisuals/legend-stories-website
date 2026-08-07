@@ -130,12 +130,12 @@ test('escapes cart text and attribute content', () => {
   );
 });
 
-test('accepts same-origin Netlify and GitHub Pages image paths only', () => {
+test('accepts only approved same-origin Netlify cart image paths', () => {
   assert.equal(isCartImagePath('media/products/hero.webp'), true);
   assert.equal(isCartImagePath('assets/hero.webp'), true);
   assert.equal(isCartImagePath('./assets/hero.webp'), true);
   assert.equal(isCartImagePath('/assets/hero.webp'), true);
-  assert.equal(isCartImagePath('/legend-stories-website/assets/hero.webp'), true);
+  assert.equal(isCartImagePath('/legend-stories-website/assets/hero.webp'), false);
   assert.equal(isCartImagePath('https://example.com/assets/hero.webp'), false);
   assert.equal(isCartImagePath('//example.com/assets/hero.webp'), false);
   assert.equal(isCartImagePath('/legend-stories-website/media/hero.webp'), false);
@@ -163,21 +163,6 @@ test('renders delegated accessible cart controls without inline code', () => {
   assert.match(markup, /€25\.00/);
   assert.doesNotMatch(markup, /onclick=/);
   assert.doesNotMatch(markup, /<script>alert/);
-});
-
-test('renders a GitHub Pages product image as an image element', () => {
-  const markup = renderCartItemMarkup({
-    item: {
-      name: 'Pages hero',
-      image: '/legend-stories-website/assets/hero.webp',
-      price: 35,
-      quantity: 1,
-    },
-    index: 0,
-    formatPrice: (value) => `€${value.toFixed(2)}`,
-  });
-
-  assert.match(markup, /src="\/legend-stories-website\/assets\/hero\.webp"/);
 });
 
 test('rejects incomplete cart markup input', () => {

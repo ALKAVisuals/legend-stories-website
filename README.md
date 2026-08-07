@@ -2,7 +2,7 @@
 
 Premium, mobile-first e-commerce storefront voor LegendMural. De website verkoopt muurkunst rond sport-, muziek-, combat- en wisdom-legendes en is gebouwd met statische HTML, Tailwind CSS, Vanilla JavaScript en Vite.
 
-De repository bevat inmiddels meer dan alleen een frontend: productdata, productpaginageneratie, orderberekening, Stripe Checkout-contracten, webhookvalidatie, een Neon Postgres-adapter en uitgebreide kwaliteitscontroles zijn centraal vastgelegd. Hosted checkout, Netlify Functions en live betalingen blijven bewust uitgeschakeld totdat de staging- en productie-infrastructuur afzonderlijk is goedgekeurd.
+De repository bevat naast de storefront ook centrale productdata, productpaginageneratie, autoritatieve orderberekening, Stripe Checkout- en webhookgrenzen, een Neon Postgres order-store en Netlify Functions voor checkout, webhook en orderstatus. Live Stripe-betalingen en een definitieve productie-release blijven uitgeschakeld totdat de productie-infrastructuur afzonderlijk is goedgekeurd.
 
 ## Belangrijkste kenmerken
 
@@ -10,11 +10,13 @@ De repository bevat inmiddels meer dan alleen een frontend: productdata, product
 - alle productpagina’s worden vanuit één gedeelde template gegenereerd;
 - centrale catalogus, prijs-, kortings- en verzendregels;
 - server-side autoritatieve orderberekening in eurocenten;
-- voorbereid Stripe Checkout-, webhook- en orderstatuscontract;
-- voorbereid Neon Postgres order-store met migraties en conformance-tests;
+- Stripe Checkout-, webhook- en orderstatuscontracten met test-mode guardrails;
+- Neon Postgres order-store met migraties, conformance-tests en een uitgevoerde echte integratietest;
+- Netlify Functions voor checkout, webhook en orderstatus;
 - geoptimaliseerde video- en homepageafbeeldingen met objectieve kwaliteitsgrenzen;
 - permanente repository-, SEO-, media-, commerce-, database- en buildvalidatie;
-- GitHub Actions werkt in de normale situatie met `contents: read`.
+- GitHub Actions werkt in de normale situatie met `contents: read`;
+- Netlify is de enige beoogde production host; GitHub Pages is geen production target.
 
 ## Huidige status
 
@@ -22,10 +24,11 @@ De repository bevat inmiddels meer dan alleen een frontend: productdata, product
 |---|---|
 | Productcatalogus en productpagina’s | Productieklaar binnen de repository |
 | Winkelwagen, korting en verzending | Centraal gevalideerd |
-| Stripe Checkout-code | Voorbereid en getest, endpoint uitgeschakeld |
-| Stripe webhook en orderstatus | Voorbereid en getest, niet gedeployed |
-| Neon Postgres-adapter | Voorbereid; echte integratietest wacht op issue #31 |
-| Netlify Functions | Nog niet geïmplementeerd |
+| Stripe Checkout-code | Geïmplementeerd voor test/staging via Netlify Function |
+| Stripe webhook en orderstatus | Geïmplementeerd via Netlify Functions |
+| Neon Postgres-adapter | Echte geïsoleerde integratie en conformance uitgevoerd |
+| Netlify Functions | Geïmplementeerd; productieactivatie nog niet vrijgegeven |
+| GitHub Pages | Geen production target |
 | Stripe live betalingen | Uitgeschakeld |
 | Definitieve productie-release | Nog niet vrijgegeven |
 
@@ -37,16 +40,17 @@ Zie [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) voor de actuele roadmap e
 - **Tailwind CSS 3.4** en PostCSS;
 - **Vanilla JavaScript** voor cart, navigatie, productinteracties en browser Checkout;
 - **Vite 6** voor de multi-page productiebuild;
-- **Node.js 20** voor generators, validators, tests en CI;
-- **Neon Postgres** als gekozen toekomstige orderdatabase;
-- **Stripe Checkout** als gekozen toekomstige hosted betaalflow;
+- **Node.js 20** voor de hoofd-quality gate en lokale repositorychecks;
+- **Node.js 22** voor de Netlify-build en Netlify-compatibiliteitscontrole;
+- **Neon Postgres** voor duurzame orderopslag;
+- **Stripe Checkout** voor de hosted betaalflow;
 - **Netlify** als beoogde hosting- en serverlessomgeving.
 
 ## Snel starten
 
 Vereisten:
 
-- Node.js 20;
+- Node.js 20 voor de standaard lokale kwaliteitsketen;
 - npm;
 - FFmpeg en FFprobe voor de volledige media-quality gate.
 
@@ -100,6 +104,8 @@ npm run validate:video-delivery
 │   └── public/                    # Gegenereerde runtime-assets voor Vite
 ├── js/                            # Browserruntime en commerce-modules
 ├── media/                         # Storefrontmedia en geverifieerde derivatives
+├── netlify/
+│   └── functions/                 # Checkout-, webhook- en orderstatusadapters
 ├── server/
 │   ├── commerce/                  # Autoritatieve order- en prijslogica
 │   ├── db/                        # Order-store contracten, Neon-adapter en migraties
@@ -109,6 +115,7 @@ npm run validate:video-delivery
 │   └── product-page.html          # Gedeelde productpaginatemplate
 ├── tests/                         # Unit- en contracttests
 ├── *.html                         # Homepage, collecties, checkout en gegenereerde producten
+├── netlify.toml
 ├── package.json
 └── vite.config.mjs
 ```
@@ -145,7 +152,7 @@ De browser is nooit de autoriteit voor productnamen, prijzen, korting, verzendin
 - rekent in gehele eurocenten;
 - levert de enige geldige basis voor een Stripe Checkout Session.
 
-De Stripe- en orderstatuscode is platformneutraal voorbereid, maar de browser-endpointconfiguratie blijft leeg. Zonder een goedgekeurde serverless adapter, veilige secrets en een echte database kan de storefront geen hosted betaling starten.
+Netlify publiceert same-origin routes voor checkout en orderstatus en bevat een Stripe-webhookroute. Zonder de vereiste staging- of productie-environmentvariabelen falen deze servergrenzen veilig. Live Stripe-modus blijft server-side geblokkeerd totdat die afzonderlijk wordt goedgekeurd.
 
 ## Neon-integratie
 
@@ -153,17 +160,15 @@ De repository bevat:
 
 - een Neon Postgres order-store adapter;
 - een idempotente databaseschemamigratie;
-- een aparte migratie- en least-privilege runtimerol;
 - provider-neutrale conformance-tests;
 - een handmatige GitHub Actions-integratieworkflow;
-- synthetische fixture-cleanup voor en na de echte test.
+- synthetische fixture-cleanup voor en na de echte test;
+- bounded retries voor retryable serializable transacties;
+- expliciete JSONB-serialisatie voor orderdata.
 
-De echte integratietest blijft geblokkeerd totdat issue #31 is uitgevoerd en de volgende secrets veilig in de `neon-integration` GitHub environment staan:
+De echte geïsoleerde Neon-integratie is uitgevoerd: migraties, order-store conformance en concurrent gedrag zijn gevalideerd. Voor productie blijft een afzonderlijke least-privilege runtime-rol, backup-/restorebeleid en privacybeoordeling vereist.
 
-- `NEON_TEST_DATABASE_URL`;
-- `NEON_TEST_MIGRATION_URL`.
-
-Zie [`docs/NEON_INTEGRATION_ACTIVATION.md`](docs/NEON_INTEGRATION_ACTIVATION.md).
+Zie [`docs/NEON_INTEGRATION_ACTIVATION.md`](docs/NEON_INTEGRATION_ACTIVATION.md) voor de testharness en veiligheidsgrenzen.
 
 ## Media en performance
 
@@ -171,6 +176,8 @@ De repository bewaakt actieve mediaverwijzingen, grote rasterbestanden en videol
 
 - ongebruikte media zijn verwijderd en worden voortaan geblokkeerd;
 - collectie-video’s zijn met geverifieerde SSIM- en PSNR-grenzen geoptimaliseerd;
+- video-audio is verwijderd waar alle usages muted zijn;
+- posters zijn toegevoegd;
 - video’s respecteren viewport, tabbladzichtbaarheid, Reduced Motion en Save-Data;
 - homepage-marketingafbeeldingen gebruiken WebP-first `image-set()` met PNG-fallback;
 - originele transparante product- en printbronnen blijven onaangetast.
@@ -190,19 +197,20 @@ De repository bewaakt actieve mediaverwijzingen, grote rasterbestanden en videol
 - unit tests;
 - Vite-build en uiteindelijke productie-output.
 
-Een groene PR-check is vereist voordat een wijziging voor merge wordt voorgesteld.
+Daarnaast bestaat een aparte Node 22 Netlify-compatibiliteitsworkflow. Een groene PR-check is vereist voordat een wijziging voor merge wordt voorgesteld.
 
 ## Deployment en releasebeleid
 
-Netlify is de beoogde hostingomgeving, maar deze repository activeert nog geen productie-Functions, secrets of live betaalendpoints. Deploymentwijzigingen worden apart beoordeeld.
+Netlify is de enige beoogde production host. GitHub wordt gebruikt voor broncode, branches, PR’s, CI en reviews, niet als tweede production website-host.
 
-De geplande releasevolgorde is:
+De huidige releasevolgorde is:
 
-1. geïsoleerde Neon-testomgeving aanmaken;
-2. echte Neon-conformance-test uitvoeren;
-3. Netlify staging Functions voor checkout, webhook en status toevoegen;
-4. Stripe-testbetaling end-to-end valideren;
-5. pas daarna productie-infrastructuur en live betalingen afzonderlijk goedkeuren.
+1. repository- en Netlify-compatibiliteit groen houden;
+2. Netlify staging met uitsluitend Stripe-testkeys en een geïsoleerde Neon-omgeving configureren;
+3. volledige testbetaling end-to-end valideren;
+4. webhookgestuurde `paid`-status en paid-only cart cleanup bevestigen;
+5. retries, refreshes, cancel/failure en duplicate events testen;
+6. pas daarna productie-infrastructuur en live betalingen afzonderlijk goedkeuren.
 
 Zie [`docs/DEVELOPMENT_AND_RELEASE.md`](docs/DEVELOPMENT_AND_RELEASE.md) voor de operationele checklist.
 
@@ -211,7 +219,7 @@ Zie [`docs/DEVELOPMENT_AND_RELEASE.md`](docs/DEVELOPMENT_AND_RELEASE.md) voor de
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — componenten, datastromen en veiligheidsgrenzen;
 - [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) — afgerond werk, blokkades en roadmap;
 - [`docs/DEVELOPMENT_AND_RELEASE.md`](docs/DEVELOPMENT_AND_RELEASE.md) — ontwikkel-, review-, staging- en releaseproces;
-- [`docs/NEON_INTEGRATION_ACTIVATION.md`](docs/NEON_INTEGRATION_ACTIVATION.md) — activeren van de echte Neon-test.
+- [`docs/NEON_INTEGRATION_ACTIVATION.md`](docs/NEON_INTEGRATION_ACTIVATION.md) — Neon-integratieharness en testveiligheid.
 
 ## Veiligheidsregels
 
@@ -220,6 +228,7 @@ Zie [`docs/DEVELOPMENT_AND_RELEASE.md`](docs/DEVELOPMENT_AND_RELEASE.md) voor de
 - Verander gegenereerde productpagina’s niet handmatig.
 - Activeer live Stripe-modus niet via browsercode.
 - Wijzig Netlify of productie-infrastructuur alleen in een afzonderlijk goedgekeurde sprint.
+- Gebruik GitHub Pages niet als parallel production target.
 - Behoud originele product- en printmedia; gebruik geverifieerde browserderivatives.
 
 ## Licentie
