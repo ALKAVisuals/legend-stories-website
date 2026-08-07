@@ -2,33 +2,30 @@
 
 Laatst inhoudelijk bijgewerkt: 7 augustus 2026.
 
-Dit document beschrijft de actuele repositorystatus. Het bewijst niet dat productie-secrets, live Stripe of het definitieve publieke domein al zijn geactiveerd.
+Dit document beschrijft de actuele repositorystatus en de eerstvolgende releaseblokkade. Het bewijst niet dat productie-secrets, live Stripe of het definitieve publieke domein zijn geactiveerd.
 
 ## Samenvatting
 
 De storefront, catalogusarchitectuur, productpaginageneratie, browsercommerce, autoritatieve orderberekening, Stripe-contracten, Neon order-store, Netlify Function-adapters en kwaliteitsketen zijn geïmplementeerd en uitgebreid getest.
 
-De eerder genoemde Neon-blokkade uit issue #31 is niet meer actueel: de geïsoleerde echte Neon-integratie is uitgevoerd en PR #74 heeft de daarbij gevonden JSONB- en serializable-transactionproblemen opgelost. De volgende echte releaseblokkade is nu een gecontroleerde Netlify staging-validatie met Stripe-testmodus en de geïsoleerde Neon-omgeving. Live betalingen blijven uitgeschakeld.
+De geïsoleerde echte Neon-integratie is uitgevoerd. PR #74 heeft de daarbij gevonden JSONB-serialisatie- en serializable-transactionproblemen opgelost. PR #81 heeft Netlify vastgelegd als enige production host en de GitHub Pages production-lijn verwijderd.
 
-Netlify is de enige beoogde production host. GitHub Pages wordt niet als parallel production target onderhouden.
+De huidige releaseblokkade zit niet meer in de repositorycode maar in de externe Netlify stagingconfiguratie: een dedicated stagingdeployment moet nog veilig worden gekoppeld aan een staging-Neon runtime-URL en Stripe-testcredentials. Live betalingen blijven uitgeschakeld.
 
 ## Afgerond
 
 ### Product en content
 
 - centrale catalogus met 111 producten en 6 batches;
-- centrale runtime-productregistratie;
-- gedeelde productpaginatemplate;
-- alle 111 live productpagina’s generator-managed en reproduceerbaar;
-- gerelateerde-productenvalidatie;
+- gedeelde productpaginatemplate en reproduceerbare managed productpagina’s;
+- centrale runtime-productregistratie en related-productsvalidatie;
 - canonical-, structured-data- en cataloguspariteitcontroles;
 - kapotte interne routes en duplicate SEO-titels opgelost.
 
 ### Launch commerce
 
 - Compact: maximaal 50 × 30 cm voor €35 incl. btw;
-- Statement: maximaal 50 × 50 cm voor €45 incl. btw;
-- Statement is standaard en aanbevolen;
+- Statement: maximaal 50 × 50 cm voor €45 incl. btw, standaard en aanbevolen;
 - originele ontwerpverhoudingen blijven behouden binnen de productiedoos;
 - publieke kortingscode `LEGEND10` voor 10%;
 - Nederland: €4,95 verzending;
@@ -40,22 +37,19 @@ Netlify is de enige beoogde production host. GitHub Pages wordt niet als paralle
 ### Browsercommerce
 
 - winkelwagen en productidentiteit centraal bewaakt;
-- centrale korting- en verzendregels;
-- opgeslagen kortingscodes worden opnieuw gevalideerd;
-- dubbele cart-persistence verwijderd;
-- browser Checkout-client gekoppeld aan same-origin runtimeconfiguratie;
-- Google Places blijft optioneel en kan handmatige adresinvoer niet blokkeren;
-- adresvalidatie heeft een timeout/fallback zodat checkout niet blijft hangen;
-- success- en cancelpagina’s zijn aanwezig en `noindex`;
-- winkelwagen wordt niet op basis van alleen een return-URL geleegd;
-- oude winkelwagenafbeeldingen kunnen via de runtime-productregistratie naar het actuele Netlify/Vite-pad worden hersteld.
+- korting en shipping worden opnieuw gevalideerd;
+- browser Checkout-client gebruikt same-origin runtimeconfiguratie;
+- Google Places heeft timeout en handmatige fallback;
+- `order-success.html` en `order-cancelled.html` zijn aanwezig en `noindex`;
+- return-URL alleen is nooit voldoende om de winkelwagen te legen;
+- oude winkelwagenafbeeldingen kunnen via de runtime-productregistratie naar actuele Netlify/Vite-assets worden hersteld.
 
 ### Server-side orderbeveiliging
 
 - autoritatieve orderquote uit centrale productdata;
 - browserprijzen, namen en totalen worden genegeerd;
 - bedragen worden in gehele eurocenten berekend;
-- Stripe Checkout-boundary met test-key enforcement;
+- Stripe Checkout-boundary dwingt standaard testmodus af;
 - deterministische idempotency keys;
 - durable pending-ordervereiste vóór Checkout-response;
 - ondertekende Stripe-webhookvalidatie;
@@ -65,80 +59,98 @@ Netlify is de enige beoogde production host. GitHub Pages wordt niet als paralle
 
 ### Neon Postgres
 
-- provider-neutraal order-store contract;
-- herbruikbare conformance-suite;
-- Neon Postgres in Frankfurt gekozen voor de geïsoleerde testomgeving;
-- Postgresmigratie voor orders en Stripe-eventreserveringen;
-- Neon-adapter met transacties, locking en versiecontrole;
+- provider-neutraal order-store contract en conformance-suite;
+- echte Neon-migraties en order-store conformance uitgevoerd;
+- concurrent transact gedrag tegen echte PostgreSQL gevalideerd;
 - expliciete JSONB-serialisatie voor pending orders;
 - bounded retries met backoff voor retryable serializable conflicts;
-- pinned Neon- en WebSocketdependencies;
-- echte Neon-migraties uitgevoerd;
-- echte order-store conformance uitgevoerd;
-- concurrent transact gedrag tegen echte PostgreSQL gevalideerd;
 - synthetische fixture-cleanup aanwezig;
-- productie vereist nog steeds een dedicated least-privilege runtime-rol en vastgesteld backup-/privacybeleid.
+- productie vereist nog een dedicated least-privilege runtime-rol en vastgesteld backup-/privacybeleid.
 
-### Netlify stagingarchitectuur
+### Netlify architectuur
 
-- `netlify.toml` aanwezig;
-- Node.js 22 voor de Netlify-build;
-- Netlify Function voor checkout;
-- Netlify Function voor Stripe webhook;
-- Netlify Function voor orderstatus;
+- Netlify is de enige beoogde production host;
+- Node.js 22 voor Netlify-builds;
+- Functions voor checkout, Stripe webhook en orderstatus;
 - same-origin routes `/api/checkout`, `/api/order-status` en `/api/stripe-webhook`;
-- gedeelde Neon order-store geïnjecteerd in de bestaande serverhandlers;
-- fail-closed gedrag wanneer vereiste configuratie ontbreekt;
-- productcatalogus expliciet beschikbaar voor Function-bundling;
+- gedeelde Neon order-store wordt in de serverhandlers geïnjecteerd;
+- commerce Functions falen bewust gesloten wanneer vereiste configuratie ontbreekt;
+- productcatalogus wordt expliciet meegebundeld;
 - aparte Node 22 Netlify-compatibiliteitsworkflow aanwezig;
 - live Stripe-activering blijft uitgesloten.
 
-### Performance en media
+### Kwaliteit, accessibility en media
 
-- repository-wide mediareferentieaudit;
-- 9 volledig ongebruikte bestanden verwijderd;
-- ongeveer 12,8 MB ongebruikte media verwijderd;
-- collectie-video’s van ongeveer 22,23 MB naar 7,16 MB gebracht;
-- video-audio verwijderd waar alle usages muted zijn;
-- posters toegevoegd;
-- adaptief videoladen voor viewport, visibility, Reduced Motion en Save-Data;
-- grote actieve rasterbestanden geclassificeerd;
-- vijf homepage-marketingafbeeldingen als WebP toegevoegd;
-- ongeveer 85,52% potentiële transferreductie voor die vijf afbeeldingen;
-- originele PNG- en product-/printbronnen behouden;
-- runtime productafbeeldingen en related-products CSS worden in de Netlify/Vite-output gecontroleerd beschikbaar gemaakt.
-
-### Codekwaliteit en CI
-
-- laatste uitvoerbare inline script geëxternaliseerd;
-- 236 inline image-error handlers gecentraliseerd;
-- nul inline `onerror`-handlers over;
 - permanente repository-, CSS-, dependency-, media-, image-, video- en runtime-audits;
 - permanente commerce-, Stripe-, Neon- en ordervalidatie;
 - unit tests en Vite-productiebuild in de quality gate;
 - aparte accessibility- en purchase-flow audit;
-- aparte Node 22 Netlify-compatibiliteitscontrole;
-- normale GitHub Actions-permissie is `contents: read`;
+- Netlify Node 22 compatibility groen op de Netlify-first cleanup;
+- collectie-video’s en homepage-marketingmedia geoptimaliseerd zonder originele print-/productbronnen te overschrijven;
 - GitHub Pages is geen production deploymentpad meer.
+
+## Bewezen stagingstatus — 7 augustus 2026
+
+Er is een side-effect-free runtimeprobe uitgevoerd tegen:
+
+1. de eerdere Netlify Deploy Preview van PR #81;
+2. `https://legendmural.netlify.app`.
+
+Beide storefronts antwoordden met HTTP 200. Bij beide deployments antwoordde `/api/checkout` echter met HTTP 503 `CHECKOUT_SERVICE_NOT_CONFIGURED`.
+
+De Function-code en routing zijn dus bereikbaar, maar de externe runtime heeft nog geen bruikbare `NEON_DATABASE_URL`. Dit is geen Deploy Preview-specifiek probleem: ook de primaire Netlifycontext mist op dit moment de commerce-databaseconfiguratie.
+
+Er zijn tijdens deze probes geen orders, Stripe Checkout Sessions of database-writes aangemaakt.
 
 ## Actuele releaseblokkade
 
-### Netlify staging end-to-end valideren
+### Dedicated Netlify staging activeren
 
-De repositorycode voor staging is aanwezig. Voor doorgang naar productie moet de externe stagingomgeving aantoonbaar de volledige flow doorlopen met uitsluitend testdata en Stripe-testmodus.
+De eerstvolgende stap is één afzonderlijke stagingcontext configureren met uitsluitend test/stagingwaarden. Gebruik de primaire Netlify production context niet als tijdelijke secretcontainer.
 
-Benodigde validatie:
+Staging heeft nodig:
 
-1. Netlify staging gebruikt uitsluitend staging/test environment variables;
-2. checkout Function kan een autoritatieve orderquote opslaan in de geïsoleerde Neon-omgeving;
-3. Stripe-test Checkout Session wordt correct aangemaakt;
-4. een Stripe-testbetaling voltooit;
-5. de ondertekende webhook zet de orderstatus naar `paid`;
-6. de returnpagina bevestigt exact dezelfde order en Checkout Session;
-7. alleen bij serverbevestigde `paid`-status wordt bijbehorende cart-/Checkoutdata verwijderd;
-8. cancel, failure en expiry behouden de winkelwagen;
-9. retries, refreshes en duplicate events veroorzaken geen dubbele ordermutaties;
-10. logs bevatten geen secrets of onnodige persoonsgegevens.
+- gepoolde `NEON_DATABASE_URL` van de geïsoleerde staging-Neonbranch/runtime-rol;
+- `STRIPE_SECRET_KEY` met uitsluitend een `sk_test_` key;
+- `STRIPE_WEBHOOK_SECRET` van het Stripe test-webhookendpoint;
+- `CHECKOUT_SUCCESS_URL=<STAGING_ORIGIN>/order-success.html`;
+- `CHECKOUT_CANCEL_URL=<STAGING_ORIGIN>/order-cancelled.html`;
+- `CHECKOUT_ALLOWED_ORIGINS=<STAGING_ORIGIN>`;
+- `STRIPE_ALLOW_LIVE=false` of volledig afwezig.
+
+Het Stripe test-webhookendpoint is:
+
+```text
+<STAGING_ORIGIN>/api/stripe-webhook
+```
+
+Ondersteunde events:
+
+- `checkout.session.completed`;
+- `checkout.session.async_payment_succeeded`;
+- `checkout.session.async_payment_failed`;
+- `checkout.session.expired`.
+
+Zie [`NETLIFY_STAGING_ACTIVATION.md`](NETLIFY_STAGING_ACTIVATION.md) voor de volledige veilige activatie- en acceptatieprocedure.
+
+## Stagingacceptatie
+
+Voor een echte testbetaling wordt eerst de handmatige **Netlify staging readiness probe** uitgevoerd. Deze controleert Neon-, checkout URL-, Stripe test-key-, order-status- en webhookconfiguratie zonder een order of Stripe Session te creëren.
+
+Pas na een volledig groene readiness-probe wordt één synthetische end-to-end testorder uitgevoerd:
+
+1. product → cart;
+2. autoritatieve serverquote;
+3. durable pending order in staging-Neon;
+4. Stripe `cs_test_...` Checkout Session;
+5. Stripe testbetaling;
+6. ondertekende webhook;
+7. status `paid` in Neon;
+8. verified return op `order-success.html`;
+9. paid-only cart cleanup;
+10. idempotente refresh/duplicate webhook.
+
+Cancel, failure en expiry moeten de winkelwagen behouden.
 
 ## Voor productie nog vereist
 
@@ -157,39 +169,16 @@ Productieactivering vereist een afzonderlijk besluit en minimaal:
 - gecontroleerde kleine echte betaling;
 - rollbackprocedure.
 
-## Technische verbeteringen die parallel mogelijk zijn
-
-Deze onderdelen vereisen geen live secrets:
-
-- resterende documentatie actueel houden;
-- resterende inline event handlers read-only classificeren en in veilige batches centraliseren;
-- aanvullende toegankelijkheidsaudit van menu, modals, cart en checkout;
-- responsive image- en fetch-priority-audit;
-- technische SEO voor collecties, breadcrumbs en social metadata;
-- mobiele koopflow en foutstatussen verder verbeteren;
-- testdekking voor interacties en toegankelijkheidscontracten uitbreiden.
-
-## Commerciële roadmap na bewezen staging
-
-- productzoekfunctie en filters;
-- reviews en social proof;
-- wishlist;
-- verbeterde productvergelijking;
-- SEO-landingspagina’s en content;
-- analytics en conversiemeting;
-- abandoned-cartstrategie;
-- klantaccounts en orderhistorie;
-- eenvoudige order-/voorraadadministratie;
-- support-, refund- en disputeprocessen.
+De 120 HTML-pagina’s met de oude GitHub Pages-origin in canonical/Open Graph metadata worden pas in een aparte domein-/SEO-sprint gemigreerd zodra het definitieve publieke LegendMural-domein vaststaat.
 
 ## Werkafspraken
 
-- iedere wijziging begint met analyse en een beperkte scope;
-- codewijzigingen gaan via een branch en PR;
+- iedere wijziging begint met analyse en beperkte scope;
+- codewijzigingen gaan via branch en PR;
 - geen merge zonder expliciete goedkeuring;
 - geen productie-Netlifywijziging zonder afzonderlijke toestemming;
-- geen secrets in chat of repository;
+- geen secrets in chat, repository, issues of PR-comments;
 - GitHub Pages wordt niet als tweede production host onderhouden;
-- tijdelijke migratietooling wordt vóór merge verwijderd of permanent veilig gemaakt;
+- staging gebruikt uitsluitend synthetische data en Stripe-testmodus;
 - performanceoptimalisatie overschrijft nooit originele product- of printbronnen;
-- een groene quality gate is noodzakelijk maar vervangt geen handmatige UX- of infrastructuurreview.
+- een groene quality gate vervangt geen handmatige UX- of infrastructuurreview.
