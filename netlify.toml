@@ -1,5 +1,6 @@
 # LegendMural uses Netlify as the single intended production host.
 # GitHub Pages is not maintained as a parallel production target.
+# PayPal remains sandbox-only unless PAYPAL_ALLOW_LIVE=true is explicitly configured.
 
 [build]
   command = "npm run build && node scripts/generate-commerce-runtime-config.mjs"
@@ -8,16 +9,30 @@
 
 [build.environment]
   NODE_VERSION = "22"
-  LEGENDMURAL_HOSTED_CHECKOUT_ENDPOINT = "/api/checkout"
+  LEGENDMURAL_HOSTED_CHECKOUT_ENDPOINT = "/api/paypal/checkout"
   LEGENDMURAL_ORDER_STATUS_ENDPOINT = "/api/order-status"
+  LEGENDMURAL_PAYPAL_CAPTURE_ENDPOINT = "/api/paypal/capture"
 
 [functions]
   node_bundler = "esbuild"
   included_files = ["data/products/catalog.json"]
 
+# Stripe fallback remains available while PayPal is evaluated.
 [[redirects]]
   from = "/api/checkout"
   to = "/.netlify/functions/create-checkout-session"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/paypal/checkout"
+  to = "/.netlify/functions/create-paypal-order"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/paypal/capture"
+  to = "/.netlify/functions/capture-paypal-order"
   status = 200
   force = true
 
