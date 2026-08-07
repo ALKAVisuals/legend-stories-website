@@ -2,7 +2,9 @@
 
 ## 1. Doel en uitgangspunten
 
-LegendMural is een statische multi-page storefront met een voorbereid server-side commerce- en betaalmodel. De architectuur kiest bewust voor:
+LegendMural is een statische multi-page storefront met server-side commerce, een Neon Postgres order-store en Netlify Function-adapters voor checkout, webhook en orderstatus.
+
+De architectuur kiest bewust voor:
 
 - snelle statische pagina’s;
 - centrale product- en commerce-data;
@@ -10,9 +12,12 @@ LegendMural is een statische multi-page storefront met een voorbereid server-sid
 - zo weinig mogelijk browservertrouwen;
 - provider-neutrale servercontracten;
 - kleine, gecontroleerde infrastructuurstappen;
-- permanente validatie van kritieke aannames.
+- permanente validatie van kritieke aannames;
+- één production host: Netlify.
 
-De browserstorefront is bruikbaar zonder actieve hosted checkout. Betalings- en databasecode blijft fail-closed zolang endpoints, secrets of een duurzame store ontbreken.
+GitHub wordt gebruikt voor broncode, branches, PR’s, CI en reviews. GitHub Pages is geen parallel production target.
+
+De storefront blijft fail-closed wanneer noodzakelijke betaal- of databaseconfiguratie ontbreekt. Live Stripe-modus wordt niet automatisch geactiveerd.
 
 ## 2. Hoofdcomponenten
 
@@ -27,7 +32,7 @@ Verantwoordelijkheden:
 - winkelwagen en lokale voorkeuren;
 - kortingscode-invoer;
 - checkoutformulier;
-- optionele hosted Checkout-client;
+- hosted Checkout-client;
 - verified order-return UI;
 - adaptieve media- en videoloading.
 
@@ -52,8 +57,6 @@ De runtime-productregistratie wordt hieruit gegenereerd. Validators bewaken dat 
 ### Productpaginagenerator
 
 `templates/product-page.html` is de gedeelde presentatiebasis voor alle productpagina’s. Batchspecifieke presentatiegegevens vullen de template aan.
-
-Datastroom:
 
 ```text
 catalogus + presentatiemanifest + gedeelde template
@@ -91,7 +94,7 @@ De server-side orderquote ontvangt een minimale winkelwagenaanvraag en:
 
 ### Stripe Checkout-boundary
 
-De voorbereidende Stripe-laag:
+De Stripe-laag:
 
 - accepteert standaard alleen `sk_test_`-keys;
 - blokkeert live modus tenzij die server-side expliciet wordt toegestaan;
@@ -121,7 +124,7 @@ Een provider-neutrale conformance-suite valideert iedere adapter op:
 
 ### Neon Postgres-adapter
 
-Neon Postgres is gekozen voor toekomstige duurzame orderopslag.
+Neon Postgres is de gekozen duurzame order-store.
 
 De adapter gebruikt:
 
@@ -130,9 +133,29 @@ De adapter gebruikt:
 - row locking;
 - optimistische versiecontroles;
 - atomaire Stripe-eventreservering;
-- aparte migratie- en least-privilege runtimerollen.
+- expliciete JSONB-serialisatie;
+- bounded retries voor retryable serializable conflicts;
+- gescheiden migratie- en runtimecredentials waar de omgeving dit ondersteunt.
 
-De code en integratieharness staan klaar, maar de echte database-integratietest is nog niet uitgevoerd.
+De echte geïsoleerde integratietest is uitgevoerd. Migraties, provider-neutrale conformance en concurrent gedrag tegen echte PostgreSQL zijn gevalideerd. Voor productie blijft een dedicated least-privilege runtime-rol vereist.
+
+### Netlify Function-adapters
+
+`netlify/functions/` bevat dunne adapters voor:
+
+- `create-checkout-session.mjs`;
+- `stripe-webhook.mjs`;
+- `order-status.mjs`.
+
+De adapters gebruiken de bestaande serverhandlers en één gedeelde Neon order-store. `netlify.toml` publiceert same-origin routes:
+
+```text
+/api/checkout
+/api/order-status
+/api/stripe-webhook
+```
+
+De Netlify-build draait op Node.js 22. Ontbrekende of ongeldige configuratie faalt gesloten.
 
 ### Stripe webhook
 
@@ -157,6 +180,10 @@ De browser:
 4. leegt alleen bij een serverbevestigde `paid`-status de Checkout-gerelateerde browserdata;
 5. behoudt de winkelwagen bij pending, failed, expired of onbereikbare status.
 
+### Cart image recovery
+
+Winkelwagenitems worden lokaal opgeslagen en kunnen daardoor een ouder afbeeldingspad bevatten dan de huidige Vite-build. Wanneer zo’n lokale afbeelding faalt, gebruikt de cart-runtime de stabiele productpagina-identiteit om het actuele browserbeeld uit `data/product-registry.json` op te halen. Alleen goedgekeurde lokale Netlify/Vite-paden worden geaccepteerd en de herstelde URL wordt teruggeschreven naar `localStorage`.
+
 ### Media delivery
 
 De medialaag gebruikt:
@@ -173,14 +200,15 @@ Originele transparante product- en printbronnen blijven behouden.
 
 ## 3. Build- en quality-architectuur
 
-Vite bouwt iedere root-HTML-pagina als afzonderlijke multi-page entry. De build:
+Vite bouwt iedere root-HTML-pagina als afzonderlijke multi-page entry. De standaard build:
 
 1. genereert de runtime-productregistratie;
 2. bouwt alle HTML-pagina’s en assets;
-3. kopieert benodigde browserruntimebestanden;
-4. valideert de uiteindelijke productie-output.
+3. kopieert benodigde browserruntimebestanden en geverifieerde runtime-assets;
+4. finaliseert de runtime-productregistratie met de actuele gebouwde afbeelding-URL’s;
+5. valideert de uiteindelijke productie-output.
 
-De quality gate controleert:
+De quality gate draait op Node.js 20 en controleert:
 
 - repository- en linkintegriteit;
 - SEO en metadata;
@@ -188,10 +216,13 @@ De quality gate controleert:
 - media- en videodelivery;
 - catalogus en productpagina’s;
 - browsercommerce;
+- cart-controls en image fallback;
 - orderquote en betalingscontracten;
 - databasecontracten en Neon-harness;
 - unit tests;
 - productiebuild.
+
+Een aparte workflow controleert de Netlify-build op Node.js 22.
 
 ## 4. Veiligheidsgrenzen
 
@@ -211,57 +242,60 @@ Mag nooit de autoriteit zijn voor:
 - secrets mogen niet in commits, logs, issues of PR’s verschijnen;
 - normale workflows gebruiken `contents: read`;
 - tijdelijke schrijfworkflows moeten vóór merge worden verwijderd of teruggebracht naar read-only;
-- iedere risicovolle migratie krijgt een permanente validator.
+- GitHub Pages wordt niet gebruikt als alternatieve production host.
 
 ### Database
 
 - migraties gebruiken een aparte directe verbinding;
-- runtime gebruikt een gepoolde least-privilege verbinding;
+- runtime gebruikt een gepoolde verbinding;
+- productie gebruikt een dedicated least-privilege runtime-rol;
 - integratietests gebruiken alleen synthetische data;
-- productiegegevens mogen nooit in de integratiebranch worden geplaatst.
+- productiegegevens mogen nooit in de integratieomgeving worden geplaatst.
 
 ### Deployment
 
-- Netlifywijzigingen zijn een afzonderlijke sprint;
+- Netlify is de enige beoogde production host;
 - test- en productievariabelen worden gescheiden;
 - live Stripe-modus vereist een aparte expliciete goedkeuring;
-- browser-endpointconstants worden pas ingevuld voor een goedgekeurde omgeving.
+- productiecanonical en domeinwijzigingen worden afzonderlijk beoordeeld.
 
-## 5. Geplande deploymentarchitectuur
+## 5. Deploymentarchitectuur
 
-De beoogde stagingopzet:
+De staging-/productiearchitectuur is:
 
 ```text
 Browser storefront
-    ├── POST checkout  ───────┐
-    ├── POST order status ────┼── Netlify Functions
-    └── Stripe return page ───┘        │
-                                       ├── Stripe Checkout API (test mode)
-Stripe webhook ────────────────────────┤
-                                       └── Neon Postgres staging branch
+    ├── POST /api/checkout ───────┐
+    ├── POST /api/order-status ───┼── Netlify Functions
+    └── Stripe return page ───────┘        │
+                                           ├── Stripe Checkout API
+Stripe webhook ────────────────────────────┤
+                                           └── Neon Postgres
 ```
 
-Voor productie worden aparte Neon-, Stripe- en Netlifyconfiguraties gebruikt. Geen stagingsecret wordt naar productie gekopieerd zonder aparte beoordeling.
+Staging gebruikt uitsluitend Stripe-testmodus en een geïsoleerde Neon-omgeving. Productie krijgt aparte Neon-, Stripe- en Netlifyconfiguraties.
 
 ## 6. Beslissingen die nog openstaan
 
-- definitieve productiebranch- en backupstrategie in Neon;
-- Netlify Function-routes en environment scopes;
+- definitieve productie-Neonbranch en backupstrategie;
+- dedicated productie runtime-rol en privileges;
 - definitief publiek domein en canonical/sitemapbeleid;
 - monitoring, logging en alerting;
 - operationele orderadministratie en supportflow;
 - refunds, disputes en handmatige ordercorrecties;
-- privacyretentie voor klant- en ordergegevens.
+- privacyretentie voor klant- en ordergegevens;
+- definitieve productieactivering van Stripe live-modus.
 
-## 7. Niet-doelen van de huidige repositoryfase
+## 7. Niet automatisch geactiveerd door repositorycode
 
-De huidige code activeert niet automatisch:
+De repository activeert niet zelfstandig:
 
-- een Neon-account of databaseproject;
-- Netlify Functions;
+- productie-Neoncredentials;
+- Netlify production environment variables;
 - Stripe secrets;
 - live betalingen;
 - productiegegevens;
+- een definitief publiek domein;
 - klantaccounts of een adminportal.
 
-Die onderdelen worden alleen toegevoegd via afzonderlijk goedgekeurde implementatie- en releasefases.
+Die onderdelen worden alleen geactiveerd via afzonderlijk goedgekeurde releasefases.
