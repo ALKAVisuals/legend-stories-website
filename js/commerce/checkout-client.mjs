@@ -2,6 +2,7 @@ import { COMMERCE_RUNTIME_CONFIG } from './runtime-config.mjs';
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 const MAX_ERROR_MESSAGE_LENGTH = 240;
+const PAYPAL_ORDER_ID_PATTERN = /^[A-Z0-9]{1,36}$/;
 
 export const HOSTED_CHECKOUT_ENDPOINT = String(
   COMMERCE_RUNTIME_CONFIG.hostedCheckoutEndpoint || '',
@@ -53,26 +54,42 @@ export function isHostedCheckoutConfigured(
   return Boolean(normalizeHostedCheckoutEndpoint(endpoint, baseUrl));
 }
 
+function trustedPayPalUrl(url, mode) {
+  const host = url.hostname.toLowerCase();
+  const sandboxHost = host === 'sandbox.paypal.com' || host.endsWith('.sandbox.paypal.com');
+  const liveHost = host === 'paypal.com' || host.endsWith('.paypal.com');
+  return mode === 'test' ? sandboxHost : (liveHost && !sandboxHost);
+}
+
 function parseHostedCheckoutResponse(payload) {
   if (!payload || typeof payload !== 'object') {
     fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an invalid response.');
   }
 
-  const sessionId = String(payload.sessionId || '');
+  const provider = String(payload.provider || 'stripe').trim().toLowerCase();
+  const sessionId = String(payload.sessionId || '').trim();
   const mode = String(payload.mode || '');
   const reference = String(payload.reference || '');
-  if (!/^cs_(test|live)_[A-Za-z0-9_-]+$/.test(sessionId)) {
-    fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an invalid session ID.');
+  if (!['stripe', 'paypal'].includes(provider)) {
+    fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an invalid payment provider.');
   }
   if (!['test', 'live'].includes(mode)) {
     fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an invalid mode.');
   }
-  if ((mode === 'test' && !sessionId.startsWith('cs_test_'))
-    || (mode === 'live' && !sessionId.startsWith('cs_live_'))) {
-    fail('INVALID_CHECKOUT_RESPONSE', 'The checkout session does not match the reported mode.');
-  }
   if (!/^[a-f0-9]{64}$/.test(reference)) {
     fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an invalid reference.');
+  }
+
+  if (provider === 'stripe') {
+    if (!/^cs_(test|live)_[A-Za-z0-9_-]+$/.test(sessionId)) {
+      fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an invalid Stripe session ID.');
+    }
+    if ((mode === 'test' && !sessionId.startsWith('cs_test_'))
+      || (mode === 'live' && !sessionId.startsWith('cs_live_'))) {
+      fail('INVALID_CHECKOUT_RESPONSE', 'The Stripe Checkout Session does not match the reported mode.');
+    }
+  } else if (!PAYPAL_ORDER_ID_PATTERN.test(sessionId)) {
+    fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an invalid PayPal order ID.');
   }
 
   let checkoutUrl;
@@ -81,11 +98,18 @@ function parseHostedCheckoutResponse(payload) {
   } catch {
     fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an invalid Checkout URL.');
   }
-  if (checkoutUrl.protocol !== 'https:' || checkoutUrl.hostname !== 'checkout.stripe.com') {
-    fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an unexpected Checkout URL.');
+  if (checkoutUrl.protocol !== 'https:') {
+    fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an insecure Checkout URL.');
+  }
+  if (provider === 'stripe' && checkoutUrl.hostname !== 'checkout.stripe.com') {
+    fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an unexpected Stripe Checkout URL.');
+  }
+  if (provider === 'paypal' && !trustedPayPalUrl(checkoutUrl, mode)) {
+    fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an unexpected PayPal Checkout URL.');
   }
 
   return Object.freeze({
+    provider,
     sessionId,
     mode,
     reference,
