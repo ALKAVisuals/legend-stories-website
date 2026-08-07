@@ -10,6 +10,7 @@ import {
 } from './store-contract.mjs';
 
 const REFERENCE_PATTERN = /^[a-f0-9]{64}$/;
+const PAYPAL_ORDER_ID_PATTERN = /^[A-Z0-9]{1,36}$/;
 
 export class CheckoutPersistenceError extends Error {
   constructor(code, message, details = {}) {
@@ -63,6 +64,13 @@ function sameImmutableValue(left, right) {
   return JSON.stringify(canonicalize(left)) === JSON.stringify(canonicalize(right));
 }
 
+function isTrustedPayPalCheckoutUrl(url, mode) {
+  const host = url.hostname.toLowerCase();
+  const sandboxHost = host === 'sandbox.paypal.com' || host.endsWith('.sandbox.paypal.com');
+  const liveHost = host === 'paypal.com' || host.endsWith('.paypal.com');
+  return mode === 'test' ? sandboxHost : (liveHost && !sandboxHost);
+}
+
 function validateCheckoutResult(checkout) {
   if (!REFERENCE_PATTERN.test(String(checkout?.reference || ''))) {
     fail('INVALID_CHECKOUT_RECORD', 'The Checkout reference is invalid.');
@@ -71,19 +79,35 @@ function validateCheckoutResult(checkout) {
     fail('INVALID_CHECKOUT_RECORD', 'The Checkout mode is invalid.');
   }
 
-  const expectedPrefix = checkout.mode === 'live' ? 'cs_live_' : 'cs_test_';
-  if (!String(checkout?.sessionId || '').startsWith(expectedPrefix)) {
-    fail('INVALID_CHECKOUT_RECORD', 'The Checkout Session does not match the Checkout mode.');
+  const provider = String(checkout?.provider || 'stripe').trim().toLowerCase();
+  if (!['stripe', 'paypal'].includes(provider)) {
+    fail('INVALID_CHECKOUT_RECORD', 'The Checkout provider is invalid.');
+  }
+
+  const sessionId = String(checkout?.sessionId || '').trim();
+  if (provider === 'stripe') {
+    const expectedPrefix = checkout.mode === 'live' ? 'cs_live_' : 'cs_test_';
+    if (!sessionId.startsWith(expectedPrefix)) {
+      fail('INVALID_CHECKOUT_RECORD', 'The Checkout Session does not match the Checkout mode.');
+    }
+  } else if (!PAYPAL_ORDER_ID_PATTERN.test(sessionId)) {
+    fail('INVALID_CHECKOUT_RECORD', 'The PayPal order ID is invalid.');
   }
 
   let checkoutUrl;
   try {
     checkoutUrl = new URL(String(checkout?.url || ''));
   } catch {
-    fail('INVALID_CHECKOUT_RECORD', 'The Stripe Checkout URL is invalid.');
+    fail('INVALID_CHECKOUT_RECORD', 'The hosted Checkout URL is invalid.');
   }
-  if (checkoutUrl.protocol !== 'https:' || checkoutUrl.hostname !== 'checkout.stripe.com') {
+  if (checkoutUrl.protocol !== 'https:') {
+    fail('INVALID_CHECKOUT_RECORD', 'The hosted Checkout URL must use HTTPS.');
+  }
+  if (provider === 'stripe' && checkoutUrl.hostname !== 'checkout.stripe.com') {
     fail('INVALID_CHECKOUT_RECORD', 'The Stripe Checkout URL is not trusted.');
+  }
+  if (provider === 'paypal' && !isTrustedPayPalCheckoutUrl(checkoutUrl, checkout.mode)) {
+    fail('INVALID_CHECKOUT_RECORD', 'The PayPal Checkout URL is not trusted.');
   }
 
   const grandTotal = Number(checkout?.quote?.grandTotal);
