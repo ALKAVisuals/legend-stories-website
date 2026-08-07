@@ -1,10 +1,12 @@
 name: Netlify staging readiness probe
 
 on:
-  push:
-    branches:
-      - test/netlify-staging-readiness
   workflow_dispatch:
+    inputs:
+      staging_url:
+        description: HTTPS origin of the dedicated LegendMural staging deployment
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -19,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     env:
-      LEGENDMURAL_STAGING_BASE_URL: https://legendmural.netlify.app
+      LEGENDMURAL_STAGING_BASE_URL: ${{ inputs.staging_url }}
       LEGENDMURAL_STAGING_RETRY_ATTEMPTS: '24'
       LEGENDMURAL_STAGING_RETRY_DELAY_MS: '10000'
 
