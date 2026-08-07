@@ -42,9 +42,9 @@ test('stale cart images recover through the runtime product registry', () => {
   assert.match(moduleSource, /persistRecoveredCartImage\(safePage, replacement, storage\)/);
 });
 
-test('cart image paths stay scoped to Netlify-compatible local assets', () => {
-  assert.doesNotMatch(moduleSource, /A-Za-z0-9\._~-\]\+\\\/\)\*assets/);
-  assert.match(moduleSource, /\\\/assets/);
+test('cart image recovery contains no GitHub Pages repository path handling', () => {
+  assert.doesNotMatch(moduleSource, /legend-stories-website/);
+  assert.doesNotMatch(moduleSource, /github\.io/i);
 });
 
 test('the permanent quality chain validates delegated cart controls once', () => {
