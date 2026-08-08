@@ -1,6 +1,6 @@
 # LegendMural uses Netlify as the single intended production host.
 # GitHub Pages is not maintained as a parallel production target.
-# PayPal remains sandbox-only unless PAYPAL_ALLOW_LIVE=true is explicitly configured.
+# PayPal remains sandbox-only unless live mode is explicitly enabled at deployment.
 
 [build]
   command = "npm run build && node scripts/generate-commerce-runtime-config.mjs"
