@@ -8,7 +8,7 @@ const RETURN_COPY = Object.freeze({
   payment_processing: Object.freeze({
     label: 'Payment processing',
     title: 'Payment is processing',
-    message: 'Stripe is still processing your payment. Your cart remains saved until the server confirms that the order is paid.',
+    message: 'Your payment provider is still processing your payment. Your cart remains saved until the server confirms that the order is paid.',
     clearCart: false,
   }),
   payment_failed: Object.freeze({
@@ -20,7 +20,7 @@ const RETURN_COPY = Object.freeze({
   expired: Object.freeze({
     label: 'Checkout expired',
     title: 'Checkout expired',
-    message: 'This secure Checkout Session has expired. Your cart remains saved so you can start a new payment.',
+    message: 'This secure checkout has expired. Your cart remains saved so you can start a new payment.',
     clearCart: false,
   }),
   paid: Object.freeze({

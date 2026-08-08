@@ -7,8 +7,9 @@ import { handleOrderStatus } from '../server/api/order-status.mjs';
 const catalog = JSON.parse(
   await readFile(new URL('../data/products/catalog.json', import.meta.url), 'utf8'),
 ).products;
-const [clientSource, runtimeConfigSource, returnSource, returnPage] = await Promise.all([
+const [clientSource, paypalCaptureClientSource, runtimeConfigSource, returnSource, returnPage] = await Promise.all([
   readFile(new URL('../js/commerce/order-status-client.mjs', import.meta.url), 'utf8'),
+  readFile(new URL('../js/commerce/paypal-capture-client.mjs', import.meta.url), 'utf8'),
   readFile(new URL('../js/commerce/runtime-config.mjs', import.meta.url), 'utf8'),
   readFile(new URL('../js/order-return.js', import.meta.url), 'utf8'),
   readFile(new URL('../order-success.html', import.meta.url), 'utf8'),
@@ -31,19 +32,35 @@ if (!runtimeConfigSource.includes("orderStatusEndpoint: ''")
   || !clientSource.includes('COMMERCE_RUNTIME_CONFIG.orderStatusEndpoint')) {
   errors.push('Order status must remain disabled in tracked source until a deployment endpoint is generated.');
 }
-if (!clientSource.includes("credentials: 'omit'")) {
-  errors.push('Order status requests must omit ambient browser credentials.');
+if (!runtimeConfigSource.includes("paypalCaptureEndpoint: ''")
+  || !paypalCaptureClientSource.includes('COMMERCE_RUNTIME_CONFIG.paypalCaptureEndpoint')) {
+  errors.push('PayPal capture must remain disabled in tracked source until a deployment endpoint is generated.');
 }
-if (!clientSource.includes("redirect: 'error'")) {
-  errors.push('Order status requests must reject unexpected HTTP redirects.');
+for (const [label, source] of [
+  ['Order status', clientSource],
+  ['PayPal capture', paypalCaptureClientSource],
+]) {
+  if (!source.includes("credentials: 'omit'")) {
+    errors.push(`${label} requests must omit ambient browser credentials.`);
+  }
+  if (!source.includes("redirect: 'error'")) {
+    errors.push(`${label} requests must reject unexpected HTTP redirects.`);
+  }
 }
-if (/NEON_DATABASE_URL|postgres(?:ql)?:\/\/|STRIPE_SECRET_KEY|sk_(?:test|live)_|whsec_/.test(
-  `${clientSource}\n${runtimeConfigSource}`,
+if (/NEON_DATABASE_URL|postgres(?:ql)?:\/\/|STRIPE_SECRET_KEY|sk_(?:test|live)_|whsec_|PAYPAL_CLIENT_SECRET/.test(
+  `${clientSource}\n${paypalCaptureClientSource}\n${runtimeConfigSource}`,
 )) {
-  errors.push('Public order-status modules must not contain database or Stripe credentials.');
+  errors.push('Public order-return modules must not contain database or payment-provider credentials.');
 }
-if (!returnSource.includes('sessionId !== storedSessionId')) {
-  errors.push('Return page must match the URL session to the stored Checkout Session.');
+if (!returnSource.includes('returnedSessionId !== storedSessionId')) {
+  errors.push('Return page must match the returned provider session to the stored payment session.');
+}
+if (!returnSource.includes("url.searchParams.get('session_id')")
+  || !returnSource.includes("url.searchParams.get('token')")) {
+  errors.push('Return page must recognize both Stripe and PayPal hosted-return identifiers.');
+}
+if (!returnSource.includes('requestPayPalCapture({')) {
+  errors.push('PayPal returns must be captured server-side before order status verification.');
 }
 if (!returnSource.includes('applyVerifiedOrderStatus(status')) {
   errors.push('Return page must use the verified cart-clearing policy.');
@@ -58,7 +75,9 @@ if (!returnPage.includes('<meta name="robots" content="noindex, nofollow">')) {
 const statuses = ['payment_pending', 'payment_processing', 'payment_failed', 'expired', 'paid'];
 for (const [index, product] of catalog.entries()) {
   const reference = createHash('sha256').update(`order-return:${product.page}`).digest('hex');
-  const sessionId = `cs_test_order_return_${index}`;
+  const sessionId = index % 2 === 0
+    ? `cs_test_order_return_${index}`
+    : `P${String(index).padStart(16, '0')}TEST`;
   const status = statuses[index % statuses.length];
   const order = {
     reference,
@@ -130,5 +149,5 @@ if (errors.length) {
 }
 
 console.log(
-  `Verified order return validation passed for ${catalog.length} products with deployment-generated endpoints, privacy-minimal status responses and paid-only cart clearing.`,
+  `Verified order return validation passed for ${catalog.length} products with Stripe/PayPal return identifiers, privacy-minimal status responses and paid-only cart clearing.`,
 );

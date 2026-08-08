@@ -5,6 +5,7 @@ import {
 
 const MAX_REQUEST_BYTES = 4 * 1024;
 const REFERENCE_PATTERN = /^[a-f0-9]{64}$/;
+const PAYPAL_ORDER_ID_PATTERN = /^[A-Z0-9]{1,36}$/;
 const ORDER_STATUSES = new Set([
   'payment_pending',
   'payment_processing',
@@ -102,22 +103,31 @@ function normalizeLookup(payload = {}) {
   }
 
   const sessionId = String(payload.sessionId || '').trim();
-  if (!/^cs_(test|live)_[A-Za-z0-9_-]+$/.test(sessionId)) {
-    fail('INVALID_ORDER_LOOKUP', 'The Checkout Session ID is invalid.');
+  if (/^cs_(test|live)_[A-Za-z0-9_-]+$/.test(sessionId)) {
+    return Object.freeze({
+      reference,
+      sessionId,
+      mode: sessionId.startsWith('cs_live_') ? 'live' : 'test',
+    });
   }
-  const mode = sessionId.startsWith('cs_live_') ? 'live' : 'test';
-
-  return Object.freeze({ reference, sessionId, mode });
+  if (PAYPAL_ORDER_ID_PATTERN.test(sessionId)) {
+    return Object.freeze({ reference, sessionId, mode: '' });
+  }
+  fail('INVALID_ORDER_LOOKUP', 'The payment session identifier is invalid.');
 }
 
 function normalizePublicStatus(order, lookup) {
   if (!order || typeof order !== 'object') return null;
   if (order.reference !== lookup.reference
     || order.paymentSessionId !== lookup.sessionId
-    || order.mode !== lookup.mode) {
+    || (lookup.mode && order.mode !== lookup.mode)) {
     return null;
   }
 
+  const mode = String(order.mode || '');
+  if (!['test', 'live'].includes(mode)) {
+    fail('INVALID_ORDER_STORE_RESULT', 'The stored order mode is invalid.');
+  }
   const status = String(order.status || '');
   if (!ORDER_STATUSES.has(status)) {
     fail('INVALID_ORDER_STORE_RESULT', 'The stored order status is invalid.');
@@ -132,7 +142,7 @@ function normalizePublicStatus(order, lookup) {
   return Object.freeze({
     reference: lookup.reference,
     sessionId: lookup.sessionId,
-    mode: lookup.mode,
+    mode,
     status,
     paid: status === 'paid',
     terminal: ['paid', 'payment_failed', 'expired'].includes(status),

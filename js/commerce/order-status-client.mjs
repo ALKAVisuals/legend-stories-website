@@ -1,6 +1,7 @@
 import { COMMERCE_RUNTIME_CONFIG } from './runtime-config.mjs';
 
 const DEFAULT_TIMEOUT_MS = 10_000;
+const PAYPAL_ORDER_ID_PATTERN = /^[A-Z0-9]{1,36}$/;
 const ORDER_STATUSES = new Set([
   'payment_pending',
   'payment_processing',
@@ -62,15 +63,24 @@ export function isOrderStatusConfigured(
 function normalizeLookup(reference, sessionId) {
   const normalizedReference = String(reference || '').trim().toLowerCase();
   const normalizedSessionId = String(sessionId || '').trim();
-  if (!/^[a-f0-9]{64}$/.test(normalizedReference)
-    || !/^cs_(test|live)_[A-Za-z0-9_-]+$/.test(normalizedSessionId)) {
+  if (!/^[a-f0-9]{64}$/.test(normalizedReference)) {
     fail('INVALID_ORDER_LOOKUP', 'The order verification details are invalid.');
   }
-  return Object.freeze({
-    reference: normalizedReference,
-    sessionId: normalizedSessionId,
-    mode: normalizedSessionId.startsWith('cs_live_') ? 'live' : 'test',
-  });
+  if (/^cs_(test|live)_[A-Za-z0-9_-]+$/.test(normalizedSessionId)) {
+    return Object.freeze({
+      reference: normalizedReference,
+      sessionId: normalizedSessionId,
+      mode: normalizedSessionId.startsWith('cs_live_') ? 'live' : 'test',
+    });
+  }
+  if (PAYPAL_ORDER_ID_PATTERN.test(normalizedSessionId)) {
+    return Object.freeze({
+      reference: normalizedReference,
+      sessionId: normalizedSessionId,
+      mode: '',
+    });
+  }
+  fail('INVALID_ORDER_LOOKUP', 'The order verification details are invalid.');
 }
 
 function parseStatusResponse(payload, lookup) {
@@ -79,8 +89,12 @@ function parseStatusResponse(payload, lookup) {
   }
   if (payload.reference !== lookup.reference
     || payload.sessionId !== lookup.sessionId
-    || payload.mode !== lookup.mode) {
-    fail('INVALID_ORDER_STATUS_RESPONSE', 'The order status response does not match this Checkout Session.');
+    || (lookup.mode && payload.mode !== lookup.mode)) {
+    fail('INVALID_ORDER_STATUS_RESPONSE', 'The order status response does not match this payment session.');
+  }
+  const mode = String(payload.mode || '');
+  if (!['test', 'live'].includes(mode)) {
+    fail('INVALID_ORDER_STATUS_RESPONSE', 'The order status response has an invalid payment mode.');
   }
 
   const status = String(payload.status || '');
@@ -95,7 +109,9 @@ function parseStatusResponse(payload, lookup) {
   }
 
   return Object.freeze({
-    ...lookup,
+    reference: lookup.reference,
+    sessionId: lookup.sessionId,
+    mode,
     status,
     paid: payload.paid,
     terminal: payload.terminal,

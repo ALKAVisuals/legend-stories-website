@@ -16,7 +16,13 @@ if (!runtimeConfigSource.includes("hostedCheckoutEndpoint: ''")
   errors.push('Hosted checkout must remain disabled in tracked source until a deployment endpoint is generated.');
 }
 if (!clientSource.includes("checkoutUrl.hostname !== 'checkout.stripe.com'")) {
-  errors.push('Browser checkout responses must be restricted to checkout.stripe.com.');
+  errors.push('Stripe fallback responses must remain restricted to checkout.stripe.com.');
+}
+if (!clientSource.includes('trustedPayPalUrl(checkoutUrl, mode)')) {
+  errors.push('PayPal hosted checkout responses must be restricted to the reported PayPal environment.');
+}
+if (!clientSource.includes("provider === 'paypal'")) {
+  errors.push('Browser checkout must explicitly distinguish PayPal from the Stripe fallback.');
 }
 if (!clientSource.includes("credentials: 'omit'")) {
   errors.push('Browser checkout requests must not send ambient credentials.');
@@ -27,8 +33,10 @@ if (!clientSource.includes("redirect: 'error'")) {
 if (!clientSource.includes('setTimeout(() => controller.abort(), safeTimeout)')) {
   errors.push('Hosted checkout must use a real abort signal for request timeouts.');
 }
-if (/STRIPE_SECRET_KEY|sk_(test|live)_/.test(`${clientSource}\n${runtimeConfigSource}`)) {
-  errors.push('The browser checkout modules must never contain Stripe secret-key material.');
+if (/STRIPE_SECRET_KEY|sk_(test|live)_|PAYPAL_CLIENT_SECRET|PAYPAL_CLIENT_ID\s*=/.test(
+  `${clientSource}\n${runtimeConfigSource}`,
+)) {
+  errors.push('Browser checkout modules must never contain payment-provider secret material.');
 }
 
 if (!appSource.includes("import('./commerce/checkout-client.mjs')")) {
@@ -44,10 +52,13 @@ if (!appSource.includes('commerceModule.requestHostedCheckout({')) {
   errors.push('The storefront must delegate payment-session creation to the browser checkout client.');
 }
 if (!appSource.includes('window.location.assign(checkout.url)')) {
-  errors.push('The storefront must redirect only to the validated Checkout URL returned by the client.');
+  errors.push('The storefront must redirect only to the validated provider URL returned by the client.');
 }
 if (!appSource.includes("sessionStorage.setItem('legendCheckoutReference', checkout.reference)")) {
   errors.push('The storefront must retain the server-generated checkout reference for the return flow.');
+}
+if (!appSource.includes("sessionStorage.setItem('legendCheckoutSessionId', checkout.sessionId)")) {
+  errors.push('The storefront must retain the exact provider session/order ID for return verification.');
 }
 
 const hostedCall = appSource.match(/commerceModule\.requestHostedCheckout\(\{([\s\S]*?)\n      \}\);/);
@@ -98,4 +109,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Browser checkout validation passed with deployment-generated endpoints, minimal payloads and verified Stripe redirects.');
+console.log('Browser checkout validation passed with deployment-generated endpoints, minimal payloads, trusted PayPal Sandbox redirects and the Stripe fallback intact.');

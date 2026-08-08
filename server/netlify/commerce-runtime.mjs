@@ -1,4 +1,5 @@
 import { createNeonOrderStore } from '../adapters/neon-order-store.mjs';
+import { createNeonPayPalCaptureStore } from '../adapters/neon-paypal-capture-store.mjs';
 
 let cachedConnectionString = '';
 let cachedStoreFactory = null;
@@ -22,9 +23,18 @@ export function resetCommerceRuntimeCache() {
   cachedOrderStore = null;
 }
 
+function createDefaultCommerceOrderStore({ connectionString }) {
+  const orderStore = createNeonOrderStore({ connectionString });
+  const paypalCaptureStore = createNeonPayPalCaptureStore({ connectionString });
+  return Object.freeze({
+    ...orderStore,
+    ...paypalCaptureStore,
+  });
+}
+
 export function getCommerceOrderStore({
   env = process.env,
-  storeFactory = createNeonOrderStore,
+  storeFactory = createDefaultCommerceOrderStore,
 } = {}) {
   const connectionString = String(env.NEON_DATABASE_URL || '').trim();
   if (!connectionString) {

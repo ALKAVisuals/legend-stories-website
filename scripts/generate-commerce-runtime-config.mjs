@@ -43,6 +43,10 @@ export function createCommerceRuntimeConfig(env = process.env) {
       env.LEGENDMURAL_ORDER_STATUS_ENDPOINT,
       'LEGENDMURAL_ORDER_STATUS_ENDPOINT',
     ),
+    paypalCaptureEndpoint: normalizePublicCommerceEndpoint(
+      env.LEGENDMURAL_PAYPAL_CAPTURE_ENDPOINT,
+      'LEGENDMURAL_PAYPAL_CAPTURE_ENDPOINT',
+    ),
   });
 }
 
