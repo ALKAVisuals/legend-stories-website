@@ -43,7 +43,7 @@ function paypalPendingOrder() {
   return {
     ...createPendingOrderRecord({
       reference: PAYPAL_REFERENCE,
-      amountTotal: 4495,
+      amountTotal: 4500,
       currency: 'EUR',
       mode: 'test',
       paymentSessionId: PAYPAL_ORDER_ID,
@@ -86,11 +86,11 @@ function paypalPendingOrder() {
       qualifiesForFreeShipping: false,
     },
     totals: {
-      subtotal: 4495,
+      subtotal: 4500,
       discount: 0,
-      discountedSubtotal: 4495,
+      discountedSubtotal: 4500,
       shipping: 0,
-      grandTotal: 4495,
+      grandTotal: 4500,
     },
   };
 }
