@@ -6,6 +6,7 @@ on:
       - audit/radiant-autonomy-history
     paths:
       - "scripts/audit_radiant_autonomy_history.py"
+      - "scripts/render_radiant_autonomy_history_comparison.py"
       - ".github/workflows/audit-radiant-autonomy-history.yml"
   workflow_dispatch:
 
@@ -33,17 +34,31 @@ jobs:
       - name: Compare historical and current pixels
         run: python scripts/audit_radiant_autonomy_history.py
 
+      - name: Render visual comparison evidence
+        run: python scripts/render_radiant_autonomy_history_comparison.py
+
+      - name: Upload lightweight visual audit artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: radiant-autonomy-history-visual
+          path: docs/audits/radiant-autonomy-history-visual/
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Commit audit evidence to temporary branch
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/audits/radiant-autonomy-history-audit.json docs/audits/radiant-autonomy-history-audit.md
+          git add \
+            docs/audits/radiant-autonomy-history-audit.json \
+            docs/audits/radiant-autonomy-history-audit.md \
+            docs/audits/radiant-autonomy-history-visual
           if git diff --cached --quiet; then
             echo "No audit changes to commit."
             exit 0
           fi
-          git commit -m "Record Radiant Autonomy history audit"
+          git commit -m "Record Radiant Autonomy history visual audit"
           git pull --rebase origin audit/radiant-autonomy-history
           git push origin HEAD:audit/radiant-autonomy-history
