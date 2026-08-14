@@ -53,6 +53,10 @@ CREATE TABLE IF NOT EXISTS legend_commerce.paypal_webhook_events (
   paypal_created_at bigint NOT NULL,
   processed_at bigint NOT NULL,
 
+  CONSTRAINT paypal_webhook_events_order_reference_fk
+    FOREIGN KEY (order_reference)
+    REFERENCES legend_commerce.orders(reference)
+    ON DELETE RESTRICT,
   CONSTRAINT paypal_webhook_events_id_nonempty
     CHECK (char_length(event_id) BETWEEN 1 AND 128),
   CONSTRAINT paypal_webhook_events_type_nonempty
