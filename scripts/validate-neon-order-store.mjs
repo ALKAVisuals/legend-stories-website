@@ -1,8 +1,16 @@
 import { readFile } from 'node:fs/promises';
 
 const ROOT = new URL('../', import.meta.url);
-const [adapter, baseMigration, paypalMigration, paypalGrants, decision] = await Promise.all([
+const [
+  adapter,
+  paypalWebhookAdapter,
+  baseMigration,
+  paypalMigration,
+  paypalGrants,
+  decision,
+] = await Promise.all([
   readFile(new URL('server/adapters/neon-order-store.mjs', ROOT), 'utf8'),
+  readFile(new URL('server/adapters/neon-paypal-webhook-store.mjs', ROOT), 'utf8'),
   readFile(new URL('server/db/migrations/001_create_order_store.sql', ROOT), 'utf8'),
   readFile(new URL('server/db/migrations/003_add_paypal_reconciliation.sql', ROOT), 'utf8'),
   readFile(new URL('server/db/migrations/004_grant_paypal_reconciliation_runtime.sql', ROOT), 'utf8'),
@@ -27,12 +35,12 @@ requireSource(
 requireSource(
   adapter,
   "client.query('BEGIN ISOLATION LEVEL SERIALIZABLE')",
-  'Every Neon write transaction must use SERIALIZABLE isolation.',
+  'Every core Neon write transaction must use SERIALIZABLE isolation.',
 );
 requireSource(
   adapter,
   'FOR UPDATE',
-  'Payment event processing and idempotent retries must lock the order row.',
+  'Core payment event processing and idempotent retries must lock the order row.',
 );
 requireSource(
   adapter,
@@ -42,7 +50,7 @@ requireSource(
 requireSource(
   adapter,
   'WHERE reference = $1 AND version = $2',
-  'Order status updates must enforce optimistic version matching.',
+  'Core order status updates must enforce optimistic version matching.',
 );
 requireSource(
   adapter,
@@ -54,22 +62,33 @@ requireSource(
   "['require', 'verify-full'].includes(sslMode)",
   'Runtime database URLs must require TLS.',
 );
-requireSource(
-  adapter,
-  "await client.query('ROLLBACK')",
-  'Failed transactions must be rolled back before the client closes.',
-);
-requireSource(
-  adapter,
-  'await client.end()',
-  'Serverless Neon clients must be closed after every request operation.',
-);
 
-if (/postgres(?:ql)?:\/\/[^\s'"`]+:[^\s'"`]+@ep-/i.test(adapter)) {
-  errors.push('The Neon adapter must not contain a real or example embedded database credential.');
+for (const fragment of [
+  "client.query('BEGIN ISOLATION LEVEL SERIALIZABLE')",
+  'FOR UPDATE',
+  'INSERT INTO legend_commerce.paypal_webhook_events',
+  'ON CONFLICT (event_id) DO NOTHING',
+  "String(row.payment_provider || '') !== 'paypal'",
+  'WHERE reference = $1 AND version = $2',
+  "current.status === 'paid'",
+  "event.targetStatus === 'paid'",
+  "await client.query('ROLLBACK')",
+  'await client.end()',
+]) {
+  requireSource(
+    paypalWebhookAdapter,
+    fragment,
+    `PayPal webhook adapter is missing safety contract: ${fragment}`,
+  );
 }
-if (/process\.env\.DATABASE_MIGRATION_URL/.test(adapter)) {
-  errors.push('Runtime request handlers must never use the migration connection string.');
+
+for (const source of [adapter, paypalWebhookAdapter]) {
+  if (/postgres(?:ql)?:\/\/[^\s'"`]+:[^\s'"`]+@ep-/i.test(source)) {
+    errors.push('Neon runtime adapters must not contain embedded database credentials.');
+  }
+  if (/process\.env\.DATABASE_MIGRATION_URL/.test(source)) {
+    errors.push('Runtime request handlers must never use the migration connection string.');
+  }
 }
 
 for (const fragment of [
@@ -100,6 +119,8 @@ for (const fragment of [
   'event_id text PRIMARY KEY',
   'order_reference text NOT NULL',
   'paypal_order_id text NOT NULL',
+  'FOREIGN KEY (order_reference)',
+  'REFERENCES legend_commerce.orders(reference)',
   "CHECK (mode IN ('test', 'live'))",
   'Full provider payloads are intentionally not stored',
 ]) {
@@ -116,8 +137,8 @@ requireSource(
   'ON TABLE legend_commerce.paypal_webhook_events',
   'PayPal webhook runtime grant must target only its event ledger.',
 );
-if (/\b(DELETE|TRUNCATE|CREATE|DROP|ALTER)\b/.test(paypalGrants)) {
-  errors.push('PayPal webhook runtime grants must not include destructive or DDL privileges.');
+if (/\b(DELETE|TRUNCATE|CREATE|DROP|ALTER|UPDATE)\b/.test(paypalGrants)) {
+  errors.push('PayPal webhook runtime grants must not include destructive, DDL, or ledger-update privileges.');
 }
 
 requireSource(
@@ -142,4 +163,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Neon order-store validation passed with TLS-only access, serializable writes, provider-derived payment identity and a least-privilege PayPal reconciliation ledger.');
+console.log('Neon order-store validation passed with TLS-only access, serializable provider-matched PayPal reconciliation, immutable event reservations and least-privilege grants.');
