@@ -9,9 +9,6 @@ const SUPPORTED_EVENTS = new Set([
   'PAYMENT.CAPTURE.COMPLETED',
   'PAYMENT.CAPTURE.PENDING',
   'PAYMENT.CAPTURE.DECLINED',
-  'PAYMENT.CAPTURE.DENIED',
-  'PAYMENT.CAPTURE.REFUNDED',
-  'PAYMENT.CAPTURE.REVERSED',
 ]);
 
 export class PayPalWebhookReconciliationError extends Error {
@@ -119,7 +116,7 @@ function parseApprovalReversedEvent(event) {
   });
 }
 
-function parseCaptureEvent(event, { requireAmount = true } = {}) {
+function parseCaptureEvent(event) {
   const identity = eventIdentity(event);
   const resource = event?.resource || {};
   const captureId = String(resource.id || '').trim().toUpperCase();
@@ -133,8 +130,7 @@ function parseCaptureEvent(event, { requireAmount = true } = {}) {
     fail('INVALID_PAYPAL_WEBHOOK_EVENT', 'PayPal webhook related order ID is invalid.');
   }
   const reference = normalizeReference(resource.custom_id);
-  const amountTotal = requireAmount ? amountToCents(resource.amount, 'PayPal capture') : null;
-  const currency = requireAmount ? 'EUR' : null;
+  const amountTotal = amountToCents(resource.amount, 'PayPal capture');
   const mutationAt = resource.update_time || resource.create_time
     ? timestampSeconds(resource.update_time || resource.create_time, 'PayPal capture')
     : identity.createdAt;
@@ -144,7 +140,7 @@ function parseCaptureEvent(event, { requireAmount = true } = {}) {
     orderId,
     captureId,
     amountTotal,
-    currency,
+    currency: 'EUR',
     mutationAt,
     resourceStatus: String(resource.status || '').trim().toUpperCase(),
   });
@@ -231,20 +227,14 @@ export function createPayPalWebhookReconciler({
       });
     }
 
+    const parsed = parseCaptureEvent(event);
     if (eventType === 'PAYMENT.CAPTURE.COMPLETED') {
-      const parsed = parseCaptureEvent(event);
       if (parsed.resourceStatus !== 'COMPLETED') {
         fail('INVALID_PAYPAL_WEBHOOK_EVENT', 'Completed capture webhook has a non-completed resource.');
       }
-      return orderStore.processPaypalWebhookEvent({
-        ...parsed,
-        mode,
-        targetStatus: 'paid',
-      });
+      return orderStore.processPaypalWebhookEvent({ ...parsed, mode, targetStatus: 'paid' });
     }
-
     if (eventType === 'PAYMENT.CAPTURE.PENDING') {
-      const parsed = parseCaptureEvent(event);
       if (parsed.resourceStatus !== 'PENDING') {
         fail('INVALID_PAYPAL_WEBHOOK_EVENT', 'Pending capture webhook has a non-pending resource.');
       }
@@ -254,24 +244,13 @@ export function createPayPalWebhookReconciler({
         targetStatus: 'payment_processing',
       });
     }
-
-    if (eventType === 'PAYMENT.CAPTURE.DECLINED' || eventType === 'PAYMENT.CAPTURE.DENIED') {
-      const parsed = parseCaptureEvent(event);
-      if (!['DECLINED', 'DENIED'].includes(parsed.resourceStatus)) {
-        fail('INVALID_PAYPAL_WEBHOOK_EVENT', 'Declined capture webhook has an unexpected resource status.');
-      }
-      return orderStore.processPaypalWebhookEvent({
-        ...parsed,
-        mode,
-        targetStatus: 'payment_failed',
-      });
+    if (parsed.resourceStatus !== 'DECLINED') {
+      fail('INVALID_PAYPAL_WEBHOOK_EVENT', 'Declined capture webhook has an unexpected resource status.');
     }
-
-    const parsed = parseCaptureEvent(event, { requireAmount: false });
     return orderStore.processPaypalWebhookEvent({
       ...parsed,
       mode,
-      targetStatus: null,
+      targetStatus: 'payment_failed',
     });
   };
 }
