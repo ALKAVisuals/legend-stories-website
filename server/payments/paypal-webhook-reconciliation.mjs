@@ -70,7 +70,7 @@ function eventIdentity(event = {}) {
   });
 }
 
-function parseOrderEvent(event) {
+function parseApprovedOrderEvent(event) {
   const identity = eventIdentity(event);
   const resource = event?.resource || {};
   let orderId;
@@ -94,6 +94,28 @@ function parseOrderEvent(event) {
     orderId,
     amountTotal: amountToCents(unit?.amount, 'PayPal order'),
     currency: 'EUR',
+  });
+}
+
+function parseApprovalReversedEvent(event) {
+  const identity = eventIdentity(event);
+  const resource = event?.resource || {};
+  let orderId;
+  try {
+    orderId = normalizePayPalOrderId(resource.order_id);
+  } catch {
+    fail('INVALID_PAYPAL_WEBHOOK_EVENT', 'PayPal approval reversal order ID is invalid.');
+  }
+  const units = Array.isArray(resource.purchase_units) ? resource.purchase_units : [];
+  if (units.length !== 1) {
+    fail('INVALID_PAYPAL_WEBHOOK_EVENT', 'PayPal approval reversal must contain exactly one purchase unit.');
+  }
+  return Object.freeze({
+    ...identity,
+    reference: normalizeReference(units[0]?.custom_id),
+    orderId,
+    amountTotal: null,
+    currency: null,
   });
 }
 
@@ -128,13 +150,13 @@ function parseCaptureEvent(event, { requireAmount = true } = {}) {
   });
 }
 
-function assertReservedOrder(order, expected, mode) {
+function assertReservedOrder(order, expected, mode, { requireAmount = true } = {}) {
   if (!order
     || order.reference !== expected.reference
     || order.paymentSessionId !== expected.orderId
-    || order.amountTotal !== expected.amountTotal
-    || String(order.currency || '').toUpperCase() !== 'EUR'
-    || order.mode !== mode) {
+    || order.mode !== mode
+    || (requireAmount && order.amountTotal !== expected.amountTotal)
+    || (requireAmount && String(order.currency || '').toUpperCase() !== 'EUR')) {
     fail('PAYPAL_WEBHOOK_ORDER_MISMATCH', 'PayPal webhook event does not match the reserved order.');
   }
 }
@@ -162,7 +184,7 @@ export function createPayPalWebhookReconciler({
     }
 
     if (eventType === 'CHECKOUT.ORDER.APPROVED') {
-      const parsed = parseOrderEvent(event);
+      const parsed = parseApprovedOrderEvent(event);
       const reserved = await orderStore.getOrderByReference(parsed.reference);
       assertReservedOrder(reserved, parsed, mode);
 
@@ -198,7 +220,9 @@ export function createPayPalWebhookReconciler({
     }
 
     if (eventType === 'CHECKOUT.PAYMENT-APPROVAL.REVERSED') {
-      const parsed = parseOrderEvent(event);
+      const parsed = parseApprovalReversedEvent(event);
+      const reserved = await orderStore.getOrderByReference(parsed.reference);
+      assertReservedOrder(reserved, parsed, mode, { requireAmount: false });
       return orderStore.processPaypalWebhookEvent({
         ...parsed,
         mode,
