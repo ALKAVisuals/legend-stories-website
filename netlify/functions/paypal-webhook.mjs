@@ -4,10 +4,7 @@ import {
   createPayPalApiClient,
 } from '../../server/payments/paypal-api.mjs';
 import { createPayPalWebhookReconciler } from '../../server/payments/paypal-webhook-reconciliation.mjs';
-import {
-  getCommerceOrderStore,
-  resetCommerceRuntimeCache,
-} from '../../server/netlify/commerce-runtime.mjs';
+import { getCommerceOrderStore } from '../../server/netlify/commerce-runtime.mjs';
 
 function bootstrapErrorResponse(status, code, message) {
   return new Response(JSON.stringify({ error: { code, message } }), {
@@ -37,13 +34,12 @@ export function createNetlifyPayPalWebhookHandler({
         apiBase: env.PAYPAL_API_BASE,
         allowLive: env.PAYPAL_ALLOW_LIVE === 'true',
       });
-      if (!processor) {
+      if (!processor && String(env.NEON_DATABASE_URL || '').trim()) {
         const orderStore = getCommerceOrderStore({ env, storeFactory });
         processor = createPayPalWebhookReconciler({ orderStore, paypalClient });
       }
     } catch (error) {
       if (error instanceof PayPalConfigurationError
-        || error?.code === 'NEON_DATABASE_URL_MISSING'
         || error?.code === 'NEON_DATABASE_URL_INVALID'
         || error?.code === 'PAYPAL_WEBHOOK_STORE_NOT_CONFIGURED') {
         return bootstrapErrorResponse(
@@ -71,5 +67,4 @@ export function createNetlifyPayPalWebhookHandler({
   };
 }
 
-export { resetCommerceRuntimeCache };
 export default createNetlifyPayPalWebhookHandler();
