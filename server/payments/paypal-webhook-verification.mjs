@@ -82,7 +82,12 @@ function parseWebhookEvent(rawBody) {
     fail('PAYPAL_WEBHOOK_BODY_INVALID', 'The PayPal webhook event type is invalid.');
   }
 
-  return event;
+  return Object.freeze({ event, source });
+}
+
+function exactPostbackBody(metadata, rawWebhookEvent) {
+  const metadataJson = JSON.stringify(metadata);
+  return `${metadataJson.slice(0, -1)},"webhook_event":${rawWebhookEvent}}`;
 }
 
 export function buildPayPalWebhookVerificationPayload({
@@ -108,19 +113,20 @@ export function buildPayPalWebhookVerificationPayload({
 
   const certUrl = normalizeCertUrl(headerValue(headers, 'PAYPAL-CERT-URL', 500));
   const normalizedWebhookId = normalizeWebhookId(webhookId);
-  const event = parseWebhookEvent(rawBody);
+  const { event, source } = parseWebhookEvent(rawBody);
+  const metadata = Object.freeze({
+    auth_algo: authAlgo,
+    cert_url: certUrl,
+    transmission_id: transmissionId,
+    transmission_sig: transmissionSig,
+    transmission_time: transmissionTime,
+    webhook_id: normalizedWebhookId,
+  });
 
   return Object.freeze({
     event,
-    payload: Object.freeze({
-      auth_algo: authAlgo,
-      cert_url: certUrl,
-      transmission_id: transmissionId,
-      transmission_sig: transmissionSig,
-      transmission_time: transmissionTime,
-      webhook_id: normalizedWebhookId,
-      webhook_event: event,
-    }),
+    metadata,
+    requestBody: exactPostbackBody(metadata, source),
   });
 }
 
@@ -142,7 +148,7 @@ export async function verifyPayPalWebhookSignature({
     rawBody,
     webhookId,
   });
-  const response = await paypalClient.verifyWebhookSignature(verification.payload);
+  const response = await paypalClient.verifyWebhookSignature(verification.requestBody);
   const status = String(response?.verification_status || '').trim().toUpperCase();
   if (status === 'SUCCESS') {
     return Object.freeze({
