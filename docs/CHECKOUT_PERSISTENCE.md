@@ -1,113 +1,128 @@
-# Durable Checkout Persistence Contract
+# Durable checkout persistence contract
+
+Laatst inhoudelijk bijgewerkt: 14 augustus 2026.
 
 ## Current status
 
-The Checkout Session endpoint now requires a durable order store before it can return a Stripe Checkout URL.
+LegendMural vereist een duurzame orderrecord voordat een hosted payment approval URL als geldige checkoutresponse aan de browser wordt teruggegeven.
 
-No database adapter, Stripe secret, Netlify function or deployment configuration is included. With no `checkoutStore`, the endpoint returns `503 CHECKOUT_STORE_NOT_CONFIGURED` before contacting Stripe.
+De actieve launchrichting gebruikt:
 
-## Why this boundary is required
+- PayPal voor payment;
+- Neon Postgres voor orderopslag;
+- Netlify Functions als serveradapter.
 
-A Stripe webhook can only verify and update an order that already exists. A browser return URL is not payment proof and cannot safely create or mark an order paid.
+De oude Stripe-specifieke implementatie blijft tijdelijk als legacy/fallback in de repository totdat PayPal staging inclusief webhook/reconciliation volledig is bewezen.
 
-The server flow is therefore:
+## Waarom deze grens nodig is
 
-1. validate the request and calculate the authoritative catalog quote;
-2. create a Stripe Checkout Session with a deterministic idempotency key;
-3. build an authoritative `payment_pending` order record;
-4. atomically persist that pending order;
-5. validate the store result against the Checkout reference, amount, currency, mode and session ID;
-6. only then return the Stripe Checkout URL to the browser.
+Een browserreturn of payment-provider redirect is geen voldoende orderbewijs. LegendMural moet de order, het bedrag en de provideridentiteit al server-side kennen voordat de klant buiten de storefront verdergaat.
 
-If persistence fails, the endpoint does not expose the Checkout URL. A retry uses the same Stripe idempotency key, allowing Stripe to return the same Checkout Session while storage is retried.
+De PayPal flow is daarom:
+
+1. valideer de minimale browserrequest;
+2. bereken de autoritatieve catalogusquote;
+3. maak/reserveer de PayPal Order met deterministische idempotency;
+4. bouw een autoritatieve `payment_pending` orderrecord;
+5. persist die order duurzaam in Neon;
+6. controleer dat reference, amount, currency, mode en PayPal order ID overeenkomen;
+7. retourneer pas daarna de PayPal approval URL.
+
+Als persistence faalt, wordt de approval URL niet als succesvolle checkoutresponse aan de browser vrijgegeven.
 
 ## Store interface
 
-A future durable adapter must provide:
+De centrale checkout/storelaag gebruikt duurzame capabilities voor pending checkout en order lookup. De PayPal capturelaag voegt transactionele captureverwerking toe.
 
-```js
-checkoutStore.persistPendingCheckout(order)
-```
-
-It must atomically create the order by its 64-character reference or return the existing identical order.
-
-New order result:
-
-```js
-{
-  created: true,
-  order: persistedOrder,
-}
-```
-
-Idempotent retry result:
-
-```js
-{
-  created: false,
-  order: existingIdenticalOrder,
-}
-```
-
-The adapter must reject conflicts. It may not silently return an order with a different:
-
-- order reference;
-- status;
-- amount in cents;
-- currency;
-- test/live mode;
-- Stripe Checkout Session ID.
-
-## Pending order record
-
-The server-generated record includes:
-
-- deterministic order reference;
-- `payment_pending` status;
-- amount and totals in integer cents;
-- EUR currency;
-- test/live mode;
-- Stripe Checkout Session ID;
-- authoritative product names, prices, quantities and pages;
-- normalized customer and delivery address;
-- discount and shipping details;
-- optimistic version number.
-
-Browser-supplied names, prices and totals are not stored as authority.
-
-## Failure behavior
-
-- Missing store: Stripe is not contacted and the endpoint returns `503`.
-- Store unavailable after Stripe session creation: the Checkout URL is withheld and the endpoint returns `503`.
-- Existing conflicting order: the Checkout URL is withheld and the endpoint returns `409`.
-- Invalid store result: the Checkout URL is withheld and the endpoint returns `503`.
-- Successful identical retry: the existing pending order is accepted.
-
-## Relationship to webhooks
-
-The pending record is the source that `paymentStore.processStripeEvent()` later loads and updates after Stripe signature verification.
-
-A production adapter can implement both interfaces on the same database-backed service:
+Conceptueel:
 
 ```js
 {
   persistPendingCheckout(order),
-  processStripeEvent(paymentEvent, createUpdate),
+  getOrderByReference(reference),
+  processPaypalCapture(capture)
 }
 ```
 
-Both methods require durable, atomic, idempotent database operations.
+Provider-neutrale capabilities moeten behouden blijven wanneer de legacy Stripecode later wordt verwijderd.
 
-## Future deployment work
+## Pending order record
 
-1. Select a durable database.
-2. Implement unique constraints on order reference and Stripe event ID.
-3. Implement `persistPendingCheckout()` transactionally.
-4. Implement `processStripeEvent()` transactionally with optimistic version checks.
-5. Add encryption/access controls for customer address data.
-6. Add retention, deletion and audit policies.
-7. Deploy thin adapters around the Checkout and webhook handlers.
-8. Test interrupted requests, duplicate requests, Stripe retries and database outages in test mode.
+De server-generated record bevat onder andere:
+
+- deterministische orderreference;
+- `payment_pending` status;
+- amount/totals in integer cents;
+- EUR currency;
+- test/live mode;
+- provider/payment session identity;
+- PayPal order ID voor de PayPal flow;
+- autoritatieve productnamen, prijzen, varianten, quantities en pages;
+- normalized customer- en deliverygegevens;
+- discount- en shippingdetails;
+- optimistic versioning.
+
+Browser-supplied namen, prijzen en totals worden niet als autoriteit opgeslagen.
+
+## Idempotency en conflicts
+
+Een identieke retry mag dezelfde bestaande pending order teruggeven.
+
+Een conflict onder dezelfde reference/payment identity mag nooit stilzwijgend worden geaccepteerd wanneer bijvoorbeeld verschilt:
+
+- amount;
+- currency;
+- mode;
+- producten/variant/quantity;
+- customer/delivery payload binnen het immutable ordercontract;
+- PayPal order ID.
+
+## Capture en `paid`
+
+Na buyer approval:
+
+1. browser levert alleen de eerder bekende reference + PayPal order ID aan de capture endpoint;
+2. server haalt de pending order uit Neon;
+3. reference en order ID moeten exact overeenkomen;
+4. server capturet de PayPal Order;
+5. capture-resultaat wordt gecontroleerd op amount, currency en orderidentity;
+6. Neon verwerkt de capture idempotent;
+7. alleen een correct opgeslagen `paid` orderresultaat wordt als payment confirmation teruggegeven.
+
+Een reeds betaalde order mag een idempotent duplicate-resultaat opleveren zonder nieuwe paymentmutatie.
+
+## Failure behavior
+
+- ontbrekende Neon store/configuratie → gecontroleerde 503;
+- ontbrekende PayPal Sandbox credentials → gecontroleerde 503;
+- conflicterende pending order → geen geldige approvalflow;
+- verkeerde reference/order ID → geen orderdetails, generieke not-found/mismatchbehandeling;
+- capture/provider mismatch → weigeren;
+- tijdelijke storagefailure na capture → paymentstate moet later via retry/webhook/reconciliation herstelbaar zijn;
+- identieke retry → veilig/idempotent.
+
+## Relatie tot PayPal webhook
+
+De huidige create/capture persistence is nog niet de volledige productieflow.
+
+Voor productie moet een PayPal webhook/reconciliationlaag hetzelfde duurzame ordermodel gebruiken om:
+
+- provider events onafhankelijk van de browserreturn te verwerken;
+- duplicate events idempotent te reserveren/verwerken;
+- capture/paymentidentity te matchen;
+- Neon state te reconciliëren;
+- reeds betaalde orders niet te laten regresseren.
+
+## Neon
+
+De echte geïsoleerde Neon-integratie is uitgevoerd. Migraties, conformance en concurrent gedrag zijn getest. JSONB-serialisatie en retryable SERIALIZABLE conflicts zijn al gehard.
+
+Voor productie blijven vereist:
+
+- separate production environment;
+- dedicated least-privilege runtime role;
+- backup-/restorebeleid;
+- privacy-/retentiebeleid.
 
 ## Validation
 
@@ -115,8 +130,9 @@ Run:
 
 ```bash
 npm run validate:checkout-persistence
+npm run validate:neon-order-store
 npm test
 npm run quality
 ```
 
-The catalog-wide validation creates and persists an authoritative pending Checkout record for every one of the 111 products and verifies fail-closed behavior when no store exists.
+De bestaande validation suite bevat nog legacy Stripecases zolang Stripecode bewust niet is verwijderd. PayPal-specifieke E2E staging komt bovenop deze repositorychecks.

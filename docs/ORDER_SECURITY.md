@@ -1,17 +1,21 @@
 # Order security boundary
 
+Laatst inhoudelijk bijgewerkt: 14 augustus 2026.
+
 ## Current state
 
 The storefront may display prices and totals in the browser, but browser values are not trusted as payment authority.
 
-`server/commerce/order-quote.mjs` is the provider-independent server quote engine. It accepts only product identifiers, quantities, destination country and an optional discount code. Product names, images, availability, currency and prices are resolved again from `data/products/catalog.json`.
+`server/commerce/order-quote.mjs` is the provider-independent server quote engine. It resolves authoritative product, variant, price, discount and shipping data from central server-controlled sources before a PayPal order can be created.
 
 ## Trusted inputs
 
 - the central product catalog;
+- the shared product-variant policy;
 - the shared shipping configuration;
 - the shared discount-code policy;
-- integer quantities within the configured limits.
+- integer quantities within configured limits;
+- server-side payment/database state.
 
 ## Untrusted browser inputs
 
@@ -21,18 +25,22 @@ The storefront may display prices and totals in the browser, but browser values 
 - discount amount or percentage;
 - shipping cost;
 - grand total;
-- product name or image.
+- product name or image;
+- claimed payment status.
 
-These values may be present for display purposes, but a server endpoint must ignore them and use the authoritative quote output instead.
+Browser values may exist for presentation, but payment creation and order persistence must derive authoritative values independently.
 
-## Required payment flow
+## Required PayPal payment flow
 
-1. The browser sends `{ items: [{ page, quantity }], countryCode, discountCode }`.
-2. The server loads the current product catalog.
-3. The server calls `createAuthoritativeOrderQuote()`.
-4. A payment session is created from `quote.amountInCents.grandTotal` and the authoritative line data.
-5. The order stores the quote and the payment-provider session ID.
-6. A signed provider webhook confirms payment before the order is marked paid.
+1. Browser sends the minimal product/variant/quantity/destination/discount request plus normalized customer data.
+2. Server loads the current catalog and commerce policies.
+3. Server calls the authoritative order quote.
+4. A PayPal Sandbox/Live order is created only from the authoritative cent amounts and line data.
+5. The durable LegendMural order stores the authoritative quote and PayPal order ID.
+6. Buyer approval alone is not payment proof.
+7. Server-side capture validates PayPal order ID, reference, amount and currency.
+8. Neon persists the `paid` state.
+9. A PayPal webhook/reconciliation layer must independently confirm/reconcile provider state before production launch.
 
 ## Validation contract
 
@@ -47,8 +55,26 @@ The quote engine:
 - returns rounded currency values and integer cent amounts;
 - ignores client-supplied names, prices and totals.
 
-Run `npm run validate:order-security` to quote every catalog product by page and slug while deliberately supplying tampered browser prices.
+Run:
+
+```bash
+npm run validate:order-security
+npm run validate:commerce-runtime
+npm test
+```
+
+The repository validators deliberately supply tampered browser prices to prove that client values are ignored.
 
 ## Deployment boundary
 
-This repository does not yet connect the engine to Stripe, Netlify or another server platform. That integration must be a separate reviewed change because it requires secrets, provider configuration, webhook verification and production URLs.
+The order-security engine is now connected to Netlify Functions, Neon Postgres and PayPal create/capture handlers.
+
+Production remains blocked until:
+
+- PayPal webhook/reconciliation is implemented;
+- PayPal Sandbox + isolated Neon staging is green;
+- legacy Stripe is removed after PayPal proof;
+- PayPal Live and production Neon are separately approved/configured;
+- final legal/operational launch checks are complete.
+
+Secrets remain deployment-only and never belong in browser code or repository files.

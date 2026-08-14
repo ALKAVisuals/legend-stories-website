@@ -1,23 +1,26 @@
 # LegendMural architecture
 
+Laatst inhoudelijk bijgewerkt: 14 augustus 2026.
+
 ## 1. Doel en uitgangspunten
 
-LegendMural is een statische multi-page storefront met server-side commerce, een Neon Postgres order-store en Netlify Function-adapters voor checkout, webhook en orderstatus.
+LegendMural is een statische multi-page storefront met server-side commerce, een Neon Postgres order-store en Netlify Function-adapters voor checkout, capture en orderstatus.
 
-De architectuur kiest bewust voor:
+De huidige doelarchitectuur kiest bewust voor:
 
 - snelle statische pagina’s;
 - centrale product- en commerce-data;
 - reproduceerbare productpagina’s;
 - zo weinig mogelijk browservertrouwen;
-- provider-neutrale servercontracten;
+- duurzame eigen orderopslag in Neon;
+- PayPal als enige beoogde payment provider voor launch;
 - kleine, gecontroleerde infrastructuurstappen;
 - permanente validatie van kritieke aannames;
 - één production host: Netlify.
 
 GitHub wordt gebruikt voor broncode, branches, PR’s, CI en reviews. GitHub Pages is geen parallel production target.
 
-De storefront blijft fail-closed wanneer noodzakelijke betaal- of databaseconfiguratie ontbreekt. Live Stripe-modus wordt niet automatisch geactiveerd.
+De storefront blijft fail-closed wanneer noodzakelijke betaal- of databaseconfiguratie ontbreekt. PayPal Live wordt niet automatisch geactiveerd.
 
 ## 2. Hoofdcomponenten
 
@@ -32,7 +35,8 @@ Verantwoordelijkheden:
 - winkelwagen en lokale voorkeuren;
 - kortingscode-invoer;
 - checkoutformulier;
-- hosted Checkout-client;
+- hosted checkout-client;
+- PayPal approval/return handling;
 - verified order-return UI;
 - adaptieve media- en videoloading.
 
@@ -45,7 +49,7 @@ De browser berekent bedragen voor presentatie, maar die bedragen zijn nooit auto
 Belangrijke gegevens:
 
 - product-ID en slug;
-- pagina en canonical URL;
+- pagina-identiteit;
 - naam en beschrijving;
 - prijs en valuta;
 - beschikbaarheid;
@@ -66,7 +70,7 @@ catalogus + presentatiemanifest + gedeelde template
               live root-HTML + validatie
 ```
 
-De live productpagina’s moeten byte-identiek opnieuw gegenereerd kunnen worden. Handmatige afwijkingen worden afgekeurd.
+De live productpagina’s moeten reproduceerbaar opnieuw gegenereerd kunnen worden. Handmatige afwijkingen worden afgekeurd.
 
 ### Commercebeleid
 
@@ -85,100 +89,128 @@ Deze regels worden zowel door browservalidatie als server-side orderquotes gebru
 
 De server-side orderquote ontvangt een minimale winkelwagenaanvraag en:
 
-1. valideert product-ID’s en aantallen;
+1. valideert product-ID’s, varianten en aantallen;
 2. zoekt productdata opnieuw op in de centrale catalogus;
 3. negeert browsernamen, browserprijzen en browsertotalen;
 4. past korting en verzending centraal toe;
 5. rekent alles om naar gehele eurocenten;
-6. retourneert de enige geldige basis voor Checkout en orderopslag.
+6. retourneert de enige geldige basis voor payment en orderopslag.
 
-### Stripe Checkout-boundary
+### PayPal boundary
 
-De Stripe-laag:
+De PayPal-laag is sandbox-first en bestaat momenteel uit:
 
-- accepteert standaard alleen `sk_test_`-keys;
-- blokkeert live modus tenzij die server-side expliciet wordt toegestaan;
-- bouwt line items uit de autoritatieve quote;
-- gebruikt deterministische idempotency keys;
-- beheert success- en cancel-URL’s server-side;
-- retourneert alleen gevalideerde Stripe Checkout-URL’s.
+- `server/payments/paypal-api.mjs` voor OAuth en PayPal Orders API-verkeer;
+- server-side PayPal order creation uit de autoritatieve quote;
+- trusted PayPal approval URL-validatie in de browser;
+- server-side capture;
+- capture-resultaatvalidatie op order ID, reference, amount en currency;
+- idempotency via `PayPal-Request-Id`;
+- live-mode guardrail via `PAYPAL_ALLOW_LIVE`.
 
-Zonder een duurzame order-store wordt geen Checkout-URL teruggegeven.
+De standaard API-origin is PayPal Sandbox. De officiële live API-origin wordt alleen geaccepteerd wanneer live mode server-side expliciet is toegestaan.
+
+### Durable checkout persistence
+
+Voor een hosted checkout-response moet de bijbehorende LegendMural-order duurzaam zijn opgeslagen.
+
+De PayPal flow:
+
+1. valideert het request en berekent de autoritatieve quote;
+2. maakt/reserveert de PayPal Order met deterministische idempotency;
+3. bouwt een autoritatieve `payment_pending` orderrecord;
+4. slaat de order duurzaam op in Neon;
+5. valideert dat store-resultaat en PayPal order ID bij elkaar horen;
+6. retourneert pas daarna de approval URL aan de browser.
 
 ### Order-store contract
 
-Alle servergrenzen gebruiken één centraal order-store capability contract voor:
+De codebase heeft één centrale order-store grens voor duurzame orderopslag en orderstatus. Provider-neutrale onderdelen moeten behouden blijven, ook wanneer de tijdelijke Stripecode later wordt verwijderd.
 
-- pending Checkout-orders opslaan;
-- Stripe-events atomair verwerken;
-- orderstatus veilig opvragen.
-
-Een provider-neutrale conformance-suite valideert iedere adapter op:
+Belangrijke eigenschappen:
 
 - idempotente ordercreatie;
 - conflictbehandeling;
 - detached reads;
 - concurrente identieke writes;
-- dubbele Stripe-events;
-- ontbrekende orders.
+- transactionele statusupdates;
+- consistente orderidentiteit;
+- privacy-minimale statusresponses.
 
 ### Neon Postgres-adapter
 
-Neon Postgres is de gekozen duurzame order-store.
+Neon Postgres is de duurzame LegendMural order-store.
 
-De adapter gebruikt:
+De adapter gebruikt onder andere:
 
 - TLS-only Neon-URL’s;
 - SERIALIZABLE transacties;
 - row locking;
 - optimistische versiecontroles;
-- atomaire Stripe-eventreservering;
 - expliciete JSONB-serialisatie;
 - bounded retries voor retryable serializable conflicts;
 - gescheiden migratie- en runtimecredentials waar de omgeving dit ondersteunt.
 
-De echte geïsoleerde integratietest is uitgevoerd. Migraties, provider-neutrale conformance en concurrent gedrag tegen echte PostgreSQL zijn gevalideerd. Voor productie blijft een dedicated least-privilege runtime-rol vereist.
+De echte geïsoleerde integratietest is uitgevoerd. Migraties, provider-neutrale conformance en concurrent gedrag tegen echte PostgreSQL zijn gevalideerd. Voor productie blijven een dedicated least-privilege runtime-rol, aparte productieomgeving en backup-/privacybeleid vereist.
+
+### PayPal capture persistence
+
+Na approval wordt PayPal niet door de browser als betaald verklaard. De server:
+
+1. controleert de lokale orderreference en PayPal order ID;
+2. haalt de opgeslagen pending order op;
+3. weigert mismatches;
+4. capturet via de PayPal API;
+5. valideert amount/currency/reference/order ID;
+6. verwerkt de capture idempotent in Neon;
+7. retourneert alleen een `paid` resultaat wanneer de store de betaalde order heeft bevestigd.
+
+Een reeds betaalde order kan veilig als duplicate capture-resultaat terugkomen zonder tweede ordermutatie.
+
+### PayPal webhook — nog te implementeren
+
+De huidige create/capture flow is nog niet de volledige productiearchitectuur.
+
+Voor productie moet een PayPal webhook/reconciliationlaag worden toegevoegd die:
+
+- PayPal events server-side verifieert;
+- event- en paymentidentiteit tegen de opgeslagen order controleert;
+- amount, currency, mode en provider valideert;
+- duplicate deliveries idempotent verwerkt;
+- betaalde orders niet laat regresseren;
+- Neon kan reconciliëren wanneer de browserreturn wegvalt;
+- geen secrets of onnodige gevoelige payloads logt.
 
 ### Netlify Function-adapters
 
-`netlify/functions/` bevat dunne adapters voor:
+`netlify/functions/` bevat voor de doelarchitectuur onder andere dunne adapters voor:
 
-- `create-checkout-session.mjs`;
-- `stripe-webhook.mjs`;
+- `create-paypal-order.mjs`;
+- `capture-paypal-order.mjs`;
 - `order-status.mjs`.
 
-De adapters gebruiken de bestaande serverhandlers en één gedeelde Neon order-store. `netlify.toml` publiceert same-origin routes:
+`netlify.toml` publiceert de PayPal/runtime routes:
 
 ```text
-/api/checkout
+/api/paypal/checkout
+/api/paypal/capture
 /api/order-status
-/api/stripe-webhook
 ```
 
 De Netlify-build draait op Node.js 22. Ontbrekende of ongeldige configuratie faalt gesloten.
 
-### Stripe webhook
-
-De webhookboundary:
-
-- valideert de handtekening op de exacte raw body;
-- gebruikt HMAC-SHA256 en timing-safe vergelijking;
-- weigert te oude, gemanipuleerde of ongeldige events;
-- controleert reference, session ID, bedrag, valuta en test/live modus;
-- verwerkt dubbele events idempotent;
-- voorkomt regressie van reeds betaalde orders.
-
 ### Verified order return
 
-De returnpagina vertrouwt de querystring niet als betalingsbewijs.
+De returnpagina vertrouwt de URL nooit als betalingsbewijs.
 
 De browser:
 
-1. vergelijkt de teruggekeerde Checkout Session met eerder opgeslagen sessiedata;
-2. vraagt orderstatus op via het serverendpoint;
-3. verwacht een exacte match op orderreferentie en Checkout Session;
-4. leegt alleen bij een serverbevestigde `paid`-status de Checkout-gerelateerde browserdata;
-5. behoudt de winkelwagen bij pending, failed, expired of onbereikbare status.
+1. gebruikt de eerder opgeslagen orderreference en PayPal order ID;
+2. laat de server capture/verify uitvoeren waar vereist;
+3. vraagt orderstatus via het serverendpoint op;
+4. verwacht een exacte match op orderreference en payment session/order ID;
+5. leegt alleen bij serverbevestigde `paid`-status de checkoutgerelateerde browserdata;
+6. behoudt de cart bij pending, failed, expired of onbereikbare status.
 
 ### Cart image recovery
 
@@ -191,24 +223,38 @@ De medialaag gebruikt:
 - actieve-reference audits;
 - duplicate- en orphan-detectie;
 - metadata-inspectie via FFprobe;
-- WebP-derivatives met SSIM- en grootteguardrails;
+- WebP-derivatives met kwaliteits- en grootteguardrails;
 - geoptimaliseerde H.264-video’s met SSIM/PSNR-grenzen;
 - posters en `preload="none"`;
 - viewport-, visibility-, Reduced Motion- en Save-Data-beleid.
 
 Originele transparante product- en printbronnen blijven behouden.
 
-## 3. Build- en quality-architectuur
+## 3. Tijdelijke legacy Stripe-laag
+
+De repository bevat nog Stripecode uit de eerdere architectuur. Onder andere bestaan nog legacy servermodules, Netlify fallbackroutes, tests en validators.
+
+Deze code is **geen onderdeel van de gewenste eindarchitectuur**.
+
+Zij blijft tijdelijk staan totdat:
+
+1. PayPal webhook/reconciliation is geïmplementeerd;
+2. PayPal Sandbox + Neon staging end-to-end groen is;
+3. capture, return, duplicate events en foutpaden aantoonbaar stabiel zijn.
+
+Daarna wordt Stripe in een aparte PR verwijderd. Provider-neutrale commerce-, order-, database- en securitycomponenten moeten daarbij behouden blijven.
+
+## 4. Build- en quality-architectuur
 
 Vite bouwt iedere root-HTML-pagina als afzonderlijke multi-page entry. De standaard build:
 
 1. genereert de runtime-productregistratie;
 2. bouwt alle HTML-pagina’s en assets;
 3. kopieert benodigde browserruntimebestanden en geverifieerde runtime-assets;
-4. finaliseert de runtime-productregistratie met de actuele gebouwde afbeelding-URL’s;
+4. finaliseert runtimedata met actuele gebouwde asset-URL’s;
 5. valideert de uiteindelijke productie-output.
 
-De quality gate draait op Node.js 20 en controleert:
+De quality gate draait op Node.js 20 en controleert onder andere:
 
 - repository- en linkintegriteit;
 - SEO en metadata;
@@ -217,14 +263,16 @@ De quality gate draait op Node.js 20 en controleert:
 - catalogus en productpagina’s;
 - browsercommerce;
 - cart-controls en image fallback;
-- orderquote en betalingscontracten;
+- orderquote en paymentcontracten;
 - databasecontracten en Neon-harness;
 - unit tests;
 - productiebuild.
 
+Enkele checks heten nog `validate:stripe-*` zolang de legacy Stripe-code bewust aanwezig blijft. Die namen/code worden pas in de latere Stripe-removal PR opgeschoond.
+
 Een aparte workflow controleert de Netlify-build op Node.js 22.
 
-## 4. Veiligheidsgrenzen
+## 5. Veiligheidsgrenzen
 
 ### Browser
 
@@ -241,13 +289,13 @@ Mag nooit de autoriteit zijn voor:
 
 - secrets mogen niet in commits, logs, issues of PR’s verschijnen;
 - normale workflows gebruiken `contents: read`;
-- tijdelijke schrijfworkflows moeten vóór merge worden verwijderd of teruggebracht naar read-only;
+- tijdelijke schrijfworkflows moeten vóór merge worden verwijderd of permanent veilig worden gemaakt;
 - GitHub Pages wordt niet gebruikt als alternatieve production host.
 
 ### Database
 
-- migraties gebruiken een aparte directe verbinding;
-- runtime gebruikt een gepoolde verbinding;
+- test en productie blijven gescheiden;
+- runtime gebruikt een gepoolde TLS-verbinding;
 - productie gebruikt een dedicated least-privilege runtime-rol;
 - integratietests gebruiken alleen synthetische data;
 - productiegegevens mogen nooit in de integratieomgeving worden geplaatst.
@@ -256,44 +304,57 @@ Mag nooit de autoriteit zijn voor:
 
 - Netlify is de enige beoogde production host;
 - test- en productievariabelen worden gescheiden;
-- live Stripe-modus vereist een aparte expliciete goedkeuring;
-- productiecanonical en domeinwijzigingen worden afzonderlijk beoordeeld.
+- PayPal Live vereist een aparte expliciete goedkeuring;
+- definitief domein/canonical/SEO wordt als aparte launchfase behandeld.
 
-## 5. Deploymentarchitectuur
+## 6. Deploymentarchitectuur
 
-De staging-/productiearchitectuur is:
+De huidige stagingdoelarchitectuur is:
 
 ```text
 Browser storefront
-    ├── POST /api/checkout ───────┐
-    ├── POST /api/order-status ───┼── Netlify Functions
-    └── Stripe return page ───────┘        │
-                                           ├── Stripe Checkout API
-Stripe webhook ────────────────────────────┤
-                                           └── Neon Postgres
+    ├── POST /api/paypal/checkout ─┐
+    ├── POST /api/paypal/capture ──┼── Netlify Functions
+    └── POST /api/order-status ────┘        │
+                                            ├── PayPal Orders API
+                                            └── Neon Postgres
 ```
 
-Staging gebruikt uitsluitend Stripe-testmodus en een geïsoleerde Neon-omgeving. Productie krijgt aparte Neon-, Stripe- en Netlifyconfiguraties.
+Voor productie wordt toegevoegd:
 
-## 6. Beslissingen die nog openstaan
+```text
+PayPal webhook
+    ↓
+Netlify webhook Function
+    ↓
+verification + idempotent reconciliation
+    ↓
+Neon Postgres
+```
 
-- definitieve productie-Neonbranch en backupstrategie;
-- dedicated productie runtime-rol en privileges;
+Staging gebruikt uitsluitend PayPal Sandbox en een geïsoleerde Neon-omgeving. Productie krijgt aparte Neon-, PayPal- en Netlifyconfiguraties.
+
+## 7. Openstaande architectuurbeslissingen/werk
+
+- PayPal webhook/reconciliation ontwerp en implementatie;
+- dedicated productie-Neonbranch/omgeving;
+- productie runtime-rol en privileges;
+- backup-/restorestrategie;
+- privacyretentie voor klant- en ordergegevens;
 - definitief publiek domein en canonical/sitemapbeleid;
 - monitoring, logging en alerting;
 - operationele orderadministratie en supportflow;
 - refunds, disputes en handmatige ordercorrecties;
-- privacyretentie voor klant- en ordergegevens;
-- definitieve productieactivering van Stripe live-modus.
+- gecontroleerde Stripe-removal na bewezen PayPal staging.
 
-## 7. Niet automatisch geactiveerd door repositorycode
+## 8. Niet automatisch geactiveerd door repositorycode
 
 De repository activeert niet zelfstandig:
 
 - productie-Neoncredentials;
 - Netlify production environment variables;
-- Stripe secrets;
-- live betalingen;
+- PayPal secrets;
+- PayPal Live;
 - productiegegevens;
 - een definitief publiek domein;
 - klantaccounts of een adminportal.

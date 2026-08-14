@@ -1,5 +1,6 @@
 # LegendMural uses Netlify as the single intended production host.
 # GitHub Pages is not maintained as a parallel production target.
+# PayPal is the only intended launch payment provider.
 # PayPal remains sandbox-only unless live mode is explicitly enabled at deployment.
 
 [build]
@@ -17,7 +18,9 @@
   node_bundler = "esbuild"
   included_files = ["data/products/catalog.json"]
 
-# Stripe fallback remains available while PayPal is evaluated.
+# Legacy Stripe fallback routes are retained temporarily until PayPal Sandbox +
+# Neon staging, including webhook/reconciliation, is fully proven. They are not
+# part of the intended launch architecture and will be removed in a later PR.
 [[redirects]]
   from = "/api/checkout"
   to = "/.netlify/functions/create-checkout-session"

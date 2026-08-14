@@ -1,60 +1,57 @@
-# Order Store Conformance
+# Order store conformance
+
+Laatst inhoudelijk bijgewerkt: 14 augustus 2026.
 
 ## Purpose
 
-Checkout creation, Stripe webhook processing and the browser return flow now depend on one logical order store. A future database adapter must implement all three capabilities consistently:
+LegendMural uses Neon Postgres as the durable order database. The order-store layer protects idempotent pending-order creation, safe reads and payment-state mutations under concurrency.
+
+The original conformance contract was built during the Stripe-first phase and therefore still contains a legacy `processStripeEvent` capability. That capability remains tested while legacy Stripecode is present, but **Stripe is no longer the launch payment provider**.
+
+The PayPal create/capture implementation reuses the durable pending-order and lookup capabilities and adds PayPal-specific capture persistence. A future PayPal webhook/reconciliation layer should complete the migration toward provider-neutral payment-event semantics.
+
+## Current capabilities
+
+Core order capabilities include:
 
 ```js
 {
   persistPendingCheckout(order),
-  processStripeEvent(paymentEvent, createUpdate),
-  getOrderByReference(reference),
+  getOrderByReference(reference)
 }
 ```
 
-The repository does not select or configure a database provider. The contract and conformance suite are provider-neutral.
-
-## Central capability contract
-
-`server/orders/store-contract.mjs` defines the canonical method names and validates complete or capability-specific adapters.
-
-The existing server boundaries use the same contract:
-
-- Checkout requires `persistPendingCheckout`;
-- the Stripe webhook requires `processStripeEvent`;
-- order-status lookup requires `getOrderByReference`.
-
-A partial adapter may be injected into one isolated handler during development, but a production order store must pass the complete contract.
-
-## Conformance suite
-
-`server/orders/store-conformance.mjs` exports:
+Legacy Stripe event processing still exists temporarily:
 
 ```js
-runOrderStoreConformance(createStore)
+processStripeEvent(paymentEvent, createUpdate)
 ```
 
-`createStore` must return a fresh, isolated adapter for every scenario. The suite verifies:
+PayPal capture persistence adds the capability required to transactionally persist a verified capture.
 
-1. all three required capabilities exist;
-2. a new pending order is created and can be read back exactly;
-3. an identical retry returns the same order with `created: false`;
-4. two concurrent identical writes resolve as exactly one creation and one retry;
-5. conflicting data under the same reference is rejected with `ORDER_STORE_CONFLICT`;
-6. retrieved records are detached from durable state;
-7. two concurrent deliveries of the same Stripe event apply the order update exactly once;
-8. a Stripe event for an unknown order is rejected with `ORDER_NOT_FOUND`.
+## Conformance guarantees
 
-## Required semantics
+The existing conformance suite verifies important durable-store behavior including:
 
-### `persistPendingCheckout(order)`
+1. new pending order creation;
+2. exact read-back;
+3. identical idempotent retry;
+4. concurrent identical writes resolving to one create and one retry;
+5. conflicting data under the same reference being rejected;
+6. detached returned records;
+7. transaction-safe payment mutation behavior;
+8. unknown-order payment updates being rejected.
+
+These guarantees remain relevant after Stripe removal.
+
+## `persistPendingCheckout(order)` semantics
 
 For a new reference:
 
 ```js
 {
   created: true,
-  order: completePersistedOrder,
+  order: completePersistedOrder
 }
 ```
 
@@ -63,89 +60,82 @@ For an identical idempotent retry:
 ```js
 {
   created: false,
-  order: completeExistingOrder,
+  order: completeExistingOrder
 }
 ```
 
-For a conflicting retry, reject with:
+For conflicting immutable data:
 
 ```text
 ORDER_STORE_CONFLICT
 ```
 
-The operation must be atomic. A unique reference constraint alone is not sufficient unless the adapter also loads and compares the complete immutable order payload.
+The operation must be atomic and must compare the complete immutable order payload rather than relying only on a unique key.
 
-### `processStripeEvent(paymentEvent, createUpdate)`
+## `getOrderByReference(reference)` semantics
 
-For a new event ID:
+Return the complete order or `null`. Returned objects must be detached values; mutating a returned value may not mutate durable state.
 
-```js
-{
-  duplicate: false,
-  order: updatedOrder,
-}
-```
+## Legacy `processStripeEvent`
 
-For a previously committed event ID:
+This method remains in the codebase because the older Stripe webhook implementation is deliberately retained until PayPal staging is fully proven.
 
-```js
-{
-  duplicate: true,
-  order: currentOrder,
-}
-```
+Its useful transactional properties should survive the PayPal webhook migration:
 
-The following must happen in one database transaction:
+- globally unique provider event identity;
+- duplicate event detection;
+- lock/load referenced order;
+- optimistic version enforcement;
+- event and order mutation in one transaction;
+- duplicate delivery must not apply the update twice.
 
-1. reserve or check the globally unique Stripe event ID;
-2. lock/load the referenced order;
-3. call `createUpdate(order)` only for a new event;
-4. enforce the optimistic version increment;
-5. write the updated order;
-6. mark the event ID processed;
-7. commit both changes together.
+When Stripe is removed, replace Stripe-specific naming/schema assumptions only after equivalent PayPal webhook/reconciliation behavior exists and passes real staging tests.
 
-A duplicate event must never call `createUpdate` a second time.
+## PayPal capture persistence
 
-### `getOrderByReference(reference)`
+The current PayPal flow validates and persists capture separately from the legacy Stripe event path.
 
-Return the complete order or `null`. Returned objects must be detached values; mutating a returned object may not mutate durable state.
+It must guarantee:
 
-## Reference implementation
+- reference and PayPal order ID match the reserved order;
+- amount and currency match the authoritative stored order;
+- capture is idempotent;
+- an already-paid order cannot be paid twice;
+- successful API capture is reconciled into Neon;
+- retryable database failures can be recovered without creating a second PayPal payment.
 
-`tests/support/reference-order-store.mjs` is an in-memory transactional reference used only by tests and validation. It is not a production database adapter and must never be used as durable storage.
+## Neon status
 
-## Testing a future adapter
+Neon is already selected and integrated.
 
-A provider adapter should include its own integration test:
+Completed:
 
-```js
-import { runOrderStoreConformance } from './server/orders/store-conformance.mjs';
-import { createDatabaseOrderStore } from './server/adapters/database-order-store.mjs';
+- schema/migrations;
+- real isolated database run;
+- conformance against real PostgreSQL;
+- SERIALIZABLE transaction testing;
+- row locking/version checks;
+- JSONB serialization hardening;
+- bounded retry/backoff for retryable transaction conflicts.
 
-await runOrderStoreConformance(async () => {
-  const database = await createIsolatedTestDatabase();
-  return createDatabaseOrderStore(database);
-});
-```
+For production still required:
 
-Each suite run requires an isolated schema, transaction namespace or temporary database.
+- separate production environment;
+- dedicated least-privilege runtime role;
+- backup/restore policy;
+- privacy and retention policy.
 
-## Database requirements
+## PayPal webhook migration target
 
-Any selected database must support:
+The next payment-store evolution should introduce a provider-event contract suitable for PayPal webhook reconciliation without weakening the existing transaction guarantees.
 
-- unique order references;
-- globally unique Stripe event IDs;
-- transactions spanning event and order writes;
-- row locking or equivalent serializable conflict protection;
-- optimistic order versions;
-- durable JSON or normalized storage for the immutable fulfillment payload;
-- encrypted transport, access controls, backups and retention/deletion procedures.
+Do not simply delete the old event contract first. Safe order:
 
-## Current deployment status
-
-No database adapter, credentials, secrets, serverless adapter or Netlify configuration is included. Checkout and order-status endpoint constants remain empty, so the storefront still cannot initiate a hosted payment.
+1. design PayPal webhook verification and normalized event identity;
+2. add transactional event reservation/reconciliation;
+3. prove duplicate delivery and out-of-order behavior;
+4. run PayPal Sandbox + Neon E2E;
+5. only then remove Stripe-specific event capabilities and migrations if no longer required.
 
 ## Validation
 
@@ -153,8 +143,9 @@ Run:
 
 ```bash
 npm run validate:order-store
+npm run validate:neon-order-store
 npm test
 npm run quality
 ```
 
-The validation command runs the provider-neutral suite against the transactional reference adapter. A future real adapter must run the same suite against an isolated instance of its actual database.
+The complete quality chain still exercises legacy Stripe event semantics while that implementation remains in the repository.
