@@ -25,27 +25,44 @@ function paypalHeaders(overrides = {}) {
   });
 }
 
-test('builds the official PayPal postback verification payload from headers and event JSON', () => {
+test('builds official PayPal postback metadata and preserves the raw event body', () => {
   const verification = buildPayPalWebhookVerificationPayload({
     headers: paypalHeaders(),
     rawBody,
     webhookId: '9NV123ABC456',
   });
 
-  assert.equal(verification.payload.auth_algo, 'SHA256withRSA');
-  assert.equal(verification.payload.webhook_id, '9NV123ABC456');
-  assert.equal(verification.payload.transmission_id, '69cd13f0-d67a-11e5-baa3-778b53f4ae55');
-  assert.equal(verification.payload.webhook_event.id, 'WH-TEST-EVENT-1');
+  assert.equal(verification.metadata.auth_algo, 'SHA256withRSA');
+  assert.equal(verification.metadata.webhook_id, '9NV123ABC456');
+  assert.equal(verification.metadata.transmission_id, '69cd13f0-d67a-11e5-baa3-778b53f4ae55');
   assert.equal(verification.event.event_type, 'PAYMENT.CAPTURE.COMPLETED');
+  assert.ok(verification.requestBody.endsWith(`,"webhook_event":${rawBody}}`));
+  assert.equal(JSON.parse(verification.requestBody).webhook_event.id, 'WH-TEST-EVENT-1');
+});
+
+test('preserves webhook_event formatting byte-for-byte inside the PayPal postback request', () => {
+  const formattedRawBody = '{\n  "event_type" : "PAYMENT.CAPTURE.COMPLETED",\n  "id" : "WH-FORMATTED-1",\n  "resource" : { "id" : "CAPTURE123" }\n}\n';
+  const verification = buildPayPalWebhookVerificationPayload({
+    headers: paypalHeaders(),
+    rawBody: formattedRawBody,
+    webhookId: '9NV123ABC456',
+  });
+  const marker = ',"webhook_event":';
+  const markerIndex = verification.requestBody.indexOf(marker);
+  const embeddedEvent = verification.requestBody.slice(
+    markerIndex + marker.length,
+    verification.requestBody.length - 1,
+  );
+  assert.equal(embeddedEvent, formattedRawBody);
 });
 
 test('accepts only SUCCESS from the PayPal verification endpoint', async () => {
-  let capturedPayload;
+  let capturedRequestBody;
   const result = await verifyPayPalWebhookSignature({
     paypalClient: {
       mode: 'test',
-      async verifyWebhookSignature(payload) {
-        capturedPayload = payload;
+      async verifyWebhookSignature(requestBody) {
+        capturedRequestBody = requestBody;
         return { verification_status: 'SUCCESS' };
       },
     },
@@ -57,7 +74,7 @@ test('accepts only SUCCESS from the PayPal verification endpoint', async () => {
   assert.equal(result.verified, true);
   assert.equal(result.mode, 'test');
   assert.equal(result.event.id, 'WH-TEST-EVENT-1');
-  assert.equal(capturedPayload.webhook_event.event_type, 'PAYMENT.CAPTURE.COMPLETED');
+  assert.ok(capturedRequestBody.endsWith(`,"webhook_event":${rawBody}}`));
 });
 
 test('rejects a PayPal FAILURE verification result', async () => {
