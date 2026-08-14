@@ -11,6 +11,7 @@ const paths = Object.freeze({
   checkoutFunction: new URL('../netlify/functions/create-checkout-session.mjs', import.meta.url),
   paypalCheckoutFunction: new URL('../netlify/functions/create-paypal-order.mjs', import.meta.url),
   paypalCaptureFunction: new URL('../netlify/functions/capture-paypal-order.mjs', import.meta.url),
+  paypalWebhookFunction: new URL('../netlify/functions/paypal-webhook.mjs', import.meta.url),
   webhookFunction: new URL('../netlify/functions/stripe-webhook.mjs', import.meta.url),
   statusFunction: new URL('../netlify/functions/order-status.mjs', import.meta.url),
 });
@@ -40,6 +41,7 @@ test('Netlify config builds the validated site and selects PayPal Sandbox checko
     '/api/checkout',
     '/api/paypal/checkout',
     '/api/paypal/capture',
+    '/api/paypal/webhook',
     '/api/order-status',
     '/api/stripe-webhook',
   ]) {
@@ -70,7 +72,7 @@ test('tracked browser config stays disabled and contains no credentials', async 
   assert.doesNotMatch(publicSources, /sk_(?:test|live)_|whsec_|PAYPAL_CLIENT_SECRET\s*=/i);
 });
 
-test('each Netlify commerce function injects the shared Neon runtime', async () => {
+test('each durable Netlify commerce function injects the shared Neon runtime', async () => {
   const source = await sources();
 
   assert.match(source.checkoutFunction, /getCommerceOrderStore/);
@@ -83,4 +85,13 @@ test('each Netlify commerce function injects the shared Neon runtime', async () 
   assert.match(source.webhookFunction, /paymentStore/);
   assert.match(source.statusFunction, /getCommerceOrderStore/);
   assert.match(source.statusFunction, /orderStore/);
+});
+
+test('PayPal webhook entrypoint verifies through the server API and remains fail-closed before reconciliation', async () => {
+  const source = await sources();
+
+  assert.match(source.paypalWebhookFunction, /handlePayPalWebhook/);
+  assert.match(source.paypalWebhookFunction, /createPayPalApiClient/);
+  assert.match(source.paypalWebhookFunction, /PAYPAL_WEBHOOK_ID/);
+  assert.doesNotMatch(source.paypalWebhookFunction, /getCommerceOrderStore/);
 });
