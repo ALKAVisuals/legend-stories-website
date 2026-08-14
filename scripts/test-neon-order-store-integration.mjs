@@ -3,6 +3,7 @@ import {
   createNeonOrderStore,
   validateNeonConnectionString,
 } from '../server/adapters/neon-order-store.mjs';
+import { createNeonPayPalWebhookStore } from '../server/adapters/neon-paypal-webhook-store.mjs';
 import { createPendingOrderRecord } from '../server/orders/order-status.mjs';
 import { runOrderStoreConformance } from '../server/orders/store-conformance.mjs';
 
@@ -18,6 +19,8 @@ const runtimeUrl = requireEnvironmentUrl('NEON_TEST_DATABASE_URL');
 const migrationUrl = requireEnvironmentUrl('NEON_TEST_MIGRATION_URL');
 const PAYPAL_REFERENCE = 'f'.repeat(64);
 const PAYPAL_ORDER_ID = '5O190127TN364715T';
+const PAYPAL_CAPTURE_ID = '3Y662965014333303';
+const PAYPAL_EVENT_ID = 'WH-SYNTHETIC-PAYPAL-001';
 
 async function withClient(connectionString, action) {
   const client = await createDefaultNeonClient(connectionString);
@@ -95,9 +98,10 @@ function paypalPendingOrder() {
   };
 }
 
-async function verifyPaypalProviderCompatibility() {
-  const store = createNeonOrderStore({ connectionString: runtimeUrl });
-  const persisted = await store.persistPendingCheckout(paypalPendingOrder());
+async function verifyPaypalProviderCompatibilityAndReconciliation() {
+  const orderStore = createNeonOrderStore({ connectionString: runtimeUrl });
+  const webhookStore = createNeonPayPalWebhookStore({ connectionString: runtimeUrl });
+  const persisted = await orderStore.persistPendingCheckout(paypalPendingOrder());
   if (!persisted.created || persisted.order.paymentSessionId !== PAYPAL_ORDER_ID) {
     throw new Error('PayPal pending order could not be persisted through the runtime store.');
   }
@@ -110,25 +114,37 @@ async function verifyPaypalProviderCompatibility() {
     if (providerResult.rows?.[0]?.payment_provider !== 'paypal') {
       throw new Error('Neon did not derive payment_provider=paypal for the PayPal order ID.');
     }
+  });
 
-    const eventResult = await client.query(`
-      INSERT INTO legend_commerce.paypal_webhook_events (
-        event_id, event_type, order_reference, paypal_order_id,
-        paypal_capture_id, mode, paypal_created_at, processed_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING event_id
-    `, [
-      'WH-SYNTHETIC-PAYPAL-001',
-      'CHECKOUT.ORDER.APPROVED',
-      PAYPAL_REFERENCE,
-      PAYPAL_ORDER_ID,
-      null,
-      'test',
-      1_800_100_010,
-      1_800_100_011,
-    ]);
-    if (eventResult.rows?.[0]?.event_id !== 'WH-SYNTHETIC-PAYPAL-001') {
-      throw new Error('Runtime role could not reserve a PayPal webhook event.');
+  const webhookEvent = {
+    eventId: PAYPAL_EVENT_ID,
+    eventType: 'PAYMENT.CAPTURE.COMPLETED',
+    reference: PAYPAL_REFERENCE,
+    orderId: PAYPAL_ORDER_ID,
+    captureId: PAYPAL_CAPTURE_ID,
+    mode: 'test',
+    createdAt: 1_800_100_010,
+    mutationAt: 1_800_100_009,
+    amountTotal: 4500,
+    currency: 'EUR',
+    targetStatus: 'paid',
+  };
+  const first = await webhookStore.processPaypalWebhookEvent(webhookEvent);
+  if (first.duplicate || first.order.status !== 'paid' || first.order.version !== 1) {
+    throw new Error('PayPal completed webhook did not reconcile the pending order to paid.');
+  }
+  const duplicate = await webhookStore.processPaypalWebhookEvent(webhookEvent);
+  if (!duplicate.duplicate || duplicate.order.status !== 'paid' || duplicate.order.version !== 1) {
+    throw new Error('Duplicate PayPal webhook was not idempotent.');
+  }
+
+  await withClient(runtimeUrl, async (client) => {
+    const eventResult = await client.query(
+      'SELECT event_id FROM legend_commerce.paypal_webhook_events WHERE event_id = $1',
+      [PAYPAL_EVENT_ID],
+    );
+    if (eventResult.rows?.[0]?.event_id !== PAYPAL_EVENT_ID) {
+      throw new Error('Runtime role could not persist the PayPal webhook event reservation.');
     }
   });
 }
@@ -142,6 +158,7 @@ async function inspectRuntimePrivilegeBoundary() {
       'TRUNCATE TABLE legend_commerce.orders',
       'DELETE FROM legend_commerce.paypal_webhook_events WHERE false',
       'TRUNCATE TABLE legend_commerce.paypal_webhook_events',
+      "UPDATE legend_commerce.paypal_webhook_events SET event_type = event_type WHERE event_id = 'none'",
     ]) {
       try {
         await client.query(statement);
@@ -163,7 +180,7 @@ try {
   });
 
   await clearSyntheticRecords();
-  await verifyPaypalProviderCompatibility();
+  await verifyPaypalProviderCompatibilityAndReconciliation();
   const leastPrivilegeVerified = await inspectRuntimePrivilegeBoundary();
 
   console.log(
@@ -173,7 +190,9 @@ try {
     console.log(`- ${check}`);
   }
   console.log('- PayPal order IDs persist with derived payment_provider=paypal');
-  console.log('- PayPal webhook event ledger accepts runtime event reservations');
+  console.log('- PayPal completed webhook reconciles pending -> paid');
+  console.log('- duplicate PayPal webhook remains idempotent');
+  console.log('- PayPal webhook event ledger accepts immutable runtime reservations');
 
   if (leastPrivilegeVerified) {
     console.log('- least-privilege runtime role');
