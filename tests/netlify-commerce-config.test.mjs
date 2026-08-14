@@ -87,11 +87,13 @@ test('each durable Netlify commerce function injects the shared Neon runtime', a
   assert.match(source.statusFunction, /orderStore/);
 });
 
-test('PayPal webhook entrypoint verifies through the server API and remains fail-closed before reconciliation', async () => {
+test('PayPal webhook entrypoint verifies and conditionally wires the shared Neon reconciler', async () => {
   const source = await sources();
 
   assert.match(source.paypalWebhookFunction, /handlePayPalWebhook/);
   assert.match(source.paypalWebhookFunction, /createPayPalApiClient/);
   assert.match(source.paypalWebhookFunction, /PAYPAL_WEBHOOK_ID/);
-  assert.doesNotMatch(source.paypalWebhookFunction, /getCommerceOrderStore/);
+  assert.match(source.paypalWebhookFunction, /getCommerceOrderStore/);
+  assert.match(source.paypalWebhookFunction, /createPayPalWebhookReconciler/);
+  assert.match(source.paypalWebhookFunction, /NEON_DATABASE_URL/);
 });
