@@ -1,9 +1,11 @@
 import { readFile } from 'node:fs/promises';
 
 const ROOT = new URL('../', import.meta.url);
-const [adapter, migration, decision] = await Promise.all([
+const [adapter, baseMigration, paypalMigration, paypalGrants, decision] = await Promise.all([
   readFile(new URL('server/adapters/neon-order-store.mjs', ROOT), 'utf8'),
   readFile(new URL('server/db/migrations/001_create_order_store.sql', ROOT), 'utf8'),
+  readFile(new URL('server/db/migrations/003_add_paypal_reconciliation.sql', ROOT), 'utf8'),
+  readFile(new URL('server/db/migrations/004_grant_paypal_reconciliation_runtime.sql', ROOT), 'utf8'),
   readFile(new URL('docs/adr/0001-neon-postgres-order-store.md', ROOT), 'utf8'),
 ]);
 
@@ -30,7 +32,7 @@ requireSource(
 requireSource(
   adapter,
   'FOR UPDATE',
-  'Stripe event processing and idempotent retries must lock the order row.',
+  'Payment event processing and idempotent retries must lock the order row.',
 );
 requireSource(
   adapter,
@@ -83,7 +85,39 @@ for (const fragment of [
   'customer jsonb NOT NULL',
   'items jsonb NOT NULL',
 ]) {
-  requireSource(migration, fragment, `Database migration is missing required contract: ${fragment}`);
+  requireSource(baseMigration, fragment, `Base database migration is missing required contract: ${fragment}`);
+}
+
+for (const fragment of [
+  'DROP CONSTRAINT IF EXISTS orders_session_format',
+  'ADD COLUMN IF NOT EXISTS payment_provider text',
+  'GENERATED ALWAYS AS',
+  "THEN 'stripe'::text",
+  "THEN 'paypal'::text",
+  'CHECK (payment_provider IS NOT NULL)',
+  "CHECK (payment_provider IN ('stripe', 'paypal'))",
+  'CREATE TABLE IF NOT EXISTS legend_commerce.paypal_webhook_events',
+  'event_id text PRIMARY KEY',
+  'order_reference text NOT NULL',
+  'paypal_order_id text NOT NULL',
+  "CHECK (mode IN ('test', 'live'))",
+  'Full provider payloads are intentionally not stored',
+]) {
+  requireSource(paypalMigration, fragment, `PayPal reconciliation migration is missing required contract: ${fragment}`);
+}
+
+requireSource(
+  paypalGrants,
+  'GRANT SELECT, INSERT',
+  'PayPal webhook ledger must expose only read/insert runtime privileges.',
+);
+requireSource(
+  paypalGrants,
+  'ON TABLE legend_commerce.paypal_webhook_events',
+  'PayPal webhook runtime grant must target only its event ledger.',
+);
+if (/\b(DELETE|TRUNCATE|CREATE|DROP|ALTER)\b/.test(paypalGrants)) {
+  errors.push('PayPal webhook runtime grants must not include destructive or DDL privileges.');
 }
 
 requireSource(
@@ -108,4 +142,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Neon order-store validation passed with a dormant TLS-only adapter, serializable transactions, row locking and versioned Stripe-event processing.');
+console.log('Neon order-store validation passed with TLS-only access, serializable writes, provider-derived payment identity and a least-privilege PayPal reconciliation ledger.');
