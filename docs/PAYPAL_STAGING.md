@@ -50,7 +50,7 @@ idempotente event reservation + order lock
 Neon reconciliation
 ```
 
-`PAYMENT.CAPTURE.COMPLETED` kan een gemiste browserreturn herstellen naar `paid`. `CHECKOUT.ORDER.APPROVED` kan recovery-capture uitvoeren met dezelfde stabiele `PayPal-Request-Id` als de browsercapture. `PENDING` en `DECLINED` mogen een `paid` order nooit terugzetten. Refund/reversal-events worden voorlopig alleen als eventidentiteit geregistreerd; een volledige refund/reversal order-state-machine hoort in een aparte operationele wijziging.
+`PAYMENT.CAPTURE.COMPLETED` kan een gemiste browserreturn herstellen naar `paid`. `CHECKOUT.ORDER.APPROVED` kan recovery-capture uitvoeren met dezelfde stabiele `PayPal-Request-Id` als de browsercapture. `PENDING` en `DECLINED` mogen een `paid` order nooit terugzetten. `PAYMENT.CAPTURE.REFUNDED` en `PAYMENT.CAPTURE.REVERSED` worden in deze launchfase na geldige signature bewust als unsupported genegeerd; een volledige refund/reversal order-state-machine hoort in een aparte operationele wijziging.
 
 ## Staginggrenzen
 
@@ -122,7 +122,7 @@ Controleer na een verse Netlify stagingdeploy:
 
 De listener gebruikt PayPal's officiële `POST /v1/notifications/verify-webhook-signature` postbackmethode. Daarvoor worden de PayPal transmission/signature headers, de environment-specifieke webhook-ID en het ontvangen event aan PayPal aangeboden. Alleen `verification_status: SUCCESS` wordt geaccepteerd.
 
-Bewaar de ontvangen request body als raw tekst voordat JSON wordt geparsed. Dit houdt de ontvangstlaag geschikt voor cryptografische/self-verification controles en voorkomt dat downstream code de oorspronkelijke body opnieuw moet reconstrueren.
+De ontvangen request body wordt eerst als raw tekst bewaard. Voor de PayPal postback wordt `webhook_event` vervolgens **exact met die ontvangen JSON-tekst** in de verificatiebody ingevoegd. Parse → reserialize is niet toegestaan voor de verificatiebody, omdat PayPal expliciet waarschuwt dat afwijkingen in formatting of content de signature-verificatie kunnen laten falen. Dezelfde raw body mag daarnaast afzonderlijk worden geparsed voor onze eigen eventverwerking nadat de ontvangstvalidatie is uitgevoerd.
 
 Let op: PayPal's webhook simulator verstuurt mockevents die niet via de postback `verify-webhook-signature` endpoint verifieerbaar zijn. Gebruik voor de echte signature/reconciliation acceptance test daarom een werkelijk Sandbox-event dat door de gekoppelde Sandbox REST app wordt gegenereerd.
 
@@ -183,7 +183,8 @@ Gebruik één bestaand product en synthetische klantdata.
 - verkeerd amount/currency levert geen `paid` mutatie op;
 - verkeerd provider/mode levert geen ordermutatie op;
 - ontbrekende of ongeldige PayPal webhook-signature headers leveren geen ordermutatie op;
-- een `FAILURE` signature response van PayPal levert geen ordermutatie op.
+- een `FAILURE` signature response van PayPal levert geen ordermutatie op;
+- een niet-ondersteund maar geldig geverifieerd event veroorzaakt geen ordermutatie.
 
 ### Fout- en retrygedrag
 
@@ -204,17 +205,19 @@ Gebruik één bestaand product en synthetische klantdata.
 De server-side webhooklaag bevat nu:
 
 - officiële PayPal postback signature-verificatie;
-- raw-body ontvangst;
+- raw-body ontvangst en exact-preserving postback van `webhook_event`;
 - environment-specifieke webhook-ID;
 - provider-, mode-, reference- en PayPal order-ID matching;
-- amount/currency matching voor events die betaalbedragen dragen;
+- amount/currency matching voor de ondersteunde capture-events;
 - `SERIALIZABLE` transacties en `FOR UPDATE` order locking;
 - durable `paypal_webhook_events` event-ID reservation;
 - duplicate-event bescherming;
 - recovery via `PAYMENT.CAPTURE.COMPLETED`;
 - recovery-capture via `CHECKOUT.ORDER.APPROVED`;
+- gecontroleerde foutstatus via `CHECKOUT.PAYMENT-APPROVAL.REVERSED`;
 - bescherming tegen statusregressie van `paid`;
-- minimale ledger zonder volledige PayPal-/klantpayloads.
+- minimale ledger zonder volledige PayPal-/klantpayloads;
+- verified-but-ignored gedrag voor refund/reversal-events totdat hun financiële state-machine apart is ontworpen.
 
 De resterende launch blocker is nu **bewijs in echte PayPal Sandbox + Neon staging**, niet het ontbreken van de reconciliationcode zelf.
 
