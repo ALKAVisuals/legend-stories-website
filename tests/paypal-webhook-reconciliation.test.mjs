@@ -136,7 +136,7 @@ test('already paid approved order does not call PayPal capture again', async () 
   assert.equal(captureCalls, 0);
 });
 
-test('pending and declined events map to non-paid states while refunds are ledger-only', async () => {
+test('pending and declined V2 events map to non-paid states', async () => {
   const targets = [];
   const reconciler = createPayPalWebhookReconciler({
     orderStore: {
@@ -151,10 +151,23 @@ test('pending and declined events map to non-paid states while refunds are ledge
 
   await reconciler({ event: captureEvent('PAYMENT.CAPTURE.PENDING', 'PENDING'), mode: 'test' });
   await reconciler({ event: captureEvent('PAYMENT.CAPTURE.DECLINED', 'DECLINED'), mode: 'test' });
-  const refunded = captureEvent('PAYMENT.CAPTURE.REFUNDED', 'REFUNDED');
-  delete refunded.resource.amount;
-  await reconciler({ event: refunded, mode: 'test' });
-  assert.deepEqual(targets, ['payment_processing', 'payment_failed', null]);
+  assert.deepEqual(targets, ['payment_processing', 'payment_failed']);
+});
+
+test('refund and reversal events stay verified-but-ignored until their state machine exists', async () => {
+  let storeCalls = 0;
+  const reconciler = createPayPalWebhookReconciler({
+    orderStore: {
+      async getOrderByReference() { storeCalls += 1; },
+      async processPaypalWebhookEvent() { storeCalls += 1; },
+    },
+    paypalClient: { mode: 'test' },
+  });
+  for (const eventType of ['PAYMENT.CAPTURE.REFUNDED', 'PAYMENT.CAPTURE.REVERSED']) {
+    const result = await reconciler({ event: { id: `WH-${eventType}`, event_type: eventType }, mode: 'test' });
+    assert.equal(result.ignored, true);
+  }
+  assert.equal(storeCalls, 0);
 });
 
 test('mismatched approved amount is rejected before recovery capture', async () => {
