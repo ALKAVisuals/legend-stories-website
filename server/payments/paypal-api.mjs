@@ -223,5 +223,11 @@ export function createPayPalApiClient({
       const orderId = normalizePayPalOrderId(orderIdInput);
       return paypalRequest(`/v2/checkout/orders/${orderId}`);
     },
+    async verifyWebhookSignature(payload) {
+      return paypalRequest('/v1/notifications/verify-webhook-signature', {
+        method: 'POST',
+        body: payload,
+      });
+    },
   });
 }
