@@ -1,10 +1,17 @@
 # Development and release process
 
+Laatst inhoudelijk bijgewerkt: 14 augustus 2026.
+
 ## 1. Doel
 
-Dit document beschrijft hoe LegendMural veilig wordt ontwikkeld, gevalideerd en vrijgegeven. De repository bevat storefrontcode, server-side commerce, een Neon order-store en Netlify Function-adapters. Iedere wijziging moet daarom duidelijk aangeven of zij frontend, repositorylogica, testinfrastructuur, staging of productie raakt.
+Dit document beschrijft hoe LegendMural veilig wordt ontwikkeld, gevalideerd en vrijgegeven. De repository bevat storefrontcode, server-side commerce, een Neon order-store en Netlify Function-adapters.
 
-Netlify is de enige beoogde production host. GitHub wordt gebruikt voor broncode, branches, PR’s, CI en reviews; GitHub Pages wordt niet als parallel production target onderhouden.
+Definitieve launchrichting:
+
+- Netlify = enige production host;
+- PayPal = enige beoogde payment provider;
+- Neon = duurzame LegendMural orderdatabase;
+- Stripe = tijdelijke legacy/fallbackcode totdat PayPal staging volledig bewezen is.
 
 ## 2. Lokale omgeving
 
@@ -22,7 +29,7 @@ npm ci
 npm run dev
 ```
 
-De lokale Vite-server gebruikt standaard poort 3001. De Netlify-build zelf draait op Node.js 22 en heeft een aparte compatibiliteitsworkflow.
+De lokale Vite-server gebruikt standaard poort 3001. De Netlify-build draait op Node.js 22 en heeft een aparte compatibiliteitsworkflow.
 
 ## 3. Branch- en PR-beleid
 
@@ -32,20 +39,20 @@ Voorbeelden:
 
 ```text
 fix/cart-image-recovery
-refactor/inline-handler-audit
-fix/checkout-focus-management
+fix/paypal-capture-idempotency
+feat/paypal-webhook
+chore/remove-legacy-stripe
 perf/responsive-product-derivatives
-feat/netlify-staging-hardening
 ```
 
 Iedere PR bevat minimaal:
 
 - wat er is gewijzigd;
 - waarom dit nodig is;
-- welke gebruikers- of ontwikkelaarsimpact bestaat;
+- gebruikers-/ontwikkelaarsimpact;
 - wat bewust niet is gewijzigd;
 - welke checks zijn uitgevoerd;
-- veiligheidsgrenzen en bekende resterende risico’s.
+- veiligheidsgrenzen en resterende risico’s.
 
 Geen wijziging wordt rechtstreeks op `main` uitgevoerd. Merge gebeurt alleen na expliciete goedkeuring.
 
@@ -58,7 +65,7 @@ npm ci
 npm run quality
 ```
 
-De volledige quality chain omvat repository-, CSS-, dependency-, media-, product-, commerce-, Stripe-, Neon-, unit- en buildvalidatie.
+De huidige quality chain bevat repository-, CSS-, dependency-, media-, product-, commerce-, Neon-, unit- en buildvalidatie. Enkele Stripe-specifieke validators blijven tijdelijk actief zolang de legacy Stripecode nog aanwezig is.
 
 Daarnaast zijn er aparte GitHub Actions voor accessibility/purchase flow en Node 22 Netlify-compatibiliteit.
 
@@ -99,137 +106,191 @@ Wijzigingen aan prijs, korting, shipping of checkout vereisen altijd:
 - controle van idempotency en conflictsituaties;
 - catalogusbrede validatie voor alle 111 producten.
 
-Minimale checks:
+Minimale huidige checks:
 
 ```bash
 npm run validate:commerce-runtime
 npm run validate:order-security
-npm run validate:stripe-checkout
 npm run validate:browser-checkout
 npm run validate:checkout-persistence
-npm run validate:stripe-webhook
 npm run validate:order-return
+npm run validate:neon-order-store
 npm test
 ```
 
 De browser mag nooit de autoriteit worden voor een geldbedrag of betaalstatus.
 
-## 7. Media wijzigen
+## 7. PayPal wijzigen
 
-### Algemene regels
+PayPal is de enige beoogde payment provider voor launch.
+
+Behouden veiligheidsgrenzen:
+
+- Sandbox is standaard;
+- Client ID/Secret alleen server-side;
+- PayPal API-origin wordt op officiële origins beperkt;
+- live API is geblokkeerd tenzij `PAYPAL_ALLOW_LIVE=true` expliciet server-side is ingesteld;
+- browserprijzen worden nooit naar PayPal als autoriteit overgenomen;
+- create/capture gebruikt idempotency;
+- capture moet bij de opgeslagen orderreference, PayPal order ID, amount en currency passen;
+- een `paid` status komt uitsluitend uit server-side PayPal/Neon verwerking.
+
+Secrets worden nooit in GitHub, PR’s, logs of chat geplaatst.
+
+## 8. Media wijzigen
 
 - verwijder alleen media na een bewezen referentieaudit;
 - overschrijf geen originele product- of printbronnen;
 - gebruik derivatives voor browserdelivery;
-- behoud URL’s wanneer bestaande browserdata ervan afhankelijk kan zijn of voeg een gecontroleerde migratie/fallback toe;
+- behoud bestaande URLs of voeg gecontroleerde fallback/migratie toe;
 - leg encoderinstellingen en kwaliteitsmetingen reproduceerbaar vast;
 - voeg permanente driftvalidatie toe.
 
-### Afbeeldingen
+Voor afbeeldingen controleer minimaal codec, afmetingen, transparantie, bestandsgrootte, kwaliteitsgrenzen en referenties.
 
-Controleer minimaal codec, afmetingen, transparantie, bestandsgrootte, relevante kwaliteitsgrenzen, HTML/CSS-referenties en fallbackgedrag.
+Voor video controleer minimaal codec/profiel, frame rate, duur, pixel format, fast start, audio, poster, SSIM/PSNR en loading policy inclusief Reduced Motion en Save-Data.
 
-### Video
+## 9. Neon-integratie
 
-Controleer minimaal codec/profiel, frame rate, duur, pixel format, fast start, audio, poster, SSIM/PSNR en loading policy inclusief Reduced Motion en Save-Data.
+De echte geïsoleerde Neon-integratie is uitgevoerd. Migraties, order-store conformance en concurrent transact gedrag tegen echte PostgreSQL zijn gevalideerd. JSONB-serialisatie- en serializable-retryproblemen zijn in PR #74 opgelost.
 
-## 8. Neon-integratie
+Een herhaalde echte test mag alleen tegen een geïsoleerde testomgeving met synthetische data draaien.
 
-De echte geïsoleerde Neon-integratie is uitgevoerd. Daarbij zijn migraties, provider-neutrale order-store conformance en concurrent transact gedrag tegen echte PostgreSQL gevalideerd. De gevonden JSONB-serialisatie- en serializable-retryproblemen zijn in PR #74 opgelost.
-
-De handmatige integratieworkflow blijft beschikbaar voor regressievalidatie. Een herhaalde echte run mag alleen tegen een geïsoleerde testbranch met synthetische data draaien.
-
-Voorwaarden voor zo’n run:
-
-- ALKAVisuals beheert de Neon-organisatie;
-- MFA staat aan;
-- testomgeving staat in Frankfurt (`aws-eu-central-1`);
-- de integratiebranch bevat geen productiegegevens;
-- migratie- en runtimecredentials zijn gescheiden waar de omgeving dit ondersteunt;
-- secrets staan alleen in de GitHub environment `neon-integration`;
-- secrets worden nergens geprint.
-
-Vereiste testsecrets:
+Testsecrets blijven alleen in de daarvoor bedoelde GitHub environment:
 
 ```text
 NEON_TEST_DATABASE_URL
 NEON_TEST_MIGRATION_URL
 ```
 
-Voor productie blijft een dedicated least-privilege runtime-rol vereist, plus vastgesteld backup-/restore- en privacybeleid.
+Voor productie blijven vereist:
 
-## 9. Netlify staging
+- aparte productieomgeving;
+- dedicated least-privilege runtime-rol;
+- backup-/restorebeleid;
+- privacy-/retentiebeleid.
 
-De repository bevat inmiddels dunne Netlify Function-adapters voor:
+## 10. Netlify staging — PayPal Sandbox
 
-- checkout;
-- Stripe webhook;
-- orderstatus.
+De doelroutes zijn:
 
-`netlify.toml` configureert de same-origin routes en Node.js 22. De adapters gebruiken de bestaande serverhandlers en falen gesloten wanneer noodzakelijke configuratie ontbreekt.
+```text
+/api/paypal/checkout
+/api/paypal/capture
+/api/order-status
+```
 
-De resterende stagingstap is operationeel: configureer een geïsoleerde Netlify stagingomgeving met uitsluitend testdata, Stripe-testkeys en een geïsoleerde Neon-omgeving.
+Configureer staging uitsluitend met een geïsoleerde Netlify Deploy Preview/branchcontext, staging Neon en PayPal Sandbox.
 
-Niet toegestaan tijdens staging:
+Vereiste secrets rechtstreeks in Netlify:
 
-- productie-Neoncredentials;
-- `sk_live_`-keys;
-- live webhookenablement;
-- echte klantgegevens;
-- GitHub Pages als tweede checkoutomgeving.
+```text
+NEON_DATABASE_URL
+PAYPAL_CLIENT_ID
+PAYPAL_CLIENT_SECRET
+```
 
-## 10. End-to-end stagingacceptatie
+Niet-geheime configuratie:
+
+```text
+CHECKOUT_SUCCESS_URL=<STAGING_ORIGIN>/order-success.html
+CHECKOUT_CANCEL_URL=<STAGING_ORIGIN>/order-cancelled.html
+CHECKOUT_ALLOWED_ORIGINS=<STAGING_ORIGIN>
+PAYPAL_ALLOW_LIVE=false
+```
+
+`PAYPAL_API_BASE` mag in Sandbox afwezig blijven; de server gebruikt dan standaard de officiële PayPal Sandbox API-origin.
+
+Zie [`PAYPAL_STAGING.md`](PAYPAL_STAGING.md) voor de volledige checklist.
+
+## 11. PayPal webhook — vereist vóór productie
+
+De huidige create/capture flow moet vóór productie worden aangevuld met een server-side PayPal webhook/reconciliationlaag.
+
+Minimumeisen:
+
+- server-side verificatie van PayPal events;
+- controle van payment/order/capture identity;
+- amount/currency/mode/provider matching;
+- idempotente eventverwerking;
+- duplicate deliveries veilig afhandelen;
+- geen regressie van `paid`;
+- reconciliation wanneer browserreturn wordt onderbroken;
+- geen gevoelige volledige payloads loggen.
+
+## 12. End-to-end stagingacceptatie
 
 Een stagingrelease is pas geslaagd wanneer deze flow aantoonbaar werkt:
 
 1. gebruiker voegt een product toe;
-2. server herberekent producten en bedragen;
+2. server herberekent product, variant, korting, shipping en totaal;
 3. pending order wordt duurzaam opgeslagen;
-4. Stripe-test Checkout Session wordt aangemaakt;
-5. testbetaling wordt voltooid;
-6. geldige ondertekende webhook wordt verwerkt;
-7. orderstatus wordt `paid`;
-8. returnpagina vraagt exacte status op;
-9. alleen de bijbehorende cart-/Checkoutdata wordt verwijderd;
-10. refresh en duplicate webhook veranderen niets dubbel;
-11. failure, cancel en expiry behouden de winkelwagen;
-12. logs bevatten geen secrets of volledige gevoelige payloads.
+4. PayPal Sandbox Order wordt aangemaakt;
+5. buyer approval wordt voltooid;
+6. server capture wordt uitgevoerd;
+7. orderstatus wordt `paid` in Neon;
+8. webhook/reconciliation bevestigt of reconcilieert de paymentstate;
+9. returnpagina vraagt exacte status op;
+10. alleen de bijbehorende checkout/cartdata wordt verwijderd;
+11. refresh, duplicate capture en duplicate webhook veranderen niets dubbel;
+12. cancel/failure behoudt de cart;
+13. logs bevatten geen secrets of volledige gevoelige payloads.
 
 Test daarnaast:
 
+- Compact €35;
+- Statement €45;
+- `LEGEND10`;
+- NL €4,95;
+- EU €9,95;
+- VS €9,95 tracked;
+- gratis verzending vanaf €69;
 - gemanipuleerde browserprijzen;
-- ongeldige hoeveelheden;
-- duplicate Checkoutrequest;
-- duplicate webhookevent;
-- webhook vóór of na returnpagina;
-- verkeerde Checkout Session bij geldige orderreference;
-- tijdelijke database- of Stripefout;
-- trage verbinding en requesttimeout;
-- oude winkelwagenafbeeldingen uit `localStorage` na een assetwijziging.
+- ongeldige hoeveelheden/producten;
+- database- en PayPal timeouts/fouten;
+- oude cart-assets uit `localStorage`.
 
-## 11. Productierelease
+## 13. Legacy Stripe verwijderen
+
+Stripe is geen launchprovider meer. Verwijderen gebeurt pas na een volledig groene PayPal stagingflow.
+
+De Stripe-removal PR moet eerst inventariseren en scheiden:
+
+- Stripe-only Netlify Functions;
+- Stripe-only payment modules;
+- Stripe-only tests/validators;
+- Stripe environment/config references;
+- Stripe documentation;
+- provider-neutrale order/security/databasecode die behouden moet blijven.
+
+Daarna volledige quality/build regression uitvoeren. Stripe niet tegelijk met de eerste PayPal stagingtest verwijderen.
+
+## 14. Productierelease
 
 Productie vereist een apart goedkeuringsmoment.
 
 Checklist:
 
-- productie-Neonbranch;
+- PayPal webhook/reconciliation volledig getest;
+- PayPal Sandbox E2E volledig groen;
+- legacy Stripe gecontroleerd verwijderd;
+- productie-Neonomgeving;
 - dedicated least-privilege runtime-rol;
-- backup- en herstelbeleid vastgesteld;
-- retentie- en privacybeleid vastgesteld;
-- DPA en relevante voorwaarden beoordeeld;
-- gescheiden Netlify-productievariabelen;
-- correcte Stripe live webhookroute;
-- live keys alleen server-side;
+- backup-/restorebeleid;
+- retentie-/privacybeleid;
+- gescheiden Netlify production variables;
+- geverifieerd PayPal Business-account;
+- PayPal Live credentials alleen server-side;
+- PayPal Live webhook;
 - expliciete server-side live enablement;
 - definitief publiek domein en HTTPS;
-- canonical, sitemap en robots op het definitieve domein;
+- canonical, sitemap, robots en social metadata;
 - monitoring en alerting;
-- operationeel order-, refund- en supportproces;
+- order-, fulfillment-, refund-, dispute- en supportproces;
 - gecontroleerde kleine echte betaling;
-- rollback- en incidentprocedure.
+- rollback-/incidentprocedure.
 
-## 12. Rollbackprincipes
+## 15. Rollbackprincipes
 
 ### Storefront
 
@@ -251,30 +312,31 @@ Checklist:
 
 ### Betalingen
 
-- schakel hosted Checkout via serverconfiguratie uit;
-- behoud webhooklogging en orderdata voor reconciliatie;
-- markeer geen orders handmatig betaald zonder Stripebewijs en audittrail.
+- schakel hosted checkout via serverconfiguratie uit wanneer nodig;
+- behoud orderdata en reconciliationinformatie;
+- markeer geen orders handmatig betaald zonder verifieerbare PayPal/payment-evidence en audittrail.
 
-## 13. Secrets en privacy
+## 16. Secrets en privacy
 
 Nooit committen of delen via issues, PR’s of chat:
 
 - Neon connection strings;
-- Stripe secret keys;
-- webhook secrets;
+- PayPal Client Secret;
+- PayPal webhook secrets/verificatiecredentials;
+- legacy Stripe secrets zolang die code bestaat;
 - Netlify tokens;
-- klantnamen, adressen of betaalgegevens uit echte orders.
+- echte klantnamen, adressen of betaalgegevens.
 
 Gebruik environment scopes en least privilege. Testfixtures moeten synthetisch en herkenbaar verwijderbaar zijn.
 
-## 14. Definition of done
+## 17. Definition of done
 
 Een wijziging is pas gereed wanneer:
 
 - scope en niet-doelen duidelijk zijn;
 - relevante tests en validators groen zijn;
 - tijdelijke tooling is verwijderd of veilig permanent gemaakt;
-- secrets en productieconfiguratie afwezig zijn tenzij expliciet onderdeel van een goedgekeurde infrastructuursprint;
+- secrets en productieconfiguratie afwezig zijn tenzij expliciet goedgekeurd;
 - documentatie is bijgewerkt wanneer architectuur of workflow verandert;
 - GitHub Pages niet als parallel production target wordt toegevoegd;
 - PR review-ready is;
