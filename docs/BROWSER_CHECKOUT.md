@@ -1,57 +1,96 @@
-# Browser Checkout Integration
+# Browser checkout integration
+
+Laatst inhoudelijk bijgewerkt: 14 augustus 2026.
 
 ## Current status
 
-The storefront is connected to the hosted Checkout client, but hosted payment remains deliberately disabled:
+De storefront gebruikt een provider-aware hosted checkout client. Voor de launch is **PayPal de enige beoogde payment provider**.
 
-```js
-export const HOSTED_CHECKOUT_ENDPOINT = '';
+De Netlify-build genereert runtimeconfiguratie met deze doelroutes:
+
+```text
+/api/paypal/checkout
+/api/paypal/capture
+/api/order-status
 ```
 
-With an empty endpoint, the existing informational order summary remains active. The browser does not contact Stripe or any payment endpoint.
+PayPal Live is niet geactiveerd. Zonder geldige Neon- en PayPal-configuratie falen de servergrenzen gesloten.
+
+Legacy Stripecode blijft tijdelijk aanwezig totdat de volledige PayPal Sandbox + Neon flow inclusief webhook/reconciliation bewezen is.
 
 ## Browser flow
 
-When a future endpoint is configured, `js/app.js` will:
+De browser:
 
-1. validate the checkout form and address;
-2. build the minimal order request from stable product-page IDs and quantities;
-3. send only `{ request, customer }` to the configured endpoint;
-4. keep browser-calculated names, prices, shipping and totals out of the network payload;
-5. validate the returned Stripe session ID, mode, reference and Checkout URL;
-6. store the server-generated reference and session ID in `sessionStorage`;
-7. redirect only to `https://checkout.stripe.com`.
+1. valideert checkoutformulier en adres;
+2. bouwt een minimale orderrequest uit stabiele productidentiteiten, varianten en quantities;
+3. stuurt alleen de noodzakelijke order/customer data naar de same-origin checkout endpoint;
+4. vertrouwt browserprijzen, shipping of totalen niet als betalingsautoriteit;
+5. valideert provider, mode, reference, payment session/order ID en approval URL uit de serverresponse;
+6. bewaart de server-generated reference en payment session/order ID tijdelijk voor de returnflow;
+7. redirect alleen naar een trusted PayPal host wanneer `provider = paypal`.
 
-The cart is not cleared on redirect or on the return page. Cart clearing must wait for a future server-verified payment status.
+Voor PayPal Sandbox worden uitsluitend officiële sandbox PayPal hosts geaccepteerd; live PayPal hosts worden alleen bij een expliciet live-mode serverresultaat geaccepteerd.
+
+## PayPal return en capture
+
+Na buyer approval wordt de betaling niet simpelweg op basis van de return-URL als betaald beschouwd.
+
+De browserreturn gebruikt:
+
+- de 64-character LegendMural orderreference;
+- de PayPal order ID;
+- `/api/paypal/capture` voor server-side capture;
+- `/api/order-status` voor de uiteindelijke privacy-minimale statuscontrole.
+
+De capture endpoint controleert eerst of reference en PayPal order ID bij de gereserveerde Neon-order horen. Daarna wordt PayPal server-side gecaptured en wordt alleen een `paid` resultaat teruggegeven wanneer Neon de betaalde order heeft bevestigd.
+
+## Cart clearing
+
+De cart wordt nooit geleegd vanwege alleen:
+
+- een querystring;
+- een redirect;
+- een PayPal approval-resultaat in de browser.
+
+Checkout/cartdata wordt alleen verwijderd na een intern consistente, serverbevestigde:
+
+```text
+status = paid
+paid = true
+```
+
+Pending, processing, failed, expired of unavailable states behouden de cart.
 
 ## Return pages
 
-- `order-success.html` is a neutral payment-return page. It does not claim the order is paid before server verification exists.
-- `order-cancelled.html` explains that no payment was completed and that the browser cart remains saved.
-- Both pages are marked `noindex, nofollow`.
-
-## Future activation checklist
-
-Activation must be handled in a separate deployment sprint:
-
-1. Deploy a thin serverless adapter around `server/api/create-checkout-session.mjs`.
-2. Configure a Stripe test secret on the server only.
-3. Configure server-controlled success and cancellation URLs.
-4. Configure the allowed storefront origin.
-5. Set `HOSTED_CHECKOUT_ENDPOINT` to the deployed HTTPS endpoint or same-origin route.
-6. Complete an end-to-end Stripe test-mode payment.
-7. Add a signed Stripe webhook and persistent order-status storage.
-8. Clear the cart only after the application has verified the paid order status.
-9. Keep live Stripe mode blocked until test-mode checkout, webhook handling, refunds and operational procedures are reviewed.
+- `order-success.html` verifieert/capturet de paymentstate en toont de serverbevestigde status;
+- `order-cancelled.html` behoudt de winkelwagen wanneer geen betaling is voltooid;
+- beide pagina’s blijven `noindex, nofollow`.
 
 ## Security invariants
 
-- Stripe secret keys never appear under `js/` or in HTML.
-- Endpoint requests use `credentials: 'omit'` and reject unexpected HTTP redirects.
-- Non-local endpoints require HTTPS.
-- Browser responses may redirect only to `checkout.stripe.com`.
-- The endpoint remains empty in the repository until deployment is intentionally configured.
-- Client prices and totals never become payment authority.
+- PayPal Client Secret verschijnt nooit onder `js/` of in HTML;
+- requests gebruiken same-origin endpoints en geen ambient credentials;
+- niet-lokale endpoints vereisen HTTPS;
+- browsercalculated prijzen/totals worden nooit betalingsautoriteit;
+- PayPal approval URLs worden tegen trusted PayPal hosts gevalideerd;
+- reference en PayPal order ID moeten bij dezelfde opgeslagen order horen;
+- PayPal Live vereist expliciete server-side enablement;
+- de browserreturn is geen onafhankelijke webhookvervanger.
+
+## Nog vereist vóór productie
+
+1. PayPal webhook/reconciliation implementeren.
+2. Geïsoleerde Neon staging configureren.
+3. PayPal Sandbox credentials rechtstreeks in Netlify configureren.
+4. Complete create → approval → capture → Neon paid → order status flow testen.
+5. Duplicate create/capture/refresh en foutpaden testen.
+6. Webhook/reconciliation testen wanneer de browserreturn niet plaatsvindt.
+7. Pas daarna legacy Stripe gecontroleerd verwijderen.
+8. PayPal Live blijft geblokkeerd totdat staging, operations en launchchecks zijn goedgekeurd.
+
+Zie [`PAYPAL_STAGING.md`](PAYPAL_STAGING.md) voor de volledige acceptatiechecklist.
 
 ## Validation
 
@@ -59,8 +98,9 @@ Run:
 
 ```bash
 npm run validate:browser-checkout
+npm run validate:order-return
 npm test
 npm run quality
 ```
 
-The browser checkout gate checks the dormant configuration, minimal request payload, Stripe redirect restrictions, return-page wording and indexing policy.
+De huidige quality chain bevat nog enkele Stripe-contracten zolang de legacy code bewust aanwezig blijft.
