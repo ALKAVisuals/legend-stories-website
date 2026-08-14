@@ -1,7 +1,7 @@
 {
   "name": "legend-murals",
   "version": "1.0.0",
-  "description": "Legend Murals — Premium wall stickers & murals inspired by epic stories, history, and mythology.",
+  "description": "LegendMural — premium matte vinyl wall stickers with a PayPal + Neon commerce architecture.",
   "private": true,
   "scripts": {
     "predev": "npm run generate:runtime-products",
