@@ -38,11 +38,14 @@
   "historical_version_can_resolve_source_blocker": true,
   "related_git_paths": [
     ".github/workflows/audit-radiant-autonomy-history.yml",
+    "docs/audits/radiant-autonomy-history-audit.json",
+    "docs/audits/radiant-autonomy-history-audit.md",
     "media/stikkers/2026/Batch 5/Music Legends/radiant-autonomy-music-legend-mural.png",
     "music-radiant-autonomy-music-legend-mural.html",
-    "scripts/audit_radiant_autonomy_history.py"
+    "scripts/audit_radiant_autonomy_history.py",
+    "scripts/render_radiant_autonomy_history_comparison.py"
   ],
-  "related_git_path_count": 4,
+  "related_git_path_count": 7,
   "source_images_modified": false,
   "interpretation": "Historical PNG pixels differ from current; visual/source-quality review is required before it may be considered as a clean replacement."
 }

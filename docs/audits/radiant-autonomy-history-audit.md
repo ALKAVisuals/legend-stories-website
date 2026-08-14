@@ -9,7 +9,7 @@
 - Raw RGBA pixel hashes equal: **no**
 - Pixel-identical: **no**
 - Different pixels: **33550105**
-- Related Git paths found: **4**
+- Related Git paths found: **7**
 
 ## Interpretation
 
@@ -18,6 +18,9 @@ Historical PNG pixels differ from current; visual/source-quality review is requi
 ## Related historical paths
 
 - `.github/workflows/audit-radiant-autonomy-history.yml`
+- `docs/audits/radiant-autonomy-history-audit.json`
+- `docs/audits/radiant-autonomy-history-audit.md`
 - `media/stikkers/2026/Batch 5/Music Legends/radiant-autonomy-music-legend-mural.png`
 - `music-radiant-autonomy-music-legend-mural.html`
 - `scripts/audit_radiant_autonomy_history.py`
+- `scripts/render_radiant_autonomy_history_comparison.py`
