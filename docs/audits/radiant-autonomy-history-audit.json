@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "artwork": "radiant-autonomy-music-legend-mural",
+  "repository_path": "media/stikkers/2026/Batch 5/Music Legends/radiant-autonomy-music-legend-mural.png",
+  "old_commit": "116ad9900fe918737c284e1593560450cf9d8f4e",
+  "old": {
+    "file_size_bytes": 2350787,
+    "file_sha256": "994708c901823fd449d263ab7885f36d4edfea49d4a1dd51f38072aee20bd279",
+    "raw_rgba_pixel_sha256": "fb7f1d381813fa17936f999c0c02f03b01774765e3ea4b3e91f175ea08aa354a",
+    "dimensions_px": [
+      8208,
+      6132
+    ],
+    "original_mode": "RGBA"
+  },
+  "current": {
+    "file_size_bytes": 869277,
+    "file_sha256": "606f0f1d054df2f9a183cde9921f8fe18fbd8ba24ce1ff829a788ed5e6c884c9",
+    "raw_rgba_pixel_sha256": "cbe544e9355ede86a35823ca1b59b92fb7ad4d237f0e8fd8cd03ff8bc8ea4e51",
+    "dimensions_px": [
+      8208,
+      6132
+    ],
+    "original_mode": "P"
+  },
+  "pixel_comparison": {
+    "same_dimensions": true,
+    "identical_pixels": false,
+    "different_pixel_count": 33550105,
+    "difference_bbox": [
+      0,
+      57,
+      8129,
+      6119
+    ],
+    "max_channel_difference": 247
+  },
+  "historical_version_can_resolve_source_blocker": true,
+  "related_git_paths": [
+    ".github/workflows/audit-radiant-autonomy-history.yml",
+    "media/stikkers/2026/Batch 5/Music Legends/radiant-autonomy-music-legend-mural.png",
+    "music-radiant-autonomy-music-legend-mural.html",
+    "scripts/audit_radiant_autonomy_history.py"
+  ],
+  "related_git_path_count": 4,
+  "source_images_modified": false,
+  "interpretation": "Historical PNG pixels differ from current; visual/source-quality review is required before it may be considered as a clean replacement."
+}
