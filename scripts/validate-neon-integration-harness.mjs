@@ -6,7 +6,9 @@ const [
   workflow,
   migrationRunner,
   integrationRunner,
-  grants,
+  baseGrants,
+  paypalMigration,
+  paypalGrants,
   activationDoc,
 ] = await Promise.all([
   readFile(new URL('package.json', ROOT), 'utf8'),
@@ -14,6 +16,8 @@ const [
   readFile(new URL('scripts/run-neon-test-migrations.mjs', ROOT), 'utf8'),
   readFile(new URL('scripts/test-neon-order-store-integration.mjs', ROOT), 'utf8'),
   readFile(new URL('server/db/migrations/002_grant_order_store_runtime.sql', ROOT), 'utf8'),
+  readFile(new URL('server/db/migrations/003_add_paypal_reconciliation.sql', ROOT), 'utf8'),
+  readFile(new URL('server/db/migrations/004_grant_paypal_reconciliation_runtime.sql', ROOT), 'utf8'),
   readFile(new URL('docs/NEON_INTEGRATION_ACTIVATION.md', ROOT), 'utf8'),
 ]);
 
@@ -73,6 +77,8 @@ for (const marker of [
   'Migration and runtime URLs must use separate Neon database roles.',
   '__LEGEND_RUNTIME_ROLE__',
   'quoteIdentifier(runtimeRole)',
+  '003_add_paypal_reconciliation.sql',
+  '004_grant_paypal_reconciliation_runtime.sql',
 ]) {
   if (!migrationRunner.includes(marker)) {
     errors.push(`Migration runner is missing safety marker: ${marker}`);
@@ -83,8 +89,13 @@ for (const marker of [
   'runOrderStoreConformance',
   'clearSyntheticRecords',
   'finally',
+  'legend_commerce.paypal_webhook_events',
+  'payment_provider',
+  "!== 'paypal'",
   'DELETE FROM legend_commerce.orders WHERE false',
   'TRUNCATE TABLE legend_commerce.orders',
+  'DELETE FROM legend_commerce.paypal_webhook_events WHERE false',
+  'TRUNCATE TABLE legend_commerce.paypal_webhook_events',
   "error?.code === '42501'",
 ]) {
   if (!integrationRunner.includes(marker)) {
@@ -97,12 +108,34 @@ for (const statement of [
   'GRANT SELECT, INSERT, UPDATE',
   'GRANT SELECT, INSERT',
 ]) {
-  if (!grants.includes(statement)) {
-    errors.push(`Runtime grant migration is missing: ${statement}`);
+  if (!baseGrants.includes(statement)) {
+    errors.push(`Base runtime grant migration is missing: ${statement}`);
   }
 }
-if (/\b(DELETE|TRUNCATE|CREATE|DROP|ALTER)\b/.test(grants)) {
-  errors.push('The runtime grant migration must not grant destructive or DDL privileges.');
+if (/\b(DELETE|TRUNCATE|CREATE|DROP|ALTER)\b/.test(baseGrants)) {
+  errors.push('The base runtime grant migration must not grant destructive or DDL privileges.');
+}
+
+for (const marker of [
+  'ADD COLUMN IF NOT EXISTS payment_provider text',
+  'GENERATED ALWAYS AS',
+  'CREATE TABLE IF NOT EXISTS legend_commerce.paypal_webhook_events',
+]) {
+  if (!paypalMigration.includes(marker)) {
+    errors.push(`PayPal reconciliation migration is missing: ${marker}`);
+  }
+}
+for (const marker of [
+  'GRANT SELECT, INSERT',
+  'ON TABLE legend_commerce.paypal_webhook_events',
+  '__LEGEND_RUNTIME_ROLE__',
+]) {
+  if (!paypalGrants.includes(marker)) {
+    errors.push(`PayPal runtime grant migration is missing: ${marker}`);
+  }
+}
+if (/\b(DELETE|TRUNCATE|CREATE|DROP|ALTER)\b/.test(paypalGrants)) {
+  errors.push('The PayPal runtime grant migration must not grant destructive or DDL privileges.');
 }
 
 for (const marker of [
@@ -110,6 +143,7 @@ for (const marker of [
   'NEON_TEST_MIGRATION_URL',
   'workflow_dispatch',
   'does not touch Netlify',
+  'PayPal',
 ]) {
   if (!activationDoc.includes(marker)) {
     errors.push(`Neon activation documentation is missing: ${marker}`);
@@ -122,4 +156,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Neon integration harness validation passed with pinned drivers, manual execution, least-privilege grants and guaranteed fixture cleanup.');
+console.log('Neon integration harness validation passed with pinned drivers, manual execution, PayPal-compatible migrations, least-privilege grants and guaranteed fixture cleanup.');
