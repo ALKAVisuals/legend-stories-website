@@ -3,6 +3,11 @@ import {
   PayPalConfigurationError,
   createPayPalApiClient,
 } from '../../server/payments/paypal-api.mjs';
+import { createPayPalWebhookReconciler } from '../../server/payments/paypal-webhook-reconciliation.mjs';
+import {
+  getCommerceOrderStore,
+  resetCommerceRuntimeCache,
+} from '../../server/netlify/commerce-runtime.mjs';
 
 function bootstrapErrorResponse(status, code, message) {
   return new Response(JSON.stringify({ error: { code, message } }), {
@@ -19,10 +24,12 @@ function bootstrapErrorResponse(status, code, message) {
 export function createNetlifyPayPalWebhookHandler({
   env = process.env,
   clientFactory = createPayPalApiClient,
+  storeFactory,
   processVerifiedEvent,
 } = {}) {
   return async function netlifyPayPalWebhookHandler(request) {
     let paypalClient;
+    let processor = processVerifiedEvent;
     try {
       paypalClient = clientFactory({
         clientId: env.PAYPAL_CLIENT_ID,
@@ -30,8 +37,15 @@ export function createNetlifyPayPalWebhookHandler({
         apiBase: env.PAYPAL_API_BASE,
         allowLive: env.PAYPAL_ALLOW_LIVE === 'true',
       });
+      if (!processor) {
+        const orderStore = getCommerceOrderStore({ env, storeFactory });
+        processor = createPayPalWebhookReconciler({ orderStore, paypalClient });
+      }
     } catch (error) {
-      if (error instanceof PayPalConfigurationError) {
+      if (error instanceof PayPalConfigurationError
+        || error?.code === 'NEON_DATABASE_URL_MISSING'
+        || error?.code === 'NEON_DATABASE_URL_INVALID'
+        || error?.code === 'PAYPAL_WEBHOOK_STORE_NOT_CONFIGURED') {
         return bootstrapErrorResponse(
           503,
           'PAYPAL_WEBHOOK_SERVICE_NOT_CONFIGURED',
@@ -52,9 +66,10 @@ export function createNetlifyPayPalWebhookHandler({
     return handlePayPalWebhook(request, {
       paypalClient,
       webhookId: env.PAYPAL_WEBHOOK_ID,
-      processVerifiedEvent,
+      processVerifiedEvent: processor,
     });
   };
 }
 
+export { resetCommerceRuntimeCache };
 export default createNetlifyPayPalWebhookHandler();
