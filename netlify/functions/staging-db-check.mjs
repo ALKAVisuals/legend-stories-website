@@ -5,7 +5,7 @@ const EXPECTED_STAGING_HOST_SHA256 = '2a7de64a949d3bfc17bfd4b8f05d251678127ea639
 const SANDBOX_API_BASE = 'https://api-m.sandbox.paypal.com';
 
 function sha256(value) {
-  return createHash().update(String(value || ''), 'utf8').digest('hex');
+  return createHash('sha256').update(String(value || ''), 'utf8').digest('hex');
 }
 
 function response(status, payload) {
