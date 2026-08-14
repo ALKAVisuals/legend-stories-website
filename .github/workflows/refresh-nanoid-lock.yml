@@ -1,0 +1,53 @@
+name: One-shot nanoid lockfile refresh
+
+on:
+  push:
+    branches:
+      - chore/paypal-only-repo-cleanup
+    paths:
+      - .github/workflows/refresh-nanoid-lock.yml
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out cleanup branch
+        uses: actions/checkout@v7
+        with:
+          ref: chore/paypal-only-repo-cleanup
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Refresh only the compatible nanoid lock entry
+        run: npm update nanoid --package-lock-only --ignore-scripts
+
+      - name: Verify patched nanoid and dependency audit
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
+          const nanoid = lock.packages?.['node_modules/nanoid'];
+          if (nanoid?.version !== '3.3.18') {
+            throw new Error(`Expected nanoid 3.3.18, found ${nanoid?.version || 'missing'}`);
+          }
+          NODE
+          npm audit --audit-level=high
+
+      - name: Remove this one-shot workflow
+        run: git rm .github/workflows/refresh-nanoid-lock.yml
+
+      - name: Commit verified lockfile refresh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "chore: refresh nanoid transitive dependency"
+          git push origin HEAD:chore/paypal-only-repo-cleanup
