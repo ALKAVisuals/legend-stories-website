@@ -6,7 +6,7 @@ Laatst inhoudelijk bijgewerkt: 14 augustus 2026.
 
 LegendMural gebruikt PayPal als enige beoogde payment provider voor launch en Neon Postgres als eigen orderdatabase. Deze checklist beschrijft hoe de bestaande PayPal create-order/capture flow veilig in een geïsoleerde Netlify stagingomgeving wordt bewezen voordat PayPal Live wordt overwogen.
 
-De huidige repositorycode bevat create order, capture, verified order status en Neon persistence. **Een PayPal webhook/reconciliationlaag moet nog worden toegevoegd voordat de betaalarchitectuur productie-gereed is.**
+De repository bevat create order, capture, verified order status, Neon persistence en een fail-closed PayPal webhook-verificatielaag. **De verified-event reconciliationprocessor moet nog worden aangesloten voordat de betaalarchitectuur productie-gereed is.**
 
 ## Architectuur
 
@@ -37,14 +37,18 @@ verified return / paid-only cart cleanup
 Voor productie komt daar nog bij:
 
 ```text
-PayPal webhook
+POST /api/paypal/webhook
   ↓
-server-side event verification
+PayPal signature postback verification
+  ↓
+verified event
   ↓
 idempotente reconciliation
   ↓
 Neon
 ```
+
+De webhookroute is tijdens de huidige tussenfase bewust fail-closed: een correct geverifieerd event krijgt `503 PAYPAL_WEBHOOK_PROCESSOR_NOT_READY` zolang de duurzame reconciliationprocessor nog niet is aangesloten. Zo wordt geen PayPal event als verwerkt bevestigd voordat het veilig kan worden opgeslagen/verwerkt.
 
 ## Staginggrenzen
 
@@ -76,13 +80,16 @@ PAYPAL_CLIENT_ID=<PayPal Sandbox client ID>
 PAYPAL_CLIENT_SECRET=<PayPal Sandbox secret>
 ```
 
-### Niet-geheime stagingconfiguratie
+### Server-side stagingconfiguratie
 
 ```text
+PAYPAL_WEBHOOK_ID=<Webhook ID van exact de Sandbox listener-URL>
 CHECKOUT_SUCCESS_URL=<STAGING_ORIGIN>/order-success.html
 CHECKOUT_CANCEL_URL=<STAGING_ORIGIN>/order-cancelled.html
 CHECKOUT_ALLOWED_ORIGINS=<STAGING_ORIGIN>
 ```
+
+De `PAYPAL_WEBHOOK_ID` hoort bij de webhooklistener die in de PayPal Developer Portal voor deze stagingomgeving is aangemaakt. Gebruik niet stilzwijgend een webhook-ID van een andere app, URL of omgeving.
 
 ### PayPal mode
 
@@ -103,8 +110,18 @@ Controleer na een verse Netlify stagingdeploy:
 3. ontbrekende/ongeldige JSON faalt vóór een PayPal-order wordt aangemaakt;
 4. `/api/paypal/capture` bestaat en faalt gecontroleerd op een ongeldige lookup;
 5. `/api/order-status` bestaat;
-6. ontbreken van Neon of PayPal credentials leidt tot een gecontroleerde 503, niet tot een onduidelijke crash;
-7. responses of logs bevatten geen secrets.
+6. `/api/paypal/webhook` bestaat, accepteert alleen JSON `POST` en weigert ongeldige signature requests;
+7. zolang reconciliation nog niet is aangesloten geeft een wél geverifieerd webhookevent bewust `503 PAYPAL_WEBHOOK_PROCESSOR_NOT_READY`;
+8. ontbreken van Neon of PayPal credentials leidt tot een gecontroleerde 503, niet tot een onduidelijke crash;
+9. responses of logs bevatten geen secrets of volledige webhookpayloads.
+
+## Webhookverificatie testen
+
+De listener gebruikt PayPal's officiële `POST /v1/notifications/verify-webhook-signature` postbackmethode. Daarvoor worden de PayPal transmission/signature headers, de environment-specifieke webhook-ID en het ontvangen event aan PayPal aangeboden. Alleen `verification_status: SUCCESS` wordt geaccepteerd.
+
+Bewaar de ontvangen request body als raw tekst voordat JSON wordt geparsed. Dit houdt de ontvangstlaag geschikt voor cryptografische/self-verification controles en voorkomt dat downstream code de oorspronkelijke body opnieuw moet reconstrueren.
+
+Let op: PayPal's webhook simulator verstuurt mockevents die niet via de postback `verify-webhook-signature` endpoint verifieerbaar zijn. Gebruik voor de echte signature/reconciliation acceptance test daarom een werkelijk Sandbox-event dat door de gekoppelde Sandbox REST app wordt gegenereerd.
 
 ## Eerste gecontroleerde end-to-end test
 
@@ -124,6 +141,7 @@ Gebruik één bestaand product en synthetische klantdata.
 10. Controleer dat de returnpagina alleen na serverbevestigde `paid`-status de relevante cart/checkoutdata verwijdert.
 11. Refresh de returnpagina en controleer idempotent gedrag.
 12. Controleer dat dezelfde capture niet leidt tot een tweede betaling of dubbele ordermutatie.
+13. Controleer dat het echte `PAYMENT.CAPTURE.COMPLETED` Sandbox webhookevent wordt geverifieerd en idempotent tegen dezelfde order wordt gereconciled zodra de processor is aangesloten.
 
 ## Commercecases die afzonderlijk getest moeten worden
 
@@ -154,7 +172,9 @@ Gebruik één bestaand product en synthetische klantdata.
 - gemanipuleerde productnaam/totaal wordt genegeerd;
 - onbekend product wordt geweigerd;
 - verkeerde PayPal order ID + geldige reference levert geen orderdata op;
-- verkeerde reference + geldige PayPal order ID levert geen orderdata op.
+- verkeerde reference + geldige PayPal order ID levert geen orderdata op;
+- ontbrekende of ongeldige PayPal webhook-signature headers leveren geen ordermutatie op;
+- een `FAILURE` signature response van PayPal levert geen ordermutatie op.
 
 ### Fout- en retrygedrag
 
@@ -164,20 +184,21 @@ Gebruik één bestaand product en synthetische klantdata.
 - browserrefresh na approval;
 - duplicate create-order request;
 - duplicate capture request;
+- duplicate webhookdelivery;
+- tijdelijke PayPal signature-verificatiestoring;
 - trage verbinding/request timeout.
 
 ## PayPal webhook — launch blocker
 
-De huidige create/capture flow is niet het eindpunt van de betalingsarchitectuur. Voor productie moet nog een PayPal webhook/reconciliationlaag worden toegevoegd die minimaal:
+De server-side authenticatielaag is aanwezig, maar voor productie moet de verified-event reconciliationlaag nog minimaal:
 
-- uitsluitend officiële PayPal events accepteert na server-side verificatie;
-- relevante payment/capture-identiteit tegen de opgeslagen order controleert;
-- bedrag, valuta, provider/mode en orderidentiteit verifieert;
-- events idempotent reserveert/verwerkt;
-- duplicate deliveries veilig afhandelt;
-- geen reeds betaalde order laat regresseren;
-- Neon kan reconciliëren wanneer de browser niet terugkeert of een returnflow wordt onderbroken;
-- geen volledige gevoelige payloads logt.
+- relevante payment/capture-identiteit tegen de opgeslagen order controleren;
+- bedrag, valuta, provider/mode en orderidentiteit verifiëren;
+- events idempotent reserveren/verwerken;
+- duplicate deliveries veilig afhandelen;
+- geen reeds betaalde order laten regresseren;
+- Neon reconciliëren wanneer de browser niet terugkeert of een returnflow wordt onderbroken;
+- geen volledige gevoelige payloads loggen.
 
 Stripe mag pas worden verwijderd nadat de PayPal flow inclusief webhook/reconciliation en staging-regressies aantoonbaar groen is.
 
