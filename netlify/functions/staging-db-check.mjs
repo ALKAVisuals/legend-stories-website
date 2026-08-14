@@ -20,11 +20,6 @@ function response(status, payload) {
 }
 
 export default async function stagingDbCheck(request) {
-  const context = String(process.env.CONTEXT || '').trim();
-  if (context !== 'deploy-preview') {
-    return response(404, { available: false });
-  }
-
   let stagingDatabase = false;
   try {
     const databaseUrl = new URL(String(process.env.NEON_DATABASE_URL || ''));
