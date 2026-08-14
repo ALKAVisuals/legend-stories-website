@@ -42,4 +42,4 @@ jobs:
             reports/video-optimization-evaluation.md
             generated/video-optimization/
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 3
