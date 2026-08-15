@@ -54,7 +54,7 @@ for (const file of htmlFiles) {
     }
   }
 
-  const footerLogoPattern = /<a\b[^>]*\bhref=["']index\.html["'][^>]*\bclass=["'][^"']*\blogo-wrap\b[^"']*["'][^>]*\baria-label=["']Legend Stories Home["'][^>]*>\s*<img[^>]*lm-logo-transparant\.png/i;
+  const footerLogoPattern = /<a\b[^>]*\bhref=["']index\.html["'][^>]*\bclass=["'][^"']*\blogo-wrap\b[^"']*["'][^>]*\baria-label=["']LegendMural Home["'][^>]*>\s*<img[^>]*lm-logo-transparant\.png/i;
   if (!footerLogoPattern.test(html)) errors.push(`${file}: footer logo link is unnamed`);
 }
 
@@ -85,17 +85,11 @@ if (!/<input\b[^>]*\bid=["']email["'][^>]*\bautocomplete=["']email["'][^>]*>/i.t
 if (!/<a\b[^>]*href=["']music-truth-seeker\.html["'][^>]*aria-label=["']View The Truth Seeker product["']/i.test(index)) {
   errors.push('index.html: featured product link has no accessible name');
 }
-const testimonialControls = index.match(/<button\b[^>]*class=["'][^"']*testimonial-dot[^"']*["'][^>]*aria-label=["']Show testimonial [1-4]["'][^>]*aria-pressed=["'](?:true|false)["'][^>]*><\/button>/gi) || [];
-if (testimonialControls.length !== 4) {
-  errors.push(`index.html: expected 4 named testimonial controls, found ${testimonialControls.length}`);
+if (/\btestimonial-dot\b/i.test(index)) {
+  errors.push('index.html: removed testimonial controls unexpectedly returned');
 }
 if (!/<button\b[^>]*class=["'][^"']*add-to-cart-btn[^"']*["'][^>]*data-page=["']combat-grind-cycle\.html["'][^>]*data-name=["']The Grind Cycle["']/i.test(index)) {
   errors.push('index.html: cart upsell is not a native add-to-cart button');
-}
-
-const app = await readFile(join(ROOT, 'js/app.js'), 'utf8');
-if (!app.includes("dot.setAttribute('aria-pressed', i === index ? 'true' : 'false');")) {
-  errors.push('js/app.js: testimonial pressed state is not synchronized');
 }
 
 if (errors.length) {
