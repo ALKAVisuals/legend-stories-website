@@ -15,14 +15,14 @@ if (!runtimeConfigSource.includes("hostedCheckoutEndpoint: ''")
   || !clientSource.includes('COMMERCE_RUNTIME_CONFIG.hostedCheckoutEndpoint')) {
   errors.push('Hosted checkout must remain disabled in tracked source until a deployment endpoint is generated.');
 }
-if (!clientSource.includes("checkoutUrl.hostname !== 'checkout.stripe.com'")) {
-  errors.push('Stripe fallback responses must remain restricted to checkout.stripe.com.');
+if (!clientSource.includes("provider !== 'paypal'")) {
+  errors.push('Browser checkout must reject every non-PayPal provider.');
 }
 if (!clientSource.includes('trustedPayPalUrl(checkoutUrl, mode)')) {
   errors.push('PayPal hosted checkout responses must be restricted to the reported PayPal environment.');
 }
-if (!clientSource.includes("provider === 'paypal'")) {
-  errors.push('Browser checkout must explicitly distinguish PayPal from the Stripe fallback.');
+if (/checkout\.stripe\.com|provider === 'stripe'|provider \|\| 'stripe'/.test(clientSource)) {
+  errors.push('Browser checkout must not retain an active Stripe fallback or implicit Stripe provider.');
 }
 if (!clientSource.includes("credentials: 'omit'")) {
   errors.push('Browser checkout requests must not send ambient credentials.');
@@ -58,7 +58,7 @@ if (!appSource.includes("sessionStorage.setItem('legendCheckoutReference', check
   errors.push('The storefront must retain the server-generated checkout reference for the return flow.');
 }
 if (!appSource.includes("sessionStorage.setItem('legendCheckoutSessionId', checkout.sessionId)")) {
-  errors.push('The storefront must retain the exact provider session/order ID for return verification.');
+  errors.push('The storefront must retain the exact provider order ID for return verification.');
 }
 
 const hostedCall = appSource.match(/commerceModule\.requestHostedCheckout\(\{([\s\S]*?)\n      \}\);/);
@@ -109,4 +109,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Browser checkout validation passed with runtime-loaded deployment endpoints, minimal payloads, trusted PayPal Sandbox redirects and the Stripe fallback intact.');
+console.log('Browser checkout validation passed with runtime-loaded deployment endpoints, minimal payloads and trusted PayPal-only redirects.');
