@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
 import { resolveCatalogProductVariant } from '../js/commerce/product-variants.mjs';
-import { createDurableHostedCheckoutSession } from '../server/orders/checkout-persistence.mjs';
+import { createDurablePayPalCheckout } from '../server/orders/paypal-checkout-persistence.mjs';
 
 const catalog = JSON.parse(
   await readFile(new URL('../data/products/catalog.json', import.meta.url), 'utf8'),
@@ -24,15 +24,35 @@ function preservesVariantIdentity(item, variant) {
     && item.sizeCm === variant.longestSideCm;
 }
 
+function paypalClientFor(index, capture = {}) {
+  const suffix = String(index).padStart(2, '0');
+  return {
+    mode: 'test',
+    async createOrder(payload, options) {
+      capture.payload = payload;
+      capture.options = options;
+      const id = `5O190127TN3647${suffix}T`;
+      return {
+        id,
+        status: 'CREATED',
+        links: [{
+          rel: 'payer-action',
+          href: `https://www.sandbox.paypal.com/checkoutnow?token=${id}`,
+        }],
+      };
+    },
+  };
+}
+
 for (const [index, product] of catalog.entries()) {
   let storedOrder = null;
   const deliveryCountry = 'NL';
-  const sessionId = `cs_test_persistence_validation_${index}`;
   const variantId = index % 2 === 0 ? 'statement-50x50' : 'compact-50x30';
   const variant = resolveCatalogProductVariant(product, variantId);
+  const paypalCapture = {};
 
   try {
-    const checkout = await createDurableHostedCheckoutSession({
+    const checkout = await createDurablePayPalCheckout({
       request: {
         items: [{
           page: product.page,
@@ -54,16 +74,7 @@ for (const [index, product] of catalog.entries()) {
         country: deliveryCountry,
       },
       catalogProducts: catalog,
-      stripeClient: {
-        mode: 'test',
-        async createCheckoutSession() {
-          return {
-            id: sessionId,
-            url: `https://checkout.stripe.com/c/pay/${sessionId}`,
-            livemode: false,
-          };
-        },
-      },
+      paypalClient: paypalClientFor(index, paypalCapture),
       checkoutStore: {
         async persistPendingCheckout(order) {
           storedOrder = order;
@@ -79,11 +90,14 @@ for (const [index, product] of catalog.entries()) {
       errors.push(`${product.page}: no pending order was stored.`);
       continue;
     }
+    if (checkout.provider !== 'paypal') {
+      errors.push(`${product.page}: durable checkout did not identify PayPal explicitly.`);
+    }
     if (storedOrder.reference !== checkout.reference) {
       errors.push(`${product.page}: stored reference differs from Checkout reference.`);
     }
-    if (storedOrder.paymentSessionId !== sessionId) {
-      errors.push(`${product.page}: stored Checkout Session ID is incorrect.`);
+    if (storedOrder.paymentSessionId !== checkout.sessionId) {
+      errors.push(`${product.page}: stored PayPal order ID is incorrect.`);
     }
     if (storedOrder.status !== 'payment_pending') {
       errors.push(`${product.page}: stored order is not payment_pending.`);
@@ -110,6 +124,9 @@ for (const [index, product] of catalog.entries()) {
     if (checkout.reservationCreated !== true) {
       errors.push(`${product.page}: new Checkout was not marked as a new reservation.`);
     }
+    if (paypalCapture.options?.idempotencyKey !== `legend-paypal-create-${checkout.reference}`) {
+      errors.push(`${product.page}: PayPal create-order idempotency key is incorrect.`);
+    }
   } catch (error) {
     errors.push(`${product.page}: ${error.code || error.name}: ${error.message}`);
   }
@@ -118,7 +135,7 @@ for (const [index, product] of catalog.entries()) {
 try {
   const product = catalog[0];
   let storedOrder = null;
-  await createDurableHostedCheckoutSession({
+  await createDurablePayPalCheckout({
     request: {
       items: [
         { page: product.page, variantId: 'compact-50x30', quantity: 1 },
@@ -137,16 +154,7 @@ try {
       country: 'NL',
     },
     catalogProducts: catalog,
-    stripeClient: {
-      mode: 'test',
-      async createCheckoutSession() {
-        return {
-          id: 'cs_test_persistence_dual_size',
-          url: 'https://checkout.stripe.com/c/pay/cs_test_persistence_dual_size',
-          livemode: false,
-        };
-      },
-    },
+    paypalClient: paypalClientFor(90),
     checkoutStore: {
       async persistPendingCheckout(order) {
         storedOrder = order;
@@ -171,9 +179,9 @@ try {
   errors.push(`Dual-size pending order: ${error.code || error.name}: ${error.message}`);
 }
 
-let stripeCalledWithoutStore = false;
+let paypalCalledWithoutStore = false;
 try {
-  await createDurableHostedCheckoutSession({
+  await createDurablePayPalCheckout({
     request: {
       items: [{ page: catalog[0].page, variantId: 'statement-50x50', quantity: 1 }],
       countryCode: 'NL',
@@ -188,10 +196,10 @@ try {
       country: 'NL',
     },
     catalogProducts: catalog,
-    stripeClient: {
+    paypalClient: {
       mode: 'test',
-      async createCheckoutSession() {
-        stripeCalledWithoutStore = true;
+      async createOrder() {
+        paypalCalledWithoutStore = true;
       },
     },
     successUrl: 'https://example.com/order-success.html',
@@ -203,8 +211,8 @@ try {
     errors.push(`Missing-store check failed with ${error.code || error.name}.`);
   }
 }
-if (stripeCalledWithoutStore) {
-  errors.push('Stripe was contacted before durable storage was configured.');
+if (paypalCalledWithoutStore) {
+  errors.push('PayPal was contacted before durable storage was configured.');
 }
 
 if (errors.length) {
@@ -214,5 +222,5 @@ if (errors.length) {
 }
 
 console.log(
-  `Checkout persistence validation passed for ${catalog.length} products and a dual-size order with authoritative production-box records, NL delivery data and fail-closed storage.`,
+  `Checkout persistence validation passed for ${catalog.length} products and a dual-size order with authoritative production-box records, NL delivery data, explicit PayPal identity and fail-closed storage.`,
 );
