@@ -47,7 +47,7 @@ jobs:
               for item in placeholder_items:
                   text = text.replace(item, '')
               text = text.replace(old_payments, new_payments)
-              text = text.replace('🚚 Free shipping on orders over €50', '🚚 Free shipping from €69 after discount')
+              text = text.replace('Free shipping on orders over €50', 'Free shipping from €69 after discount')
               text = re.sub(
                   r'\n\s*<a href="https://wa\.me/31612345678"[\s\S]*?</a>\s*\n',
                   '\n',
@@ -97,8 +97,7 @@ jobs:
                   if token in text:
                       print(f'::error file={path}::Forbidden stale storefront token remains: {token}')
                       failed = True
-          template_path = Path('templates/product-page.html')
-          template = template_path.read_text(encoding='utf-8')
+          template = Path('templates/product-page.html').read_text(encoding='utf-8')
           if 'Free shipping from €69 after discount' not in template:
               print('::error file=templates/product-page.html::Missing €69 post-discount shipping copy')
               failed = True
