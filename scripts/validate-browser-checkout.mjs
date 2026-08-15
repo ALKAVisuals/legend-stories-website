@@ -80,8 +80,8 @@ if (processOrderBlock && /removeItem\(['"]legendCart/.test(processOrderBlock[0])
 }
 
 for (const [name, source, title, heading] of [
-  ['order-success.html', successPage, 'Payment Submitted — Legend Stories', 'Payment submitted'],
-  ['order-cancelled.html', cancelledPage, 'Payment Cancelled — Legend Stories', 'Payment cancelled'],
+  ['order-success.html', successPage, 'Payment Submitted — LegendMural', 'Payment submitted'],
+  ['order-cancelled.html', cancelledPage, 'Payment Cancelled — LegendMural', 'Payment cancelled'],
 ]) {
   if (!source.includes(`<title>${title}</title>`)) {
     errors.push(`${name} is missing its unique page title.`);

@@ -4,7 +4,7 @@
   "template": {
     "path": "templates/product-page.html",
     "referencePage": "combat-courageous-risk.html",
-    "sha256": "a932b58bf098d1cd8ae52dd35a002b4f3cfa9f37c10038894b1158de7783a4e6"
+    "sha256": "f19995b32a90b4a62e8f872e626e0256da0fb2405060c831bbe61e50e3aac713"
   },
   "products": [
     {
@@ -126,7 +126,7 @@
       "story": "Champions are made when nobody is watching. This mural is a daily reminder — premium matte vinyl, relentless energy.",
       "imageAlt": "Unstoppable Will — Sport Legends Wall Sticker",
       "announcementHtml": "🔥 New drop: Sport Legends collection — use <span class=\"font-bold\">LEGEND10</span> for 10% off",
-      "pageTitle": "Unstoppable Will — Sport Legends (Batch 3) | Legend Stories"
+      "pageTitle": "Unstoppable Will — Sport Legends (Batch 3) | LegendMural"
     }
   ]
 }
