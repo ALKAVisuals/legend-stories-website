@@ -144,6 +144,8 @@ try {
     cancelUrl: 'https://example.com/order-cancelled.html',
   };
 
+  // Keep legacy aliases here on purpose: they must canonicalize to active 30/45 IDs
+  // before any trusted Stripe metadata is created.
   await createHostedCheckoutSession({
     ...base,
     request: {
@@ -171,11 +173,11 @@ try {
     const byVariant = new Map(
       dualLines.map((line) => [line.price_data.product_data.metadata.variant_id, line]),
     );
-    if (byVariant.get('compact-50x30')?.price_data.unit_amount !== 3150) {
-      errors.push(`${product.page}: dual-variant checkout priced the Compact line incorrectly.`);
+    if (byVariant.get('compact-30')?.price_data.unit_amount !== 3150) {
+      errors.push(`${product.page}: dual-variant checkout priced or identified the canonical Compact 30 cm line incorrectly.`);
     }
-    if (byVariant.get('statement-50x50')?.price_data.unit_amount !== 4050) {
-      errors.push(`${product.page}: dual-variant checkout priced the Statement line incorrectly.`);
+    if (byVariant.get('statement-45')?.price_data.unit_amount !== 4050) {
+      errors.push(`${product.page}: dual-variant checkout priced or identified the canonical Statement 45 cm line incorrectly.`);
     }
   }
   if (idempotencyKeys[0] === idempotencyKeys[1]) {
@@ -192,5 +194,5 @@ if (errors.length) {
 }
 
 console.log(
-  `Stripe Checkout validation passed for ${catalog.length} products and a dual-size cart with authoritative names, prices, SKUs, metadata, variant-aware references, test-only sessions and exact cent reconciliation.`,
+  `Stripe Checkout validation passed for ${catalog.length} products and a dual-size cart with authoritative names, prices, SKUs, metadata, canonical 30/45 cm identities, variant-aware references, test-only sessions and exact cent reconciliation.`,
 );
