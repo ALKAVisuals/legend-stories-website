@@ -1,0 +1,36 @@
+name: Apply return address once
+
+on:
+  push:
+    branches:
+      - agent/legal-customer-operations-v2
+    paths:
+      - 'scripts/set-return-address-once.mjs'
+      - '.github/workflows/apply-return-address-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/legal-customer-operations-v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: npm ci
+      - run: node scripts/set-return-address-once.mjs
+      - run: npm run quality
+      - name: Commit validated return-address changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add returns.html company.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'chore: publish LegendMural parcel return address'
+          git push origin HEAD:agent/legal-customer-operations-v2
