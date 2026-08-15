@@ -8,10 +8,10 @@ const sharedStylesSource = await readFile(new URL('../css/shared.css', import.me
 const orderRequestSource = await readFile(new URL('../js/commerce/order-request.mjs', import.meta.url), 'utf8');
 const orderQuoteSource = await readFile(new URL('../server/commerce/order-quote.mjs', import.meta.url), 'utf8');
 
-test('product page defaults to the Statement 50 × 50 cm variant', () => {
+test('product page defaults to the Statement 45 cm variant', () => {
   assert.match(templateSource, /data-product-variant-selector/);
-  assert.match(templateSource, /value="statement-50x50" checked/);
-  assert.match(templateSource, /value="compact-50x30"/);
+  assert.match(templateSource, /value="statement-45" checked/);
+  assert.match(templateSource, /value="compact-30"/);
   assert.match(templateSource, /product-variant-card is-selected/);
   assert.match(templateSource, /product-variant-choice/);
   assert.match(templateSource, /product-variant-recommendation/);
@@ -21,8 +21,8 @@ test('product page defaults to the Statement 50 × 50 cm variant', () => {
   assert.match(sharedStylesSource, /\.product-variant-card\.is-selected/);
   assert.match(sharedStylesSource, /\.product-variant-recommendation/);
   assert.match(sharedStylesSource, /\[data-theme="light"\] \.product-variant-card\.is-selected/);
-  assert.match(templateSource, /Up to 50 × 50 cm/i);
-  assert.match(templateSource, /Original proportions are always preserved/i);
+  assert.match(templateSource, /45 cm longest side/i);
+  assert.match(templateSource, /original artwork proportions/i);
   assert.doesNotMatch(templateSource, /line-through|Save 17%|60\s*[×x]\s*90/);
 });
 
