@@ -6,7 +6,7 @@ import {
   CheckoutPersistenceError,
   persistPendingHostedCheckout,
 } from '../server/orders/checkout-persistence.mjs';
-import { createHostedCheckoutSession } from '../server/payments/checkout-session.mjs';
+import { createPayPalHostedCheckout } from '../server/payments/paypal-checkout.mjs';
 
 const catalog = JSON.parse(
   await readFile(new URL('../data/products/catalog.json', import.meta.url), 'utf8'),
@@ -27,21 +27,28 @@ const customer = {
   country: 'NL',
 };
 
+function fakePayPalClient() {
+  return {
+    mode: 'test',
+    async createOrder() {
+      return {
+        id: '5O190127TN364715T',
+        status: 'CREATED',
+        links: [{
+          rel: 'payer-action',
+          href: 'https://www.sandbox.paypal.com/checkoutnow?token=5O190127TN364715T',
+        }],
+      };
+    },
+  };
+}
+
 async function checkout() {
-  return createHostedCheckoutSession({
+  return createPayPalHostedCheckout({
     request,
     customer,
     catalogProducts: catalog,
-    stripeClient: {
-      mode: 'test',
-      async createCheckoutSession() {
-        return {
-          id: 'cs_test_integrity',
-          url: 'https://checkout.stripe.com/c/pay/cs_test_integrity',
-          livemode: false,
-        };
-      },
-    },
+    paypalClient: fakePayPalClient(),
     successUrl: 'https://shop.example/order-success.html',
     cancelUrl: 'https://shop.example/order-cancelled.html',
   });
