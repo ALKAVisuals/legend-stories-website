@@ -12,6 +12,8 @@ on:
       - 'server/api/**'
       - 'server/adapters/neon-order-store.mjs'
       - 'js/commerce/**'
+      - 'js/order-return.js'
+      - 'order-success.html'
       - 'scripts/generate-commerce-runtime-config.mjs'
       - 'scripts/validate-browser-checkout.mjs'
       - 'scripts/validate-order-return.mjs'
@@ -31,6 +33,8 @@ on:
       - 'server/api/**'
       - 'server/adapters/neon-order-store.mjs'
       - 'js/commerce/**'
+      - 'js/order-return.js'
+      - 'order-success.html'
       - 'scripts/generate-commerce-runtime-config.mjs'
       - 'scripts/validate-browser-checkout.mjs'
       - 'scripts/validate-order-return.mjs'
@@ -84,18 +88,32 @@ jobs:
 
       - name: Generate Netlify public runtime config
         env:
-          LEGENDMURAL_HOSTED_CHECKOUT_ENDPOINT: /api/checkout
+          LEGENDMURAL_HOSTED_CHECKOUT_ENDPOINT: /api/paypal/checkout
           LEGENDMURAL_ORDER_STATUS_ENDPOINT: /api/order-status
+          LEGENDMURAL_PAYPAL_CAPTURE_ENDPOINT: /api/paypal/capture
         run: node scripts/generate-commerce-runtime-config.mjs
 
-      - name: Verify generated runtime routes
+      - name: Verify generated runtime routes and payment return wiring
         run: |
           node --input-type=module <<'NODE'
+          import { readFile } from 'node:fs/promises';
+
           const { COMMERCE_RUNTIME_CONFIG } = await import('./dist/js/commerce/runtime-config.mjs');
-          if (COMMERCE_RUNTIME_CONFIG.hostedCheckoutEndpoint !== '/api/checkout') {
-            throw new Error('Generated checkout route is invalid.');
+          if (COMMERCE_RUNTIME_CONFIG.hostedCheckoutEndpoint !== '/api/paypal/checkout') {
+            throw new Error('Generated PayPal checkout route is invalid.');
           }
           if (COMMERCE_RUNTIME_CONFIG.orderStatusEndpoint !== '/api/order-status') {
             throw new Error('Generated order-status route is invalid.');
+          }
+          if (COMMERCE_RUNTIME_CONFIG.paypalCaptureEndpoint !== '/api/paypal/capture') {
+            throw new Error('Generated PayPal capture route is invalid.');
+          }
+
+          const returnPage = await readFile('./dist/order-success.html', 'utf8');
+          if (!returnPage.includes('<script type="module" vite-ignore src="/js/order-return.js"></script>')) {
+            throw new Error('Built payment return page is not loading the runtime order-return module.');
+          }
+          if (/assets\/order-success-[^"']+\.js/.test(returnPage)) {
+            throw new Error('Payment return page incorrectly bundled deployment-generated commerce config into a Vite asset.');
           }
           NODE
