@@ -1,8 +1,6 @@
 import { OrderStatusError, createOrderStatusUpdate } from '../orders/order-status.mjs';
-import {
-  OrderStoreContractError,
-  requirePaymentEventStore,
-} from '../orders/store-contract.mjs';
+import { OrderStoreContractError } from '../orders/store-contract.mjs';
+import { requireStripePaymentEventStore } from '../orders/stripe-store-legacy.mjs';
 import {
   StripeWebhookError,
   verifyAndNormalizeStripeWebhook,
@@ -114,7 +112,7 @@ export async function handleStripeWebhook(request, {
       });
     }
 
-    const store = requirePaymentEventStore(paymentStore);
+    const store = requireStripePaymentEventStore(paymentStore);
     const result = await store.processStripeEvent(
       paymentEvent,
       (order) => createOrderStatusUpdate(order, paymentEvent),
