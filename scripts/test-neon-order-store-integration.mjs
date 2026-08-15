@@ -4,6 +4,7 @@ import {
   validateNeonConnectionString,
 } from '../server/adapters/neon-order-store.mjs';
 import { createNeonPayPalWebhookStore } from '../server/adapters/neon-paypal-webhook-store.mjs';
+import { createNeonWithdrawalStore } from '../server/adapters/neon-withdrawal-store.mjs';
 import { createPendingOrderRecord } from '../server/orders/order-status.mjs';
 import { runOrderStoreConformance } from '../server/orders/store-conformance.mjs';
 
@@ -21,6 +22,8 @@ const PAYPAL_REFERENCE = 'f'.repeat(64);
 const PAYPAL_ORDER_ID = '5O190127TN364715T';
 const PAYPAL_CAPTURE_ID = '3Y662965014333303';
 const PAYPAL_EVENT_ID = 'WH-SYNTHETIC-PAYPAL-001';
+const PAYPAL_CUSTOMER_EMAIL = 'paypal-integration@example.invalid';
+const WITHDRAWAL_AT = 1_800_100_020;
 
 async function withClient(connectionString, action) {
   const client = await createDefaultNeonClient(connectionString);
@@ -35,6 +38,7 @@ async function withClient(connectionString, action) {
 async function clearSyntheticRecords() {
   await withClient(migrationUrl, (client) => client.query(`
     TRUNCATE TABLE
+      legend_commerce.withdrawal_requests,
       legend_commerce.paypal_webhook_events,
       legend_commerce.stripe_events,
       legend_commerce.orders
@@ -55,7 +59,7 @@ function paypalPendingOrder() {
     customer: {
       firstname: 'PayPal',
       lastname: 'Integration',
-      email: 'paypal-integration@example.invalid',
+      email: PAYPAL_CUSTOMER_EMAIL,
       street: 'Teststraat 1',
       line2: '',
       zip: '1234 AB',
@@ -149,6 +153,28 @@ async function verifyPaypalProviderCompatibilityAndReconciliation() {
   });
 }
 
+async function verifyWithdrawalPersistence() {
+  const withdrawalStore = createNeonWithdrawalStore({ connectionString: runtimeUrl });
+  const first = await withdrawalStore.createWithdrawal({
+    orderId: PAYPAL_ORDER_ID,
+    email: PAYPAL_CUSTOMER_EMAIL,
+    withdrawnAt: WITHDRAWAL_AT,
+  });
+  if (!first.created || first.withdrawal.orderId !== PAYPAL_ORDER_ID
+    || !/^LM-WD-[A-F0-9]{16}$/.test(first.withdrawal.confirmationCode)) {
+    throw new Error('Runtime role could not create a valid withdrawal record.');
+  }
+
+  const duplicate = await withdrawalStore.createWithdrawal({
+    orderId: PAYPAL_ORDER_ID,
+    email: PAYPAL_CUSTOMER_EMAIL,
+    withdrawnAt: WITHDRAWAL_AT,
+  });
+  if (duplicate.created || duplicate.withdrawal.confirmationCode !== first.withdrawal.confirmationCode) {
+    throw new Error('Duplicate withdrawal registration was not idempotent.');
+  }
+}
+
 async function inspectRuntimePrivilegeBoundary() {
   return withClient(runtimeUrl, async (client) => {
     let leastPrivilegeVerified = true;
@@ -159,6 +185,9 @@ async function inspectRuntimePrivilegeBoundary() {
       'DELETE FROM legend_commerce.paypal_webhook_events WHERE false',
       'TRUNCATE TABLE legend_commerce.paypal_webhook_events',
       "UPDATE legend_commerce.paypal_webhook_events SET event_type = event_type WHERE event_id = 'none'",
+      'DELETE FROM legend_commerce.withdrawal_requests WHERE false',
+      'TRUNCATE TABLE legend_commerce.withdrawal_requests',
+      "UPDATE legend_commerce.withdrawal_requests SET confirmation_code = confirmation_code WHERE order_reference = '${PAYPAL_REFERENCE}'",
     ]) {
       try {
         await client.query(statement);
@@ -181,6 +210,7 @@ try {
 
   await clearSyntheticRecords();
   await verifyPaypalProviderCompatibilityAndReconciliation();
+  await verifyWithdrawalPersistence();
   const leastPrivilegeVerified = await inspectRuntimePrivilegeBoundary();
 
   console.log(
@@ -193,6 +223,7 @@ try {
   console.log('- PayPal completed webhook reconciles pending -> paid');
   console.log('- duplicate PayPal webhook remains idempotent');
   console.log('- PayPal webhook event ledger accepts immutable runtime reservations');
+  console.log('- withdrawal registration persists idempotently through the runtime role');
 
   if (leastPrivilegeVerified) {
     console.log('- least-privilege runtime role');

@@ -52,11 +52,11 @@ De workflow:
 
 1. weigert te starten wanneer een vereiste secret ontbreekt;
 2. installeert de exacte dependency lock;
-3. past in volgorde de migraties `001` t/m `004` toe via de directe migration-URL;
+3. past in volgorde de migraties `001` t/m `006` toe via de directe migration-URL, inclusief de withdrawal-ledger en expliciete runtime grants;
 4. verwijdert alleen synthetische records uit de geïsoleerde testomgeving;
 5. draait de complete provider-neutrale conformance-suite tegen de echte Neon-adapter;
 6. bewijst aanvullend dat een PayPal order ID als `payment_provider=paypal` wordt opgeslagen;
-7. bewijst dat de runtime-rol een PayPal webhook-event kan reserveren maar niet kan deleten of truncaten;
+7. bewijst dat de runtime-rol een PayPal webhook-event kan reserveren en een withdrawal-record idempotent kan vastleggen, maar deze ledgers niet kan deleten, truncaten of muteren;
 8. ruimt synthetische records ook na een testfout op;
 9. draait de normale credential-free Neon architectuurvalidatie.
 
