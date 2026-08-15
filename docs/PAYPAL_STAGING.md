@@ -6,7 +6,7 @@ Laatst inhoudelijk bijgewerkt: 15 augustus 2026.
 
 LegendMural gebruikt PayPal als enige beoogde payment provider voor launch en Neon Postgres als eigen orderdatabase. Deze checklist beschrijft hoe de PayPal create-order/capture/webhook flow veilig in een geïsoleerde Netlify stagingomgeving wordt bewezen voordat PayPal Live wordt overwogen.
 
-De repository bevat create order, browser capture, verified order status, Neon persistence, PayPal webhook-signatureverificatie en een idempotente Neon reconciliationprocessor. **De browser-native happy path is op 15 augustus 2026 met een echte PayPal Sandbox-betaling tegen Netlify Deploy Preview #85 en de geïsoleerde Neon stagingbranch bewezen. De duplicate-webhookcase is daarna met een echte PayPal Sandbox redelivery bewezen. Op Deploy Preview #86 is de cancelflow inclusief cart preservation na een same-origin callbackfix end-to-end bewezen. Ook is de interruption/recovery-flow echt bewezen door de browser `POST /api/paypal/capture` met Chrome Request Conditions te blokkeren: de order ging desondanks via `CHECKOUT.ORDER.APPROVED` recovery-capture en een daaropvolgende `PAYMENT.CAPTURE.COMPLETED` webhook naar `paid`. PayPal Live blijft uitgeschakeld.**
+De repository bevat create order, browser capture, verified order status, Neon persistence, PayPal webhook-signatureverificatie en een idempotente Neon reconciliationprocessor. **De browser-native happy path is op 15 augustus 2026 met een echte PayPal Sandbox-betaling tegen Netlify Deploy Preview #85 en de geïsoleerde Neon stagingbranch bewezen. De duplicate-webhookcase is daarna met een echte PayPal Sandbox redelivery bewezen. Op Deploy Preview #86 is de cancelflow inclusief cart preservation na een same-origin callbackfix end-to-end bewezen. Ook is de interruption/recovery-flow echt bewezen door de browser `POST /api/paypal/capture` met Chrome Request Conditions te blokkeren: de order ging desondanks via `CHECKOUT.ORDER.APPROVED` recovery-capture en een daaropvolgende `PAYMENT.CAPTURE.COMPLETED` webhook naar `paid`. De actieve legacy Stripe checkout-/webhookruntime is daarna op `chore/remove-legacy-stripe` verwijderd; historische database-/auditcompatibiliteit blijft behouden. PayPal Live blijft uitgeschakeld.**
 
 ## Architectuur
 
@@ -225,9 +225,7 @@ De server-side webhooklaag bevat nu:
 - minimale ledger zonder volledige PayPal-/klantpayloads;
 - verified-but-ignored gedrag voor refund/reversal-events totdat hun financiële state-machine apart is ontworpen.
 
-De code, browser-native happy path, duplicate webhookdelivery, cancel/cart-preservation en interruption/recovery zijn nu tegen echte PayPal Sandbox + Neon staging bewezen. De resterende stagingwerkzaamheden zitten vooral in de overige negatieve/idempotency-edgecases en merge-readiness van PR #86; dit is geen toestemming om PayPal Live te activeren.
-
-Stripe mag pas worden verwijderd nadat de resterende PayPal staging-regressies aantoonbaar groen zijn.
+De code, browser-native happy path, duplicate webhookdelivery, cancel/cart-preservation en interruption/recovery zijn tegen echte PayPal Sandbox + Neon staging bewezen. De actieve legacy Stripe checkout-/webhookruntime is vervolgens op `chore/remove-legacy-stripe` verwijderd. Historische Stripe migrations, schema-/auditvelden en read-compatibiliteit blijven bewust behouden; de cleanupbranch wacht nog op volledige Quality/Netlify/build-regressie en expliciete mergegoedkeuring. Dit is geen toestemming om PayPal Live te activeren.
 
 ## Productieacceptatie
 
