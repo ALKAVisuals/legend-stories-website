@@ -39,19 +39,32 @@ jobs:
                   changed_html.append(path.name)
 
           template = Path('templates/product-page.html')
-          template_text = template.read_text(encoding='utf-8').replace('Legend Stories', 'LegendMural')
-          template.write_text(template_text, encoding='utf-8')
+          template.write_text(
+              template.read_text(encoding='utf-8').replace('Legend Stories', 'LegendMural'),
+              encoding='utf-8',
+          )
 
           generator = Path('scripts/product-page-generation.mjs')
-          generator_text = generator.read_text(encoding='utf-8').replace('Legend Stories', 'LegendMural')
-          generator.write_text(generator_text, encoding='utf-8')
+          generator.write_text(
+              generator.read_text(encoding='utf-8').replace('Legend Stories', 'LegendMural'),
+              encoding='utf-8',
+          )
+
+          # Managed page generation reads descriptions and product identity from this catalog.
+          catalog = Path('data/products/catalog.json')
+          catalog.write_text(
+              catalog.read_text(encoding='utf-8').replace('Legend Stories', 'LegendMural'),
+              encoding='utf-8',
+          )
 
           manifests = sorted(Path('data/products').glob('2026-batch-*-presentation.json'))
           if len(manifests) != 6:
               raise SystemExit(f'Expected 6 presentation manifests; found {len(manifests)}')
           for path in manifests:
-              text = path.read_text(encoding='utf-8').replace('Legend Stories', 'LegendMural')
-              path.write_text(text, encoding='utf-8')
+              path.write_text(
+                  path.read_text(encoding='utf-8').replace('Legend Stories', 'LegendMural'),
+                  encoding='utf-8',
+              )
 
           index = Path('index.html')
           text = index.read_text(encoding='utf-8')
@@ -104,6 +117,7 @@ jobs:
               *sorted(Path('.').glob('*.html')),
               Path('templates/product-page.html'),
               Path('scripts/product-page-generation.mjs'),
+              Path('data/products/catalog.json'),
               *sorted(Path('data/products').glob('2026-batch-*-presentation.json')),
           ]
           for path in targets:
@@ -112,8 +126,7 @@ jobs:
                   print(f'::error file={path}::Legacy storefront brand remains: Legend Stories')
                   failed = True
 
-          index_path = Path('index.html')
-          index = index_path.read_text(encoding='utf-8')
+          index = Path('index.html').read_text(encoding='utf-8')
           for claim in ('1K+', 'On Trustpilot', 'Best Selling Music Legend', '>Best seller<'):
               if claim in index:
                   print(f'::error file=index.html::Unsupported homepage trust claim remains: {claim}')
