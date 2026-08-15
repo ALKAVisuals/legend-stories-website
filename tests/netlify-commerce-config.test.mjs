@@ -47,6 +47,7 @@ test('Netlify config builds the validated site and exposes only PayPal payment r
   assert.doesNotMatch(config, /from\s*=\s*"\/api\/stripe-webhook"/);
   assert.doesNotMatch(config, /PAYPAL_ALLOW_LIVE\s*=\s*"?true"?/i);
   assert.doesNotMatch(config, /STRIPE_ALLOW_LIVE\s*=\s*"?true"?/i);
+  assert.doesNotMatch(config, /LEGENDMURAL_CHECKOUT_PAUSED\s*=\s*"?true"?/i);
 });
 
 test('tracked browser config stays disabled and contains no credentials', async () => {
@@ -76,10 +77,14 @@ test('each durable Netlify commerce function injects the shared Neon runtime', a
 
   assert.match(source.paypalCheckoutFunction, /getCommerceOrderStore/);
   assert.match(source.paypalCheckoutFunction, /checkoutStore/);
+  assert.match(source.paypalCheckoutFunction, /LEGENDMURAL_CHECKOUT_PAUSED/);
+  assert.match(source.paypalCheckoutFunction, /CHECKOUT_PAUSED/);
   assert.match(source.paypalCaptureFunction, /getCommerceOrderStore/);
   assert.match(source.paypalCaptureFunction, /orderStore/);
+  assert.doesNotMatch(source.paypalCaptureFunction, /LEGENDMURAL_CHECKOUT_PAUSED/);
   assert.match(source.statusFunction, /getCommerceOrderStore/);
   assert.match(source.statusFunction, /orderStore/);
+  assert.doesNotMatch(source.statusFunction, /LEGENDMURAL_CHECKOUT_PAUSED/);
 });
 
 test('PayPal webhook entrypoint verifies and conditionally wires the shared Neon reconciler', async () => {
@@ -91,4 +96,5 @@ test('PayPal webhook entrypoint verifies and conditionally wires the shared Neon
   assert.match(source.paypalWebhookFunction, /getCommerceOrderStore/);
   assert.match(source.paypalWebhookFunction, /createPayPalWebhookReconciler/);
   assert.match(source.paypalWebhookFunction, /NEON_DATABASE_URL/);
+  assert.doesNotMatch(source.paypalWebhookFunction, /LEGENDMURAL_CHECKOUT_PAUSED/);
 });
