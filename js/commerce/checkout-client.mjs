@@ -66,7 +66,7 @@ function parseHostedCheckoutResponse(payload) {
     fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an invalid response.');
   }
 
-  const provider = String(payload.provider || 'stripe').trim().toLowerCase();
+  const provider = String(payload.provider || '').trim().toLowerCase();
   const sessionId = String(payload.sessionId || '').trim();
   const mode = String(payload.mode || '');
   const reference = String(payload.reference || '');
