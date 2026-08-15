@@ -1,6 +1,6 @@
 # LegendMural projectstatus
 
-Laatst inhoudelijk bijgewerkt: 14 augustus 2026.
+Laatst inhoudelijk bijgewerkt: 15 augustus 2026.
 
 Dit document is de actuele bron van waarheid voor de launchstatus van `ALKAVisuals/legend-stories-website`. Historische Sprint- en Stripe-documenten beschrijven eerdere ontwikkelfasen maar bepalen niet langer de doelarchitectuur.
 
@@ -13,9 +13,9 @@ De definitieve launchkeuze is:
 - **Netlify** als enige production host;
 - **PayPal** als enige payment provider voor launch;
 - **Neon Postgres** als eigen LegendMural orderdatabase;
-- **Stripe** uitsluitend tijdelijk als legacy/fallbackcode totdat PayPal Sandbox + Neon inclusief webhook/reconciliation volledig bewezen is.
+- **Stripe** uitsluitend tijdelijk als legacy/fallbackcode totdat de resterende browser-native PayPal purchase-flow, failure/idempotencycases en launchcleanup zijn afgerond.
 
-De PayPal webhook/reconciliationcode is nu geïmplementeerd in draft PR #85. PayPal Live is niet geactiveerd. De volgende echte releaseblokkade is een gecontroleerde PayPal Sandbox + Neon stagingvalidatie met een werkelijk Sandbox-webhookevent.
+De PayPal webhook/reconciliationcode is geïmplementeerd in draft PR #85. Op 15 augustus 2026 is de kernketen daadwerkelijk bewezen tegen PayPal Sandbox + de geïsoleerde Neon stagingbranch: echte order creation via de Netlify Deploy Preview, buyer approval, server-side capture, Neon `paid`, plus echte `CHECKOUT.ORDER.APPROVED` en `PAYMENT.CAPTURE.COMPLETED` webhookdeliveries in de event-ledger. PayPal Live is niet geactiveerd. De resterende paymentreleaseblokkade is nu de browser-native storefrontflow en de aanvullende fout-/idempotencycases uit de E2E-checklist.
 
 ## Afgerond
 
@@ -89,7 +89,9 @@ De PayPal webhook/reconciliationcode is nu geïmplementeerd in draft PR #85. Pay
 - late niet-paid events kunnen een reeds betaalde order niet laten regresseren;
 - unsupported verified events muteren geen orders;
 - refund/reversal state handling is bewust uitgesteld tot een aparte financiële state-machine;
-- PayPal Live blijft fail-closed tenzij server-side expliciet toegestaan.
+- PayPal Live blijft fail-closed tenzij server-side expliciet toegestaan;
+- echte Sandbox buyer approval en server-side capture zijn op 15 augustus 2026 tegen de Netlify Deploy Preview uitgevoerd;
+- dezelfde echte Sandboxbetaling leverde geverifieerde `CHECKOUT.ORDER.APPROVED` en `PAYMENT.CAPTURE.COMPLETED` webhookevents op in Neon.
 
 ### Neon Postgres
 
@@ -99,15 +101,16 @@ De PayPal webhook/reconciliationcode is nu geïmplementeerd in draft PR #85. Pay
 - bestaande order- en Stripe-eventmigraties behouden;
 - provider-aware PayPal reconciliationmigratie toegevoegd zonder historische migraties te herschrijven;
 - `payment_provider` wordt door PostgreSQL uit het payment session/order ID afgeleid;
-- `paypal_webhook_events` ledger met order-FK en minimale eventidentiteit;
+- `paypal_webhook_events` ledger met minimale eventidentiteit;
 - event-ledger runtime grants zijn beperkt tot `SELECT` en `INSERT`;
 - webhookevent en ordermutatie delen één `SERIALIZABLE` transactie;
 - transacties, `FOR UPDATE`, locking en versiecontrole;
 - expliciete JSONB-serialisatie;
 - bounded retries/backoff voor retryable serializable conflicts;
 - pinned Neon- en WebSocketdependencies;
-- eerdere echte Neon-migraties en order-store conformance uitgevoerd;
-- nieuwe PayPal-migraties/reconciliation zijn in de handmatige Neon integration harness opgenomen maar nog niet opnieuw tegen de geïsoleerde echte Neon testomgeving uitgevoerd;
+- PayPal-migraties zijn toegepast op de geïsoleerde `order-store-integration` stagingbranch;
+- echte stagingorder bewees `payment_pending → paid`, `version 0 → 1` en éénmalige `paid_at`;
+- echte PayPal webhookevents zijn duurzaam in `paypal_webhook_events` geregistreerd;
 - synthetische fixture-cleanup aanwezig.
 
 Voor productie blijven vereist:
@@ -130,7 +133,9 @@ Voor productie blijven vereist:
 - fail-closed gedrag wanneer vereiste configuratie ontbreekt;
 - productcatalogus beschikbaar voor Function-bundling;
 - aparte Node 22 Netlify-compatibiliteitsworkflow;
-- Netlify is de enige beoogde production host.
+- Netlify is de enige beoogde production host;
+- Deploy Preview #85 is met PayPal Sandbox en de geïsoleerde Neon stagingbranch gevalideerd;
+- tijdelijke stagingdiagnose/workflows zijn na de echte betaling weer verwijderd.
 
 ### Performance en media
 
@@ -169,8 +174,8 @@ Dit is **niet** de beoogde launchprovider.
 De veilige migratievolgorde is nu:
 
 1. PayPal webhook/reconciliation bouwen — **code gereed in draft PR #85**;
-2. PayPal Sandbox + Neon staging volledig bewijzen;
-3. regressietests voor create, capture, return, duplicate events en foutpaden groen krijgen tegen de stagingomgeving;
+2. kern PayPal Sandbox + Neon staging bewijzen — **afgerond op 15 augustus 2026**;
+3. resterende browser-native purchase-flow en fout-/idempotencycases afronden;
 4. daarna Stripe in een aparte gecontroleerde cleanup-PR verwijderen;
 5. volledige quality/build regression opnieuw uitvoeren.
 
@@ -178,43 +183,27 @@ Provider-neutrale order-, security- en Neoncomponenten moeten tijdens die cleanu
 
 ## Actuele releaseblokkades
 
-### 1. PayPal Sandbox + Neon staging
+### 1. Resterende PayPal E2E-cases
 
-De webhook/reconciliationcode is gebouwd, maar moet nog tegen een dedicated stagingomgeving worden bewezen met uitsluitend:
-
-- geïsoleerde staging Neon;
-- PayPal Sandbox Client ID/Secret;
-- een echte Sandbox webhooklistener + environment-specifieke `PAYPAL_WEBHOOK_ID`;
-- Netlify staging/Deploy Preview environment variables;
-- synthetische klantdata.
-
-PayPal's webhook simulator is niet voldoende voor onze gekozen postback-signatureverificatie. Gebruik een werkelijk event uit de gekoppelde Sandbox REST app.
-
-Zie [`PAYPAL_STAGING.md`](PAYPAL_STAGING.md).
-
-### 2. Complete end-to-end test
-
-Minimaal bewijzen:
+De echte Sandbox/Neon kernketen is bewezen. Nog minimaal browser-native bewijzen:
 
 1. cart → serverquote;
 2. pending order in Neon vóór checkout-response;
-3. PayPal Sandbox order creation;
+3. PayPal Sandbox order creation vanuit de echte storefrontbrowser;
 4. approval;
-5. server capture;
+5. automatische browsercapture op return;
 6. Neon `paid`;
-7. echte webhook-signatureverificatie;
-8. webhook/reconciliation en event-ledger;
-9. privacy-minimale orderstatus;
-10. paid-only cart cleanup;
-11. duplicate capture/webhook/refresh blijft idempotent;
-12. browseronderbreking na PayPal capture wordt door `PAYMENT.CAPTURE.COMPLETED` hersteld;
-13. late `PENDING` regresseert `paid` niet;
-14. cancel/failure behoudt de cart;
-15. gemanipuleerde browserprijzen worden genegeerd.
+7. privacy-minimale orderstatus;
+8. paid-only cart cleanup;
+9. duplicate capture/webhook/refresh blijft idempotent;
+10. browseronderbreking na PayPal capture wordt door `PAYMENT.CAPTURE.COMPLETED` hersteld;
+11. late `PENDING` regresseert `paid` niet;
+12. cancel/failure behoudt de cart;
+13. gemanipuleerde browserprijzen worden genegeerd.
 
 Test daarbij Compact, Statement, `LEGEND10`, NL/EU/VS shipping en free shipping vanaf €69.
 
-### 3. Storefront launch cleanup
+### 2. Storefront launch cleanup
 
 De zichtbare site bevat nog oude launchrestanten die vóór officiële publicatie moeten worden gecorrigeerd, waaronder:
 
@@ -224,7 +213,7 @@ De zichtbare site bevat nog oude launchrestanten die vóór officiële publicati
 - footer/help/legal routes en betaalbadges controleren op feitelijke juistheid;
 - definitief domain/SEO beleid pas toepassen zodra het publieke domein is bevestigd.
 
-### 4. Legal / commerce operations
+### 3. Legal / commerce operations
 
 Voor officiële launch nog afronden/valideren:
 
@@ -239,8 +228,7 @@ Voor officiële launch nog afronden/valideren:
 
 ## Voor productie nog vereist
 
-- PayPal webhook/reconciliation met echt Sandbox-event bewezen;
-- PayPal Sandbox E2E volledig groen;
+- resterende PayPal Sandbox browser-E2E-cases volledig groen;
 - legacy Stripe gecontroleerd verwijderd;
 - productie-Neonomgeving;
 - dedicated least-privilege runtime-rol;
@@ -285,7 +273,7 @@ Voor officiële launch nog afronden/valideren:
 - geen productie-Netlifywijziging zonder afzonderlijke toestemming;
 - geen secrets in chat of repository;
 - GitHub Pages wordt niet als tweede production host onderhouden;
-- Stripe wordt pas verwijderd na bewezen PayPal staging;
+- Stripe wordt pas verwijderd na bewezen PayPal staging en resterende browser-E2E;
 - Neon blijft behouden als orderdatabase;
 - originele product- en printmedia worden niet overschreven door browseroptimalisatie;
 - een groene quality gate vervangt geen handmatige UX-, payment- of infrastructuurreview.
