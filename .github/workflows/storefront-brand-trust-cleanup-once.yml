@@ -1,0 +1,145 @@
+name: Migrate storefront branding and trust claims once
+
+on:
+  push:
+    branches: [storefront/brand-trust-cleanup-v1]
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+
+      - name: Update storefront brand and homepage trust copy
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          root = Path('.')
+          changed_html = []
+
+          # Brand-visible top-level storefront pages only; historical docs remain untouched.
+          for path in sorted(root.glob('*.html')):
+              text = path.read_text(encoding='utf-8')
+              updated = text.replace('Legend Stories', 'LegendMural')
+              if updated != text:
+                  path.write_text(updated, encoding='utf-8')
+                  changed_html.append(path.name)
+
+          template = Path('templates/product-page.html')
+          template_text = template.read_text(encoding='utf-8')
+          template_text = template_text.replace('Legend Stories', 'LegendMural')
+          template.write_text(template_text, encoding='utf-8')
+
+          generator = Path('scripts/product-page-generation.mjs')
+          generator_text = generator.read_text(encoding='utf-8')
+          generator_text = generator_text.replace('Legend Stories', 'LegendMural')
+          generator.write_text(generator_text, encoding='utf-8')
+
+          # Preserve any custom presentation titles while updating their brand suffix.
+          manifests = sorted(Path('data/products').glob('2026-batch-*-presentation.json'))
+          if len(manifests) != 6:
+              raise SystemExit(f'Expected 6 presentation manifests; found {len(manifests)}')
+          for path in manifests:
+              text = path.read_text(encoding='utf-8').replace('Legend Stories', 'LegendMural')
+              path.write_text(text, encoding='utf-8')
+
+          index = Path('index.html')
+          text = index.read_text(encoding='utf-8')
+          old_stats = '''            <div class="flex items-center gap-5 mt-8 justify-center lg:justify-start">
+              <div class="text-center"><p class="text-xl font-bold text-text-primary">1K+</p><p class="text-[11px] text-text-muted tracking-wide">Sold</p></div>
+              <div class="w-px h-7 bg-surface-border/50"></div>
+              <div class="text-center"><p class="text-xl font-bold text-text-primary">4.9<span class="text-sm">★</span></p><p class="text-[11px] text-text-muted tracking-wide">On Trustpilot</p></div>
+              <div class="w-px h-7 bg-surface-border/50"></div>
+              <div class="text-center"><p class="text-xl font-bold text-text-primary">Best seller</p><p class="text-[11px] text-text-muted tracking-wide">The Truth Seeker</p></div>
+            </div>'''
+          new_stats = '''            <div class="flex items-center gap-5 mt-8 justify-center lg:justify-start" aria-label="Product benefits">
+              <div class="text-center"><p class="text-sm font-bold text-text-primary">Matte vinyl</p><p class="text-[11px] text-text-muted tracking-wide">Premium finish</p></div>
+              <div class="w-px h-7 bg-surface-border/50"></div>
+              <div class="text-center"><p class="text-sm font-bold text-text-primary">Removable</p><p class="text-[11px] text-text-muted tracking-wide">Damage-free</p></div>
+              <div class="w-px h-7 bg-surface-border/50"></div>
+              <div class="text-center"><p class="text-sm font-bold text-text-primary">Ships from NL</p><p class="text-[11px] text-text-muted tracking-wide">NL · EU · US</p></div>
+            </div>'''
+          if text.count(old_stats) != 1:
+              raise SystemExit(f'Expected one homepage trust-stats block; found {text.count(old_stats)}')
+          text = text.replace(old_stats, new_stats)
+          text = text.replace(
+              'alt="The Truth Seeker — Best Selling Music Legend Wall Sticker"',
+              'alt="The Truth Seeker — Music Legend Wall Sticker"',
+          )
+          index.write_text(text, encoding='utf-8')
+
+          # Template hashes are a reproducibility contract for all managed product pages.
+          digest = hashlib.sha256(template.read_bytes()).hexdigest()
+          for path in manifests:
+              data = json.loads(path.read_text(encoding='utf-8'))
+              if data.get('template', {}).get('path') != 'templates/product-page.html':
+                  raise SystemExit(f'{path}: unexpected template path')
+              data['template']['sha256'] = digest
+              path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+
+          print(f'Updated brand copy in {len(changed_html)} top-level storefront HTML files.')
+          print(f'Updated {len(manifests)} presentation manifests to template SHA {digest}.')
+          PY
+
+      - name: Regenerate managed product pages and catalog
+        run: |
+          node scripts/generate-managed-product-pages.mjs --write-live
+          node scripts/generate-full-product-catalog.mjs
+
+      - name: Validate cleanup invariants
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          targets = [
+              *sorted(Path('.').glob('*.html')),
+              Path('templates/product-page.html'),
+              Path('scripts/product-page-generation.mjs'),
+              *sorted(Path('data/products').glob('2026-batch-*-presentation.json')),
+          ]
+          legacy = []
+          for path in targets:
+              if 'Legend Stories' in path.read_text(encoding='utf-8'):
+                  legacy.append(str(path))
+          if legacy:
+              raise SystemExit('Legacy storefront brand remains in:\n' + '\n'.join(legacy))
+
+          index = Path('index.html').read_text(encoding='utf-8')
+          forbidden_claims = ('1K+', 'On Trustpilot', 'Best Selling Music Legend', '>Best seller<')
+          found = [claim for claim in forbidden_claims if claim in index]
+          if found:
+              raise SystemExit('Unsupported homepage trust claims remain: ' + ', '.join(found))
+          print('Storefront branding and homepage trust-copy invariants pass.')
+          PY
+          node scripts/validate-product-variants.mjs
+          node scripts/validate-full-product-catalog.mjs
+          node --test tests/production-handoff.test.mjs
+          npm test
+          npm run build
+
+      - name: Commit regenerated storefront cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add '*.html' templates/product-page.html scripts/product-page-generation.mjs data/products/catalog.json data/products/2026-batch-*-presentation.json
+          if git diff --cached --quiet; then
+            echo "Storefront cleanup already synchronized."
+            exit 0
+          fi
+          git commit -m "Update storefront branding and remove unsupported trust claims"
+          git push origin HEAD:storefront/brand-trust-cleanup-v1
