@@ -1,8 +1,5 @@
 export const ORDER_STORE_CAPABILITIES = Object.freeze({
   persistPendingCheckout: 'persistPendingCheckout',
-  processStripeEvent: 'processStripeEvent',
-  processPaypalCapture: 'processPaypalCapture',
-  processPaypalWebhookEvent: 'processPaypalWebhookEvent',
   getOrderByReference: 'getOrderByReference',
 });
 
@@ -10,11 +7,8 @@ const KNOWN_ORDER_STORE_METHODS = Object.freeze(
   Object.values(ORDER_STORE_CAPABILITIES),
 );
 
-// Keep the established core contract stable. PayPal capture and webhook
-// reconciliation are additive capabilities required only by PayPal endpoints.
 export const COMPLETE_ORDER_STORE_METHODS = Object.freeze([
   ORDER_STORE_CAPABILITIES.persistPendingCheckout,
-  ORDER_STORE_CAPABILITIES.processStripeEvent,
   ORDER_STORE_CAPABILITIES.getOrderByReference,
 ]);
 
@@ -70,33 +64,6 @@ export function requireCheckoutStore(adapter) {
   return validateOrderStoreAdapter(adapter, {
     requiredMethods: [ORDER_STORE_CAPABILITIES.persistPendingCheckout],
     label: 'Checkout order store',
-  });
-}
-
-export function requirePaymentEventStore(adapter) {
-  return validateOrderStoreAdapter(adapter, {
-    requiredMethods: [ORDER_STORE_CAPABILITIES.processStripeEvent],
-    label: 'Stripe payment-event store',
-  });
-}
-
-export function requirePaypalCaptureStore(adapter) {
-  return validateOrderStoreAdapter(adapter, {
-    requiredMethods: [
-      ORDER_STORE_CAPABILITIES.processPaypalCapture,
-      ORDER_STORE_CAPABILITIES.getOrderByReference,
-    ],
-    label: 'PayPal capture store',
-  });
-}
-
-export function requirePaypalWebhookStore(adapter) {
-  return validateOrderStoreAdapter(adapter, {
-    requiredMethods: [
-      ORDER_STORE_CAPABILITIES.processPaypalWebhookEvent,
-      ORDER_STORE_CAPABILITIES.getOrderByReference,
-    ],
-    label: 'PayPal webhook reconciliation store',
   });
 }
 

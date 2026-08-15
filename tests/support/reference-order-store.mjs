@@ -27,7 +27,6 @@ function storeError(code, message) {
 
 export function createReferenceOrderStore() {
   const orders = new Map();
-  const processedEvents = new Map();
   let queue = Promise.resolve();
 
   async function atomic(action) {
@@ -71,62 +70,6 @@ export function createReferenceOrderStore() {
         return Object.freeze({
           created: true,
           order: clone(order),
-        });
-      });
-    },
-
-    async processStripeEvent(eventInput, createUpdate) {
-      return atomic(async () => {
-        const event = clone(eventInput);
-        const eventId = String(event?.eventId || '');
-        const reference = String(event?.reference || '');
-        if (!eventId || !reference || typeof createUpdate !== 'function') {
-          throw storeError('INVALID_PAYMENT_EVENT', 'Stripe event processing input is invalid.');
-        }
-
-        const previousReference = processedEvents.get(eventId);
-        if (previousReference) {
-          if (previousReference !== reference) {
-            throw storeError(
-              'ORDER_STORE_EVENT_CONFLICT',
-              'A Stripe event ID was reused for another order.',
-            );
-          }
-          const existing = orders.get(reference);
-          if (!existing) {
-            throw storeError('ORDER_NOT_FOUND', 'The referenced order does not exist.');
-          }
-          return Object.freeze({
-            duplicate: true,
-            order: clone(existing),
-          });
-        }
-
-        const current = orders.get(reference);
-        if (!current) {
-          throw storeError('ORDER_NOT_FOUND', 'The referenced order does not exist.');
-        }
-
-        const updated = await createUpdate(clone(current));
-        if (!updated || updated.reference !== reference) {
-          throw storeError(
-            'ORDER_STORE_CONFLICT',
-            'The order update returned an invalid reference.',
-          );
-        }
-        if (!Number.isInteger(updated.version)
-          || updated.version !== Number(current.version) + 1) {
-          throw storeError(
-            'ORDER_STORE_VERSION_CONFLICT',
-            'The order update did not increment the optimistic version exactly once.',
-          );
-        }
-
-        orders.set(reference, clone(updated));
-        processedEvents.set(eventId, reference);
-        return Object.freeze({
-          duplicate: false,
-          order: clone(updated),
         });
       });
     },

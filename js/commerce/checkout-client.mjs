@@ -66,11 +66,11 @@ function parseHostedCheckoutResponse(payload) {
     fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an invalid response.');
   }
 
-  const provider = String(payload.provider || 'stripe').trim().toLowerCase();
+  const provider = String(payload.provider || '').trim().toLowerCase();
   const sessionId = String(payload.sessionId || '').trim();
   const mode = String(payload.mode || '');
   const reference = String(payload.reference || '');
-  if (!['stripe', 'paypal'].includes(provider)) {
+  if (provider !== 'paypal') {
     fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an invalid payment provider.');
   }
   if (!['test', 'live'].includes(mode)) {
@@ -79,16 +79,7 @@ function parseHostedCheckoutResponse(payload) {
   if (!/^[a-f0-9]{64}$/.test(reference)) {
     fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an invalid reference.');
   }
-
-  if (provider === 'stripe') {
-    if (!/^cs_(test|live)_[A-Za-z0-9_-]+$/.test(sessionId)) {
-      fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an invalid Stripe session ID.');
-    }
-    if ((mode === 'test' && !sessionId.startsWith('cs_test_'))
-      || (mode === 'live' && !sessionId.startsWith('cs_live_'))) {
-      fail('INVALID_CHECKOUT_RESPONSE', 'The Stripe Checkout Session does not match the reported mode.');
-    }
-  } else if (!PAYPAL_ORDER_ID_PATTERN.test(sessionId)) {
+  if (!PAYPAL_ORDER_ID_PATTERN.test(sessionId)) {
     fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an invalid PayPal order ID.');
   }
 
@@ -101,10 +92,7 @@ function parseHostedCheckoutResponse(payload) {
   if (checkoutUrl.protocol !== 'https:') {
     fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an insecure Checkout URL.');
   }
-  if (provider === 'stripe' && checkoutUrl.hostname !== 'checkout.stripe.com') {
-    fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an unexpected Stripe Checkout URL.');
-  }
-  if (provider === 'paypal' && !trustedPayPalUrl(checkoutUrl, mode)) {
+  if (!trustedPayPalUrl(checkoutUrl, mode)) {
     fail('INVALID_CHECKOUT_RESPONSE', 'The checkout endpoint returned an unexpected PayPal Checkout URL.');
   }
 

@@ -17,7 +17,7 @@ function pendingOrder(overrides = {}) {
     amountTotal: 4890,
     currency: 'EUR',
     mode: 'test',
-    paymentSessionId: 'cs_test_neon_order_store',
+    paymentSessionId: '5O190127TN364715T',
     createdAt: 1_800_000_000,
     updatedAt: 1_800_000_000,
     paidAt: null,
@@ -198,142 +198,6 @@ test('rolls back when an existing pending order conflicts', async () => {
   assert.equal(trace.at(-1), 'end');
 });
 
-test('applies a new Stripe event once with row locking and a version guard', async () => {
-  const current = pendingOrder();
-  const updated = pendingOrder({
-    status: 'paid',
-    updatedAt: 1_800_000_100,
-    paidAt: 1_800_000_100,
-    lastStripeEventId: 'evt_neon_paid',
-    lastStripeEventType: 'checkout.session.completed',
-    lastStripeEventCreated: 1_800_000_100,
-    version: 1,
-  });
-  const event = {
-    eventId: 'evt_neon_paid',
-    eventType: 'checkout.session.completed',
-    created: 1_800_000_100,
-    reference,
-  };
-  let updateCalls = 0;
-  const steps = [
-    { match: /^BEGIN ISOLATION LEVEL SERIALIZABLE$/ },
-    {
-      match: /^INSERT INTO legend_commerce\.stripe_events/,
-      result: { rows: [{ event_id: event.eventId }] },
-    },
-    {
-      match: /^SELECT \* FROM legend_commerce\.orders WHERE reference = \$1 FOR UPDATE$/,
-      result: { rows: [databaseRow(current)] },
-    },
-    {
-      match: /^UPDATE legend_commerce\.orders SET status = \$3/,
-      parameters(values) {
-        assert.equal(values[0], reference);
-        assert.equal(values[1], 0);
-        assert.equal(values[9], 1);
-      },
-      result: { rows: [databaseRow(updated)] },
-    },
-    { match: /^COMMIT$/ },
-  ];
-  const store = createNeonOrderStore({
-    connectionString: DATABASE_URL,
-    clientFactory: createScriptedClientFactory(steps),
-    now: () => 1_800_000_101,
-  });
-
-  const result = await store.processStripeEvent(event, (order) => {
-    updateCalls += 1;
-    assert.deepEqual(order, current);
-    return updated;
-  });
-  assert.equal(result.duplicate, false);
-  assert.equal(result.order.status, 'paid');
-  assert.equal(result.order.version, 1);
-  assert.equal(updateCalls, 1);
-});
-
-test('acknowledges an exact duplicate Stripe event without calling the update callback', async () => {
-  const current = pendingOrder({
-    status: 'paid',
-    updatedAt: 1_800_000_100,
-    paidAt: 1_800_000_100,
-    lastStripeEventId: 'evt_neon_paid',
-    lastStripeEventType: 'checkout.session.completed',
-    lastStripeEventCreated: 1_800_000_100,
-    version: 1,
-  });
-  const event = {
-    eventId: 'evt_neon_paid',
-    eventType: 'checkout.session.completed',
-    created: 1_800_000_100,
-    reference,
-  };
-  const steps = [
-    { match: /^BEGIN ISOLATION LEVEL SERIALIZABLE$/ },
-    { match: /^INSERT INTO legend_commerce\.stripe_events/, result: { rows: [] } },
-    {
-      match: /^SELECT event_id, event_type, order_reference, stripe_created_at FROM legend_commerce\.stripe_events/,
-      result: {
-        rows: [{
-          event_id: event.eventId,
-          event_type: event.eventType,
-          order_reference: reference,
-          stripe_created_at: event.created,
-        }],
-      },
-    },
-    {
-      match: /^SELECT \* FROM legend_commerce\.orders WHERE reference = \$1 FOR UPDATE$/,
-      result: { rows: [databaseRow(current)] },
-    },
-    { match: /^COMMIT$/ },
-  ];
-  const store = createNeonOrderStore({
-    connectionString: DATABASE_URL,
-    clientFactory: createScriptedClientFactory(steps),
-  });
-
-  const result = await store.processStripeEvent(event, () => {
-    assert.fail('Duplicate event must not call createUpdate().');
-  });
-  assert.equal(result.duplicate, true);
-  assert.equal(result.order.version, 1);
-});
-
-test('rolls back the Stripe event reservation when the order is missing', async () => {
-  const event = {
-    eventId: 'evt_neon_missing',
-    eventType: 'checkout.session.completed',
-    created: 1_800_000_100,
-    reference,
-  };
-  const trace = [];
-  const steps = [
-    { match: /^BEGIN ISOLATION LEVEL SERIALIZABLE$/ },
-    {
-      match: /^INSERT INTO legend_commerce\.stripe_events/,
-      result: { rows: [{ event_id: event.eventId }] },
-    },
-    {
-      match: /^SELECT \* FROM legend_commerce\.orders WHERE reference = \$1 FOR UPDATE$/,
-      result: { rows: [] },
-    },
-    { match: /^ROLLBACK$/ },
-  ];
-  const store = createNeonOrderStore({
-    connectionString: DATABASE_URL,
-    clientFactory: createScriptedClientFactory(steps, trace),
-  });
-
-  await assert.rejects(
-    () => store.processStripeEvent(event, () => pendingOrder()),
-    (error) => error.code === 'ORDER_NOT_FOUND',
-  );
-  assert.equal(trace.at(-1), 'end');
-});
-
 test('looks up detached order values without opening a write transaction', async () => {
   const order = pendingOrder();
   const trace = [];
@@ -350,4 +214,12 @@ test('looks up detached order values without opening a write transaction', async
   found.customer.email = 'mutated@example.com';
   assert.equal(order.customer.email, 'neon@example.com');
   assert.deepEqual(trace, ['connect', 'SELECT', 'end']);
+});
+
+test('core Neon store exposes no active Stripe event capability', () => {
+  const store = createNeonOrderStore({
+    connectionString: DATABASE_URL,
+    clientFactory: async () => ({ connect() {}, query() {}, end() {} }),
+  });
+  assert.equal('processStripeEvent' in store, false);
 });

@@ -5,7 +5,7 @@ import {
   CheckoutSessionError,
   allocateDiscountCents,
   normalizeCheckoutCustomer,
-} from './checkout-session.mjs';
+} from './checkout-core.mjs';
 import { normalizePayPalOrderId } from './paypal-api.mjs';
 
 const PAYPAL_REFERENCE_VERSION = 1;
