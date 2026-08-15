@@ -33,6 +33,10 @@ De actieve legacy Stripe-runtime is inmiddels uit `main` verwijderd. De 30/45 cm
 - related-productsvalidatie;
 - catalogus-, structured-data- en productpaginapariteitscontroles;
 - eerdere kapotte interne routes en duplicate SEO-titels opgelost.
+- actieve storefrontbranding gemigreerd naar `LegendMural` via catalogus, template, generator en gegenereerde productpagina’s;
+- niet-onderbouwde social proof verwijderd uit de homepage;
+- PayPal-only betaalbadge, €69-na-korting verzendcopy en footer/help-placeholdercleanup doorgevoerd;
+- placeholder-WhatsAppnummer verwijderd zonder een onbevestigd vervangend nummer te introduceren.
 
 ### Launch commerce
 
@@ -229,13 +233,22 @@ Dit betekent **niet** dat PayPal Live of production infrastructure al klaar is; 
 
 ### 1. Storefront launch cleanup
 
-De zichtbare site bevat nog launchrestanten die vóór officiële publicatie moeten worden gecorrigeerd, waaronder:
+De algemene feitelijke storefrontcleanup is technisch afgerond via PR #92 en PR #93:
 
-- `Legend Stories` branding op verschillende plekken;
-- oude GitHub Pages canonical/Open Graph URLs;
-- social proof/trustclaims zoals `1K+ Sold`, `4.9★ On Trustpilot` en `Best seller` wanneer deze niet aantoonbaar onderbouwd zijn;
-- footer/help/legal routes en betaalbadges controleren op feitelijke juistheid;
-- definitief domain/SEO beleid pas toepassen zodra het publieke domein is bevestigd.
+- actieve storefrontbranding gebruikt `LegendMural` in plaats van `Legend Stories`;
+- niet-onderbouwde social-proofclaims zoals `1K+ Sold`, `4.9★ On Trustpilot` en bestsellerclaims zijn verwijderd of vervangen door feitelijke product-/commerce-informatie;
+- footer toont voor launch alleen PayPal als betaalmethode;
+- dode `#`-placeholderlinks voor Shipping, Returns, FAQ en Privacy zijn verwijderd totdat echte routes/policies bestaan;
+- verouderde gratis-verzendtekst van €50 is gecorrigeerd naar €69 na korting;
+- het placeholder-WhatsAppnummer `+31 6 12345678` is verwijderd;
+- alle 111 generator-managed productpagina’s zijn na deze wijzigingen opnieuw gegenereerd en gevalideerd.
+
+Voor officiële publicatie blijven binnen deze storefrontlaag nog open:
+
+- oude GitHub Pages canonical/Open Graph URLs vervangen zodra het definitieve publieke domein is bevestigd;
+- definitief domain/SEO-beleid toepassen zodra het publieke domein is bevestigd;
+- echte legal/help-pagina’s en routes pas toevoegen nadat privacy, returns, refunds, voorwaarden en shipping/customsinhoud inhoudelijk zijn vastgesteld;
+- bestaande social links pas wijzigen zodra de officiële LegendMural social accounts/handles zijn bevestigd.
 
 ### 2. Production infrastructure
 
