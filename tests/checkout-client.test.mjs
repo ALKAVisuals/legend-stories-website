@@ -27,9 +27,9 @@ const payload = Object.freeze({
 
 function validResponse(overrides = {}) {
   return {
-    provider: 'stripe',
-    sessionId: 'cs_test_browser_checkout',
-    url: 'https://checkout.stripe.com/c/pay/cs_test_browser_checkout',
+    provider: 'paypal',
+    sessionId: '5O190127TN364715T',
+    url: 'https://www.sandbox.paypal.com/checkoutnow?token=5O190127TN364715T',
     mode: 'test',
     reference: 'a'.repeat(64),
     ...overrides,
@@ -43,15 +43,15 @@ test('hosted checkout remains disabled when no endpoint is configured', () => {
 
 test('endpoint configuration requires HTTPS outside local development', () => {
   assert.equal(
-    normalizeHostedCheckoutEndpoint('/api/create-checkout-session', 'https://shop.example'),
-    'https://shop.example/api/create-checkout-session',
+    normalizeHostedCheckoutEndpoint('/api/paypal/checkout', 'https://shop.example'),
+    'https://shop.example/api/paypal/checkout',
   );
   assert.equal(
-    normalizeHostedCheckoutEndpoint('http://localhost:8888/api/checkout'),
-    'http://localhost:8888/api/checkout',
+    normalizeHostedCheckoutEndpoint('http://localhost:8888/api/paypal/checkout'),
+    'http://localhost:8888/api/paypal/checkout',
   );
   assert.throws(
-    () => normalizeHostedCheckoutEndpoint('http://payments.example/api/checkout'),
+    () => normalizeHostedCheckoutEndpoint('http://payments.example/api/paypal/checkout'),
     (error) => error instanceof HostedCheckoutClientError
       && error.code === 'INVALID_CHECKOUT_ENDPOINT',
   );
@@ -60,7 +60,7 @@ test('endpoint configuration requires HTTPS outside local development', () => {
 test('browser sends only the trusted request and customer payload', async () => {
   const capture = {};
   const checkout = await requestHostedCheckout({
-    endpoint: '/api/create-checkout-session',
+    endpoint: '/api/paypal/checkout',
     baseUrl: 'https://shop.example',
     payload: {
       ...payload,
@@ -77,14 +77,14 @@ test('browser sends only the trusted request and customer payload', async () => 
     },
   });
 
-  assert.equal(capture.url, 'https://shop.example/api/create-checkout-session');
+  assert.equal(capture.url, 'https://shop.example/api/paypal/checkout');
   assert.equal(capture.options.method, 'POST');
   assert.equal(capture.options.credentials, 'omit');
   const body = JSON.parse(capture.options.body);
   assert.deepEqual(Object.keys(body).sort(), ['customer', 'request']);
   assert.deepEqual(body, payload);
-  assert.equal(checkout.provider, 'stripe');
-  assert.equal(checkout.sessionId, 'cs_test_browser_checkout');
+  assert.equal(checkout.provider, 'paypal');
+  assert.equal(checkout.sessionId, '5O190127TN364715T');
   assert.equal(checkout.mode, 'test');
 });
 
@@ -94,7 +94,7 @@ test('browser rejects checkout responses without an explicit provider', async ()
 
   await assert.rejects(
     () => requestHostedCheckout({
-      endpoint: 'https://payments.example/api/checkout',
+      endpoint: 'https://payments.example/api/paypal/checkout',
       payload,
       fetchImpl: async () => new Response(JSON.stringify(responseBody), {
         status: 201,
@@ -106,14 +106,33 @@ test('browser rejects checkout responses without an explicit provider', async ()
   );
 });
 
-test('browser rejects unexpected Stripe redirects and mismatched modes', async () => {
+test('browser rejects explicit non-PayPal providers', async () => {
+  await assert.rejects(
+    () => requestHostedCheckout({
+      endpoint: 'https://payments.example/api/paypal/checkout',
+      payload,
+      fetchImpl: async () => new Response(JSON.stringify(validResponse({
+        provider: 'stripe',
+        sessionId: 'cs_test_legacy',
+        url: 'https://checkout.stripe.com/c/pay/cs_test_legacy',
+      })), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    }),
+    (error) => error instanceof HostedCheckoutClientError
+      && error.code === 'INVALID_CHECKOUT_RESPONSE',
+  );
+});
+
+test('browser rejects unexpected PayPal redirects and mismatched modes', async () => {
   for (const responseBody of [
     validResponse({ url: 'https://attacker.example/checkout' }),
     validResponse({ mode: 'live' }),
   ]) {
     await assert.rejects(
       () => requestHostedCheckout({
-        endpoint: 'https://payments.example/api/checkout',
+        endpoint: 'https://payments.example/api/paypal/checkout',
         payload,
         fetchImpl: async () => new Response(JSON.stringify(responseBody), {
           status: 201,
@@ -129,7 +148,7 @@ test('browser rejects unexpected Stripe redirects and mismatched modes', async (
 test('browser surfaces sanitized endpoint errors without accepting a redirect', async () => {
   await assert.rejects(
     () => requestHostedCheckout({
-      endpoint: 'https://payments.example/api/checkout',
+      endpoint: 'https://payments.example/api/paypal/checkout',
       payload,
       fetchImpl: async () => new Response(JSON.stringify({
         error: {
@@ -153,7 +172,7 @@ test('browser surfaces sanitized endpoint errors without accepting a redirect', 
 test('browser classifies aborted endpoint requests as checkout timeouts', async () => {
   await assert.rejects(
     () => requestHostedCheckout({
-      endpoint: 'https://payments.example/api/checkout',
+      endpoint: 'https://payments.example/api/paypal/checkout',
       payload,
       fetchImpl: async () => {
         const error = new Error('aborted');
@@ -170,7 +189,7 @@ test('browser rejects incomplete payloads before making a network request', asyn
   let called = false;
   await assert.rejects(
     () => requestHostedCheckout({
-      endpoint: 'https://payments.example/api/checkout',
+      endpoint: 'https://payments.example/api/paypal/checkout',
       payload: { request: payload.request },
       fetchImpl: async () => {
         called = true;
