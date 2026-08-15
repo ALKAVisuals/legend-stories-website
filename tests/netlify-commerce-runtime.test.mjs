@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createNetlifyCheckoutHandler } from '../netlify/functions/create-checkout-session.mjs';
+import { createNetlifyPayPalCheckoutHandler } from '../netlify/functions/create-paypal-order.mjs';
 import { createNetlifyOrderStatusHandler } from '../netlify/functions/order-status.mjs';
 import {
   NetlifyCommerceConfigurationError,
@@ -63,10 +63,21 @@ test('Netlify commerce runtime caches one store without exposing credentials', a
   assert.doesNotMatch(await response.text(), /postgresql:|secret@/);
 });
 
-test('checkout function returns a safe 503 before contacting Stripe when Neon is missing', async () => {
+test('PayPal checkout function returns a safe 503 before contacting PayPal when Neon is missing', async () => {
   resetCommerceRuntimeCache();
-  const handler = createNetlifyCheckoutHandler({ env: {} });
-  const response = await handler(new Request('https://preview.example/api/checkout', {
+  let paypalCalled = false;
+  const handler = createNetlifyPayPalCheckoutHandler({
+    env: {},
+    handlerOptions: {
+      paypalClient: {
+        mode: 'test',
+        async createOrder() {
+          paypalCalled = true;
+        },
+      },
+    },
+  });
+  const response = await handler(new Request('https://preview.example/api/paypal/checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ request: {}, customer: {} }),
@@ -74,13 +85,14 @@ test('checkout function returns a safe 503 before contacting Stripe when Neon is
   const payload = await response.json();
 
   assert.equal(response.status, 503);
-  assert.equal(payload.error.code, 'CHECKOUT_SERVICE_NOT_CONFIGURED');
+  assert.equal(payload.error.code, 'PAYPAL_CHECKOUT_SERVICE_NOT_CONFIGURED');
+  assert.equal(paypalCalled, false);
 });
 
 test('order-status function injects the shared Neon store into the existing API handler', async () => {
   resetCommerceRuntimeCache();
   const reference = 'a'.repeat(64);
-  const sessionId = 'cs_test_netlify_status';
+  const sessionId = '5O190127TN364715T';
   const orderStore = {
     async getOrderByReference(receivedReference) {
       assert.equal(receivedReference, reference);
