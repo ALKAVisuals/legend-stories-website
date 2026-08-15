@@ -6,7 +6,7 @@ Laatst inhoudelijk bijgewerkt: 15 augustus 2026.
 
 LegendMural gebruikt PayPal als enige beoogde payment provider voor launch en Neon Postgres als eigen orderdatabase. Deze checklist beschrijft hoe de PayPal create-order/capture/webhook flow veilig in een geïsoleerde Netlify stagingomgeving wordt bewezen voordat PayPal Live wordt overwogen.
 
-De repository bevat create order, browser capture, verified order status, Neon persistence, PayPal webhook-signatureverificatie en een idempotente Neon reconciliationprocessor. **De browser-native happy path is op 15 augustus 2026 met een echte PayPal Sandbox-betaling tegen Netlify Deploy Preview #85 en de geïsoleerde Neon stagingbranch bewezen. De duplicate-webhookcase is daarna met een echte PayPal Sandbox redelivery bewezen. Een eerste canceltest op Deploy Preview #86 bewees server-side dat de order onbetaald bleef, maar legde ook bloot dat vaste staging callback-URL's nog naar Preview #85 wezen. PR #86 corrigeert dit structureel door browsercheckouts naar exact dezelfde gevalideerde storefront-origin terug te sturen. De cart-preservation rerun op #86 blijft vereist voordat de cancelcase volledig groen is. PayPal Live blijft uitgeschakeld.**
+De repository bevat create order, browser capture, verified order status, Neon persistence, PayPal webhook-signatureverificatie en een idempotente Neon reconciliationprocessor. **De browser-native happy path is op 15 augustus 2026 met een echte PayPal Sandbox-betaling tegen Netlify Deploy Preview #85 en de geïsoleerde Neon stagingbranch bewezen. De duplicate-webhookcase is daarna met een echte PayPal Sandbox redelivery bewezen. Op Deploy Preview #86 is de cancelflow inclusief cart preservation na een same-origin callbackfix end-to-end bewezen. Ook is de interruption/recovery-flow echt bewezen door de browser `POST /api/paypal/capture` met Chrome Request Conditions te blokkeren: de order ging desondanks via `CHECKOUT.ORDER.APPROVED` recovery-capture en een daaropvolgende `PAYMENT.CAPTURE.COMPLETED` webhook naar `paid`. PayPal Live blijft uitgeschakeld.**
 
 ## Architectuur
 
@@ -151,10 +151,10 @@ De browser-native happy path hieronder is op 15 augustus 2026 daadwerkelijk uitg
 12. Controleer dat dezelfde capture niet leidt tot een tweede betaling of dubbele ordermutatie.
 13. Controleer dat het echte `PAYMENT.CAPTURE.COMPLETED` Sandbox webhookevent wordt geverifieerd, in `paypal_webhook_events` wordt gereserveerd en idempotent tegen dezelfde order wordt gereconciled.
 14. Lever hetzelfde webhookevent opnieuw en controleer dat order `version` en `paid_at` niet nogmaals veranderen. **Bewezen op 15 augustus 2026 met een echte PayPal Sandbox `Resend`: order bleef `paid`, version bleef 1, paid_at bleef gelijk en de ledger bleef op één completed-event voor dezelfde PayPal event-ID.**
-15. Simuleer browseronderbreking na PayPal-capture en vóór lokale bevestiging; controleer dat `PAYMENT.CAPTURE.COMPLETED` de order alsnog naar `paid` brengt.
+15. Simuleer een browseronderbreking door de browser `POST /api/paypal/capture` te blokkeren terwijl PayPal approval wel doorgaat. Controleer dat `CHECKOUT.ORDER.APPROVED` recovery-capture uitvoert en dat een latere `PAYMENT.CAPTURE.COMPLETED` voor dezelfde capture-ID de keten bevestigt. **Bewezen op 15 augustus 2026 op Deploy Preview #86: DevTools toonde `1 affected`, de browserreturn bleef op `Payment submitted`, maar de Neon-order ging zelfstandig naar `paid`, version werd exact 1 en beide echte webhookevents wezen naar dezelfde capture.**
 16. Controleer `CHECKOUT.ORDER.APPROVED` recovery-capture en bevestig dat dezelfde `legend-paypal-capture-<reference>` idempotency-key wordt gebruikt.
 17. Lever een late `PAYMENT.CAPTURE.PENDING` na `paid` en controleer dat de order `paid` blijft.
-18. Annuleer vóór capture, controleer server-side `payment_pending`, `version = 0`, geen `paid_at` en geen capture-event, en bevestig vervolgens dat PayPal naar dezelfde storefront-origin terugkeert en de cart daar behouden blijft. **Server-side onbetaald gedrag is bewezen; de cart-preservation rerun na de same-origin callbackfix staat nog open.**
+18. Annuleer vóór capture, controleer server-side `payment_pending`, `version = 0`, geen `paid_at` en geen capture-event, en bevestig vervolgens dat PayPal naar dezelfde storefront-origin terugkeert en de cart daar behouden blijft. **Volledig bewezen op 15 augustus 2026 na de same-origin callbackfix op Deploy Preview #86.**
 
 ## Commercecases die afzonderlijk getest moeten worden
 
@@ -225,7 +225,7 @@ De server-side webhooklaag bevat nu:
 - minimale ledger zonder volledige PayPal-/klantpayloads;
 - verified-but-ignored gedrag voor refund/reversal-events totdat hun financiële state-machine apart is ontworpen.
 
-De code én de browser-native happy path zijn nu tegen echte PayPal Sandbox + Neon staging bewezen. De duplicate webhookdelivery is eveneens met een echte Sandbox redelivery bewezen. De resterende stagingblokkers zijn de overige negatieve/interruption/idempotencycases hierboven en de cancel-cart rerun na de same-origin callbackfix; dit is geen toestemming om PayPal Live te activeren.
+De code, browser-native happy path, duplicate webhookdelivery, cancel/cart-preservation en interruption/recovery zijn nu tegen echte PayPal Sandbox + Neon staging bewezen. De resterende stagingwerkzaamheden zitten vooral in de overige negatieve/idempotency-edgecases en merge-readiness van PR #86; dit is geen toestemming om PayPal Live te activeren.
 
 Stripe mag pas worden verwijderd nadat de resterende PayPal staging-regressies aantoonbaar groen zijn.
 
