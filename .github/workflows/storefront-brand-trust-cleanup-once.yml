@@ -50,7 +50,6 @@ jobs:
               encoding='utf-8',
           )
 
-          # Managed page generation reads descriptions and product identity from this catalog.
           catalog = Path('data/products/catalog.json')
           catalog.write_text(
               catalog.read_text(encoding='utf-8').replace('Legend Stories', 'LegendMural'),
@@ -68,6 +67,7 @@ jobs:
 
           index = Path('index.html')
           text = index.read_text(encoding='utf-8')
+
           start_marker = '            <div class="flex items-center gap-5 mt-8 justify-center lg:justify-start">'
           end_marker = '\n          </div>\n          <div class="relative max-w-sm mx-auto lg:max-w-none">'
           start = text.find(start_marker)
@@ -76,17 +76,32 @@ jobs:
               raise SystemExit('Homepage trust-stats region markers were not found in the expected hero structure.')
           if text.find(start_marker, start + 1) >= 0:
               raise SystemExit('Homepage trust-stats start marker is not unique.')
-          new_stats = '''            <div class="flex items-center gap-5 mt-8 justify-center lg:justify-start" aria-label="Product benefits">
+          hero_benefits = '''            <div class="flex items-center gap-5 mt-8 justify-center lg:justify-start" aria-label="Product benefits">
               <div class="text-center"><p class="text-sm font-bold text-text-primary">Matte vinyl</p><p class="text-[11px] text-text-muted tracking-wide">Premium finish</p></div>
               <div class="w-px h-7 bg-surface-border/50"></div>
               <div class="text-center"><p class="text-sm font-bold text-text-primary">Removable</p><p class="text-[11px] text-text-muted tracking-wide">Damage-free</p></div>
               <div class="w-px h-7 bg-surface-border/50"></div>
               <div class="text-center"><p class="text-sm font-bold text-text-primary">Ships from NL</p><p class="text-[11px] text-text-muted tracking-wide">NL · EU · US</p></div>
             </div>'''
-          text = text[:start] + new_stats + text[end:]
+          text = text[:start] + hero_benefits + text[end:]
+
           text = text.replace(
               'alt="The Truth Seeker — Best Selling Music Legend Wall Sticker"',
               'alt="The Truth Seeker — Music Legend Wall Sticker"',
+          )
+          text = text.replace(
+              '<span class="text-[10px] text-void font-bold">+1K sold</span>',
+              '<span class="text-[10px] text-void font-bold">Matte vinyl</span>',
+          ).replace(
+              '<p class="text-[9px] text-void/70 font-medium">Best seller this week</p>',
+              '<p class="text-[9px] text-void/70 font-medium">Removable finish</p>',
+          )
+          text = text.replace(
+              '<div class="axis-stat-value text-mint">1K+</div>\n            <p class="axis-stat-label">Happy customers</p>',
+              '<div class="axis-stat-value text-mint">30 / 45 cm</div>\n            <p class="axis-stat-label">Two production sizes</p>',
+          ).replace(
+              '<div class="axis-stat-value text-mint">4.9★</div>\n            <p class="axis-stat-label">Trustpilot rating</p>',
+              '<div class="axis-stat-value text-mint">NL · EU · US</div>\n            <p class="axis-stat-label">Shipping regions</p>',
           )
           index.write_text(text, encoding='utf-8')
 
@@ -127,7 +142,12 @@ jobs:
                   failed = True
 
           index = Path('index.html').read_text(encoding='utf-8')
-          for claim in ('1K+', 'On Trustpilot', 'Best Selling Music Legend', '>Best seller<'):
+          forbidden = (
+              '1K+', '+1K sold', 'Happy customers', '4.9★', 'On Trustpilot',
+              'Trustpilot rating', 'Best Selling Music Legend', '>Best seller<',
+              'Best seller this week',
+          )
+          for claim in forbidden:
               if claim in index:
                   print(f'::error file=index.html::Unsupported homepage trust claim remains: {claim}')
                   failed = True
