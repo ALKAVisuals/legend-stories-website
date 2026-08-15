@@ -1,0 +1,40 @@
+name: PayPal approved order capture
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/paypal-capture-approved-order.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    name: Capture approved Sandbox order
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Capture approved order through Deploy Preview
+        env:
+          PREVIEW_URL: https://deploy-preview-85--legendmural.netlify.app
+          ORDER_REFERENCE: 224f719664536f1aab2a4a830ec0ec96530dbc65bd8ae090f53727ef2b8a3f81
+          PAYPAL_ORDER_ID: 23350405M3805603V
+        run: |
+          set -euo pipefail
+          response=$(curl --silent --show-error --fail-with-body \
+            -X POST "$PREVIEW_URL/api/paypal/capture" \
+            -H 'Content-Type: application/json' \
+            --data "{\"reference\":\"$ORDER_REFERENCE\",\"orderId\":\"$PAYPAL_ORDER_ID\"}")
+          echo "$response" | node --input-type=module <<'NODE'
+          let input = '';
+          process.stdin.setEncoding('utf8');
+          for await (const chunk of process.stdin) input += chunk;
+          const payload = JSON.parse(input);
+          if (payload.provider !== 'paypal' || payload.mode !== 'test' || payload.status !== 'paid' || payload.paid !== true) {
+            throw new Error('Sandbox capture did not finish as paid.');
+          }
+          console.log(JSON.stringify({ provider: payload.provider, mode: payload.mode, status: payload.status, paid: payload.paid, duplicate: payload.duplicate }));
+          NODE
