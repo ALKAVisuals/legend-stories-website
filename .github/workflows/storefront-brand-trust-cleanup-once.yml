@@ -31,8 +31,6 @@ jobs:
 
           root = Path('.')
           changed_html = []
-
-          # Brand-visible top-level storefront pages only; historical docs remain untouched.
           for path in sorted(root.glob('*.html')):
               text = path.read_text(encoding='utf-8')
               updated = text.replace('Legend Stories', 'LegendMural')
@@ -41,16 +39,13 @@ jobs:
                   changed_html.append(path.name)
 
           template = Path('templates/product-page.html')
-          template_text = template.read_text(encoding='utf-8')
-          template_text = template_text.replace('Legend Stories', 'LegendMural')
+          template_text = template.read_text(encoding='utf-8').replace('Legend Stories', 'LegendMural')
           template.write_text(template_text, encoding='utf-8')
 
           generator = Path('scripts/product-page-generation.mjs')
-          generator_text = generator.read_text(encoding='utf-8')
-          generator_text = generator_text.replace('Legend Stories', 'LegendMural')
+          generator_text = generator.read_text(encoding='utf-8').replace('Legend Stories', 'LegendMural')
           generator.write_text(generator_text, encoding='utf-8')
 
-          # Preserve any custom presentation titles while updating their brand suffix.
           manifests = sorted(Path('data/products').glob('2026-batch-*-presentation.json'))
           if len(manifests) != 6:
               raise SystemExit(f'Expected 6 presentation manifests; found {len(manifests)}')
@@ -65,7 +60,7 @@ jobs:
           start = text.find(start_marker)
           end = text.find(end_marker, start if start >= 0 else 0)
           if start < 0 or end < 0 or end <= start:
-              raise SystemExit('Homepage trust-stats region markers were not found exactly once in the expected hero structure.')
+              raise SystemExit('Homepage trust-stats region markers were not found in the expected hero structure.')
           if text.find(start_marker, start + 1) >= 0:
               raise SystemExit('Homepage trust-stats start marker is not unique.')
           new_stats = '''            <div class="flex items-center gap-5 mt-8 justify-center lg:justify-start" aria-label="Product benefits">
@@ -82,7 +77,6 @@ jobs:
           )
           index.write_text(text, encoding='utf-8')
 
-          # Template hashes are a reproducibility contract for all managed product pages.
           digest = hashlib.sha256(template.read_bytes()).hexdigest()
           for path in manifests:
               data = json.loads(path.read_text(encoding='utf-8'))
@@ -100,34 +94,44 @@ jobs:
           node scripts/generate-managed-product-pages.mjs --write-live
           node scripts/generate-full-product-catalog.mjs
 
-      - name: Validate cleanup invariants
+      - name: Diagnose storefront cleanup invariants
         run: |
           python - <<'PY'
           from pathlib import Path
 
+          failed = False
           targets = [
               *sorted(Path('.').glob('*.html')),
               Path('templates/product-page.html'),
               Path('scripts/product-page-generation.mjs'),
               *sorted(Path('data/products').glob('2026-batch-*-presentation.json')),
           ]
-          legacy = []
           for path in targets:
-              if 'Legend Stories' in path.read_text(encoding='utf-8'):
-                  legacy.append(str(path))
-          if legacy:
-              raise SystemExit('Legacy storefront brand remains in:\n' + '\n'.join(legacy))
+              text = path.read_text(encoding='utf-8')
+              if 'Legend Stories' in text:
+                  print(f'::error file={path}::Legacy storefront brand remains: Legend Stories')
+                  failed = True
 
-          index = Path('index.html').read_text(encoding='utf-8')
-          forbidden_claims = ('1K+', 'On Trustpilot', 'Best Selling Music Legend', '>Best seller<')
-          found = [claim for claim in forbidden_claims if claim in index]
-          if found:
-              raise SystemExit('Unsupported homepage trust claims remain: ' + ', '.join(found))
+          index_path = Path('index.html')
+          index = index_path.read_text(encoding='utf-8')
+          for claim in ('1K+', 'On Trustpilot', 'Best Selling Music Legend', '>Best seller<'):
+              if claim in index:
+                  print(f'::error file=index.html::Unsupported homepage trust claim remains: {claim}')
+                  failed = True
+
+          if failed:
+              raise SystemExit(1)
           print('Storefront branding and homepage trust-copy invariants pass.')
           PY
+
+      - name: Validate product contracts
+        run: |
           node scripts/validate-product-variants.mjs
           node scripts/validate-full-product-catalog.mjs
           node --test tests/production-handoff.test.mjs
+
+      - name: Run tests and build
+        run: |
           npm test
           npm run build
 
