@@ -27,6 +27,7 @@ const payload = Object.freeze({
 
 function validResponse(overrides = {}) {
   return {
+    provider: 'stripe',
     sessionId: 'cs_test_browser_checkout',
     url: 'https://checkout.stripe.com/c/pay/cs_test_browser_checkout',
     mode: 'test',
@@ -82,8 +83,27 @@ test('browser sends only the trusted request and customer payload', async () => 
   const body = JSON.parse(capture.options.body);
   assert.deepEqual(Object.keys(body).sort(), ['customer', 'request']);
   assert.deepEqual(body, payload);
+  assert.equal(checkout.provider, 'stripe');
   assert.equal(checkout.sessionId, 'cs_test_browser_checkout');
   assert.equal(checkout.mode, 'test');
+});
+
+test('browser rejects checkout responses without an explicit provider', async () => {
+  const responseBody = validResponse();
+  delete responseBody.provider;
+
+  await assert.rejects(
+    () => requestHostedCheckout({
+      endpoint: 'https://payments.example/api/checkout',
+      payload,
+      fetchImpl: async () => new Response(JSON.stringify(responseBody), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    }),
+    (error) => error instanceof HostedCheckoutClientError
+      && error.code === 'INVALID_CHECKOUT_RESPONSE',
+  );
 });
 
 test('browser rejects unexpected Stripe redirects and mismatched modes', async () => {
