@@ -1,0 +1,31 @@
+name: Legal operations validation one-off
+
+on:
+  push:
+    branches:
+      - agent/legal-customer-operations-v1
+    paths:
+      - .github/workflows/legal-ops-validation-once.yml
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/legal-customer-operations-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends ffmpeg
+      - name: Withdrawal notification contract
+        run: node --test tests/withdrawal-notification.test.mjs
+      - name: Full quality gate
+        run: npm run quality
