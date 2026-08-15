@@ -1,0 +1,74 @@
+name: Remove unverified testimonials one-off
+
+on:
+  push:
+    branches:
+      - agent/legal-customer-operations-v2
+    paths:
+      - .github/workflows/remove-unverified-testimonials-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  remove-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/legal-customer-operations-v2
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends ffmpeg
+      - name: Remove unverified testimonial claims
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+
+          let index = fs.readFileSync('index.html', 'utf8');
+          const start = index.indexOf('    <!-- TESTIMONIALS — Axis card pattern -->');
+          const endMarker = '    <!-- SHOP PREVIEW — Swiper Card Swipe Carousel (All 20 Batch 3 Products) -->';
+          const end = index.indexOf(endMarker);
+          if (start < 0 || end < 0 || end <= start) {
+            throw new Error('Could not locate exact testimonial section boundaries.');
+          }
+          index = `${index.slice(0, start)}${index.slice(end)}`;
+          if (/Rik van Dijk|Pieter Bakker|Anna de Wit|Jonas Peeters|testimonial-dot|testimonial-track/.test(index)) {
+            throw new Error('Unverified testimonial content remains in index.html.');
+          }
+          fs.writeFileSync('index.html', index);
+
+          let validator = fs.readFileSync('scripts/validate-shared-form-semantics.mjs', 'utf8');
+          const oldBlock = `const testimonialControls = index.match(/<button\\b[^>]*class=["'][^"']*testimonial-dot[^"']*["'][^>]*aria-label=["']Show testimonial [1-4]["'][^>]*aria-pressed=["'](?:true|false)["'][^>]*><\\/button>/gi) || [];
+if (testimonialControls.length !== 4) {
+  errors.push(\`index.html: expected 4 named testimonial controls, found \${testimonialControls.length}\`);
+}`;
+          const newBlock = `if (/\\btestimonial-dot\\b/i.test(index) || /\\btestimonial-track\\b/i.test(index)) {
+  errors.push('index.html: unverified testimonial controls unexpectedly returned');
+}`;
+          if (!validator.includes(oldBlock)) {
+            throw new Error('Expected testimonial validator block not found; refusing broad rewrite.');
+          }
+          validator = validator.replace(oldBlock, newBlock);
+          fs.writeFileSync('scripts/validate-shared-form-semantics.mjs', validator);
+          NODE
+      - name: Verify testimonial claims are absent
+        run: |
+          ! grep -Eiq 'Rik van Dijk|Pieter Bakker|Anna de Wit|Jonas Peeters|testimonial-dot|testimonial-track' index.html
+          npm run validate:shared-form-semantics
+          git diff --check
+      - name: Full quality gate
+        run: npm run quality
+      - name: Commit only after all gates pass
+        run: |
+          git config user.name "legendmural-legal-ops-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html scripts/validate-shared-form-semantics.mjs
+          git commit -m "Remove unverified customer testimonials"
+          git push origin HEAD:agent/legal-customer-operations-v2
