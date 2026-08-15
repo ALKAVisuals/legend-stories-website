@@ -23,12 +23,25 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Install media inspection tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends ffmpeg
       - name: Integrate withdrawal route across storefront
         shell: bash
         run: |
           node <<'NODE'
           const fs = require('node:fs');
           const crypto = require('node:crypto');
+
+          let withdraw = fs.readFileSync('withdraw.html', 'utf8');
+          if (!withdraw.includes('rel="canonical"')) {
+            withdraw = withdraw.replace(
+              '<title>Withdraw a purchase — LegendMural</title>',
+              '<title>Withdraw a purchase — LegendMural</title>\n  <link rel="canonical" href="https://alkavisuals.github.io/legend-stories-website/withdraw.html">',
+            );
+            fs.writeFileSync('withdraw.html', withdraw);
+          }
 
           const footerLink = '<li><a href="withdraw.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Withdraw a purchase</a></li>';
           const files = fs.readdirSync('.').filter((name) => name.endsWith('.html'));
