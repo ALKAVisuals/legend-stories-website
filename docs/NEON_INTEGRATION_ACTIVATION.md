@@ -1,30 +1,27 @@
 # Neon integration validation
 
-De echte geïsoleerde Neon Postgres-integratie is eerder uitgevoerd. Dit document beschrijft de blijvende testharness, de veiligheidsgrenzen en de voorwaarden voor een toekomstige regressierun.
+Laatst inhoudelijk bijgewerkt: 15 augustus 2026.
 
-## Status
+Dit document beschrijft de blijvende echte-Neon testharness, de bewezen databasecontracten en de grens tussen geïsoleerde validatie en production-activatie.
 
-De bestaande integratie heeft tegen echte PostgreSQL gevalideerd:
+## Huidige status
 
-- schema-migraties;
+De LegendMural paymentruntime is PayPal-only voor nieuwe checkouts. Historische Stripe-schemaonderdelen blijven alleen bestaan voor audit/read-compatibiliteit en zijn geen actieve paymentruntime.
+
+De bestaande echte Neon-validatie heeft onder andere bewezen:
+
 - provider-neutrale order-store conformance;
 - concurrent pending-ordergedrag;
-- duplicate Stripe-eventgedrag;
-- synthetische fixture-cleanup;
-- Neon architectuurvalidatie.
+- expliciete JSONB-serialisatie;
+- bounded retries voor retryable `SERIALIZABLE` conflicts;
+- PayPal order IDs met database-afgeleide `payment_provider=paypal`;
+- PayPal webhook-ledger en idempotente reconciliation;
+- pending -> paid overgang met versiecontrole;
+- duplicate PayPal webhook-idempotency;
+- least-privilege event-ledgergrenzen;
+- synthetische fixture-cleanup.
 
-Tijdens de eerste echte run zijn twee productiepadproblemen gevonden en daarna in PR #74 opgelost:
-
-- JSONB-velden worden expliciet geserialiseerd voordat zij naar de PostgreSQL-driver gaan;
-- retryable SERIALIZABLE-conflicten krijgen bounded retries met backoff.
-
-De PayPal-architectuur voegt nu een aanvullende schemafundering toe die bij de eerstvolgende geïsoleerde Neon-regressierun expliciet moet worden bewezen:
-
-- `payment_provider` wordt in PostgreSQL automatisch afgeleid uit de opgeslagen payment session/order ID;
-- Stripe Checkout session IDs blijven ondersteund voor de tijdelijke legacy fallback;
-- PayPal order IDs worden als `paypal` geclassificeerd zonder dat applicatiecode het providerlabel kan overschrijven;
-- `legend_commerce.paypal_webhook_events` reserveert alleen minimale eventmetadata voor toekomstige idempotente reconciliation;
-- de runtime-rol krijgt op de PayPal event-ledger alleen `SELECT` en `INSERT`.
+De legal/customer-operationsfase voegt migrations `005` en `006` toe voor een aparte immutable withdrawal-ledger. De testharness is daarom uitgebreid zodat de volledige migrationketen nu `001` t/m `006` omvat.
 
 ## Pinned runtime dependencies
 
@@ -33,53 +30,101 @@ De integratie gebruikt:
 - `@neondatabase/serverless` `1.0.2`;
 - `ws` `8.21.1`.
 
-De hoofd-repository-CI draait op Node.js 20. De Netlify-build en Netlify-compatibiliteitscontrole draaien op Node.js 22.
+De Netlify-build en permanente Netlify-compatibiliteitscontrole draaien op Node.js 22.
 
-## Vereiste testsecrets voor een herhaalde run
+## Migrationcontract
 
-De handmatige integratieworkflow vereist:
+De migrationrunner verwerkt migrations strikt in numerieke volgorde:
 
-- `NEON_TEST_DATABASE_URL`: gepoolde TLS-URL voor de geïsoleerde runtimebranch;
-- `NEON_TEST_MIGRATION_URL`: directe TLS-URL voor schema-migraties en fixture-cleanup.
+1. `001_create_order_store.sql`;
+2. `002_grant_order_store_runtime.sql`;
+3. `003_add_paypal_reconciliation.sql`;
+4. `004_grant_paypal_reconciliation_runtime.sql`;
+5. `005_create_withdrawal_requests.sql`;
+6. `006_grant_withdrawal_runtime.sql`.
 
-Print of commit deze waarden nooit. De workflow geeft ze uitsluitend via environment variables door.
+Runtime grants gebruiken een expliciete `__LEGEND_RUNTIME_ROLE__` placeholder die door de migrationrunner veilig als identifier wordt ingevuld. Migration `006` gebruikt dus niet `CURRENT_USER` als impliciete production-default.
 
-## Handmatige integratieworkflow
+De runtime role krijgt voor withdrawal-operaties alleen wat nodig is:
 
-Run **Neon order-store integration** alleen wanneer een echte regressietest tegen de geïsoleerde testomgeving nodig is.
+- order lookup via `SELECT` op `legend_commerce.orders`;
+- `SELECT` en `INSERT` op `legend_commerce.withdrawal_requests`;
+- geen `UPDATE`, `DELETE` of `TRUNCATE` op de withdrawal-ledger.
+
+## Vereiste secrets voor de handmatige echte-Neon regressierun
+
+De bestaande `workflow_dispatch` integratieworkflow vereist uitsluitend test-/stagingcredentials:
+
+- `NEON_TEST_DATABASE_URL`: runtimeverbinding voor de geïsoleerde Neon-branch;
+- `NEON_TEST_MIGRATION_URL`: directe migrationverbinding voor dezelfde branch/database.
+
+De URLs moeten verschillende database-rollen gebruiken. De migration-URL moet een directe, niet-gepoolde endpoint gebruiken. Secrets mogen nooit worden geprint of gecommit.
+
+## Wat de handmatige integration workflow bewijst
 
 De workflow:
 
 1. weigert te starten wanneer een vereiste secret ontbreekt;
 2. installeert de exacte dependency lock;
-3. past in volgorde de migraties `001` t/m `006` toe via de directe migration-URL, inclusief de withdrawal-ledger en expliciete runtime grants;
-4. verwijdert alleen synthetische records uit de geïsoleerde testomgeving;
-5. draait de complete provider-neutrale conformance-suite tegen de echte Neon-adapter;
-6. bewijst aanvullend dat een PayPal order ID als `payment_provider=paypal` wordt opgeslagen;
-7. bewijst dat de runtime-rol een PayPal webhook-event kan reserveren en een withdrawal-record idempotent kan vastleggen, maar deze ledgers niet kan deleten, truncaten of muteren;
-8. ruimt synthetische records ook na een testfout op;
-9. draait de normale credential-free Neon architectuurvalidatie.
+3. past migrations `001` t/m `006` toe;
+4. ruimt alleen synthetische records op;
+5. draait de provider-neutrale order-store conformance-suite;
+6. bewijst PayPal provider-afleiding;
+7. bewijst PayPal reconciliation en duplicate idempotency;
+8. registreert een withdrawal idempotent via de runtime store;
+9. controleert dat de runtime role de payment/withdrawal ledgers niet destructief kan muteren;
+10. ruimt synthetische records ook na fouten op;
+11. draait daarna de credential-free Neon architectuurvalidatie.
+
+## Aanvullend production-bootstrapbewijs
+
+Op 15 augustus 2026 is de daadwerkelijke Neon `production` branch read-only geïnspecteerd. Daar bestonden nog geen `legend_commerce` tabellen. Productie is dus een lege commerce-baseline en moet later volledig `001 -> 006` worden gebootstrapt.
+
+Daarom is een tijdelijke branch rechtstreeks vanaf die lege production-baseline gemaakt. Op die tijdelijke branch is bewezen dat:
+
+- migrations `001` t/m `006` het volledige schema vanaf nul kunnen opbouwen;
+- de resulterende tabellen `orders`, historisch `stripe_events`, `paypal_webhook_events` en `withdrawal_requests` aanwezig zijn;
+- een PayPal order ID als `payment_provider=paypal` wordt afgeleid;
+- een withdrawal-record correct aan een bestaande order kan worden gekoppeld;
+- de test-runtime-role noodzakelijke order/withdrawalrechten krijgt;
+- die role geen withdrawal `UPDATE`, `DELETE` of `TRUNCATE` recht krijgt.
+
+De tijdelijke preflightbranch is na de controle verwijderd. De production-branch zelf is niet gemuteerd.
+
+## Huidige production-observaties
+
+Read-only Neon-inspectie op 15 augustus 2026 liet zien:
+
+- project: `Legendmural`;
+- primary/default branch: `production`;
+- production commerce-schema: nog leeg;
+- production branch: momenteel niet protected;
+- production compute: passwordless access momenteel enabled;
+- project history-retention: momenteel 21.600 seconden (6 uur).
+
+Dit zijn observaties, geen goedkeuring van deze instellingen. Branch protection, access policy, dedicated migration/runtimecredentials en recovery window moeten vóór Live expliciet worden beoordeeld.
 
 ## Veiligheidsgrenzen
 
-- De workflow is `workflow_dispatch` only.
-- Zij gebruikt `contents: read`.
-- Zij maakt, verwijdert of reset geen Neon-branches.
-- Zij mag alleen synthetische testdata gebruiken.
-- Deze handmatige Neon-integratieworkflow does not touch Netlify; Netlify staging is een afzonderlijke operationele releasefase.
-- Zij activeert geen PayPal Live-modus.
-- `PAYPAL_ALLOW_LIVE=true` hoort niet in deze testomgeving.
-- Productiecredentials horen nooit in de testenvironment.
+- De normale echte-Neon regressieworkflow is handmatig (`workflow_dispatch`) en repository-permissions blijven read-only.
+- Testworkflows mogen geen productioncredentials gebruiken.
+- PayPal Live wordt niet door database-integratietests geactiveerd.
+- Full PayPal/customerpayloads worden niet in de event-ledger opgeslagen.
+- Historische migrations worden niet herschreven om oude Stripe-schemahistorie cosmetisch te verwijderen.
+- Production migration, credentialconfiguratie en restorebeleid zijn afzonderlijke operationele gates.
 
 ## Productiegrens
 
-Een geslaagde integratietest betekent niet dat de database automatisch productieklaar is. Voor productie blijven minimaal vereist:
+Een groene staging/preflight betekent niet dat production automatisch mag worden geactiveerd. Voor de live databasefase blijven minimaal vereist:
 
-- een gescheiden productiebranch;
-- een dedicated least-privilege runtime-rol;
-- vastgesteld backup- en restorebeleid;
-- vastgesteld privacy- en retentiebeleid;
-- gescheiden Netlify-productievariabelen;
-- monitoring en incidentprocedures.
+- exact reviewed `main` SHA;
+- protected/controlled production branch policy;
+- dedicated migration-owner en least-privilege runtime credential;
+- vastgesteld recovery/restorebeleid en voldoende restore window;
+- definitief privacy-/retentiebeleid;
+- gescheiden Netlify production secrets;
+- monitoring, incident- en rollbackprocedure;
+- expliciete toestemming vóór migrations `001–006` op production;
+- PayPal Live als aparte, latere expliciet goedgekeurde fase.
 
-De eerstvolgende operationele stap na deze schemafundering is de PayPal webhook/reconciliationlaag implementeren. Pas daarna volgt PayPal Sandbox + Neon staging end-to-end validatie.
+Zie `docs/PRODUCTION_READINESS_RUNBOOK.md` voor de volledige volgorde.
