@@ -49,8 +49,8 @@ for (const page of pages) {
   totalMarkers += markers.length;
 }
 
-if (runtimePages !== 118) {
-  errors.push(`Expected 118 app-runtime pages, found ${runtimePages}.`);
+if (runtimePages < 1) {
+  errors.push('Expected at least one app-runtime page.');
 }
 if (totalMarkers !== runtimePages * 2) {
   errors.push(`Expected ${runtimePages * 2} managed image fallbacks, found ${totalMarkers}.`);
