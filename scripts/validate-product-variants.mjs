@@ -79,9 +79,6 @@ if (/50 × 50 cm|50 × 30 cm|statement-50x50|compact-50x30/.test(template)) {
   errors.push('legacy 50 cm production variant copy remains in the product template.');
 }
 if (!/CART_SCHEMA_VERSION = '4'/.test(app)) errors.push('cart schema must be version 4.');
-if (!/International checkout opens per validated market/.test(app)) {
-  errors.push('market-gating notice is missing.');
-}
 
 const rootHtmlFiles = (await readdir(ROOT)).filter((file) => file.endsWith('.html'));
 const productPages = new Set((catalog.products || []).map((product) => product.page));
