@@ -31,6 +31,8 @@ const REQUIRED_FIELDS = [
 const ALLOWED_CATEGORIES = new Set(['music', 'combat', 'sport', 'wisdom']);
 const COMPATIBLE_SOURCE_DEFAULTS = new Set([DEFAULT_PRODUCT_VARIANT_ID, 'statement-45']);
 const COMPATIBLE_SOURCE_MEASUREMENTS = new Set(['production_box', 'width_height', 'longest_side']);
+const CANONICAL_SIZE_COPY = 'Available in 30 cm and 45 cm, measured along the longest side.';
+const LEGACY_SIZE_PATTERN = /50 × 50 cm|50 × 30 cm|statement-50x50|compact-50x30/i;
 
 function escapeHtml(value) {
   return String(value)
@@ -41,11 +43,17 @@ function escapeHtml(value) {
     .replaceAll("'", '&#039;');
 }
 
-function launchDescription(product) {
-  return String(product.description || '').replace(
+function launchDescription(value) {
+  let description = String(value?.description ?? value ?? '');
+  const approvedSizeCopies = [
     /Available in Compact \(up to 50 × 30 cm\) and Statement \(up to 50 × 50 cm\)\. Original proportions are preserved\.?/i,
-    'Available in 30 cm and 45 cm, measured along the longest side.',
-  );
+    /Available in Compact \(30 cm longest side\) and Statement \(45 cm longest side\)\. Original proportions are preserved\.?/i,
+    /Available in 30 cm and 45 cm, measured along the longest side\.?/i,
+  ];
+  for (const pattern of approvedSizeCopies) {
+    description = description.replace(pattern, CANONICAL_SIZE_COPY);
+  }
+  return description;
 }
 
 function sameNumber(left, right) {
@@ -104,6 +112,9 @@ if (liveBatchProducts.length !== batch?.expectedProductCount) {
 
 for (const live of liveBatchProducts) {
   if (!catalogPages.has(live.page)) errors.push(`${live.page}: live Batch 3 product is missing from central catalog.`);
+  if (LEGACY_SIZE_PATTERN.test(String(live.description || ''))) {
+    errors.push(`${live.page}: live description still exposes a legacy 50 cm production size.`);
+  }
 }
 
 for (const product of safeProducts) {
@@ -124,6 +135,9 @@ for (const product of safeProducts) {
   if (product.price !== 45 || product.fromPrice !== 35) errors.push(`${product.slug}: expected €45 default and €35 from price.`);
   if (product.currency !== 'EUR') errors.push(`${product.slug}: unsupported currency ${product.currency}.`);
   if (product.status !== 'active') errors.push(`${product.slug}: unsupported status ${product.status}.`);
+  if (LEGACY_SIZE_PATTERN.test(String(product.description || ''))) {
+    errors.push(`${product.slug}: compatibility catalog description still exposes a legacy 50 cm production size.`);
+  }
 
   try {
     const defaultVariant = resolveCatalogProductVariant(product, product.defaultVariantId);
@@ -185,7 +199,7 @@ for (const product of safeProducts) {
     compareValue(errors, product, live, 'batchId');
     compareValue(errors, product, live, 'collection');
     compareValue(errors, product, live, 'category');
-    if (launchDescription(product) !== live.description) {
+    if (launchDescription(product) !== launchDescription(live)) {
       errors.push(`${product.slug}: normalized launch description differs from ${product.page}.`);
     }
     if (!sameNumber(product.price, live.price)) errors.push(`${product.slug}: central default price differs from ${product.page}.`);
@@ -217,7 +231,7 @@ for (const product of safeProducts) {
     if (!generated.includes(authoritativeOfferName)) errors.push(`${product.slug}: generated authoritative offer name missing.`);
     if (!generated.includes(`?variant=${defaultVariant.id}`)) errors.push(`${product.slug}: generated variant URL missing.`);
     if (!generated.includes(product.image)) errors.push(`${product.slug}: generated image mismatch.`);
-    if (/50 × 50 cm|50 × 30 cm|statement-50x50|compact-50x30/.test(generated)) {
+    if (LEGACY_SIZE_PATTERN.test(generated)) {
       errors.push(`${product.slug}: generated preview still exposes a legacy 50 cm production variant.`);
     }
     if (!generated.includes('Compact: 30 cm longest side. Statement: 45 cm longest side.')) {
