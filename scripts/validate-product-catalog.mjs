@@ -43,8 +43,8 @@ function escapeHtml(value) {
 
 function launchDescription(product) {
   return String(product.description || '').replace(
-    /Available in 30 cm and 45 cm, measured along the longest side\.?/i,
-    'Available in Compact (up to 50 × 30 cm) and Statement (up to 50 × 50 cm). Original proportions are preserved.',
+    /Available in Compact \(up to 50 × 30 cm\) and Statement \(up to 50 × 50 cm\)\. Original proportions are preserved\.?/i,
+    'Available in 30 cm and 45 cm, measured along the longest side.',
   );
 }
 
@@ -217,6 +217,12 @@ for (const product of safeProducts) {
     if (!generated.includes(authoritativeOfferName)) errors.push(`${product.slug}: generated authoritative offer name missing.`);
     if (!generated.includes(`?variant=${defaultVariant.id}`)) errors.push(`${product.slug}: generated variant URL missing.`);
     if (!generated.includes(product.image)) errors.push(`${product.slug}: generated image mismatch.`);
+    if (/50 × 50 cm|50 × 30 cm|statement-50x50|compact-50x30/.test(generated)) {
+      errors.push(`${product.slug}: generated preview still exposes a legacy 50 cm production variant.`);
+    }
+    if (!generated.includes('Compact: 30 cm longest side. Statement: 45 cm longest side.')) {
+      errors.push(`${product.slug}: generated preview is missing canonical 30/45 cm size copy.`);
+    }
   } catch (error) {
     errors.push(`${product.slug}: generated preview invalid (${error.message}).`);
   }
@@ -234,5 +240,5 @@ const categoryCounts = safeProducts.reduce((counts, product) => {
 }, {});
 
 console.log(
-  `Launch-variant product catalog validation passed for ${safeProducts.length} products in ${batch.id}: ${JSON.stringify(categoryCounts)}. Legacy source policy and aliases resolve to the approved production boxes.`,
+  `Launch-variant product catalog validation passed for ${safeProducts.length} products in ${batch.id}: ${JSON.stringify(categoryCounts)}. Legacy source aliases resolve to canonical 30/45 cm production variants.`,
 );
