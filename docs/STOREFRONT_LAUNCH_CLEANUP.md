@@ -36,7 +36,8 @@ Customer-visible HTML must not contradict these values.
 
 - `Legend Stories` in title, meta description, Open Graph metadata and accessibility copy;
 - `og:site_name` set to `Legend Stories`;
-- canonical, `og:url` and social image URLs pointing to the legacy GitHub Pages host.
+- canonical, `og:url` and social image URLs pointing to the legacy GitHub Pages host;
+- copyright copy that still names `Legend Stories`.
 
 Branding can be changed to `LegendMural`. Canonical/domain URLs must not be guessed; they remain blocked until the definitive public production domain is confirmed.
 
@@ -59,11 +60,40 @@ The homepage shop-preview currently contains cards that visibly show `€49,95` 
 - `data-size-label="50 × 50 cm"`;
 - `data-longest-side-cm="50"`.
 
+The cart upsell contains the same stale Statement identity and visible `€49,95` value.
+
 The current launch identity is `statement-45`, 45 cm longest side, €45. This is a concrete post-#88 storefront inconsistency and must be corrected before launch.
 
 Legacy aliases in runtime may preserve old stored-cart compatibility, but new customer-facing markup must emit canonical 30/45 cm variant identity.
 
-### 4. Shared product template still contains legacy brand identity
+### 4. Shipping copy contradicts the launch commerce contract
+
+The cart currently states `Free shipping on orders over €50`, while the authoritative runtime and launch-matrix tests use free shipping from **€69 after discount**.
+
+The homepage value proposition also states `2 to 4 working days. Ships across Europe.` This does not accurately describe the active market configuration because the United States is also enabled with tracked shipping. Delivery-time claims must only remain if the operational fulfillment promise is verified.
+
+### 5. Contact and social identity still contain legacy / placeholder data
+
+The homepage currently contains:
+
+- `hello@legendstories.nl`;
+- TikTok and Instagram handle `@legendstories_official`;
+- WhatsApp placeholder number `+31 6 12345678`.
+
+Placeholder contact data must not ship. Legacy brand contact/social identities must either be verified as intentionally retained or replaced by the confirmed LegendMural identities.
+
+### 6. Payment badges overstate the launch payment surface
+
+The homepage footer currently advertises:
+
+- iDEAL;
+- Visa;
+- Mastercard;
+- PayPal.
+
+The launch checkout runtime is PayPal-only. Payment badges must describe what customers can actually select in the storefront; unsupported standalone payment-method claims must be removed unless the final PayPal checkout presentation genuinely exposes them in a way that makes the wording accurate.
+
+### 7. Shared product template still contains legacy brand identity
 
 `templates/product-page.html` is already correct for 30/45 cm sizing, but still contains `Legend Stories` in shared customer-facing metadata/accessibility copy.
 
@@ -71,7 +101,7 @@ Legacy aliases in runtime may preserve old stored-cart compatibility, but new cu
 
 Because all 111 product pages are generator-managed and the live validator requires byte-identical generated output, template/generator changes must be followed by a complete managed-page regeneration. Do not hand-edit the 111 product pages individually.
 
-### 5. Project status documentation is stale
+### 8. Project status documentation is stale
 
 `docs/PROJECT_STATUS.md` on current `main` still describes:
 
@@ -83,13 +113,12 @@ This status file should be refreshed in a dedicated coherent update; stale proje
 
 ## Items that still require direct re-check before implementation completion
 
-- cart/footer free-shipping copy versus the €69 post-discount rule;
-- placeholder WhatsApp/contact data;
-- footer help/legal routes;
-- payment badges versus PayPal-only launch checkout;
-- old social handles/brand mentions outside generated product pages;
+- footer help/legal routes and whether each route actually exists;
 - collection/shop/about page price and variant markup;
-- any remaining legacy `statement-50x50` / `compact-50x30` markup that is used for new storefront actions rather than backwards compatibility.
+- current-brand strings and old social handles outside homepage/generated product pages;
+- remaining legacy `statement-50x50` / `compact-50x30` markup used for new storefront actions rather than backwards compatibility;
+- other shipping/delivery-time claims across customer-facing pages;
+- other payment badges or provider claims outside the homepage.
 
 ## Implementation rules
 
@@ -100,15 +129,17 @@ This status file should be refreshed in a dedicated coherent update; stale proje
 5. **Shipping:** copy must match `shipping.mjs`, including the €69 post-discount threshold and supported markets.
 6. **Trust claims:** no invented replacement claims. Remove unsupported social proof rather than replacing it with different unsupported numbers.
 7. **Contact details:** do not publish placeholder phone/WhatsApp data. Only verified business contact details are allowed.
-8. **Domain/SEO:** do not invent a canonical production domain. Replace GitHub Pages URLs only after the definitive public domain is confirmed.
-9. **Generated pages:** update shared template/generator/catalog sources, then regenerate and validate all 111 managed product pages.
-10. **Legal:** route/label cleanup can be scoped here, but final privacy/returns/refunds/terms content belongs to the separate legal phase using current official NL/EU sources.
+8. **Payment claims:** only display payment methods actually available through the launch checkout.
+9. **Domain/SEO:** do not invent a canonical production domain. Replace GitHub Pages URLs only after the definitive public domain is confirmed.
+10. **Generated pages:** update shared template/generator/catalog sources, then regenerate and validate all 111 managed product pages.
+11. **Legal:** route/label cleanup can be scoped here, but final privacy/returns/refunds/terms content belongs to the separate legal phase using current official NL/EU sources.
 
 ## Required validation before this phase can be called complete
 
 - repository-wide audit for old current-brand strings and legacy GitHub Pages URLs;
 - repository-wide audit for stale visible `€49,95` product pricing;
 - repository-wide audit for legacy 50 × 30 / 50 × 50 storefront markup that should now be 30 / 45 cm;
+- repository-wide audit for incorrect free-shipping, delivery-time and payment-method claims;
 - `validate:managed-product-pages:live` green after any shared product-page changes;
 - unit tests / Quality green;
 - Accessibility/purchase-flow green;
