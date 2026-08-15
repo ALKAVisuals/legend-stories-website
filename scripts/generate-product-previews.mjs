@@ -28,8 +28,8 @@ function canonicalVariants(product) {
 
 function launchDescription(product) {
   return String(product.description || '').replace(
-    /Available in 30 cm and 45 cm, measured along the longest side\.?/i,
-    'Available in Compact (up to 50 × 30 cm) and Statement (up to 50 × 50 cm). Original proportions are preserved.',
+    /Available in Compact \(up to 50 × 30 cm\) and Statement \(up to 50 × 50 cm\)\. Original proportions are preserved\.?/i,
+    'Available in 30 cm and 45 cm, measured along the longest side.',
   );
 }
 
@@ -91,5 +91,5 @@ for (const product of [...products].sort((a, b) => a.page.localeCompare(b.page))
 }
 
 console.log(
-  `Generated ${products.length} launch-variant product previews for ${batch.id} with legacy aliases normalized.`,
+  `Generated ${products.length} launch-variant product previews for ${batch.id} with legacy aliases normalized to canonical 30/45 cm production sizes.`,
 );
