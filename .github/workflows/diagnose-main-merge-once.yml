@@ -1,0 +1,39 @@
+name: Diagnose main integration conflicts once
+
+on:
+  push:
+    branches: [commerce/align-production-30-45-v1]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose-merge:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Attempt merge and annotate conflicts
+        shell: bash
+        run: |
+          set +e
+          git fetch origin main
+          git merge --no-commit --no-ff origin/main
+          status=$?
+          conflicts="$(git diff --name-only --diff-filter=U)"
+          if [ -n "$conflicts" ]; then
+            while IFS= read -r file; do
+              [ -z "$file" ] && continue
+              echo "::error file=$file::Merge conflict with current main"
+            done <<< "$conflicts"
+            echo "Conflicting files:"
+            printf '%s\n' "$conflicts"
+            exit 1
+          fi
+          if [ "$status" -ne 0 ]; then
+            echo "::error::Merge failed without unmerged paths"
+            exit "$status"
+          fi
+          echo "No merge conflicts detected."
