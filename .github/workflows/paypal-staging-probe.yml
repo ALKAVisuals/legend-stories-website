@@ -87,6 +87,7 @@ jobs:
           import { readFile, writeFile } from 'node:fs/promises';
           const catalog = JSON.parse(await readFile('data/products/catalog.json', 'utf8')).products;
           const product = catalog[0];
+          const runNonce = `${Date.now()}-${process.env.GITHUB_RUN_ID || 'local'}-${process.env.GITHUB_RUN_ATTEMPT || '1'}`;
           const response = await fetch(`${process.env.PREVIEW_URL}/api/paypal/checkout`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -98,7 +99,7 @@ jobs:
               customer: {
                 firstname: 'LegendMural',
                 lastname: 'Sandbox',
-                email: 'paypal-staging@legendmural.invalid',
+                email: `paypal-staging+${runNonce}@legendmural.invalid`,
                 street: 'Teststraat 10',
                 zip: '1234 AB',
                 city: 'Amsterdam',
