@@ -2,7 +2,7 @@
 
 Laatst inhoudelijk bijgewerkt: 15 augustus 2026.
 
-Dit document is de actuele bron van waarheid voor de launchstatus van `ALKAVisuals/legend-stories-website`. Historische Sprint- en Stripe-documenten beschrijven eerdere ontwikkelfasen maar bepalen niet langer de doelarchitectuur.
+Dit document is de actuele bron van waarheid voor de launchstatus van `ALKAVisuals/legend-stories-website`. Historische Sprint-, Stripe- en tijdelijke branchdocumenten beschrijven eerdere ontwikkelfasen maar bepalen niet langer de doelarchitectuur.
 
 ## Samenvatting
 
@@ -13,11 +13,13 @@ De definitieve launchkeuze is:
 - **Netlify** als enige production host;
 - **PayPal** als enige payment provider voor launch;
 - **Neon Postgres** als eigen LegendMural orderdatabase;
+- **Compact: 30 cm langste zijde voor €35 incl. btw**;
+- **Statement: 45 cm langste zijde voor €45 incl. btw**;
 - **geen actieve Stripe checkout- of webhookruntime**; historische Stripe databasevelden/migraties en read-compatibiliteit blijven uitsluitend behouden voor bestaande audit-/orderdata.
 
-Op 15 augustus 2026 is eerst de kernketen daadwerkelijk bewezen tegen PayPal Sandbox + de geïsoleerde Neon stagingbranch: echte order creation via een Netlify Deploy Preview, buyer approval, server-side capture, Neon `paid`, plus echte `CHECKOUT.ORDER.APPROVED` en `PAYMENT.CAPTURE.COMPLETED` webhookdeliveries in de event-ledger. Daarna is ook de volledige browser-native storefront happy path bewezen: product → cart → checkout → PayPal Sandbox → automatische return → serververificatie → `Payment confirmed` → paid-only cart cleanup, zonder handmatige refresh. Duplicate webhookdelivery, cancel/cart preservation en browserinterruption met webhook recovery zijn eveneens end-to-end bewezen. PayPal Live is niet geactiveerd.
+Op 15 augustus 2026 is de kernketen daadwerkelijk bewezen tegen PayPal Sandbox + de geïsoleerde Neon stagingbranch: echte order creation via een Netlify Deploy Preview, buyer approval, server-side capture, Neon `paid`, plus echte `CHECKOUT.ORDER.APPROVED` en `PAYMENT.CAPTURE.COMPLETED` webhookdeliveries in de event-ledger. Daarna is ook de volledige browser-native storefront happy path bewezen: product → cart → checkout → PayPal Sandbox → automatische return → serververificatie → `Payment confirmed` → paid-only cart cleanup, zonder handmatige refresh. Duplicate webhookdelivery, cancel/cart preservation en browserinterruption met webhook recovery zijn eveneens end-to-end bewezen. PayPal Live is niet geactiveerd.
 
-De actieve legacy Stripe-runtime is op de cleanupbranch `chore/remove-legacy-stripe` verwijderd. De branch wacht nog op volledige PR-regressievalidatie en expliciete mergegoedkeuring.
+De actieve legacy Stripe-runtime is inmiddels uit `main` verwijderd. De 30/45 cm productiemigratie is daarna met de PayPal-only architectuur geïntegreerd en via PR #88 gemerged. Op de gecombineerde staat zijn production gates, alle Node-tests, build, volledige `npm run quality`, Node 22 commerce preview en accessibility inventory groen uitgevoerd. De volledige launch-commercematrix is vervolgens als permanente regressietest toegevoegd via PR #89.
 
 ## Afgerond
 
@@ -25,6 +27,7 @@ De actieve legacy Stripe-runtime is op de cleanupbranch `chore/remove-legacy-str
 
 - centrale catalogus met 111 producten en 6 batches;
 - centrale runtime-productregistratie;
+- canonieke production `productId` per product;
 - gedeelde productpaginatemplate;
 - alle 111 productpagina’s generator-managed en reproduceerbaar;
 - related-productsvalidatie;
@@ -33,16 +36,17 @@ De actieve legacy Stripe-runtime is op de cleanupbranch `chore/remove-legacy-str
 
 ### Launch commerce
 
-- Compact: maximaal 50 × 30 cm voor €35 incl. btw;
-- Statement: maximaal 50 × 50 cm voor €45 incl. btw;
+- Compact: **30 cm langste zijde** voor €35 incl. btw;
+- Statement: **45 cm langste zijde** voor €45 incl. btw;
 - Statement is standaard en aanbevolen;
-- originele ontwerpverhoudingen blijven behouden binnen de productiedoos;
+- originele ontwerpverhoudingen blijven behouden; de andere afmeting volgt de artworkverhouding;
 - publieke kortingscode `LEGEND10` voor 10%;
 - Nederland: €4,95 verzending;
 - EU: €9,95 verzending;
 - Verenigde Staten: €9,95 tracked verzending;
-- gratis verzending vanaf €69 in ondersteunde markten;
-- bestemmingen buiten NL, EU en VS worden geblokkeerd.
+- gratis verzending vanaf €69 in ondersteunde markten, beoordeeld op het subtotaal **na korting**;
+- bestemmingen buiten NL, EU en VS worden geblokkeerd;
+- permanente commerce-matrixregressietest dekt Compact, Statement, `LEGEND10`, NL/EU/VS, gemengde varianten, de €69-grens en unsupported destinations.
 
 ### Browsercommerce
 
@@ -66,6 +70,7 @@ De actieve legacy Stripe-runtime is op de cleanupbranch `chore/remove-legacy-str
 
 - autoritatieve orderquote uit centrale productdata;
 - browserprijzen, namen en totalen worden genegeerd;
+- canonieke product- en variantidentiteit wordt server-side opgelost;
 - bedragen worden in gehele eurocenten berekend;
 - durable pending-ordervereiste vóór hosted checkout-response;
 - checkout-persistence vereist voor nieuwe checkouts expliciet PayPal en accepteert geen impliciete Stripe-default meer;
@@ -102,7 +107,9 @@ De actieve legacy Stripe-runtime is op de cleanupbranch `chore/remove-legacy-str
 - een volledige browser-native storefrontbetaling is succesvol afgerond tot `Payment confirmed`, zonder Ctrl+R of andere handmatige bevestigingsactie;
 - duplicate webhook redelivery is idempotent bewezen;
 - cancel vóór capture met cart preservation is end-to-end bewezen;
-- browserinterruption vóór capture-response is end-to-end hersteld via PayPal webhook recovery.
+- browserinterruption vóór capture-response is end-to-end hersteld via PayPal webhook recovery;
+- tijdelijke PayPal capture/API-fout geeft gecontroleerd upstream-falen zonder lokale `paid`-mutatie;
+- tijdelijke PayPal webhook-signatureverificatiestoring geeft retryable 503 en bereikt de eventprocessor niet.
 
 ### Neon Postgres
 
@@ -118,6 +125,9 @@ De actieve legacy Stripe-runtime is op de cleanupbranch `chore/remove-legacy-str
 - transacties, `FOR UPDATE`, locking en versiecontrole;
 - expliciete JSONB-serialisatie;
 - bounded retries/backoff voor retryable serializable conflicts;
+- retryable SQLSTATE `40001` wordt als volledige transactie opnieuw uitgevoerd en faalt na de begrensde retryreeks gecontroleerd;
+- capture/webhook concurrency convergeert zonder dubbele paid-mutatie;
+- duplicate webhookevents worden duurzaam herkend zonder tweede ordermutatie;
 - pinned Neon- en WebSocketdependencies;
 - PayPal-migraties zijn toegepast op de geïsoleerde `order-store-integration` stagingbranch;
 - echte stagingorders bewezen `payment_pending → paid`, `version 0 → 1` en éénmalige `paid_at`;
@@ -140,7 +150,7 @@ Voor productie blijven vereist:
 - PayPal webhook Function;
 - orderstatus Function;
 - same-origin PayPal/runtime routes;
-- legacy Stripe checkout- en webhookroutes zijn op `chore/remove-legacy-stripe` verwijderd;
+- legacy Stripe checkout- en webhookroutes zijn uit `main` verwijderd;
 - gedeelde Neon order-store inclusief webhook-store geïnjecteerd in serverhandlers;
 - fail-closed gedrag wanneer vereiste configuratie ontbreekt;
 - productcatalogus beschikbaar voor Function-bundling;
@@ -174,14 +184,16 @@ Voor productie blijven vereist:
 - permanente commerce-, order-, Neon- en buildvalidatie;
 - unit tests en Vite-productiebuild in de quality gate;
 - aparte Node 22 Netlify-compatibiliteitscontrole;
-- PayPal webhooktests dekken signatureverificatie, exact raw postback, matching, duplicates, recovery, mode/provider/order/amount/currency mismatch en paid-state non-regression;
-- Stripe-only validators/tests/workflowgates zijn op de cleanupbranch verwijderd of, waar de onderliggende securitycoverage provider-neutraal was, naar PayPal/provider-neutrale tests gemigreerd;
+- PayPal webhooktests dekken signatureverificatie, exact raw postback, matching, duplicates, recovery, mode/provider/order/amount/currency mismatch, verification outage en paid-state non-regression;
+- capturetests dekken upstream PayPal-falen, Neon-persistencefalen, webhook recovery, duplicate capture en serialization retry;
+- volledige launch-commercematrix is als permanente Node-regressietest opgenomen;
+- Stripe-only validators/tests/workflowgates zijn verwijderd of, waar de onderliggende securitycoverage provider-neutraal was, naar PayPal/provider-neutrale tests gemigreerd;
 - normale GitHub Actions-permissie is `contents: read`;
 - GitHub Pages is geen production deploymentpad meer.
 
 ## Legacy Stripe: runtime verwijderd, historie behouden
 
-Op `chore/remove-legacy-stripe` is de **actieve** Stripe-betaalruntime verwijderd. Nieuwe storefrontcheckouts kunnen niet meer via Stripe worden aangemaakt of verwerkt.
+De **actieve** Stripe-betaalruntime is verwijderd en de cleanup is in `main` opgenomen. Nieuwe storefrontcheckouts kunnen niet meer via Stripe worden aangemaakt of verwerkt.
 
 Verwijderd zijn onder andere:
 
@@ -198,30 +210,49 @@ Bewust behouden voor historische/auditcompatibiliteit:
 - historische Stripe-eventmetadata waar bestaande schema's of auditdata daarvan afhankelijk zijn;
 - documentatie die expliciet als historische context is gemarkeerd.
 
-Deze scheiding is bewust: **geen actieve Stripe-runtime, geen destructieve databasecleanup van historische data**. De cleanupbranch moet nog volledig door PR Quality/Netlify/build/regressiechecks voordat merge wordt overwogen.
+Deze scheiding is bewust: **geen actieve Stripe-runtime, geen destructieve databasecleanup van historische data**.
+
+## Afgeronde technische launchvalidatie
+
+De eerder openstaande PayPal/commerce-regressiepunten zijn technisch gesloten:
+
+1. tijdelijke PayPal API- of signatureverificatiestoring faalt gecontroleerd en fail-closed;
+2. tijdelijke Neon-/serializationfouten falen gecontroleerd of worden begrensd veilig herprobeerd;
+3. gemanipuleerde browserprijzen, namen en totalen worden server-side genegeerd;
+4. capture/webhook concurrency, duplicates en idempotency zijn met regressietests afgedekt;
+5. de volledige commerce-matrix voor Compact, Statement, `LEGEND10`, NL/EU/VS shipping en gratis verzending vanaf €69 is als permanente test opgenomen;
+6. de gecombineerde PayPal-only + 30/45 cm staat heeft volledige Quality, Node 22 compatibility, accessibility, unit tests en productiebuild groen doorlopen.
+
+Dit betekent **niet** dat PayPal Live of production infrastructure al klaar is; onderstaande launchblokkades blijven van kracht.
 
 ## Actuele releaseblokkades
 
-### 1. Resterende PayPal regressie- en edgecases
+### 1. Storefront launch cleanup
 
-De echte Sandbox/Neon kernketen, browser-native happy path, duplicate webhookdelivery, cancel/cart preservation en interruption/recovery zijn bewezen. Nog aanvullend valideren vóór livegang:
-
-1. tijdelijke PayPal API- of signatureverificatiestoring faalt gecontroleerd;
-2. tijdelijke Neon-fout faalt gecontroleerd en kan veilig worden herprobeerd;
-3. gemanipuleerde browserprijzen en productdata blijven server-side genegeerd;
-4. resterende concurrency/idempotencycases blijven groen na de Stripe-runtimecleanup;
-5. volledige commerce-matrix voor Compact, Statement, `LEGEND10`, NL/EU/VS shipping en free shipping vanaf €69;
-6. volledige Quality, Netlify compatibility, accessibility/purchase-flow en productiebuild op de cleanup-PR.
-
-### 2. Storefront launch cleanup
-
-De zichtbare site bevat nog oude launchrestanten die vóór officiële publicatie moeten worden gecorrigeerd, waaronder:
+De zichtbare site bevat nog launchrestanten die vóór officiële publicatie moeten worden gecorrigeerd, waaronder:
 
 - `Legend Stories` branding op verschillende plekken;
 - oude GitHub Pages canonical/Open Graph URLs;
 - social proof/trustclaims zoals `1K+ Sold`, `4.9★ On Trustpilot` en `Best seller` wanneer deze niet aantoonbaar onderbouwd zijn;
 - footer/help/legal routes en betaalbadges controleren op feitelijke juistheid;
 - definitief domain/SEO beleid pas toepassen zodra het publieke domein is bevestigd.
+
+### 2. Production infrastructure
+
+Voor officiële livegang nog inrichten en bewijzen:
+
+- aparte productie-Neonomgeving;
+- dedicated least-privilege runtime-rol;
+- backup-/restorebeleid;
+- privacy-/retentiebeleid;
+- aparte Netlify production variables;
+- volledig geverifieerd PayPal Business-account;
+- PayPal Live app/credentials uitsluitend server-side;
+- PayPal Live webhook;
+- expliciete live enablement uitsluitend server-side;
+- monitoring/logging/incidentprocedure;
+- gecontroleerde kleine echte betaling;
+- rollbackprocedure.
 
 ### 3. Legal / commerce operations
 
@@ -236,10 +267,19 @@ Voor officiële launch nog afronden/valideren:
 - IP-/portret-/auteursrecht-/trademarkcontrole van de artworkcatalogus;
 - support-, fulfillment-, refund- en disputeproces.
 
+### 4. Definitief publiek domein en SEO
+
+Voor publicatie nog afronden zodra het definitieve domein is bevestigd:
+
+- definitief publiek domein en HTTPS;
+- canonical URLs;
+- sitemap en robots;
+- Open Graph/social metadata;
+- eventuele redirects vanaf oude hosts/URLs.
+
 ## Voor productie nog vereist
 
-- resterende PayPal Sandbox negatieve/idempotencycases en volledige cleanup-regressie groen;
-- cleanupbranch voor legacy Stripe volledig gevalideerd en na expliciete goedkeuring gemerged;
+- storefront launch cleanup afgerond;
 - productie-Neonomgeving;
 - dedicated least-privilege runtime-rol;
 - backup-/restorebeleid;
@@ -279,7 +319,7 @@ Voor officiële launch nog afronden/valideren:
 
 - iedere wijziging begint met analyse en een beperkte scope;
 - wijzigingen gaan via branch en PR;
-- geen merge zonder expliciete goedkeuring;
+- geen merge zonder expliciete goedkeuring of een door de gebruiker gegeven opdracht om de huidige technische fase zelfstandig voort te zetten;
 - geen productie-Netlifywijziging zonder afzonderlijke toestemming;
 - geen secrets in chat of repository;
 - GitHub Pages wordt niet als tweede production host onderhouden;
