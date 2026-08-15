@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Your secure Legend Stories payment has been submitted and is awaiting confirmation.">
+  <meta name="description" content="Your secure LegendMural payment has been submitted and is awaiting confirmation.">
   <meta name="robots" content="noindex, nofollow">
-  <title>Payment Submitted — Legend Stories</title>
-  <meta property="og:title" content="Payment Submitted — Legend Stories">
-  <meta property="og:description" content="Your secure Legend Stories payment has been submitted and is awaiting confirmation.">
+  <title>Payment Submitted — LegendMural</title>
+  <meta property="og:title" content="Payment Submitted — LegendMural">
+  <meta property="og:description" content="Your secure LegendMural payment has been submitted and is awaiting confirmation.">
   <meta property="og:image" content="https://alkavisuals.github.io/legend-stories-website/media/LOGO/lm-logo-transparant.png">
   <meta property="og:url" content="https://alkavisuals.github.io/legend-stories-website/order-success.html">
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Legend Stories">
+  <meta property="og:site_name" content="LegendMural">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://alkavisuals.github.io/legend-stories-website/order-success.html">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,8 +25,8 @@
 <body class="min-h-screen bg-void text-text-primary font-body flex flex-col">
   <header class="border-b border-surface-border/20 glass">
     <div class="max-w-6xl mx-auto px-5 sm:px-6 h-16 md:h-20 flex items-center justify-between">
-      <a href="index.html" class="flex items-center" aria-label="Legend Stories Home">
-        <img src="media/LOGO/lm-logo-transparant.png" alt="Legend Stories" class="h-8 md:h-10 w-auto object-contain">
+      <a href="index.html" class="flex items-center" aria-label="LegendMural Home">
+        <img src="media/LOGO/lm-logo-transparant.png" alt="LegendMural" class="h-8 md:h-10 w-auto object-contain">
       </a>
       <a href="shop.html" class="text-sm font-medium text-text-secondary hover:text-mint transition-colors">Back to shop</a>
     </div>
@@ -44,18 +44,18 @@
       <p id="order-status-message" class="text-text-secondary leading-relaxed max-w-xl mx-auto">
         Your payment has not been confirmed by the server yet. Your cart remains saved while confirmation is pending.
       </p>
-      <p id="order-status-note" class="mt-4 text-sm text-text-muted">
+      <div id="order-id-block" class="hidden mt-6 rounded-xl border border-surface-border/30 bg-void/40 p-4 text-left"><p class="text-xs uppercase tracking-wider text-text-muted mb-1">Order ID</p><p id="order-id-value" class="font-mono text-sm break-all text-text-primary"></p><p class="text-xs text-text-muted mt-2">Keep this Order ID with your payment records. It can be used with your order email for the online withdrawal function.</p></div><p id="order-status-note" class="mt-4 text-sm text-text-muted">
         Keep your payment confirmation email for your records. Your cart is not cleared automatically until the server verifies this exact Checkout Session.
       </p>
       <div class="mt-9 flex flex-col sm:flex-row gap-3 justify-center">
         <a href="shop.html" class="inline-flex items-center justify-center rounded-xl bg-mint text-void px-6 py-3 font-semibold hover:opacity-90 transition-opacity">Continue shopping</a>
-        <a href="index.html#contact" class="inline-flex items-center justify-center rounded-xl border border-surface-border/50 px-6 py-3 font-semibold text-text-secondary hover:text-mint hover:border-mint/40 transition-colors">Contact support</a>
+        <a id="order-withdraw-link" href="withdraw.html" class="hidden inline-flex items-center justify-center rounded-xl border border-surface-border/50 px-6 py-3 font-semibold text-text-secondary hover:text-mint hover:border-mint/40 transition-colors">Withdraw from purchase</a><a href="index.html#contact" class="inline-flex items-center justify-center rounded-xl border border-surface-border/50 px-6 py-3 font-semibold text-text-secondary hover:text-mint hover:border-mint/40 transition-colors">Contact support</a>
       </div>
     </section>
   </main>
 
   <footer class="border-t border-surface-border/20 py-6 text-center text-xs text-text-muted">
-    <p>Legend Stories — Premium wall art for legendary spaces.</p>
+    <p>LegendMural — Premium wall art for legendary spaces.</p>
   </footer>
   <script type="module" vite-ignore src="/js/order-return.js"></script>
 </body>
