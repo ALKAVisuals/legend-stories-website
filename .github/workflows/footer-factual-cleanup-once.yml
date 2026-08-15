@@ -82,7 +82,7 @@ jobs:
           from pathlib import Path
 
           targets = [*sorted(Path('.').glob('*.html')), Path('templates/product-page.html')]
-          failures = []
+          failed = False
           forbidden = [
               '>iDEAL</div>', '>Visa</div>', '>Mastercard</div>',
               'Free shipping on orders over €50', 'wa.me/31612345678',
@@ -95,14 +95,18 @@ jobs:
               text = path.read_text(encoding='utf-8')
               for token in forbidden:
                   if token in text:
-                      failures.append(f'{path}: {token}')
-          template = Path('templates/product-page.html').read_text(encoding='utf-8')
+                      print(f'::error file={path}::Forbidden stale storefront token remains: {token}')
+                      failed = True
+          template_path = Path('templates/product-page.html')
+          template = template_path.read_text(encoding='utf-8')
           if 'Free shipping from €69 after discount' not in template:
-              failures.append('templates/product-page.html: missing €69 post-discount shipping copy')
+              print('::error file=templates/product-page.html::Missing €69 post-discount shipping copy')
+              failed = True
           if '>PayPal</div>' not in template:
-              failures.append('templates/product-page.html: missing PayPal payment badge')
-          if failures:
-              raise SystemExit('Factual storefront cleanup failed:\n' + '\n'.join(failures))
+              print('::error file=templates/product-page.html::Missing PayPal payment badge')
+              failed = True
+          if failed:
+              raise SystemExit(1)
           print('Footer/payment/shipping/placeholder invariants pass.')
           PY
           node scripts/validate-product-variants.mjs
