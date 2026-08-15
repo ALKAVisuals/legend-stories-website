@@ -1,7 +1,7 @@
 import {
   ORDER_STATUS_ENDPOINT,
   isOrderStatusConfigured,
-  requestVerifiedOrderStatus,
+  pollVerifiedOrderStatus,
 } from './commerce/order-status-client.mjs';
 import {
   PAYPAL_CAPTURE_ENDPOINT,
@@ -48,7 +48,7 @@ async function verifyStoredOrder(reference, sessionId) {
     message: 'The server is checking the payment result. Your cart remains saved during verification.',
   }, 'verifying');
 
-  const status = await requestVerifiedOrderStatus({
+  const status = await pollVerifiedOrderStatus({
     endpoint: ORDER_STATUS_ENDPOINT,
     baseUrl: window.location.origin,
     reference,
