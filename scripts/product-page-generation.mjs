@@ -77,7 +77,7 @@ function structuredData(product) {
     name: product.name,
     image: absoluteImageUrl(product),
     description: product.description,
-    brand: { '@type': 'Brand', name: 'Legend Stories' },
+    brand: { '@type': 'Brand', name: 'LegendMural' },
     offers: orderedVariants.map((variant) => ({
       '@type': 'Offer',
       name: variant.id === 'legacy' ? product.name : `${product.name} — ${variant.label} (${variant.sizeLabel})`,
@@ -111,7 +111,7 @@ export function extractProductPresentation(html, product) {
     /<title>([\s\S]*?)<\/title>/,
     `${product.page} page title`,
   ).trim());
-  const defaultPageTitle = `${product.name} — ${product.collection} | Legend Stories`;
+  const defaultPageTitle = `${product.name} — ${product.collection} | LegendMural`;
   const presentation = { page: product.page, story, imageAlt, announcementHtml };
   if (pageTitle !== defaultPageTitle) presentation.pageTitle = pageTitle;
   return presentation;
@@ -214,7 +214,7 @@ function breadcrumb(product) {
 }
 
 export function renderProductPage(template, product, presentation) {
-  const title = presentation.pageTitle || `${product.name} — ${product.collection} | Legend Stories`;
+  const title = presentation.pageTitle || `${product.name} — ${product.collection} | LegendMural`;
   const browserImage = browserProductImageFor(product.image);
   const values = {
     META_DESCRIPTION: escapeHtml(product.description),
