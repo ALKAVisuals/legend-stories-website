@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  patch-homepage:
+  normalize-static-storefront:
     if: github.ref == 'refs/heads/agent/storefront-launch-cleanup-v2'
     runs-on: ubuntu-latest
     steps:
@@ -22,55 +22,66 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Apply deterministic homepage cleanup
+      - name: Normalize static storefront pages
         shell: bash
         run: |
           node <<'NODE'
           const fs = require('node:fs');
-          const path = 'index.html';
-          let html = fs.readFileSync(path, 'utf8');
+          const files = [
+            'index.html',
+            'shop.html',
+            'music-legends.html',
+            'sport-legends.html',
+            'combat-legends.html',
+            'wisdom-legends.html',
+            'about.html',
+          ];
 
-          // Current brand identity on the customer-facing homepage.
-          html = html.replaceAll('Legend Stories', 'LegendMural');
+          for (const path of files) {
+            if (!fs.existsSync(path)) continue;
+            let html = fs.readFileSync(path, 'utf8');
 
-          // Remove unsupported social-proof block in the hero.
-          html = html.replace(/\n\s*<div class="flex items-center gap-5 mt-8 justify-center lg:justify-start">[\s\S]*?<\/div>\n\s*<\/div>\n\s*<div class="relative max-w-sm mx-auto lg:max-w-none">/, '\n          </div>\n          <div class="relative max-w-sm mx-auto lg:max-w-none">');
+            // Customer-facing current brand only; legacy URLs are intentionally untouched.
+            html = html.replaceAll('Legend Stories', 'LegendMural');
 
-          // Remove unsupported testimonial section until genuine reviews exist.
-          html = html.replace(/\n\s*<!-- TESTIMONIALS — Axis card pattern -->[\s\S]*?\n\s*<!-- SHOP PREVIEW — Swiper Card Swipe Carousel \(All 20 Batch 3 Products\) -->/, '\n\n    <!-- SHOP PREVIEW — Swiper Card Swipe Carousel (All 20 Batch 3 Products) -->');
+            // New storefront actions must emit canonical 45 cm Statement identity.
+            html = html.replaceAll('statement-50x50', 'statement-45');
+            html = html.replaceAll('data-size-label="50 × 50 cm"', 'data-size-label="45 cm"');
+            html = html.replaceAll('data-width-cm="50"', 'data-width-cm="45"');
+            html = html.replaceAll('data-height-cm="50"', 'data-height-cm="45"');
+            html = html.replaceAll('data-longest-side-cm="50"', 'data-longest-side-cm="45"');
 
-          // Align homepage cards and upsells with canonical Statement launch variant.
-          html = html.replaceAll('€49,95', '€45');
-          html = html.replaceAll('statement-50x50', 'statement-45');
-          html = html.replaceAll('data-size-label="50 × 50 cm"', 'data-size-label="45 cm"');
-          html = html.replaceAll('data-width-cm="50"', 'data-width-cm="45"');
-          html = html.replaceAll('data-height-cm="50"', 'data-height-cm="45"');
-          html = html.replaceAll('data-longest-side-cm="50"', 'data-longest-side-cm="45"');
+            // Stale visible Statement marketing price.
+            html = html.replaceAll('€49,95', '€45');
 
-          // Align visible shipping copy with authoritative runtime configuration.
-          html = html.replaceAll('Free shipping on orders over €50', 'Free shipping from €69 after discount');
-          html = html.replaceAll('2 to 4 working days. Ships across Europe.', 'Shipping available in the Netherlands, EU and United States.');
+            // Authoritative launch shipping threshold / market scope.
+            html = html.replaceAll('Free shipping on orders over €50', 'Free shipping from €69 after discount');
+            html = html.replaceAll('2 to 4 working days. Ships across Europe.', 'Shipping available in the Netherlands, EU and United States.');
 
-          // Launch checkout is PayPal-only; do not advertise unsupported standalone methods.
-          html = html.replace('<div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">iDEAL</div><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">Visa</div><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">Mastercard</div>', '');
+            // PayPal-only launch surface: remove unsupported standalone badges when this exact legacy group exists.
+            html = html.replace('<div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">iDEAL</div><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">Visa</div><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">Mastercard</div>', '');
 
-          // Remove placeholder WhatsApp entry entirely.
-          html = html.replace(/\n\s*<!-- WHATSAPP -->[\s\S]*?\n\s*<!-- CHECKOUT DRAWER -->/, '\n\n  <!-- CHECKOUT DRAWER -->');
+            // Placeholder WhatsApp must not ship.
+            html = html.replace(/\n\s*<!-- WHATSAPP -->[\s\S]*?\n\s*<!-- CHECKOUT DRAWER -->/, '\n\n  <!-- CHECKOUT DRAWER -->');
 
-          fs.writeFileSync(path, html);
+            // Remove residual unsupported bestseller wording from image accessibility text.
+            html = html.replaceAll(' — Best Selling Music Legend Wall Sticker', ' — Music Legend Wall Sticker');
+
+            fs.writeFileSync(path, html);
+          }
           NODE
 
           git diff --check
-          git diff -- index.html
-      - name: Commit homepage cleanup
+          git diff -- index.html shop.html music-legends.html sport-legends.html combat-legends.html wisdom-legends.html about.html
+      - name: Commit static storefront normalization
         shell: bash
         run: |
-          if git diff --quiet -- index.html; then
-            echo "No homepage changes to commit."
+          if git diff --quiet -- index.html shop.html music-legends.html sport-legends.html combat-legends.html wisdom-legends.html about.html; then
+            echo "No static storefront changes to commit."
             exit 0
           fi
           git config user.name "legendmural-cleanup-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          git commit -m "Clean homepage launch claims and commerce copy"
+          git add index.html shop.html music-legends.html sport-legends.html combat-legends.html wisdom-legends.html about.html
+          git commit -m "Normalize static storefront launch data"
           git push origin HEAD:agent/storefront-launch-cleanup-v2
