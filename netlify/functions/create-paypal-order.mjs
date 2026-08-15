@@ -5,6 +5,35 @@ import {
   unexpectedCommerceFunctionResponse,
 } from '../../server/netlify/commerce-runtime.mjs';
 
+function normalizedOrigin(value = '') {
+  try {
+    const url = new URL(String(value || ''));
+    if (url.protocol !== 'https:' && !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)) {
+      return '';
+    }
+    return url.origin;
+  } catch {
+    return '';
+  }
+}
+
+export function resolveNetlifyPayPalReturnUrls(request, env = process.env) {
+  const requestOrigin = normalizedOrigin(request?.url);
+  const browserOrigin = normalizedOrigin(request?.headers?.get?.('origin') || '');
+
+  if (requestOrigin && browserOrigin === requestOrigin) {
+    return Object.freeze({
+      successUrl: new URL('/order-success.html', `${requestOrigin}/`).toString(),
+      cancelUrl: new URL('/order-cancelled.html', `${requestOrigin}/`).toString(),
+    });
+  }
+
+  return Object.freeze({
+    successUrl: env.CHECKOUT_SUCCESS_URL,
+    cancelUrl: env.CHECKOUT_CANCEL_URL,
+  });
+}
+
 export function createNetlifyPayPalCheckoutHandler({
   env = process.env,
   storeFactory,
@@ -13,10 +42,13 @@ export function createNetlifyPayPalCheckoutHandler({
   return async function netlifyPayPalCheckoutHandler(request) {
     try {
       const checkoutStore = getCommerceOrderStore({ env, storeFactory });
+      const returnUrls = resolveNetlifyPayPalReturnUrls(request, env);
       return await handleCreatePayPalOrder(request, {
         ...handlerOptions,
         env,
         checkoutStore,
+        successUrl: returnUrls.successUrl,
+        cancelUrl: returnUrls.cancelUrl,
       });
     } catch (error) {
       const configurationResponse = commerceBootstrapErrorResponse(error, {
