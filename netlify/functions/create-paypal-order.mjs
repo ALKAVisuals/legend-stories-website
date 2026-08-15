@@ -17,6 +17,25 @@ function normalizedOrigin(value = '') {
   }
 }
 
+export function isLegendMuralCheckoutPaused(env = process.env) {
+  return String(env?.LEGENDMURAL_CHECKOUT_PAUSED || '').trim().toLowerCase() === 'true';
+}
+
+function checkoutPausedResponse() {
+  return Response.json({
+    error: {
+      code: 'CHECKOUT_PAUSED',
+      message: 'Checkout is temporarily unavailable. Please try again later.',
+    },
+  }, {
+    status: 503,
+    headers: {
+      'cache-control': 'no-store',
+      'retry-after': '300',
+    },
+  });
+}
+
 export function resolveNetlifyPayPalReturnUrls(request, env = process.env) {
   const requestOrigin = normalizedOrigin(request?.url);
   const browserOrigin = normalizedOrigin(request?.headers?.get?.('origin') || '');
@@ -40,6 +59,10 @@ export function createNetlifyPayPalCheckoutHandler({
   handlerOptions = {},
 } = {}) {
   return async function netlifyPayPalCheckoutHandler(request) {
+    if (isLegendMuralCheckoutPaused(env)) {
+      return checkoutPausedResponse();
+    }
+
     try {
       const checkoutStore = getCommerceOrderStore({ env, storeFactory });
       const returnUrls = resolveNetlifyPayPalReturnUrls(request, env);
