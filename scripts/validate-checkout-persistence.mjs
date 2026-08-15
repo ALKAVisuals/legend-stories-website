@@ -118,6 +118,8 @@ for (const [index, product] of catalog.entries()) {
 try {
   const product = catalog[0];
   let storedOrder = null;
+  // Keep legacy aliases as browser input so backwards compatibility is covered,
+  // while persisted order identity must be canonical 30/45 cm.
   await createDurableHostedCheckoutSession({
     request: {
       items: [
@@ -158,8 +160,12 @@ try {
   });
 
   const variantIds = storedOrder?.items.map((item) => item.variantId).sort();
-  if (JSON.stringify(variantIds) !== JSON.stringify(['compact-50x30', 'statement-50x50'])) {
-    errors.push(`${product.page}: pending order did not preserve both selected sizes.`);
+  if (JSON.stringify(variantIds) !== JSON.stringify(['compact-30', 'statement-45'])) {
+    errors.push(`${product.page}: pending order did not preserve both canonical 30/45 cm sizes.`);
+  }
+  const sizeCms = storedOrder?.items.map((item) => item.sizeCm).sort((a, b) => a - b);
+  if (JSON.stringify(sizeCms) !== JSON.stringify([30, 45])) {
+    errors.push(`${product.page}: pending order did not persist exact 30/45 cm production sizes.`);
   }
   for (const item of storedOrder?.items || []) {
     const variant = resolveCatalogProductVariant(product, item.variantId);
@@ -214,5 +220,5 @@ if (errors.length) {
 }
 
 console.log(
-  `Checkout persistence validation passed for ${catalog.length} products and a dual-size order with authoritative production-box records, NL delivery data and fail-closed storage.`,
+  `Checkout persistence validation passed for ${catalog.length} products and a dual-size order with canonical 30/45 cm production records, NL delivery data and fail-closed storage.`,
 );
