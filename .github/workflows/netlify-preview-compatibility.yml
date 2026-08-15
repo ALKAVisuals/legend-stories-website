@@ -110,7 +110,8 @@ jobs:
           }
 
           const returnPage = await readFile('./dist/order-success.html', 'utf8');
-          if (!returnPage.includes('<script type="module" src="/js/order-return.js"></script>')) {
+          const runtimeReturnScript = /<script\b(?=[^>]*\btype=["']module["'])(?=[^>]*\bsrc=["']\/js\/order-return\.js["'])[^>]*>\s*<\/script>/i;
+          if (!runtimeReturnScript.test(returnPage)) {
             throw new Error('Built payment return page is not loading the unbundled runtime order-return module.');
           }
           if (/assets\/order-success-[^"']+\.js/.test(returnPage)) {
