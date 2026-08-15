@@ -1,0 +1,36 @@
+name: Validate integrated PayPal and production state once
+
+on:
+  push:
+    branches: [commerce/align-production-30-45-v1]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install FFmpeg tooling required by media audits
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          ffprobe -version
+      - run: npm ci
+      - name: Validate integrated production gates
+        run: |
+          node scripts/validate-product-variants.mjs
+          node scripts/validate-full-product-catalog.mjs
+          node --test tests/production-handoff.test.mjs
+          npm run validate:checkout-persistence
+          npm run validate:browser-checkout
+          npm run validate:commerce-runtime
+      - name: Run full website quality suite
+        run: npm run quality
