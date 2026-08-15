@@ -41,13 +41,13 @@ jobs:
       - name: Run focused audit tests
         run: node --test tests/accessibility-purchase-flow-audit.test.mjs
 
-      - name: Upload audit report
-        if: always()
+      - name: Upload audit report on failure only
+        if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: accessibility-purchase-flow-audit
           path: |
             reports/accessibility-purchase-flow-audit.json
             reports/accessibility-purchase-flow-audit.md
-          if-no-files-found: error
-          retention-days: 14
+          if-no-files-found: warn
+          retention-days: 1

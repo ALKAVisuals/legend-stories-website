@@ -129,11 +129,11 @@ jobs:
       - name: Validate production output
         run: node scripts/validate-build.mjs
 
-      - name: Upload audit reports
-        if: always()
+      - name: Upload audit reports on failure only
+        if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: repository-audits
           path: reports/
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 1
