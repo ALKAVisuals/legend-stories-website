@@ -96,8 +96,8 @@ for (const [name, source, title, heading] of [
 if (!successPage.includes('has not been confirmed by the server yet')) {
   errors.push('The success return page must state that payment is unverified until the server confirms it.');
 }
-if (!successPage.includes('<script type="module" src="js/order-return.js"></script>')) {
-  errors.push('The success return page must load the verified order-status module.');
+if (!successPage.includes('<script type="module" vite-ignore src="/js/order-return.js"></script>')) {
+  errors.push('The success return page must load the verified order-status module at runtime so deployment-generated commerce routes are not bundled away.');
 }
 if (!cancelledPage.includes('Your cart remains saved in this browser')) {
   errors.push('The cancellation page must explain that the browser cart remains available.');
@@ -109,4 +109,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Browser checkout validation passed with deployment-generated endpoints, minimal payloads, trusted PayPal Sandbox redirects and the Stripe fallback intact.');
+console.log('Browser checkout validation passed with runtime-loaded deployment endpoints, minimal payloads, trusted PayPal Sandbox redirects and the Stripe fallback intact.');

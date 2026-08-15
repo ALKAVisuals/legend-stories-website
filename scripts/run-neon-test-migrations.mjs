@@ -48,6 +48,8 @@ const runtimeRole = normalizeRoleName(runtimeConfig.username);
 const migrations = [
   new URL('../server/db/migrations/001_create_order_store.sql', import.meta.url),
   new URL('../server/db/migrations/002_grant_order_store_runtime.sql', import.meta.url),
+  new URL('../server/db/migrations/003_add_paypal_reconciliation.sql', import.meta.url),
+  new URL('../server/db/migrations/004_grant_paypal_reconciliation_runtime.sql', import.meta.url),
 ];
 
 const client = await createDefaultNeonClient(migrationUrl);

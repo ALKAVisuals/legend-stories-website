@@ -62,11 +62,15 @@ if (!returnSource.includes("url.searchParams.get('session_id')")
 if (!returnSource.includes('requestPayPalCapture({')) {
   errors.push('PayPal returns must be captured server-side before order status verification.');
 }
+if (!clientSource.includes('pollVerifiedOrderStatus')
+  || !returnSource.includes('pollVerifiedOrderStatus({')) {
+  errors.push('Return page must automatically poll non-terminal order status after provider return.');
+}
 if (!returnSource.includes('applyVerifiedOrderStatus(status')) {
   errors.push('Return page must use the verified cart-clearing policy.');
 }
-if (!returnPage.includes('<script type="module" src="js/order-return.js"></script>')) {
-  errors.push('Payment return page is not connected to the verified status client.');
+if (!returnPage.includes('<script type="module" vite-ignore src="/js/order-return.js"></script>')) {
+  errors.push('Payment return page must load the order-return module at runtime instead of bundling deployment-generated commerce config into Vite output.');
 }
 if (!returnPage.includes('<meta name="robots" content="noindex, nofollow">')) {
   errors.push('Payment return page must remain excluded from search indexing.');
@@ -149,5 +153,5 @@ if (errors.length) {
 }
 
 console.log(
-  `Verified order return validation passed for ${catalog.length} products with Stripe/PayPal return identifiers, privacy-minimal status responses and paid-only cart clearing.`,
+  `Verified order return validation passed for ${catalog.length} products with Stripe/PayPal return identifiers, runtime-loaded deployment config, bounded status polling, privacy-minimal status responses and paid-only cart clearing.`,
 );

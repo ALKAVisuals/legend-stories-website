@@ -5,6 +5,7 @@ import {
   OrderStatusClientError,
   isOrderStatusConfigured,
   normalizeOrderStatusEndpoint,
+  pollVerifiedOrderStatus,
   requestVerifiedOrderStatus,
 } from '../js/commerce/order-status-client.mjs';
 
@@ -130,4 +131,90 @@ test('browser rejects invalid lookup identifiers before network access', async (
       && error.code === 'INVALID_ORDER_LOOKUP',
   );
   assert.equal(called, false);
+});
+
+test('return polling retries non-terminal status until the server confirms paid', async () => {
+  const responses = [
+    validStatus({ status: 'payment_pending', paid: false, terminal: false, version: 0 }),
+    validStatus({ status: 'payment_processing', paid: false, terminal: false, version: 0 }),
+    validStatus({ status: 'paid', paid: true, terminal: true, version: 1 }),
+  ];
+  let requests = 0;
+  let sleeps = 0;
+
+  const status = await pollVerifiedOrderStatus({
+    endpoint: '/api/order-status',
+    baseUrl: 'https://shop.example',
+    reference,
+    sessionId,
+    maxAttempts: 12,
+    intervalMs: 1_000,
+    async requestImpl() {
+      requests += 1;
+      return responses.shift();
+    },
+    async sleepImpl(delayMs) {
+      assert.equal(delayMs, 1_000);
+      sleeps += 1;
+    },
+  });
+
+  assert.equal(status.status, 'paid');
+  assert.equal(status.paid, true);
+  assert.equal(requests, 3);
+  assert.equal(sleeps, 2);
+});
+
+test('return polling is bounded when payment remains pending', async () => {
+  let requests = 0;
+  let sleeps = 0;
+  const pending = validStatus({
+    status: 'payment_pending',
+    paid: false,
+    terminal: false,
+    version: 0,
+  });
+
+  const status = await pollVerifiedOrderStatus({
+    maxAttempts: 3,
+    intervalMs: 250,
+    async requestImpl() {
+      requests += 1;
+      return pending;
+    },
+    async sleepImpl(delayMs) {
+      assert.equal(delayMs, 250);
+      sleeps += 1;
+    },
+  });
+
+  assert.equal(status.status, 'payment_pending');
+  assert.equal(status.paid, false);
+  assert.equal(requests, 3);
+  assert.equal(sleeps, 2);
+});
+
+test('return polling stops immediately on a terminal failure status', async () => {
+  let requests = 0;
+  const failed = validStatus({
+    status: 'payment_failed',
+    paid: false,
+    terminal: true,
+    version: 1,
+  });
+
+  const status = await pollVerifiedOrderStatus({
+    maxAttempts: 12,
+    intervalMs: 1_000,
+    async requestImpl() {
+      requests += 1;
+      return failed;
+    },
+    async sleepImpl() {
+      assert.fail('terminal status must not sleep or retry');
+    },
+  });
+
+  assert.equal(status.status, 'payment_failed');
+  assert.equal(requests, 1);
 });

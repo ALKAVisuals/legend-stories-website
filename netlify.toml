@@ -40,6 +40,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/paypal/webhook"
+  to = "/.netlify/functions/paypal-webhook"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/order-status"
   to = "/.netlify/functions/order-status"
   status = 200

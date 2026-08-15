@@ -1,6 +1,8 @@
 import { COMMERCE_RUNTIME_CONFIG } from './runtime-config.mjs';
 
 const DEFAULT_TIMEOUT_MS = 10_000;
+const DEFAULT_POLL_ATTEMPTS = 12;
+const DEFAULT_POLL_INTERVAL_MS = 1_000;
 const PAYPAL_ORDER_ID_PATTERN = /^[A-Z0-9]{1,36}$/;
 const ORDER_STATUSES = new Set([
   'payment_pending',
@@ -182,4 +184,32 @@ export async function requestVerifiedOrderStatus({
   } finally {
     if (timer) clearTimeout(timer);
   }
+}
+
+export async function pollVerifiedOrderStatus({
+  requestImpl = requestVerifiedOrderStatus,
+  sleepImpl = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs)),
+  maxAttempts = DEFAULT_POLL_ATTEMPTS,
+  intervalMs = DEFAULT_POLL_INTERVAL_MS,
+  ...requestOptions
+} = {}) {
+  const attempts = Number(maxAttempts);
+  const delayMs = Number(intervalMs);
+  if (!Number.isInteger(attempts) || attempts < 1 || attempts > 30
+    || !Number.isInteger(delayMs) || delayMs < 0 || delayMs > 10_000) {
+    fail('INVALID_ORDER_STATUS_POLLING', 'Order status polling configuration is invalid.');
+  }
+  if (typeof requestImpl !== 'function' || typeof sleepImpl !== 'function') {
+    fail('INVALID_ORDER_STATUS_POLLING', 'Order status polling dependencies are invalid.');
+  }
+
+  let latestStatus = null;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    latestStatus = await requestImpl(requestOptions);
+    if (latestStatus?.terminal === true) return latestStatus;
+    if (attempt < attempts && delayMs > 0) {
+      await sleepImpl(delayMs);
+    }
+  }
+  return latestStatus;
 }

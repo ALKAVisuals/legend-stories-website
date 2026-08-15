@@ -104,6 +104,25 @@ function requestId(value) {
   return normalized;
 }
 
+function rawJsonRequestBody(value) {
+  if (typeof value !== 'string' || !value) {
+    throw new PayPalApiError(
+      'INVALID_PAYPAL_RAW_JSON_BODY',
+      'PayPal raw JSON request body is invalid.',
+    );
+  }
+  try {
+    const parsed = JSON.parse(value);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('object required');
+  } catch {
+    throw new PayPalApiError(
+      'INVALID_PAYPAL_RAW_JSON_BODY',
+      'PayPal raw JSON request body is invalid.',
+    );
+  }
+  return value;
+}
+
 export function createPayPalApiClient({
   clientId = process.env.PAYPAL_CLIENT_ID,
   clientSecret = process.env.PAYPAL_CLIENT_SECRET,
@@ -167,9 +186,16 @@ export function createPayPalApiClient({
   async function paypalRequest(path, {
     method = 'GET',
     body,
+    rawJsonBody,
     paypalRequestId,
     preferRepresentation = false,
   } = {}) {
+    if (body !== undefined && rawJsonBody !== undefined) {
+      throw new PayPalApiError(
+        'INVALID_PAYPAL_REQUEST_BODY',
+        'PayPal request cannot contain both structured and raw JSON bodies.',
+      );
+    }
     const accessToken = await getAccessToken();
     const headers = {
       Accept: 'application/json',
@@ -179,10 +205,13 @@ export function createPayPalApiClient({
     if (paypalRequestId) headers['PayPal-Request-Id'] = requestId(paypalRequestId);
     if (preferRepresentation) headers.Prefer = 'return=representation';
 
+    const requestBody = rawJsonBody === undefined
+      ? (body === undefined ? undefined : JSON.stringify(body))
+      : rawJsonRequestBody(rawJsonBody);
     const response = await fetchImpl(`${configuration.apiBase}${path}`, {
       method,
       headers,
-      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      ...(requestBody === undefined ? {} : { body: requestBody }),
     });
     if (!response.ok) {
       const errorBody = await readErrorBody(response);
@@ -222,6 +251,12 @@ export function createPayPalApiClient({
     async getOrder(orderIdInput) {
       const orderId = normalizePayPalOrderId(orderIdInput);
       return paypalRequest(`/v2/checkout/orders/${orderId}`);
+    },
+    async verifyWebhookSignature(rawVerificationBody) {
+      return paypalRequest('/v1/notifications/verify-webhook-signature', {
+        method: 'POST',
+        rawJsonBody: rawVerificationBody,
+      });
     },
   });
 }

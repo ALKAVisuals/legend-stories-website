@@ -1,10 +1,10 @@
 # Neon integration validation
 
-De echte geïsoleerde Neon Postgres-integratie is uitgevoerd. Dit document beschrijft de blijvende testharness, de veiligheidsgrenzen en de voorwaarden voor een toekomstige regressierun.
+De echte geïsoleerde Neon Postgres-integratie is eerder uitgevoerd. Dit document beschrijft de blijvende testharness, de veiligheidsgrenzen en de voorwaarden voor een toekomstige regressierun.
 
 ## Status
 
-De integratie heeft tegen echte PostgreSQL gevalideerd:
+De bestaande integratie heeft tegen echte PostgreSQL gevalideerd:
 
 - schema-migraties;
 - provider-neutrale order-store conformance;
@@ -15,8 +15,16 @@ De integratie heeft tegen echte PostgreSQL gevalideerd:
 
 Tijdens de eerste echte run zijn twee productiepadproblemen gevonden en daarna in PR #74 opgelost:
 
-- JSONB-velden worden nu expliciet geserialiseerd voordat zij naar de PostgreSQL-driver gaan;
+- JSONB-velden worden expliciet geserialiseerd voordat zij naar de PostgreSQL-driver gaan;
 - retryable SERIALIZABLE-conflicten krijgen bounded retries met backoff.
+
+De PayPal-architectuur voegt nu een aanvullende schemafundering toe die bij de eerstvolgende geïsoleerde Neon-regressierun expliciet moet worden bewezen:
+
+- `payment_provider` wordt in PostgreSQL automatisch afgeleid uit de opgeslagen payment session/order ID;
+- Stripe Checkout session IDs blijven ondersteund voor de tijdelijke legacy fallback;
+- PayPal order IDs worden als `paypal` geclassificeerd zonder dat applicatiecode het providerlabel kan overschrijven;
+- `legend_commerce.paypal_webhook_events` reserveert alleen minimale eventmetadata voor toekomstige idempotente reconciliation;
+- de runtime-rol krijgt op de PayPal event-ledger alleen `SELECT` en `INSERT`.
 
 ## Pinned runtime dependencies
 
@@ -44,11 +52,13 @@ De workflow:
 
 1. weigert te starten wanneer een vereiste secret ontbreekt;
 2. installeert de exacte dependency lock;
-3. past `server/db/migrations/001_create_order_store.sql` toe via de directe migration-URL;
+3. past in volgorde de migraties `001` t/m `004` toe via de directe migration-URL;
 4. verwijdert alleen synthetische records uit de geïsoleerde testomgeving;
 5. draait de complete provider-neutrale conformance-suite tegen de echte Neon-adapter;
-6. ruimt synthetische records ook na een testfout op;
-7. draait de normale credential-free Neon architectuurvalidatie.
+6. bewijst aanvullend dat een PayPal order ID als `payment_provider=paypal` wordt opgeslagen;
+7. bewijst dat de runtime-rol een PayPal webhook-event kan reserveren maar niet kan deleten of truncaten;
+8. ruimt synthetische records ook na een testfout op;
+9. draait de normale credential-free Neon architectuurvalidatie.
 
 ## Veiligheidsgrenzen
 
@@ -57,7 +67,8 @@ De workflow:
 - Zij maakt, verwijdert of reset geen Neon-branches.
 - Zij mag alleen synthetische testdata gebruiken.
 - Deze handmatige Neon-integratieworkflow does not touch Netlify; Netlify staging is een afzonderlijke operationele releasefase.
-- Zij activeert geen Stripe live-modus.
+- Zij activeert geen PayPal Live-modus.
+- `PAYPAL_ALLOW_LIVE=true` hoort niet in deze testomgeving.
 - Productiecredentials horen nooit in de testenvironment.
 
 ## Productiegrens
@@ -71,4 +82,4 @@ Een geslaagde integratietest betekent niet dat de database automatisch productie
 - gescheiden Netlify-productievariabelen;
 - monitoring en incidentprocedures.
 
-De eerstvolgende operationele stap is niet opnieuw Neon provisionen, maar de bestaande Netlify Function-adapters end-to-end valideren in staging met Stripe-testmodus.
+De eerstvolgende operationele stap na deze schemafundering is de PayPal webhook/reconciliationlaag implementeren. Pas daarna volgt PayPal Sandbox + Neon staging end-to-end validatie.

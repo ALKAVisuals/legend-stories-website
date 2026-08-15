@@ -46,6 +46,40 @@ test('PayPal client defaults to Sandbox and sends idempotent Orders API requests
   assert.equal(calls[1].options.headers.Prefer, 'return=representation');
 });
 
+test('PayPal client posts a prebuilt raw webhook verification body without reserializing it', async () => {
+  const calls = [];
+  const client = createPayPalApiClient({
+    clientId: 'sandbox-client',
+    clientSecret: 'sandbox-secret',
+    fetchImpl: async (url, options) => {
+      calls.push({ url, options });
+      if (url.endsWith('/v1/oauth2/token')) {
+        return new Response(JSON.stringify({ access_token: 'sandbox-access-token' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({ verification_status: 'SUCCESS' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    },
+  });
+  const rawVerificationBody = '{"auth_algo":"SHA256withRSA","webhook_event":{\n  "id" : "WH-TEST", "event_type" : "PAYMENT.CAPTURE.COMPLETED"\n}}';
+
+  const result = await client.verifyWebhookSignature(rawVerificationBody);
+
+  assert.equal(result.verification_status, 'SUCCESS');
+  assert.equal(calls.length, 2);
+  assert.equal(
+    calls[1].url,
+    'https://api-m.sandbox.paypal.com/v1/notifications/verify-webhook-signature',
+  );
+  assert.equal(calls[1].options.method, 'POST');
+  assert.equal(calls[1].options.headers.Authorization, 'Bearer sandbox-access-token');
+  assert.equal(calls[1].options.body, rawVerificationBody);
+});
+
 test('PayPal live API is blocked unless explicitly enabled', () => {
   assert.throws(
     () => createPayPalApiClient({
