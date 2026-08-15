@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 import {
   CheckoutSessionError,
-} from '../server/payments/checkout-session.mjs';
+} from '../server/payments/checkout-core.mjs';
 import {
   createPayPalHostedCheckout,
 } from '../server/payments/paypal-checkout.mjs';
