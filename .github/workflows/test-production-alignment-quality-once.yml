@@ -1,0 +1,28 @@
+name: Test production alignment quality once
+
+on:
+  push:
+    branches: [commerce/align-production-30-45-v1]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Re-run production alignment gates
+        run: |
+          node scripts/validate-product-variants.mjs
+          node scripts/validate-full-product-catalog.mjs
+          node --test tests/production-handoff.test.mjs
+      - name: Run full website quality suite
+        run: npm run quality
