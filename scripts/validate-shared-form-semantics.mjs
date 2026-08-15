@@ -54,7 +54,7 @@ for (const file of htmlFiles) {
     }
   }
 
-  const footerLogoPattern = /<a\b[^>]*\bhref=["']index\.html["'][^>]*\bclass=["'][^"']*\blogo-wrap\b[^"']*["'][^>]*\baria-label=["']Legend Stories Home["'][^>]*>\s*<img[^>]*lm-logo-transparant\.png/i;
+  const footerLogoPattern = /<a\b[^>]*\bhref=["']index\.html["'][^>]*\bclass=["'][^"']*\blogo-wrap\b[^"']*["'][^>]*\baria-label=["']LegendMural Home["'][^>]*>\s*<img[^>]*lm-logo-transparant\.png/i;
   if (!footerLogoPattern.test(html)) errors.push(`${file}: footer logo link is unnamed`);
 }
 

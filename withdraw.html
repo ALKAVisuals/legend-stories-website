@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Use the LegendMural online withdrawal function to notify us that you want to withdraw from an eligible online purchase.">
+  <meta name="robots" content="noindex, follow">
+  <title>Withdraw a purchase — LegendMural</title>
+  <link rel="canonical" href="https://alkavisuals.github.io/legend-stories-website/withdraw.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Playfair+Display:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tailwind-built.css">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/shared.css">
+</head>
+<body class="min-h-screen bg-void text-text-primary font-body flex flex-col">
+  <header class="border-b border-surface-border/20 glass">
+    <div class="max-w-5xl mx-auto px-5 sm:px-6 h-16 md:h-20 flex items-center justify-between gap-4">
+      <a href="index.html" class="flex items-center" aria-label="LegendMural Home">
+        <img src="media/LOGO/lm-logo-transparant.png" alt="LegendMural" class="h-8 md:h-10 w-auto object-contain">
+      </a>
+      <a href="returns.html" class="text-sm font-medium text-text-secondary hover:text-mint transition-colors">Returns &amp; withdrawal</a>
+    </div>
+  </header>
+
+  <main class="flex-1 py-12 md:py-20">
+    <div class="max-w-2xl mx-auto px-5 sm:px-6">
+      <p class="text-mint text-xs font-semibold uppercase tracking-widest mb-3">Statutory withdrawal</p>
+      <h1 class="font-display text-3xl md:text-5xl font-bold mb-4">Withdraw from a purchase</h1>
+      <p class="text-text-secondary leading-relaxed mb-8">Use this online function to tell LegendMural that you want to withdraw from an eligible online purchase. You do not need an account and you do not need to give a reason.</p>
+
+      <form id="withdrawal-form" class="rounded-2xl border border-surface-border/30 bg-surface/60 p-6 md:p-8 space-y-5" novalidate>
+        <div>
+          <label for="withdrawal-order-id" class="block text-sm font-semibold mb-2">Order ID</label>
+          <input id="withdrawal-order-id" name="orderId" type="text" required maxlength="36" autocomplete="off" class="w-full rounded-xl bg-void border border-surface-border/40 px-4 py-3 text-text-primary focus:border-mint focus:outline-none" placeholder="PayPal Order ID">
+          <p class="text-xs text-text-muted mt-2">Use the Order ID shown after your LegendMural payment.</p>
+        </div>
+        <div>
+          <label for="withdrawal-email" class="block text-sm font-semibold mb-2">Email used for the order</label>
+          <input id="withdrawal-email" name="email" type="email" required maxlength="254" autocomplete="email" class="w-full rounded-xl bg-void border border-surface-border/40 px-4 py-3 text-text-primary focus:border-mint focus:outline-none" placeholder="you@example.com">
+        </div>
+        <div class="rounded-xl border border-mint/20 bg-mint/[.04] p-4">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input id="withdrawal-confirm" type="checkbox" required class="mt-1 h-4 w-4 accent-mint">
+            <span class="text-sm leading-relaxed">I clearly confirm that I want to withdraw from the purchase identified above.</span>
+          </label>
+        </div>
+        <p id="withdrawal-error" class="hidden rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200" role="alert"></p>
+        <button id="withdrawal-submit" type="submit" class="btn-primary w-full">Confirm withdrawal</button>
+        <p class="text-xs text-text-muted">Submitting this form records your withdrawal notice. It does not automatically mean a refund has already been processed or that returned goods have been received.</p>
+      </form>
+
+      <section id="withdrawal-receipt" class="hidden rounded-2xl border border-mint/30 bg-surface/60 p-6 md:p-8" tabindex="-1" aria-live="polite">
+        <p class="text-mint text-xs font-semibold uppercase tracking-widest mb-2">Withdrawal received</p>
+        <h2 class="font-display text-2xl md:text-3xl font-bold mb-4">Keep this confirmation</h2>
+        <p class="text-text-secondary mb-6">LegendMural has recorded your online notice to withdraw from this purchase.</p>
+        <dl class="space-y-3 text-sm">
+          <div><dt class="text-text-muted">Order ID</dt><dd id="withdrawal-receipt-order-id" class="font-semibold break-all"></dd></div>
+          <div><dt class="text-text-muted">Confirmation code</dt><dd id="withdrawal-receipt-code" class="font-semibold break-all"></dd></div>
+          <div><dt class="text-text-muted">Received</dt><dd id="withdrawal-receipt-time" class="font-semibold"></dd></div>
+        </dl>
+        <div class="mt-7 flex flex-col sm:flex-row gap-3">
+          <button id="withdrawal-download" type="button" class="btn-primary">Download confirmation</button>
+          <a href="returns.html" class="btn-secondary text-center">Return instructions</a>
+        </div>
+        <p class="text-xs text-text-muted mt-5">Keep this receipt. Automatic email delivery is not activated yet; this launch branch is therefore not being treated as final legal readiness.</p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="border-t border-surface-border/20 py-6 text-center text-xs text-text-muted">
+    <p>© 2026 LegendMural. <a href="returns.html" class="hover:text-mint">Returns &amp; withdrawal</a></p>
+  </footer>
+  <script type="module" src="js/withdrawal.js"></script>
+</body>
+</html>

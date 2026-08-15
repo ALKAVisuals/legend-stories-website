@@ -44,12 +44,12 @@
       <p id="order-status-message" class="text-text-secondary leading-relaxed max-w-xl mx-auto">
         Your payment has not been confirmed by the server yet. Your cart remains saved while confirmation is pending.
       </p>
-      <p id="order-status-note" class="mt-4 text-sm text-text-muted">
+      <div id="order-id-block" class="hidden mt-6 rounded-xl border border-surface-border/30 bg-void/40 p-4 text-left"><p class="text-xs uppercase tracking-wider text-text-muted mb-1">Order ID</p><p id="order-id-value" class="font-mono text-sm break-all text-text-primary"></p><p class="text-xs text-text-muted mt-2">Keep this Order ID with your payment records. It can be used with your order email for the online withdrawal function.</p></div><p id="order-status-note" class="mt-4 text-sm text-text-muted">
         Keep your payment confirmation email for your records. Your cart is not cleared automatically until the server verifies this exact Checkout Session.
       </p>
       <div class="mt-9 flex flex-col sm:flex-row gap-3 justify-center">
         <a href="shop.html" class="inline-flex items-center justify-center rounded-xl bg-mint text-void px-6 py-3 font-semibold hover:opacity-90 transition-opacity">Continue shopping</a>
-        <a href="index.html#contact" class="inline-flex items-center justify-center rounded-xl border border-surface-border/50 px-6 py-3 font-semibold text-text-secondary hover:text-mint hover:border-mint/40 transition-colors">Contact support</a>
+        <a id="order-withdraw-link" href="withdraw.html" class="hidden inline-flex items-center justify-center rounded-xl border border-surface-border/50 px-6 py-3 font-semibold text-text-secondary hover:text-mint hover:border-mint/40 transition-colors">Withdraw from purchase</a><a href="index.html#contact" class="inline-flex items-center justify-center rounded-xl border border-surface-border/50 px-6 py-3 font-semibold text-text-secondary hover:text-mint hover:border-mint/40 transition-colors">Contact support</a>
       </div>
     </section>
   </main>
