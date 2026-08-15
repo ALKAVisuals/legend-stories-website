@@ -62,6 +62,10 @@ if (!returnSource.includes("url.searchParams.get('session_id')")
 if (!returnSource.includes('requestPayPalCapture({')) {
   errors.push('PayPal returns must be captured server-side before order status verification.');
 }
+if (!clientSource.includes('pollVerifiedOrderStatus')
+  || !returnSource.includes('pollVerifiedOrderStatus({')) {
+  errors.push('Return page must automatically poll non-terminal order status after provider return.');
+}
 if (!returnSource.includes('applyVerifiedOrderStatus(status')) {
   errors.push('Return page must use the verified cart-clearing policy.');
 }
@@ -149,5 +153,5 @@ if (errors.length) {
 }
 
 console.log(
-  `Verified order return validation passed for ${catalog.length} products with Stripe/PayPal return identifiers, privacy-minimal status responses and paid-only cart clearing.`,
+  `Verified order return validation passed for ${catalog.length} products with Stripe/PayPal return identifiers, bounded status polling, privacy-minimal status responses and paid-only cart clearing.`,
 );
