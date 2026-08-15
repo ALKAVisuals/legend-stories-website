@@ -1,35 +1,35 @@
-export const DEFAULT_PRODUCT_VARIANT_ID = 'statement-50x50';
+export const DEFAULT_PRODUCT_VARIANT_ID = 'statement-45';
 
 export const PRODUCT_VARIANTS = Object.freeze([
   Object.freeze({
-    id: 'statement-50x50',
+    id: 'statement-45',
     label: 'Statement',
-    sizeLabel: '50 × 50 cm',
-    widthCm: 50,
-    heightCm: 50,
-    longestSideCm: 50,
-    sizeCm: 50,
+    sizeLabel: '45 cm',
+    widthCm: 45,
+    heightCm: 45,
+    longestSideCm: 45,
+    sizeCm: 45,
     price: 45,
-    skuSuffix: '50x50',
+    skuSuffix: '45cm',
     isDefault: true,
   }),
   Object.freeze({
-    id: 'compact-50x30',
+    id: 'compact-30',
     label: 'Compact',
-    sizeLabel: '50 × 30 cm',
-    widthCm: 50,
+    sizeLabel: '30 cm',
+    widthCm: 30,
     heightCm: 30,
-    longestSideCm: 50,
-    sizeCm: 50,
+    longestSideCm: 30,
+    sizeCm: 30,
     price: 35,
-    skuSuffix: '50x30',
+    skuSuffix: '30cm',
     isDefault: false,
   }),
 ]);
 
 const LEGACY_VARIANT_ALIASES = Object.freeze({
-  'statement-45': 'statement-50x50',
-  'compact-30': 'compact-50x30',
+  'statement-50x50': 'statement-45',
+  'compact-50x30': 'compact-30',
 });
 
 function normalizeVariantId(value = '') {
@@ -50,7 +50,7 @@ function normalizeVariant(entry = {}) {
   const widthCm = Number(source.widthCm);
   const heightCm = Number(source.heightCm);
   const longestSideCm = Number(source.longestSideCm || Math.max(widthCm, heightCm));
-  const sizeLabel = String(source.sizeLabel || `${widthCm} × ${heightCm} cm`);
+  const sizeLabel = String(source.sizeLabel || `${longestSideCm} cm`);
   if (!id || !source.label || !Number.isFinite(price) || price < 0
     || !Number.isFinite(widthCm) || widthCm <= 0
     || !Number.isFinite(heightCm) || heightCm <= 0
@@ -66,7 +66,7 @@ function normalizeVariant(entry = {}) {
     longestSideCm,
     sizeCm: longestSideCm,
     price,
-    skuSuffix: String(source.skuSuffix || `${widthCm}x${heightCm}`),
+    skuSuffix: String(source.skuSuffix || `${longestSideCm}cm`),
     isDefault: Boolean(source.isDefault),
   });
 }
