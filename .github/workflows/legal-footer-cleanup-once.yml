@@ -1,0 +1,59 @@
+name: Legal footer cleanup one-off
+
+on:
+  push:
+    branches:
+      - agent/legal-customer-operations-v2
+    paths:
+      - .github/workflows/legal-footer-cleanup-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  clean-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/legal-customer-operations-v2
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends ffmpeg
+      - name: Replace dead legal footer placeholders
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const oldCompany = '<div><p class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Company</p><ul class="space-y-2"><li><a href="about.html" class="text-sm text-text-secondary hover:text-mint transition-colors">About</a></li><li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Privacy</a></li></ul></div>';
+          const newCompany = '<div><p class="font-display font-bold text-sm uppercase tracking-wider text-text-primary mb-4">Company</p><ul class="space-y-2"><li><a href="about.html" class="text-sm text-text-secondary hover:text-mint transition-colors">About</a></li><li><a href="privacy.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Privacy</a></li><li><a href="terms.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Terms</a></li></ul></div>';
+          for (const path of ['shipping.html', 'returns.html', 'faq.html']) {
+            let source = fs.readFileSync(path, 'utf8');
+            if (!source.includes(oldCompany)) throw new Error(`${path}: expected legacy company footer block not found`);
+            source = source.replace(oldCompany, newCompany);
+            fs.writeFileSync(path, source);
+          }
+          NODE
+          git diff --check
+      - name: Verify repository audit has no placeholder links
+        run: |
+          npm run audit | tee /tmp/audit.txt
+          if grep -q 'Placeholder links: 0' /tmp/audit.txt; then
+            exit 0
+          fi
+          echo 'Repository audit still reports placeholder links.' >&2
+          exit 1
+      - name: Full quality gate
+        run: npm run quality
+      - name: Commit only after all gates pass
+        run: |
+          git config user.name "legendmural-legal-ops-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add shipping.html returns.html faq.html
+          git commit -m "Replace legal footer placeholder links"
+          git push origin HEAD:agent/legal-customer-operations-v2
