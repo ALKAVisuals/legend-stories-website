@@ -178,8 +178,8 @@ export function templatizeProductPage(input) {
   );
   html = replaceRequired(
     html,
-    /<button class="([^"]*\badd-to-cart-btn\b[^"]*)" data-name="[^"]*" data-price="45" data-variant-id="statement-50x50" data-size-label="50 × 50 cm" data-width-cm="50" data-height-cm="50" data-longest-side-cm="50" data-variant-label="Statement" data-img="[^"]*">[\s\S]*?<\/button>/,
-    '<button class="$1" data-name="{{NAME}}" data-price="45" data-variant-id="statement-50x50" data-size-label="50 × 50 cm" data-width-cm="50" data-height-cm="50" data-longest-side-cm="50" data-variant-label="Statement" data-img="{{IMAGE}}">\n              Add to cart — €45\n            </button>',
+    /<button class="([^"]*\badd-to-cart-btn\b[^"]*)" data-name="[^"]*" data-price="45" data-variant-id="statement-45" data-size-label="45 cm" data-width-cm="45" data-height-cm="45" data-longest-side-cm="45" data-variant-label="Statement" data-img="[^"]*">[\s\S]*?<\/button>/,
+    '<button class="$1" data-name="{{NAME}}" data-price="45" data-variant-id="statement-45" data-size-label="45 cm" data-width-cm="45" data-height-cm="45" data-longest-side-cm="45" data-variant-label="Statement" data-img="{{IMAGE}}">\n              Add to cart — €45\n            </button>',
     'add-to-cart button',
   );
   html = replaceRequired(

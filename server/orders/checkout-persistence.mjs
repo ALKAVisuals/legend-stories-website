@@ -135,6 +135,7 @@ function createPendingCheckoutRecord({
     ...pending,
     customer: Object.freeze({ ...customer }),
     items: Object.freeze(quote.items.map((item) => Object.freeze({
+      productId: item.productId,
       slug: item.slug,
       page: item.page,
       sku: item.sku,

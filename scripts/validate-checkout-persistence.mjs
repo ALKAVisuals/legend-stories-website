@@ -47,7 +47,7 @@ function paypalClientFor(index, capture = {}) {
 for (const [index, product] of catalog.entries()) {
   let storedOrder = null;
   const deliveryCountry = 'NL';
-  const variantId = index % 2 === 0 ? 'statement-50x50' : 'compact-50x30';
+  const variantId = index % 2 === 0 ? 'statement-45' : 'compact-30';
   const variant = resolveCatalogProductVariant(product, variantId);
   const paypalCapture = {};
 
@@ -107,6 +107,9 @@ for (const [index, product] of catalog.entries()) {
     }
 
     const storedItem = storedOrder.items[0];
+    if (storedItem.productId !== product.productId) {
+      errors.push(`${product.page}: stored order lost canonical product identity.`);
+    }
     if (storedItem.name !== expectedVariantName(product, variant)
       || storedItem.unitPrice !== variant.price) {
       errors.push(`${product.page}: stored order trusted browser product data.`);
@@ -166,8 +169,12 @@ try {
   });
 
   const variantIds = storedOrder?.items.map((item) => item.variantId).sort();
-  if (JSON.stringify(variantIds) !== JSON.stringify(['compact-50x30', 'statement-50x50'])) {
-    errors.push(`${product.page}: pending order did not preserve both selected sizes.`);
+  if (JSON.stringify(variantIds) !== JSON.stringify(['compact-30', 'statement-45'])) {
+    errors.push(`${product.page}: pending order did not preserve both canonical 30/45 cm sizes.`);
+  }
+  const sizeCms = storedOrder?.items.map((item) => item.sizeCm).sort((a, b) => a - b);
+  if (JSON.stringify(sizeCms) !== JSON.stringify([30, 45])) {
+    errors.push(`${product.page}: pending order did not persist exact 30/45 cm production sizes.`);
   }
   for (const item of storedOrder?.items || []) {
     const variant = resolveCatalogProductVariant(product, item.variantId);
@@ -183,7 +190,7 @@ let paypalCalledWithoutStore = false;
 try {
   await createDurablePayPalCheckout({
     request: {
-      items: [{ page: catalog[0].page, variantId: 'statement-50x50', quantity: 1 }],
+      items: [{ page: catalog[0].page, variantId: 'statement-45', quantity: 1 }],
       countryCode: 'NL',
     },
     customer: {
@@ -222,5 +229,5 @@ if (errors.length) {
 }
 
 console.log(
-  `Checkout persistence validation passed for ${catalog.length} products and a dual-size order with authoritative production-box records, NL delivery data, explicit PayPal identity and fail-closed storage.`,
+  `Checkout persistence validation passed for ${catalog.length} products and a dual-size order with canonical 30/45 cm production records, NL delivery data, explicit PayPal identity and fail-closed storage.`,
 );

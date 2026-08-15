@@ -11,6 +11,7 @@ const MAX_QUANTITY_PER_LINE = 10;
 const MAX_TOTAL_QUANTITY = 100;
 const SUPPORTED_CURRENCY = 'EUR';
 const IN_STOCK = 'https://schema.org/InStock';
+const PRODUCTION_PRODUCT_ID_PATTERN = /^LM-\d{4}-\d{5}$/;
 
 export class OrderQuoteError extends Error {
   constructor(code, message, details = {}) {
@@ -56,21 +57,34 @@ export function createCatalogIndex(products = []) {
 
   const byPage = new Map();
   const bySlug = new Map();
+  const byProductId = new Map();
 
   for (const product of products) {
     const page = normalizeIdentifier(product.page);
     const slug = normalizeIdentifier(product.slug);
+    const productId = normalizeIdentifier(product.productId);
     if (!page || !slug) {
       fail('INVALID_CATALOG', 'Every catalog product must have a page and slug.');
     }
-    if (byPage.has(page) || bySlug.has(slug)) {
-      fail('INVALID_CATALOG', 'Product pages and slugs must be unique.', { page, slug });
+    if (!PRODUCTION_PRODUCT_ID_PATTERN.test(productId)) {
+      fail('INVALID_CATALOG', 'Every catalog product must have a canonical production product ID.', {
+        page,
+        productId,
+      });
+    }
+    if (byPage.has(page) || bySlug.has(slug) || byProductId.has(productId)) {
+      fail('INVALID_CATALOG', 'Product pages, slugs and production product IDs must be unique.', {
+        page,
+        slug,
+        productId,
+      });
     }
     byPage.set(page, product);
     bySlug.set(slug, product);
+    byProductId.set(productId, product);
   }
 
-  return Object.freeze({ byPage, bySlug });
+  return Object.freeze({ byPage, bySlug, byProductId });
 }
 
 function resolveProduct(line, catalogIndex) {
@@ -139,7 +153,7 @@ export function createAuthoritativeOrderQuote(payload = {}, catalogProducts = []
       fail('TOO_MANY_ITEMS', `No more than ${MAX_TOTAL_QUANTITY} products are allowed per order.`);
     }
 
-    const key = `${product.page}::${variant.id}`;
+    const key = `${product.productId}::${variant.id}`;
     const existing = quantitiesByLine.get(key);
     quantitiesByLine.set(key, {
       product,
@@ -162,6 +176,7 @@ export function createAuthoritativeOrderQuote(payload = {}, catalogProducts = []
         ? product.name
         : `${product.name} — ${variant.label} (${variant.sizeLabel})`;
       return Object.freeze({
+        productId: product.productId,
         slug: product.slug,
         page: product.page,
         name: displayName,
@@ -180,7 +195,7 @@ export function createAuthoritativeOrderQuote(payload = {}, catalogProducts = []
       });
     })
     .sort((left, right) => (
-      left.page.localeCompare(right.page)
+      left.productId.localeCompare(right.productId)
       || left.variantId.localeCompare(right.variantId)
     ));
 

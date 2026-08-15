@@ -32,11 +32,17 @@ if (/streetInput\.addEventListener\('focus',[\s\S]*?\{ once: true \}/.test(appSo
 }
 for (const signal of [
   'await googlePlacesLoader.load()',
-  "Address verification is temporarily unavailable. Please try again.",
-  "Google address suggestions are temporarily unavailable. You can try focusing the address field again.",
+  "setCheckoutAddressStatus('Address suggestions are unavailable. You can enter the address manually.', { warning: true })",
+  'useManualFallback();',
   'loadGooglePlaces().then(() =>',
 ]) {
   if (!appSource.includes(signal)) errors.push(`js/app.js is missing resilient Places behavior: ${signal}`);
+}
+if (!/loadGooglePlaces\(\)\.then\(\(\) => \{[\s\S]*?\.catch\(\(error\) => \{[\s\S]*?googlePlacesUnavailable = true;[\s\S]*?useManualFallback\(\);/.test(appSource)) {
+  errors.push('Address validation must fall back to manual address handling when Google Places loading fails.');
+}
+if (!/streetInput\.addEventListener\('focus',[\s\S]*?catch \(error\) \{[\s\S]*?googlePlacesUnavailable = true;[\s\S]*?placesFailedAt[\s\S]*?Address suggestions are unavailable\. You can enter the address manually\./.test(appSource)) {
+  errors.push('Autocomplete loading must expose a retryable manual-entry fallback after a Google Places failure.');
 }
 
 for (const signal of [
@@ -63,4 +69,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Google Places loader validation passed with deduplication, retry and timeout recovery.');
+console.log('Google Places loader validation passed with deduplication, retry and manual fallback recovery.');
