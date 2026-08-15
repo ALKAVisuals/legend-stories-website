@@ -1,0 +1,124 @@
+name: Clean storefront footer facts once
+
+on:
+  push:
+    branches: [storefront/footer-factual-cleanup-v1]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+
+      - name: Apply factual storefront cleanup
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import re
+          from pathlib import Path
+
+          targets = [*sorted(Path('.').glob('*.html')), Path('templates/product-page.html')]
+          placeholder_items = [
+              '<li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Shipping</a></li>',
+              '<li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Returns</a></li>',
+              '<li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">FAQ</a></li>',
+              '<li><a href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Privacy</a></li>',
+          ]
+          old_payments = '<div class="flex items-center gap-4"><span class="text-xs text-text-muted">Payments:</span><div class="flex gap-2"><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">iDEAL</div><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">Visa</div><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">Mastercard</div><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">PayPal</div></div></div>'
+          new_payments = '<div class="flex items-center gap-4"><span class="text-xs text-text-muted">Payment:</span><div class="flex gap-2"><div class="px-2 py-1 rounded bg-surface-light text-[10px] text-text-muted font-medium">PayPal</div></div></div>'
+
+          changed = []
+          for path in targets:
+              text = path.read_text(encoding='utf-8')
+              original = text
+              for item in placeholder_items:
+                  text = text.replace(item, '')
+              text = text.replace(old_payments, new_payments)
+              text = text.replace('🚚 Free shipping on orders over €50', '🚚 Free shipping from €69 after discount')
+              text = re.sub(
+                  r'\n\s*<a href="https://wa\.me/31612345678"[\s\S]*?</a>\s*\n',
+                  '\n',
+                  text,
+              )
+              if text != original:
+                  path.write_text(text, encoding='utf-8')
+                  changed.append(str(path))
+
+          template = Path('templates/product-page.html')
+          manifests = sorted(Path('data/products').glob('2026-batch-*-presentation.json'))
+          if len(manifests) != 6:
+              raise SystemExit(f'Expected 6 presentation manifests; found {len(manifests)}')
+          digest = hashlib.sha256(template.read_bytes()).hexdigest()
+          for path in manifests:
+              data = json.loads(path.read_text(encoding='utf-8'))
+              if data.get('template', {}).get('path') != 'templates/product-page.html':
+                  raise SystemExit(f'{path}: unexpected template path')
+              data['template']['sha256'] = digest
+              path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+
+          print(f'Updated {len(changed)} storefront/template files.')
+          print(f'Updated managed template hash to {digest}.')
+          PY
+
+      - name: Regenerate managed product pages
+        run: node scripts/generate-managed-product-pages.mjs --write-live
+
+      - name: Validate factual storefront invariants
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          targets = [*sorted(Path('.').glob('*.html')), Path('templates/product-page.html')]
+          failures = []
+          forbidden = [
+              '>iDEAL</div>', '>Visa</div>', '>Mastercard</div>',
+              'Free shipping on orders over €50', 'wa.me/31612345678',
+              'href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Shipping</a>',
+              'href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Returns</a>',
+              'href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">FAQ</a>',
+              'href="#" class="text-sm text-text-secondary hover:text-mint transition-colors">Privacy</a>',
+          ]
+          for path in targets:
+              text = path.read_text(encoding='utf-8')
+              for token in forbidden:
+                  if token in text:
+                      failures.append(f'{path}: {token}')
+          template = Path('templates/product-page.html').read_text(encoding='utf-8')
+          if 'Free shipping from €69 after discount' not in template:
+              failures.append('templates/product-page.html: missing €69 post-discount shipping copy')
+          if '>PayPal</div>' not in template:
+              failures.append('templates/product-page.html: missing PayPal payment badge')
+          if failures:
+              raise SystemExit('Factual storefront cleanup failed:\n' + '\n'.join(failures))
+          print('Footer/payment/shipping/placeholder invariants pass.')
+          PY
+          node scripts/validate-product-variants.mjs
+          node scripts/validate-full-product-catalog.mjs
+          node scripts/validate-browser-checkout.mjs
+          npm test
+          npm run build
+
+      - name: Commit cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add '*.html' templates/product-page.html data/products/2026-batch-*-presentation.json
+          if git diff --cached --quiet; then
+            echo "No storefront factual changes to commit."
+            exit 0
+          fi
+          git commit -m "Remove storefront footer placeholders and stale payment claims"
+          git push origin HEAD:storefront/footer-factual-cleanup-v1
