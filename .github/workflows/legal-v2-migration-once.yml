@@ -1,4 +1,5 @@
 name: Legal v2 migration one-off
+# pass 2: preserve current-main testimonial semantics
 
 on:
   push:
@@ -49,7 +50,6 @@ jobs:
             tests/withdrawal-notification.test.mjs
             tests/withdrawal-page-contract.test.mjs
             scripts/validate-image-error-fallbacks.mjs
-            scripts/validate-shared-form-semantics.mjs
           )
           for path in "${files[@]}"; do
             mkdir -p "$(dirname "$path")"
@@ -60,6 +60,11 @@ jobs:
           node - <<'NODE'
           const fs = require('fs');
           const crypto = require('crypto');
+
+          // Keep current-main testimonial and checkout semantics. Only normalize the stale footer brand expectation.
+          let formValidator = fs.readFileSync('scripts/validate-shared-form-semantics.mjs', 'utf8');
+          formValidator = formValidator.replaceAll('Legend Stories Home', 'LegendMural Home');
+          fs.writeFileSync('scripts/validate-shared-form-semantics.mjs', formValidator);
 
           // Keep the current-main return flow and add only the verified Order ID / withdrawal UI integration.
           let returnJs = fs.readFileSync('js/order-return.js', 'utf8');
