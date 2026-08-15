@@ -1,4 +1,6 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { templateHash } from './product-page-generation.mjs';
 
 const link = '<li><a href="company.html" class="text-sm text-text-secondary hover:text-mint transition-colors">Company information</a></li>';
 const storefrontFiles = [
@@ -49,4 +51,22 @@ let company = await readFile('company.html', 'utf8');
 company = company.replaceAll(' data-hide-on-error', '');
 await writeFile('company.html', company);
 
-console.log('Integrated Company Information into storefront footers and legal content without designating a parcel return address.');
+const template = await readFile('templates/product-page.html', 'utf8');
+const nextTemplateHash = templateHash(template);
+const productDataDirectory = 'data/products';
+const presentationFiles = (await readdir(productDataDirectory))
+  .filter((name) => /^2026-batch-\d+-presentation\.json$/.test(name))
+  .sort();
+if (presentationFiles.length === 0) throw new Error('No managed presentation manifests were found.');
+
+for (const filename of presentationFiles) {
+  const path = join(productDataDirectory, filename);
+  const manifest = JSON.parse(await readFile(path, 'utf8'));
+  if (manifest.template?.path !== 'templates/product-page.html') {
+    throw new Error(`${path}: unexpected product template path`);
+  }
+  manifest.template.sha256 = nextTemplateHash;
+  await writeFile(path, `${JSON.stringify(manifest, null, 2)}\n`);
+}
+
+console.log(`Integrated Company Information and updated ${presentationFiles.length} presentation manifests to template ${nextTemplateHash}.`);
