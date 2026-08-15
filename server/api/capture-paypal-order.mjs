@@ -1,7 +1,5 @@
-import {
-  OrderStoreContractError,
-  requirePaypalCaptureStore,
-} from '../orders/store-contract.mjs';
+import { OrderStoreContractError } from '../orders/store-contract.mjs';
+import { requirePaypalCaptureStore } from '../orders/paypal-store-capabilities.mjs';
 import {
   PayPalApiError,
   PayPalConfigurationError,

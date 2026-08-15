@@ -1,24 +1,10 @@
 const REFERENCE_PATTERN = /^[a-f0-9]{64}$/;
-const STRIPE_EVENT_PATTERN = /^evt_[A-Za-z0-9_-]+$/;
 const ORDER_STATUSES = new Set([
   'payment_pending',
   'payment_processing',
   'payment_failed',
   'expired',
   'paid',
-]);
-const IMMUTABLE_ORDER_FIELDS = Object.freeze([
-  'reference',
-  'amountTotal',
-  'currency',
-  'mode',
-  'paymentSessionId',
-  'createdAt',
-  'customer',
-  'items',
-  'discount',
-  'shipping',
-  'totals',
 ]);
 
 export class NeonOrderStoreError extends Error {
@@ -231,26 +217,6 @@ function assertSamePendingOrder(actual, expected) {
   }
 }
 
-function assertSafeUpdate(current, updated) {
-  if (!updated || typeof updated !== 'object') {
-    fail('INVALID_ORDER_UPDATE', 'The order update callback returned no order.');
-  }
-  for (const field of IMMUTABLE_ORDER_FIELDS) {
-    if (!sameValue(updated[field], current[field])) {
-      fail('INVALID_ORDER_UPDATE', `The order update changed immutable ${field}.`, { field });
-    }
-  }
-  if (!ORDER_STATUSES.has(updated.status)) {
-    fail('INVALID_ORDER_UPDATE', 'The order update status is invalid.');
-  }
-  if (updated.version !== current.version + 1) {
-    fail('INVALID_ORDER_UPDATE', 'The order update must increment version exactly once.');
-  }
-  if (!Number.isInteger(updated.updatedAt) || updated.updatedAt < current.updatedAt) {
-    fail('INVALID_ORDER_UPDATE', 'The order update timestamp is invalid.');
-  }
-}
-
 function normalizeDatabaseError(error) {
   if (error instanceof NeonOrderStoreError) return error;
   if (error?.code && String(error.code).length !== 5) return error;
@@ -376,46 +342,13 @@ const SELECT_ORDER = `
 
 const SELECT_ORDER_FOR_UPDATE = `${SELECT_ORDER} FOR UPDATE`;
 
-const INSERT_STRIPE_EVENT = `
-  INSERT INTO legend_commerce.stripe_events (
-    event_id, event_type, order_reference, stripe_created_at, processed_at
-  ) VALUES ($1, $2, $3, $4, $5)
-  ON CONFLICT (event_id) DO NOTHING
-  RETURNING event_id
-`;
-
-const SELECT_STRIPE_EVENT = `
-  SELECT event_id, event_type, order_reference, stripe_created_at
-  FROM legend_commerce.stripe_events
-  WHERE event_id = $1
-  FOR SHARE
-`;
-
-const UPDATE_ORDER_STATUS = `
-  UPDATE legend_commerce.orders
-  SET status = $3,
-      payment_session_id = $4,
-      updated_at = $5,
-      paid_at = $6,
-      last_stripe_event_id = $7,
-      last_stripe_event_type = $8,
-      last_stripe_event_created = $9,
-      version = $10
-  WHERE reference = $1 AND version = $2
-  RETURNING *
-`;
-
 export function createNeonOrderStore({
   connectionString = process.env.DATABASE_URL,
   clientFactory = createDefaultNeonClient,
-  now = () => Math.floor(Date.now() / 1000),
 } = {}) {
   const databaseUrl = validateNeonConnectionString(connectionString);
   if (typeof clientFactory !== 'function') {
     fail('INVALID_NEON_CLIENT_FACTORY', 'A Neon client factory is required.');
-  }
-  if (typeof now !== 'function') {
-    fail('INVALID_CLOCK', 'An order-store clock function is required.');
   }
 
   return Object.freeze({
@@ -439,80 +372,6 @@ export function createNeonOrderStore({
         }
         assertSamePendingOrder(existing, expected);
         return { created: false, order: clone(existing) };
-      });
-    },
-
-    async processStripeEvent(paymentEventInput, createUpdate) {
-      if (typeof createUpdate !== 'function') {
-        fail('INVALID_ORDER_UPDATE', 'A synchronous order update callback is required.');
-      }
-      const paymentEvent = clone(paymentEventInput);
-      const eventId = String(paymentEvent.eventId || '').trim();
-      if (!STRIPE_EVENT_PATTERN.test(eventId)) {
-        fail('INVALID_STRIPE_EVENT', 'Stripe event ID is invalid.');
-      }
-      const reference = validateReference(paymentEvent.reference);
-      const eventCreated = integer(paymentEvent.created, 'Stripe event timestamp');
-
-      return withSerializableTransaction(clientFactory, databaseUrl, async (client) => {
-        const reserved = await client.query(INSERT_STRIPE_EVENT, [
-          eventId,
-          String(paymentEvent.eventType || ''),
-          reference,
-          eventCreated,
-          integer(now(), 'processed timestamp'),
-        ]);
-
-        if (reserved.rows?.length === 0) {
-          const existingEventResult = await client.query(SELECT_STRIPE_EVENT, [eventId]);
-          const existingEvent = existingEventResult.rows?.[0];
-          if (!existingEvent
-            || existingEvent.event_type !== paymentEvent.eventType
-            || existingEvent.order_reference !== reference
-            || Number(existingEvent.stripe_created_at) !== eventCreated) {
-            fail('ORDER_STORE_CONFLICT', 'Stripe event ID exists with different event data.');
-          }
-          const currentResult = await client.query(SELECT_ORDER_FOR_UPDATE, [reference]);
-          const current = rowToOrder(currentResult.rows?.[0]);
-          if (!current) {
-            const notFound = new Error('Referenced order does not exist.');
-            notFound.code = 'ORDER_NOT_FOUND';
-            throw notFound;
-          }
-          return { duplicate: true, order: clone(current) };
-        }
-
-        const currentResult = await client.query(SELECT_ORDER_FOR_UPDATE, [reference]);
-        const current = rowToOrder(currentResult.rows?.[0]);
-        if (!current) {
-          const notFound = new Error('Referenced order does not exist.');
-          notFound.code = 'ORDER_NOT_FOUND';
-          throw notFound;
-        }
-
-        const updated = createUpdate(clone(current));
-        if (updated && typeof updated.then === 'function') {
-          fail('INVALID_ORDER_UPDATE', 'The order update callback must be synchronous.');
-        }
-        assertSafeUpdate(current, updated);
-
-        const updateResult = await client.query(UPDATE_ORDER_STATUS, [
-          current.reference,
-          current.version,
-          updated.status,
-          updated.paymentSessionId,
-          updated.updatedAt,
-          updated.paidAt ?? null,
-          updated.lastStripeEventId || null,
-          updated.lastStripeEventType || null,
-          updated.lastStripeEventCreated ?? 0,
-          updated.version,
-        ]);
-        const persisted = rowToOrder(updateResult.rows?.[0]);
-        if (!persisted) {
-          fail('ORDER_STORE_RETRYABLE', 'The order version changed during payment processing.');
-        }
-        return { duplicate: false, order: clone(persisted) };
       });
     },
 

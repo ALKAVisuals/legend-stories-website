@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto';
 
-import { createOrderStatusUpdate } from './order-status.mjs';
 import {
   OrderStoreContractError,
   validateOrderStoreAdapter,
@@ -65,32 +64,16 @@ function validatePersistenceResult(result, expectedOrder, expectedCreated) {
   );
 }
 
-function validatePaymentResult(result, expectedDuplicate) {
-  assertContract(
-    result && typeof result === 'object' && typeof result.duplicate === 'boolean',
-    'processStripeEvent() returned an invalid result.',
-  );
-  assertContract(
-    result.duplicate === expectedDuplicate,
-    `processStripeEvent() returned duplicate=${result.duplicate}; expected ${expectedDuplicate}.`,
-  );
-  assertContract(
-    result.order && typeof result.order === 'object',
-    'processStripeEvent() did not return an order.',
-  );
-}
-
 export function createOrderStoreConformanceFixtures(seed = 'legend-order-store') {
   const reference = createHash('sha256').update(String(seed)).digest('hex');
   const createdAt = 1_800_000_000;
-  const paymentSessionId = 'cs_test_order_store_conformance';
   const order = Object.freeze({
     reference,
     status: 'payment_pending',
     amountTotal: 4890,
     currency: 'EUR',
     mode: 'test',
-    paymentSessionId,
+    paymentSessionId: '5O190127TN364715T',
     createdAt,
     updatedAt: createdAt,
     lastStripeEventCreated: 0,
@@ -139,21 +122,7 @@ export function createOrderStoreConformanceFixtures(seed = 'legend-order-store')
     }),
   });
 
-  const paidEvent = Object.freeze({
-    eventId: 'evt_test_order_store_paid',
-    eventType: 'checkout.session.completed',
-    created: createdAt + 100,
-    livemode: false,
-    ignored: false,
-    reference,
-    sessionId: paymentSessionId,
-    amountTotal: order.amountTotal,
-    currency: order.currency,
-    paymentStatus: 'paid',
-    status: 'paid',
-  });
-
-  return Object.freeze({ order, paidEvent });
+  return Object.freeze({ order });
 }
 
 export async function runOrderStoreConformance(createStore, {
@@ -243,45 +212,6 @@ export async function runOrderStoreConformance(createStore, {
     assertContract(
       sameValue(second, expected),
       'Mutating a retrieved order changed durable store state.',
-    );
-  });
-
-  await run('atomic duplicate Stripe event processing', async () => {
-    const store = validateOrderStoreAdapter(await createStore());
-    const pending = clone(fixtures.order);
-    const event = clone(fixtures.paidEvent);
-    await store.persistPendingCheckout(clone(pending));
-    let updateCalls = 0;
-    const update = (order) => {
-      updateCalls += 1;
-      return createOrderStatusUpdate(order, event);
-    };
-    const results = await Promise.all([
-      store.processStripeEvent(clone(event), update),
-      store.processStripeEvent(clone(event), update),
-    ]);
-    const applied = results.filter((result) => result?.duplicate === false);
-    const duplicates = results.filter((result) => result?.duplicate === true);
-    assertContract(
-      applied.length === 1 && duplicates.length === 1,
-      'Concurrent duplicate Stripe events were not processed exactly once.',
-      { applied: applied.length, duplicates: duplicates.length },
-    );
-    assertContract(updateCalls === 1, 'Duplicate Stripe event invoked the order update more than once.');
-    validatePaymentResult(applied[0], false);
-    validatePaymentResult(duplicates[0], true);
-    const stored = await store.getOrderByReference(pending.reference);
-    assertContract(stored.status === 'paid', 'Signed paid event did not persist the paid status.');
-    assertContract(stored.version === 1, 'Duplicate paid event incremented the order version more than once.');
-  });
-
-  await run('unknown order event rejection', async () => {
-    const store = validateOrderStoreAdapter(await createStore());
-    const event = clone(fixtures.paidEvent);
-    await expectErrorCode(
-      () => store.processStripeEvent(event, (order) => createOrderStatusUpdate(order, event)),
-      'ORDER_NOT_FOUND',
-      'Unknown-order Stripe event',
     );
   });
 

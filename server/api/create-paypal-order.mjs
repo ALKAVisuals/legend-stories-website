@@ -5,7 +5,7 @@ import {
   CheckoutPersistenceError,
 } from '../orders/checkout-persistence.mjs';
 import { createDurablePayPalCheckout } from '../orders/paypal-checkout-persistence.mjs';
-import { CheckoutSessionError } from '../payments/checkout-session.mjs';
+import { CheckoutSessionError } from '../payments/checkout-core.mjs';
 import {
   PayPalApiError,
   PayPalConfigurationError,

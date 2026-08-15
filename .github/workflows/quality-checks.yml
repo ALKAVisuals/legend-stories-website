@@ -87,9 +87,6 @@ jobs:
       - name: Validate authoritative order quotes
         run: npm run validate:order-security
 
-      - name: Validate Stripe test Checkout boundary
-        run: npm run validate:stripe-checkout
-
       - name: Validate browser Checkout integration
         run: npm run validate:browser-checkout
 
@@ -104,9 +101,6 @@ jobs:
 
       - name: Validate durable pending Checkout records
         run: npm run validate:checkout-persistence
-
-      - name: Validate signed Stripe webhook boundary
-        run: npm run validate:stripe-webhook
 
       - name: Validate verified order return flow
         run: npm run validate:order-return

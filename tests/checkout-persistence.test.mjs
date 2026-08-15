@@ -4,10 +4,9 @@ import { readFile } from 'node:fs/promises';
 
 import {
   CheckoutPersistenceError,
-  createDurableHostedCheckoutSession,
   persistPendingHostedCheckout,
 } from '../server/orders/checkout-persistence.mjs';
-import { createHostedCheckoutSession } from '../server/payments/checkout-session.mjs';
+import { createPayPalHostedCheckout } from '../server/payments/paypal-checkout.mjs';
 
 const catalog = JSON.parse(
   await readFile(new URL('../data/products/catalog.json', import.meta.url), 'utf8'),
@@ -41,43 +40,46 @@ const customer = Object.freeze({
   country: 'NL',
 });
 
-function fakeStripeClient(capture = {}, order = []) {
+function fakePayPalClient(capture = {}) {
   return {
     mode: 'test',
-    async createCheckoutSession(payload, options) {
-      order.push('stripe');
+    async createOrder(payload, options) {
       capture.payload = payload;
       capture.options = options;
       return {
-        id: 'cs_test_durable_checkout',
-        url: 'https://checkout.stripe.com/c/pay/cs_test_durable_checkout',
-        livemode: false,
+        id: '5O190127TN364715T',
+        status: 'CREATED',
+        links: [{
+          rel: 'payer-action',
+          href: 'https://www.sandbox.paypal.com/checkoutnow?token=5O190127TN364715T',
+        }],
       };
     },
   };
 }
 
-function checkoutInput(overrides = {}) {
-  return {
+async function createCheckout(capture = {}) {
+  return createPayPalHostedCheckout({
     request,
     customer,
     catalogProducts: catalog,
-    stripeClient: fakeStripeClient(),
+    paypalClient: fakePayPalClient(capture),
     successUrl: 'https://shop.example/order-success.html',
     cancelUrl: 'https://shop.example/order-cancelled.html',
-    ...overrides,
-  };
+  });
 }
 
-test('durable checkout persists an authoritative pending order before returning', async () => {
-  const sequence = [];
-  const stripeCapture = {};
+test('durable persistence stores an authoritative PayPal pending order', async () => {
+  const paypalCapture = {};
+  const checkout = await createCheckout(paypalCapture);
   const storeCapture = {};
-  const checkout = await createDurableHostedCheckoutSession({
-    ...checkoutInput({ stripeClient: fakeStripeClient(stripeCapture, sequence) }),
+  const persisted = await persistPendingHostedCheckout({
+    checkout,
+    request,
+    customer,
+    catalogProducts: catalog,
     checkoutStore: {
       async persistPendingCheckout(order) {
-        sequence.push('store');
         storeCapture.order = order;
         return { created: true, order };
       },
@@ -85,9 +87,9 @@ test('durable checkout persists an authoritative pending order before returning'
     createdAt: 1_800_000_000,
   });
 
-  assert.deepEqual(sequence, ['stripe', 'store']);
-  assert.equal(checkout.sessionId, 'cs_test_durable_checkout');
-  assert.equal(checkout.reservationCreated, true);
+  assert.equal(checkout.provider, 'paypal');
+  assert.equal(checkout.sessionId, '5O190127TN364715T');
+  assert.equal(persisted.reservationCreated, true);
   assert.equal(storeCapture.order.reference, checkout.reference);
   assert.equal(storeCapture.order.status, 'payment_pending');
   assert.equal(storeCapture.order.amountTotal, checkout.quote.grandTotal);
@@ -97,30 +99,26 @@ test('durable checkout persists an authoritative pending order before returning'
   assert.equal(storeCapture.order.customer.email, customer.email);
   assert.equal(storeCapture.order.discount.code, 'LEGEND10');
   assert.equal(storeCapture.order.version, 0);
-  assert.match(stripeCapture.options.idempotencyKey, /^legend-checkout-[a-f0-9]{64}$/);
+  assert.match(paypalCapture.options.idempotencyKey, /^legend-paypal-create-[a-f0-9]{64}$/);
 });
 
-test('missing durable storage blocks Stripe before a session is created', async () => {
-  let stripeCalled = false;
+test('missing durable storage rejects before persistence is attempted', async () => {
+  const checkout = await createCheckout();
   await assert.rejects(
-    () => createDurableHostedCheckoutSession({
-      ...checkoutInput({
-        stripeClient: {
-          mode: 'test',
-          async createCheckoutSession() {
-            stripeCalled = true;
-          },
-        },
-      }),
+    () => persistPendingHostedCheckout({
+      checkout,
+      request,
+      customer,
+      catalogProducts: catalog,
+      checkoutStore: null,
     }),
     (error) => error instanceof CheckoutPersistenceError
       && error.code === 'CHECKOUT_STORE_NOT_CONFIGURED',
   );
-  assert.equal(stripeCalled, false);
 });
 
 test('idempotent storage may return the same pending order as an existing record', async () => {
-  const firstCheckout = await createHostedCheckoutSession(checkoutInput());
+  const checkout = await createCheckout();
   let persistedOrder = null;
   const store = {
     async persistPendingCheckout(order) {
@@ -133,7 +131,7 @@ test('idempotent storage may return the same pending order as an existing record
   };
 
   const first = await persistPendingHostedCheckout({
-    checkout: firstCheckout,
+    checkout,
     request,
     customer,
     catalogProducts: catalog,
@@ -141,7 +139,7 @@ test('idempotent storage may return the same pending order as an existing record
     createdAt: 1_800_000_000,
   });
   const second = await persistPendingHostedCheckout({
-    checkout: firstCheckout,
+    checkout,
     request,
     customer,
     catalogProducts: catalog,
@@ -155,8 +153,8 @@ test('idempotent storage may return the same pending order as an existing record
   assert.equal(second.order.paymentSessionId, first.order.paymentSessionId);
 });
 
-test('storage conflicts reject the Checkout response', async () => {
-  const checkout = await createHostedCheckoutSession(checkoutInput());
+test('storage conflicts reject the checkout response', async () => {
+  const checkout = await createCheckout();
   await assert.rejects(
     () => persistPendingHostedCheckout({
       checkout,
@@ -167,7 +165,7 @@ test('storage conflicts reject the Checkout response', async () => {
         async persistPendingCheckout(order) {
           return {
             created: false,
-            order: { ...order, paymentSessionId: 'cs_test_conflict' },
+            order: { ...order, paymentSessionId: 'DIFFERENTPAYPALID' },
           };
         },
       },
@@ -178,7 +176,7 @@ test('storage conflicts reject the Checkout response', async () => {
 });
 
 test('storage failures are sanitized as persistence failures', async () => {
-  const checkout = await createHostedCheckoutSession(checkoutInput());
+  const checkout = await createCheckout();
   await assert.rejects(
     () => persistPendingHostedCheckout({
       checkout,
@@ -200,5 +198,21 @@ test('storage failures are sanitized as persistence failures', async () => {
       assert.equal(error.details.causeCode, 'ECONNREFUSED');
       return true;
     },
+  );
+});
+
+test('persistence rejects checkout responses without explicit PayPal provider', async () => {
+  const checkout = await createCheckout();
+  const { provider, ...withoutProvider } = checkout;
+  await assert.rejects(
+    () => persistPendingHostedCheckout({
+      checkout: withoutProvider,
+      request,
+      customer,
+      catalogProducts: catalog,
+      checkoutStore: { async persistPendingCheckout(order) { return { created: true, order }; } },
+    }),
+    (error) => error instanceof CheckoutPersistenceError
+      && error.code === 'INVALID_CHECKOUT_RECORD',
   );
 });

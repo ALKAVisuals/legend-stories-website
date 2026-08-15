@@ -1,8 +1,5 @@
 import { createAuthoritativeOrderQuote } from '../commerce/order-quote.mjs';
-import {
-  createHostedCheckoutSession,
-  normalizeCheckoutCustomer,
-} from '../payments/checkout-session.mjs';
+import { normalizeCheckoutCustomer } from '../payments/checkout-core.mjs';
 import { createPendingOrderRecord } from './order-status.mjs';
 import {
   OrderStoreContractError,
@@ -79,18 +76,13 @@ function validateCheckoutResult(checkout) {
     fail('INVALID_CHECKOUT_RECORD', 'The Checkout mode is invalid.');
   }
 
-  const provider = String(checkout?.provider || 'stripe').trim().toLowerCase();
-  if (!['stripe', 'paypal'].includes(provider)) {
-    fail('INVALID_CHECKOUT_RECORD', 'The Checkout provider is invalid.');
+  const provider = String(checkout?.provider || '').trim().toLowerCase();
+  if (provider !== 'paypal') {
+    fail('INVALID_CHECKOUT_RECORD', 'The Checkout provider must be PayPal.');
   }
 
   const sessionId = String(checkout?.sessionId || '').trim();
-  if (provider === 'stripe') {
-    const expectedPrefix = checkout.mode === 'live' ? 'cs_live_' : 'cs_test_';
-    if (!sessionId.startsWith(expectedPrefix)) {
-      fail('INVALID_CHECKOUT_RECORD', 'The Checkout Session does not match the Checkout mode.');
-    }
-  } else if (!PAYPAL_ORDER_ID_PATTERN.test(sessionId)) {
+  if (!PAYPAL_ORDER_ID_PATTERN.test(sessionId)) {
     fail('INVALID_CHECKOUT_RECORD', 'The PayPal order ID is invalid.');
   }
 
@@ -103,10 +95,7 @@ function validateCheckoutResult(checkout) {
   if (checkoutUrl.protocol !== 'https:') {
     fail('INVALID_CHECKOUT_RECORD', 'The hosted Checkout URL must use HTTPS.');
   }
-  if (provider === 'stripe' && checkoutUrl.hostname !== 'checkout.stripe.com') {
-    fail('INVALID_CHECKOUT_RECORD', 'The Stripe Checkout URL is not trusted.');
-  }
-  if (provider === 'paypal' && !isTrustedPayPalCheckoutUrl(checkoutUrl, checkout.mode)) {
+  if (!isTrustedPayPalCheckoutUrl(checkoutUrl, checkout.mode)) {
     fail('INVALID_CHECKOUT_RECORD', 'The PayPal Checkout URL is not trusted.');
   }
 
@@ -261,29 +250,5 @@ export async function persistPendingHostedCheckout({
     checkout,
     order: Object.freeze({ ...result.order }),
     reservationCreated: result.created,
-  });
-}
-
-export async function createDurableHostedCheckoutSession({
-  checkoutStore,
-  createdAt = Math.floor(Date.now() / 1000),
-  ...checkoutInput
-}) {
-  requireCheckoutStore(checkoutStore);
-
-  const checkout = await createHostedCheckoutSession(checkoutInput);
-  const persisted = await persistPendingHostedCheckout({
-    checkout,
-    request: checkoutInput.request,
-    customer: checkoutInput.customer,
-    catalogProducts: checkoutInput.catalogProducts,
-    checkoutStore,
-    createdAt,
-  });
-
-  return Object.freeze({
-    ...checkout,
-    orderVersion: persisted.order.version,
-    reservationCreated: persisted.reservationCreated,
   });
 }
