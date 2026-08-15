@@ -1,0 +1,81 @@
+name: Product brand cleanup one-off
+
+on:
+  push:
+    branches:
+      - agent/storefront-launch-cleanup-v2
+    paths:
+      - .github/workflows/product-brand-cleanup-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate-products:
+    if: github.ref == 'refs/heads/agent/storefront-launch-cleanup-v2'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/storefront-launch-cleanup-v2
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Update central product brand sources
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const crypto = require('node:crypto');
+
+          const textFiles = [
+            'templates/product-page.html',
+            'scripts/product-page-generation.mjs',
+            'data/products/catalog.json',
+            'data/products/2026-batch-1-presentation.json',
+            'data/products/2026-batch-2-presentation.json',
+            'data/products/2026-batch-3-presentation.json',
+            'data/products/2026-batch-4-presentation.json',
+            'data/products/2026-batch-5-presentation.json',
+            'data/products/2026-batch-6-presentation.json',
+          ];
+
+          for (const path of textFiles) {
+            let content = fs.readFileSync(path, 'utf8');
+            content = content.replaceAll('Legend Stories', 'LegendMural');
+            fs.writeFileSync(path, content);
+          }
+
+          const template = fs.readFileSync('templates/product-page.html', 'utf8');
+          const templateSha = crypto.createHash('sha256').update(template).digest('hex');
+          for (let batch = 1; batch <= 6; batch += 1) {
+            const path = `data/products/2026-batch-${batch}-presentation.json`;
+            const manifest = JSON.parse(fs.readFileSync(path, 'utf8'));
+            manifest.template = { ...(manifest.template || {}), sha256: templateSha };
+            fs.writeFileSync(path, `${JSON.stringify(manifest, null, 2)}\n`);
+          }
+          NODE
+
+      - name: Regenerate and validate all managed product pages
+        shell: bash
+        run: |
+          npm run generate:managed-product-pages:live
+          npm run validate:managed-product-pages:live
+          npm run generate:runtime-products
+          npm run validate:runtime-products
+          npm run validate:catalog
+          git diff --check
+
+      - name: Commit regenerated product pages
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No product brand changes to commit."
+            exit 0
+          fi
+          git config user.name "legendmural-cleanup-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add templates/product-page.html scripts/product-page-generation.mjs data/products generated/product-pages '*.html' js/commerce/generated-products.mjs
+          git commit -m "Regenerate product pages with LegendMural branding"
+          git push origin HEAD:agent/storefront-launch-cleanup-v2
