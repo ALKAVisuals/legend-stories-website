@@ -1,12 +1,12 @@
 # PayPal Sandbox + Neon staging
 
-Laatst inhoudelijk bijgewerkt: 14 augustus 2026.
+Laatst inhoudelijk bijgewerkt: 15 augustus 2026.
 
 ## Doel
 
 LegendMural gebruikt PayPal als enige beoogde payment provider voor launch en Neon Postgres als eigen orderdatabase. Deze checklist beschrijft hoe de PayPal create-order/capture/webhook flow veilig in een geïsoleerde Netlify stagingomgeving wordt bewezen voordat PayPal Live wordt overwogen.
 
-De repository bevat create order, browser capture, verified order status, Neon persistence, PayPal webhook-signatureverificatie en een idempotente Neon reconciliationprocessor. **De implementatie moet nog tegen echte PayPal Sandbox-events + geïsoleerde Neon staging worden bewezen voordat de betaalarchitectuur productie-gereed is.**
+De repository bevat create order, browser capture, verified order status, Neon persistence, PayPal webhook-signatureverificatie en een idempotente Neon reconciliationprocessor. **De browser-native happy path is op 15 augustus 2026 met een echte PayPal Sandbox-betaling tegen Netlify Deploy Preview #85 en de geïsoleerde Neon stagingbranch bewezen. De resterende stagingwerkzaamheden zijn de negatieve, interruption- en idempotencycases uit deze checklist; PayPal Live blijft uitgeschakeld.**
 
 ## Architectuur
 
@@ -130,6 +130,8 @@ Let op: PayPal's webhook simulator verstuurt mockevents die niet via de postback
 
 Gebruik één bestaand product en synthetische klantdata.
 
+De browser-native happy path hieronder is op 15 augustus 2026 daadwerkelijk uitgevoerd met een Statement-product en €49,95 totaal in de Nederlandse shippingcase. De browser keerde zonder handmatige refresh terug naar `Payment confirmed`, de cart werd pas na serverbevestigde `paid`-status geleegd en dezelfde order stond in Neon als `paid` met echte `CHECKOUT.ORDER.APPROVED` en `PAYMENT.CAPTURE.COMPLETED` events.
+
 1. Voeg één product toe aan de stagingcart.
 2. Controleer de juiste variant:
    - Compact: maximaal 50 × 30 cm — €35 incl. btw;
@@ -219,9 +221,9 @@ De server-side webhooklaag bevat nu:
 - minimale ledger zonder volledige PayPal-/klantpayloads;
 - verified-but-ignored gedrag voor refund/reversal-events totdat hun financiële state-machine apart is ontworpen.
 
-De resterende launch blocker is nu **bewijs in echte PayPal Sandbox + Neon staging**, niet het ontbreken van de reconciliationcode zelf.
+De code én de browser-native happy path zijn nu tegen echte PayPal Sandbox + Neon staging bewezen. De resterende stagingblokkers zijn de negatieve, interruption- en idempotencycases hierboven; dit is geen toestemming om PayPal Live te activeren.
 
-Stripe mag pas worden verwijderd nadat de PayPal flow inclusief webhook/reconciliation en staging-regressies aantoonbaar groen is.
+Stripe mag pas worden verwijderd nadat de resterende PayPal staging-regressies aantoonbaar groen zijn.
 
 ## Productieacceptatie
 
