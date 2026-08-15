@@ -80,10 +80,23 @@ function validateConfiguredUrl(value, label) {
   try {
     url = new URL(source);
   } catch {
-    throw new PayPalConfigurationError('INVALID_CHECKOUT_URL', `${label} is invalid.`);
+    throw new PayPalConfigurationError(
+      'INVALID_CHECKOUT_URL',
+      `${label} must be a valid absolute URL.`,
+    );
   }
-  if (url.protocol !== 'https:') {
-    throw new PayPalConfigurationError('INVALID_CHECKOUT_URL', `${label} must use HTTPS.`);
+  const localDevelopment = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+  if (url.protocol !== 'https:' && !(localDevelopment && url.protocol === 'http:')) {
+    throw new PayPalConfigurationError(
+      'INVALID_CHECKOUT_URL',
+      `${label} must use HTTPS.`,
+    );
+  }
+  if (url.username || url.password) {
+    throw new PayPalConfigurationError(
+      'INVALID_CHECKOUT_URL',
+      `${label} must not contain embedded credentials.`,
+    );
   }
   return url.toString();
 }
@@ -91,7 +104,10 @@ function validateConfiguredUrl(value, label) {
 async function parseJsonRequest(request) {
   const contentType = request.headers.get('content-type') || '';
   if (!contentType.toLowerCase().startsWith('application/json')) {
-    throw new CheckoutSessionError('UNSUPPORTED_CONTENT_TYPE', 'Content-Type must be application/json.');
+    throw new CheckoutSessionError(
+      'UNSUPPORTED_CONTENT_TYPE',
+      'Content-Type must be application/json.',
+    );
   }
   const declaredLength = Number(request.headers.get('content-length') || 0);
   if (declaredLength > MAX_REQUEST_BYTES) {
@@ -109,7 +125,7 @@ async function parseJsonRequest(request) {
 }
 
 function mapError(error, origin) {
-  if (error instanceof CheckoutSessionError || error instanceof OrderQuoteError) {
+  if (error instanceof OrderQuoteError || error instanceof CheckoutSessionError) {
     return errorResponse(400, error.code, error.message, origin);
   }
   if (error instanceof CheckoutPersistenceError) {
@@ -120,20 +136,22 @@ function mapError(error, origin) {
     return errorResponse(503, error.code, 'PayPal Sandbox checkout is not configured.', origin);
   }
   if (error instanceof PayPalApiError) {
-    return errorResponse(502, error.code, 'PayPal could not create the checkout order.', origin);
+    return errorResponse(502, error.code, 'PayPal could not create the order.', origin);
   }
-
   console.error('Unexpected PayPal checkout error:', error);
-  return errorResponse(500, 'PAYPAL_CHECKOUT_FAILED', 'PayPal checkout could not be started.', origin);
+  return errorResponse(500, 'PAYPAL_CHECKOUT_FAILED', 'Checkout could not be started.', origin);
 }
 
 export async function handleCreatePayPalOrder(request, {
   env = process.env,
-  checkoutStore = null,
   catalogProducts = null,
   paypalClient = null,
   paypalClientFactory = createPayPalApiClient,
+  checkoutStore = null,
+  successUrl = env.CHECKOUT_SUCCESS_URL,
+  cancelUrl = env.CHECKOUT_CANCEL_URL,
   allowedOrigins = env.CHECKOUT_ALLOWED_ORIGINS || '',
+  createdAt = Math.floor(Date.now() / 1000),
 } = {}) {
   const corsOrigin = resolveCorsOrigin(request, allowedOrigins);
   if (corsOrigin === null) {
@@ -150,10 +168,10 @@ export async function handleCreatePayPalOrder(request, {
   }
 
   try {
+    const configuredSuccessUrl = validateConfiguredUrl(successUrl, 'CHECKOUT_SUCCESS_URL');
+    const configuredCancelUrl = validateConfiguredUrl(cancelUrl, 'CHECKOUT_CANCEL_URL');
     const payload = await parseJsonRequest(request);
     const products = catalogProducts || await loadCatalogProducts();
-    const successUrl = validateConfiguredUrl(env.CHECKOUT_SUCCESS_URL, 'CHECKOUT_SUCCESS_URL');
-    const cancelUrl = validateConfiguredUrl(env.CHECKOUT_CANCEL_URL, 'CHECKOUT_CANCEL_URL');
     const client = paypalClient || paypalClientFactory({
       clientId: env.PAYPAL_CLIENT_ID,
       clientSecret: env.PAYPAL_CLIENT_SECRET,
@@ -162,13 +180,14 @@ export async function handleCreatePayPalOrder(request, {
     });
 
     const checkout = await createDurablePayPalCheckout({
-      request: payload.request,
-      customer: payload.customer,
+      request: payload?.request,
+      customer: payload?.customer,
       catalogProducts: products,
       paypalClient: client,
-      successUrl,
-      cancelUrl,
       checkoutStore,
+      successUrl: configuredSuccessUrl,
+      cancelUrl: configuredCancelUrl,
+      createdAt,
     });
 
     return jsonResponse(201, {
