@@ -40,17 +40,7 @@ requireSource(
 requireSource(
   adapter,
   'FOR UPDATE',
-  'Core payment event processing and idempotent retries must lock the order row.',
-);
-requireSource(
-  adapter,
-  'ON CONFLICT (event_id) DO NOTHING',
-  'Stripe event IDs must be reserved idempotently.',
-);
-requireSource(
-  adapter,
-  'WHERE reference = $1 AND version = $2',
-  'Core order status updates must enforce optimistic version matching.',
+  'Idempotent pending-order retries must lock the order row.',
 );
 requireSource(
   adapter,
@@ -62,6 +52,9 @@ requireSource(
   "['require', 'verify-full'].includes(sslMode)",
   'Runtime database URLs must require TLS.',
 );
+if (/processStripeEvent|INSERT INTO legend_commerce\.stripe_events|ON CONFLICT \(event_id\) DO NOTHING/.test(adapter)) {
+  errors.push('The active core Neon runtime must not contain Stripe event processing.');
+}
 
 for (const fragment of [
   "client.query('BEGIN ISOLATION LEVEL SERIALIZABLE')",
@@ -91,6 +84,7 @@ for (const source of [adapter, paypalWebhookAdapter]) {
   }
 }
 
+// Historical Stripe schema is intentionally preserved for existing records and audit history.
 for (const fragment of [
   'CREATE SCHEMA IF NOT EXISTS legend_commerce',
   'CREATE TABLE IF NOT EXISTS legend_commerce.orders',
@@ -104,7 +98,7 @@ for (const fragment of [
   'customer jsonb NOT NULL',
   'items jsonb NOT NULL',
 ]) {
-  requireSource(baseMigration, fragment, `Base database migration is missing required contract: ${fragment}`);
+  requireSource(baseMigration, fragment, `Historical base migration is missing required contract: ${fragment}`);
 }
 
 for (const fragment of [
@@ -141,21 +135,8 @@ if (/\b(DELETE|TRUNCATE|CREATE|DROP|ALTER|UPDATE)\b/.test(paypalGrants)) {
   errors.push('PayPal webhook runtime grants must not include destructive, DDL, or ledger-update privileges.');
 }
 
-requireSource(
-  decision,
-  '**Neon Postgres**',
-  'The provider decision must explicitly select Neon Postgres.',
-);
-requireSource(
-  decision,
-  '**Netlify Functions**',
-  'The provider decision must document the future server adapter boundary.',
-);
-requireSource(
-  decision,
-  'does **not**',
-  'The provider decision must retain a clear non-activation boundary.',
-);
+requireSource(decision, '**Neon Postgres**', 'The provider decision must explicitly select Neon Postgres.');
+requireSource(decision, '**Netlify Functions**', 'The provider decision must document the server adapter boundary.');
 
 if (errors.length) {
   console.error('Neon order-store validation failed:');
@@ -163,4 +144,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Neon order-store validation passed with TLS-only access, serializable provider-matched PayPal reconciliation, immutable event reservations and least-privilege grants.');
+console.log('Neon order-store validation passed with PayPal-only active runtime, TLS-only access, serializable persistence, provider-matched PayPal reconciliation and preserved historical Stripe schema compatibility.');
