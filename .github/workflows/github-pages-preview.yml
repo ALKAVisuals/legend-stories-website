@@ -77,12 +77,44 @@ jobs:
 
       - name: Verify GitHub Pages asset paths
         run: |
-          if grep -RIl --include='*.html' --include='*.json' --include='*.js' --include='*.css' '/assets/' dist | grep -q .; then
-            echo 'Found unresolved root /assets/ URLs in GitHub Pages preview output.' >&2
-            grep -RIl --include='*.html' --include='*.json' --include='*.js' --include='*.css' '/assets/' dist | head -20 >&2
-            exit 1
-          fi
-          grep -q '/legend-stories-website/assets/' dist/index.html
+          node --input-type=module <<'EOF'
+          import { readdir, readFile, stat } from 'node:fs/promises';
+          import { join } from 'node:path';
+
+          const root = 'dist';
+          const extensions = new Set(['.html', '.json', '.js', '.css']);
+          const unresolved = [];
+          const rootAssetPattern = /(^|["'(`=:,\s])\/assets\//m;
+
+          async function walk(dir) {
+            for (const name of await readdir(dir)) {
+              const path = join(dir, name);
+              const info = await stat(path);
+              if (info.isDirectory()) {
+                await walk(path);
+                continue;
+              }
+              const dot = name.lastIndexOf('.');
+              const extension = dot >= 0 ? name.slice(dot) : '';
+              if (!extensions.has(extension)) continue;
+              const text = await readFile(path, 'utf8');
+              if (rootAssetPattern.test(text)) unresolved.push(path);
+            }
+          }
+
+          await walk(root);
+          if (unresolved.length) {
+            console.error('Found unresolved root /assets/ URLs:');
+            unresolved.slice(0, 20).forEach((path) => console.error(`- ${path}`));
+            process.exit(1);
+          }
+
+          const index = await readFile('dist/index.html', 'utf8');
+          if (!index.includes('/legend-stories-website/assets/')) {
+            throw new Error('index.html does not contain the expected GitHub Pages asset prefix.');
+          }
+          console.log('GitHub Pages asset-path verification passed.');
+          EOF
 
       - name: Disable Jekyll processing
         run: touch dist/.nojekyll
