@@ -2,7 +2,7 @@
 
 Status: production-readiness policy; enforcement is **not yet enabled**.
 
-Last reviewed: 15 August 2026.
+Last reviewed: 17 August 2026.
 
 ## Purpose
 
@@ -80,10 +80,12 @@ Important: because `customer` and `shipping` are currently JSON blobs inside the
 | Field / data group | Class | Reason / treatment |
 | --- | --- | --- |
 | `order_reference`, `payment_session_id` | R5, subject to HOLD; linked R7/R10 order remains separately retained | Evidence connecting the withdrawal notice to the purchase. The underlying order/accounting record has its own statutory retention class. |
-| `confirmation_code` | R5, subject to HOLD | Evidence that the customer received a durable withdrawal reference. |
+| `confirmation_code` | R5, subject to HOLD | Reference assigned to the withdrawal notice. Code creation is not by itself proof that the statutory acknowledgement was delivered; delivery evidence must be assessed separately. |
 | `withdrawn_at`, `created_at` | R5, subject to HOLD | Timing evidence for the statutory withdrawal process and potential disputes. |
 
 A withdrawal row must not be deleted merely because the refund was completed if a dispute/chargeback/legal hold remains open. Conversely, the withdrawal table must not automatically be retained for the full fiscal period simply because the linked order is R7/R10.
+
+The consumer name and acknowledgement email used by the online withdrawal function are not added as duplicate fields to `withdrawal_requests`; the purchase remains linked to the authoritative order record. Any transactional-email provider may process the minimum statement data needed to deliver the statutory acknowledgement, subject to the production provider contract, privacy notice and applicable transfer safeguards.
 
 ## Data deliberately not retained in the current reconciliation schema
 
@@ -112,10 +114,11 @@ Before any automated retention job is enabled, all of the following are required
 8. Require a second explicit production approval before the first destructive run.
 9. Log retention actions without logging the personal data being removed.
 10. Update the public Privacy notice when the production schedule is activated and concrete periods can be stated accurately.
+11. Before transactional withdrawal email is activated, identify the actual provider, processing location/transfer position, safeguards and operational retention of provider-side message data.
 
 ## Public Privacy notice mapping
 
-Until enforcement and the JSON-field split are confirmed, the public notice should describe the retention criteria accurately rather than promise a deletion date the system cannot yet guarantee. Before public launch, the notice must be reconciled with this policy and the final production configuration.
+Until enforcement and the JSON-field split are confirmed, the public notice should describe the retention criteria accurately rather than promise a deletion date the system cannot yet guarantee. Before public launch, the notice must be reconciled with this policy and the final production configuration, including the provider actually used for statutory withdrawal acknowledgements.
 
 ## Source basis reviewed
 

@@ -57,13 +57,15 @@ This checklist converts the production-readiness runbook into explicit release g
 - [ ] Production `from` identity approved.
 - [ ] Reply/customer-operations address approved.
 - [ ] Provider API key stored only as a production server-side secret.
+- [ ] Public Privacy notice identifies the actual transactional email provider, recipient category and any applicable international-transfer safeguards before customer data is sent through it.
+- [ ] Provider-side retention/logging behaviour for withdrawal acknowledgement data is reviewed and documented.
 - [ ] Controlled non-production withdrawal acknowledgement succeeds.
 - [ ] Acknowledgement arrives at the customer-provided electronic confirmation address without undue delay.
 - [ ] Delivered content includes the withdrawal declaration and receipt date/time.
 - [ ] Mail failure does not erase or reverse a durable withdrawal record.
 - [ ] Failure handling gives operations enough signal to resend the acknowledgement without exposing secrets or customer payload in logs.
 
-**Current status:** NO-GO. A tested provider adapter exists, but the production sending domain/identity/secret are intentionally not configured. This gate is mandatory for the online withdrawal function; it is not an optional marketing-email feature.
+**Current status:** NO-GO. A tested provider adapter exists, but the production sending domain/identity/secret are intentionally not configured. The public Privacy notice now also treats the actual transactional provider as a pre-launch disclosure gate. This gate is mandatory for the online withdrawal function; it is not an optional marketing-email feature.
 
 ## Gate 4 — Neon production security and recovery
 
