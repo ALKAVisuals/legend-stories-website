@@ -1,5 +1,5 @@
 const ORDER_ID_PATTERN = /^[A-Z0-9]{1,36}$/;
-const CONFIRMATION_CODE_PATTERN = /^WD-[A-Z0-9-]{6,64}$/;
+const CONFIRMATION_CODE_PATTERN = /^LM-WD-[A-F0-9]{16}$/;
 
 export class WithdrawalNotificationError extends Error {
   constructor(code, message, details = {}) {

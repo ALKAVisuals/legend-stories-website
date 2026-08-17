@@ -12,7 +12,7 @@ const message = {
   subject: 'LegendMural withdrawal confirmation — 82T24251E7500724R',
   data: {
     orderId: '82T24251E7500724R',
-    confirmationCode: 'WD-ABC12345',
+    confirmationCode: 'LM-WD-0123456789ABCDEF',
     withdrawnAt: 1786819200,
     withdrawnAtIso: '2026-08-15T16:00:00.000Z',
   },
@@ -35,14 +35,14 @@ test('sends the normalized withdrawal confirmation to the Resend email endpoint'
   assert.equal(captured.url, RESEND_EMAIL_ENDPOINT);
   assert.equal(captured.options.method, 'POST');
   assert.equal(captured.options.headers.authorization, 'Bearer re_test_key');
-  assert.equal(captured.options.headers['idempotency-key'], 'withdrawal-WD-ABC12345');
+  assert.equal(captured.options.headers['idempotency-key'], 'withdrawal-LM-WD-0123456789ABCDEF');
 
   const payload = JSON.parse(captured.options.body);
   assert.equal(payload.from, 'LegendMural <orders@example.com>');
   assert.deepEqual(payload.to, ['customer@example.com']);
   assert.match(payload.subject, /82T24251E7500724R/);
-  assert.match(payload.text, /WD-ABC12345/);
-  assert.match(payload.html, /WD-ABC12345/);
+  assert.match(payload.text, /LM-WD-0123456789ABCDEF/);
+  assert.match(payload.html, /LM-WD-0123456789ABCDEF/);
   assert.deepEqual(payload.tags, [{ name: 'category', value: 'withdrawal_confirmation' }]);
 });
 

@@ -9,7 +9,7 @@ import {
 const base = {
   email: 'Customer@Example.com',
   orderId: '82T24251E7500724R',
-  confirmationCode: 'WD-ABC12345',
+  confirmationCode: 'LM-WD-0123456789ABCDEF',
   withdrawnAt: 1786819200,
 };
 
@@ -19,9 +19,17 @@ test('creates a normalized provider-neutral withdrawal confirmation message', ()
   assert.equal(message.template, 'withdrawal-confirmation');
   assert.match(message.subject, /82T24251E7500724R/);
   assert.equal(message.data.orderId, '82T24251E7500724R');
-  assert.equal(message.data.confirmationCode, 'WD-ABC12345');
+  assert.equal(message.data.confirmationCode, 'LM-WD-0123456789ABCDEF');
   assert.equal(message.data.withdrawnAt, base.withdrawnAt);
   assert.match(message.data.withdrawnAtIso, /^2026-/);
+});
+
+test('rejects non-canonical withdrawal confirmation codes', () => {
+  assert.throws(
+    () => createWithdrawalConfirmationMessage({ ...base, confirmationCode: 'WD-ABC12345' }),
+    (error) => error instanceof WithdrawalNotificationError
+      && error.code === 'INVALID_WITHDRAWAL_NOTIFICATION',
+  );
 });
 
 test('rejects invalid destination email before any transport call', async () => {
