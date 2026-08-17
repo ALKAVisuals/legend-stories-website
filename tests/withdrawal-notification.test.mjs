@@ -7,6 +7,7 @@ import {
 } from '../server/notifications/withdrawal-confirmation.mjs';
 
 const base = {
+  name: 'Ada Example',
   email: 'Customer@Example.com',
   orderId: '82T24251E7500724R',
   confirmationCode: 'LM-WD-0123456789ABCDEF',
@@ -18,10 +19,20 @@ test('creates a normalized provider-neutral withdrawal confirmation message', ()
   assert.equal(message.to, 'customer@example.com');
   assert.equal(message.template, 'withdrawal-confirmation');
   assert.match(message.subject, /82T24251E7500724R/);
+  assert.equal(message.data.consumerName, 'Ada Example');
+  assert.equal(message.data.confirmationEmail, 'customer@example.com');
   assert.equal(message.data.orderId, '82T24251E7500724R');
   assert.equal(message.data.confirmationCode, 'LM-WD-0123456789ABCDEF');
   assert.equal(message.data.withdrawnAt, base.withdrawnAt);
   assert.match(message.data.withdrawnAtIso, /^2026-/);
+});
+
+test('requires consumer name for the acknowledgement content', () => {
+  assert.throws(
+    () => createWithdrawalConfirmationMessage({ ...base, name: '' }),
+    (error) => error instanceof WithdrawalNotificationError
+      && error.code === 'INVALID_WITHDRAWAL_NOTIFICATION',
+  );
 });
 
 test('rejects non-canonical withdrawal confirmation codes', () => {
@@ -70,6 +81,7 @@ test('passes only the normalized confirmation message to the provider adapter', 
   assert.equal(result.accepted, true);
   assert.equal(result.providerMessageId, 'provider-123');
   assert.equal(received.to, 'customer@example.com');
+  assert.equal(received.data.consumerName, 'Ada Example');
   assert.deepEqual(Object.keys(received).sort(), ['data', 'subject', 'template', 'to']);
 });
 

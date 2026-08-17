@@ -31,21 +31,27 @@ function escapeHtml(value) {
 }
 
 function renderWithdrawalConfirmation(message) {
+  const consumerName = escapeHtml(message.data.consumerName);
+  const confirmationEmail = escapeHtml(message.data.confirmationEmail);
   const orderId = escapeHtml(message.data.orderId);
   const confirmationCode = escapeHtml(message.data.confirmationCode);
   const withdrawnAtIso = escapeHtml(message.data.withdrawnAtIso);
+  const declaration = 'I withdraw from the contract identified by the Order ID below.';
   const text = [
     'LegendMural withdrawal confirmation',
     '',
+    `Consumer: ${message.data.consumerName}`,
     `Order ID: ${message.data.orderId}`,
+    `Confirmation email: ${message.data.confirmationEmail}`,
+    `Declaration: ${declaration}`,
     `Confirmation code: ${message.data.confirmationCode}`,
     `Received at: ${message.data.withdrawnAtIso}`,
     '',
-    'We have recorded your withdrawal request. This confirmation does not by itself confirm that a refund has been completed.',
+    'We have recorded your withdrawal notice. This confirmation does not by itself confirm that a refund has been completed.',
     '',
     'Keep this email for your records.',
   ].join('\n');
-  const html = `<!doctype html><html><body style="font-family:Arial,sans-serif;line-height:1.5;color:#111"><h1 style="font-size:20px">LegendMural withdrawal confirmation</h1><p>We have recorded your withdrawal request.</p><p><strong>Order ID:</strong> ${orderId}<br><strong>Confirmation code:</strong> ${confirmationCode}<br><strong>Received at:</strong> ${withdrawnAtIso}</p><p>This confirmation does not by itself confirm that a refund has been completed.</p><p>Keep this email for your records.</p></body></html>`;
+  const html = `<!doctype html><html><body style="font-family:Arial,sans-serif;line-height:1.5;color:#111"><h1 style="font-size:20px">LegendMural withdrawal confirmation</h1><p>We have recorded your withdrawal notice.</p><p><strong>Consumer:</strong> ${consumerName}<br><strong>Order ID:</strong> ${orderId}<br><strong>Confirmation email:</strong> ${confirmationEmail}<br><strong>Declaration:</strong> ${escapeHtml(declaration)}<br><strong>Confirmation code:</strong> ${confirmationCode}<br><strong>Received at:</strong> ${withdrawnAtIso}</p><p>This confirmation does not by itself confirm that a refund has been completed.</p><p>Keep this email for your records.</p></body></html>`;
   return { text, html };
 }
 

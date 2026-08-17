@@ -32,11 +32,13 @@ function normalizeEmail(value) {
 }
 
 export function createWithdrawalConfirmationMessage({
+  name,
   email,
   orderId,
   confirmationCode,
   withdrawnAt,
 } = {}) {
+  const consumerName = requiredText(name, 'name', 200);
   const normalizedEmail = normalizeEmail(email);
   const normalizedOrderId = requiredText(orderId, 'orderId', 36).toUpperCase();
   if (!ORDER_ID_PATTERN.test(normalizedOrderId)) {
@@ -56,6 +58,8 @@ export function createWithdrawalConfirmationMessage({
     template: 'withdrawal-confirmation',
     subject: `LegendMural withdrawal confirmation — ${normalizedOrderId}`,
     data: Object.freeze({
+      consumerName,
+      confirmationEmail: normalizedEmail,
       orderId: normalizedOrderId,
       confirmationCode: normalizedCode,
       withdrawnAt,

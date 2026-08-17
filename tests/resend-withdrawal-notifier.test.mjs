@@ -11,6 +11,8 @@ const message = {
   template: 'withdrawal-confirmation',
   subject: 'LegendMural withdrawal confirmation — 82T24251E7500724R',
   data: {
+    consumerName: 'Ada Example',
+    confirmationEmail: 'customer@example.com',
     orderId: '82T24251E7500724R',
     confirmationCode: 'LM-WD-0123456789ABCDEF',
     withdrawnAt: 1786819200,
@@ -18,7 +20,7 @@ const message = {
   },
 };
 
-test('sends the normalized withdrawal confirmation to the Resend email endpoint', async () => {
+test('sends statutory withdrawal acknowledgement content to the Resend email endpoint', async () => {
   let captured;
   const notifier = createResendWithdrawalNotifier({
     apiKey: 're_test_key',
@@ -41,8 +43,14 @@ test('sends the normalized withdrawal confirmation to the Resend email endpoint'
   assert.equal(payload.from, 'LegendMural <orders@example.com>');
   assert.deepEqual(payload.to, ['customer@example.com']);
   assert.match(payload.subject, /82T24251E7500724R/);
+  assert.match(payload.text, /Ada Example/);
+  assert.match(payload.text, /customer@example\.com/);
+  assert.match(payload.text, /I withdraw from the contract identified by the Order ID below/);
+  assert.match(payload.text, /2026-08-15T16:00:00\.000Z/);
   assert.match(payload.text, /LM-WD-0123456789ABCDEF/);
-  assert.match(payload.html, /LM-WD-0123456789ABCDEF/);
+  assert.match(payload.html, /Ada Example/);
+  assert.match(payload.html, /I withdraw from the contract identified by the Order ID below/);
+  assert.match(payload.html, /2026-08-15T16:00:00\.000Z/);
   assert.deepEqual(payload.tags, [{ name: 'category', value: 'withdrawal_confirmation' }]);
 });
 

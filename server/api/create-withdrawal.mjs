@@ -1,4 +1,5 @@
 import { NeonWithdrawalStoreError } from '../adapters/neon-withdrawal-store.mjs';
+import { sendWithdrawalConfirmation } from '../notifications/withdrawal-confirmation.mjs';
 
 const MAX_REQUEST_BYTES = 4 * 1024;
 
@@ -74,6 +75,14 @@ async function parseJsonRequest(request) {
   }
 }
 
+function normalizeConsumerName(value) {
+  const name = String(value || '').trim();
+  if (!name || name.length > 200 || /[\u0000-\u001F\u007F]/.test(name)) {
+    throw new WithdrawalRequestError('INVALID_WITHDRAWAL_NAME', 'Enter your name to confirm the withdrawal.');
+  }
+  return name;
+}
+
 function mapError(error, origin) {
   if (error instanceof WithdrawalRequestError) {
     return errorResponse(400, error.code, error.message, origin);
@@ -93,6 +102,7 @@ function mapError(error, origin) {
 
 export async function handleCreateWithdrawal(request, {
   withdrawalStore,
+  withdrawalNotifier = null,
   allowedOrigins = process.env.CHECKOUT_ALLOWED_ORIGINS || '',
   now = () => Math.floor(Date.now() / 1000),
 } = {}) {
@@ -118,18 +128,41 @@ export async function handleCreateWithdrawal(request, {
         'You must explicitly confirm that you want to withdraw from this purchase.',
       );
     }
+    const consumerName = normalizeConsumerName(payload.name);
+    const withdrawnAt = now();
     const result = await withdrawalStore.createWithdrawal({
       orderId: payload.orderId,
       email: payload.email,
-      withdrawnAt: now(),
+      withdrawnAt,
     });
     const withdrawal = result.withdrawal;
+
+    let confirmationDelivery = 'unavailable';
+    if (withdrawalNotifier) {
+      try {
+        await sendWithdrawalConfirmation(withdrawalNotifier, {
+          name: consumerName,
+          email: payload.email,
+          orderId: withdrawal.orderId,
+          confirmationCode: withdrawal.confirmationCode,
+          withdrawnAt: withdrawal.withdrawnAt,
+        });
+        confirmationDelivery = 'sent';
+      } catch (error) {
+        confirmationDelivery = 'failed';
+        console.error('Withdrawal confirmation delivery failed.', {
+          code: error?.code || error?.name || 'UNKNOWN',
+        });
+      }
+    }
+
     return jsonResponse(result.created ? 201 : 200, {
       orderId: withdrawal.orderId,
       confirmationCode: withdrawal.confirmationCode,
       withdrawnAt: withdrawal.withdrawnAt,
       withdrawnAtIso: new Date(withdrawal.withdrawnAt * 1000).toISOString(),
       alreadyReceived: !result.created,
+      confirmationDelivery,
     }, corsOrigin);
   } catch (error) {
     return mapError(error, corsOrigin);

@@ -1,6 +1,6 @@
 # LegendMural production go / no-go checklist
 
-Last reviewed: 15 August 2026.
+Last reviewed: 17 August 2026.
 
 This checklist converts the production-readiness runbook into explicit release gates. A **GO** means every mandatory item for that gate is verified. Any unresolved mandatory item means **NO-GO** for the dependent production phase.
 
@@ -15,7 +15,7 @@ This checklist converts the production-readiness runbook into explicit release g
 - [ ] Exact final Git SHA is recorded in the release log.
 - [ ] Temporary write-enabled test workflows/scripts are absent.
 
-**Current status:** technical checks are green on the current draft PR, but merge approval has not been given. Therefore Gate 0 is not yet a production GO.
+**Current status:** NO-GO. Earlier draft heads passed the permanent technical checks, but every review fix requires those checks to pass again on the exact final head before merge approval.
 
 ## Gate 1 — public domain and HTTPS
 
@@ -38,25 +38,32 @@ This checklist converts the production-readiness runbook into explicit release g
 - [x] Dutch parcel-return address confirmed and published before purchase.
 - [x] Shipping page exists.
 - [x] Returns / statutory withdrawal information exists.
-- [x] Online withdrawal function exists without requiring an account.
+- [x] Online withdrawal function exists without requiring an account or a reason.
+- [x] Withdrawal statement collects the consumer name, contract-identifying Order ID and the electronic confirmation address.
+- [x] Final withdrawal action is explicit and unambiguous.
 - [x] Withdrawal registration is durable and separate from refund execution.
+- [ ] The trader acknowledgement is sent without undue delay on a durable medium after each valid online withdrawal.
+- [ ] The durable acknowledgement includes the declaration content, consumer name, Order ID, confirmation address, confirmation code, and receipt date/time.
+- [ ] End-to-end non-production proof confirms a valid withdrawal remains recorded even if acknowledgement delivery fails.
 - [x] FAQ, Privacy and Terms of Sale pages exist.
 - [ ] Final customer-support/social identities reviewed if they are to be published at launch.
 
-**Current status:** core legal/customer-operations layer is technically ready in draft PR #96; final release still depends on merge and any unresolved public identities.
+**Current status:** NO-GO. The statutory withdrawal statement/registration flow is implemented in draft PR #96, but production launch is blocked until durable acknowledgement delivery is configured and proven end-to-end.
 
-## Gate 3 — transactional email
+## Gate 3 — statutory transactional email
 
 - [ ] Definitive sending domain available.
-- [ ] Sending domain verified with Resend.
+- [ ] Sending domain verified with the chosen email provider.
 - [ ] Production `from` identity approved.
 - [ ] Reply/customer-operations address approved.
-- [ ] Resend API key stored only as a production server-side secret.
-- [ ] Controlled non-production withdrawal confirmation succeeds.
-- [ ] Mail failure does not erase a durable withdrawal record.
-- [ ] Logs do not expose API key or customer payload.
+- [ ] Provider API key stored only as a production server-side secret.
+- [ ] Controlled non-production withdrawal acknowledgement succeeds.
+- [ ] Acknowledgement arrives at the customer-provided electronic confirmation address without undue delay.
+- [ ] Delivered content includes the withdrawal declaration and receipt date/time.
+- [ ] Mail failure does not erase or reverse a durable withdrawal record.
+- [ ] Failure handling gives operations enough signal to resend the acknowledgement without exposing secrets or customer payload in logs.
 
-**Current status:** NO-GO; provider adapter exists and is tested, but production domain/identity/secret are intentionally not configured.
+**Current status:** NO-GO. A tested provider adapter exists, but the production sending domain/identity/secret are intentionally not configured. This gate is mandatory for the online withdrawal function; it is not an optional marketing-email feature.
 
 ## Gate 4 — Neon production security and recovery
 
@@ -97,7 +104,7 @@ This checklist converts the production-readiness runbook into explicit release g
 - [ ] `LEGENDMURAL_CHECKOUT_PAUSED` defaults absent/false for normal service.
 - [ ] Incident operator knows how to set `LEGENDMURAL_CHECKOUT_PAUSED=true`.
 - [ ] PayPal checkout, capture, webhook and order-status routes point to the intended Functions.
-- [ ] Resend configured only after Gate 3.
+- [ ] Statutory withdrawal email is configured only after Gate 3 preparation is complete.
 - [ ] Logs inspected for secret/PII leakage.
 - [ ] Production build passes.
 - [ ] Same-origin API smoke checks pass without a real charge.
@@ -111,6 +118,7 @@ This checklist converts the production-readiness runbook into explicit release g
 - [ ] Netlify Function log review location/process documented.
 - [ ] PayPal webhook failure detection process documented.
 - [ ] Neon/API failure detection process documented.
+- [ ] Withdrawal acknowledgement delivery-failure detection and resend procedure documented.
 - [ ] `LEGENDMURAL_CHECKOUT_PAUSED` containment procedure tested in a non-production environment.
 - [ ] Known-good Netlify deployment rollback procedure understood.
 - [ ] Database recovery decision authority assigned.
@@ -133,7 +141,7 @@ This checklist converts the production-readiness runbook into explicit release g
 - [ ] Capture amount/currency/reference match expectations.
 - [ ] Neon reaches durable `paid` state.
 - [ ] Webhook reconciliation is visible and idempotent.
-- [ ] Customer confirmation/operations record succeeds.
+- [ ] Statutory/customer confirmation operations record succeeds.
 - [ ] Fulfillment is released only after durable paid verification.
 
 Any mismatch during the controlled Live order is an immediate **NO-GO**: pause new checkout and use the incident runbook.
@@ -148,7 +156,7 @@ Record:
 - Neon project/branch and migration timestamp;
 - runtime/migration role names (never passwords/URLs);
 - PayPal mode/app identity and webhook ID reference;
-- Resend sending identity;
+- transactional sending identity;
 - operator(s);
 - time checkout was opened;
 - controlled Live order reference and outcome;
