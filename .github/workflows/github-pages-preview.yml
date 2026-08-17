@@ -31,8 +31,58 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build static GitHub Pages preview
-        run: npm run build -- --base=/legend-stories-website/
+      - name: Build static preview with the normal production build
+        run: npm run build
+
+      - name: Rewrite Vite root asset URLs for the GitHub Pages subpath
+        run: |
+          node --input-type=module <<'EOF'
+          import { readdir, readFile, stat, writeFile } from 'node:fs/promises';
+          import { join } from 'node:path';
+
+          const root = 'dist';
+          const extensions = new Set(['.html', '.json', '.js', '.css']);
+          let changedFiles = 0;
+          let replacements = 0;
+
+          async function walk(dir) {
+            for (const name of await readdir(dir)) {
+              const path = join(dir, name);
+              const info = await stat(path);
+              if (info.isDirectory()) {
+                await walk(path);
+                continue;
+              }
+              const dot = name.lastIndexOf('.');
+              const extension = dot >= 0 ? name.slice(dot) : '';
+              if (!extensions.has(extension)) continue;
+
+              const original = await readFile(path, 'utf8');
+              const matches = original.match(/\/assets\//g) || [];
+              if (!matches.length) continue;
+
+              const updated = original.replaceAll('/assets/', '/legend-stories-website/assets/');
+              await writeFile(path, updated, 'utf8');
+              changedFiles += 1;
+              replacements += matches.length;
+            }
+          }
+
+          await walk(root);
+          console.log(`Rewrote ${replacements} root asset URL(s) across ${changedFiles} built file(s).`);
+          if (replacements === 0) {
+            throw new Error('Expected at least one root /assets/ URL in the built preview.');
+          }
+          EOF
+
+      - name: Verify GitHub Pages asset paths
+        run: |
+          if grep -RIl --include='*.html' --include='*.json' --include='*.js' --include='*.css' '/assets/' dist | grep -q .; then
+            echo 'Found unresolved root /assets/ URLs in GitHub Pages preview output.' >&2
+            grep -RIl --include='*.html' --include='*.json' --include='*.js' --include='*.css' '/assets/' dist | head -20 >&2
+            exit 1
+          fi
+          grep -q '/legend-stories-website/assets/' dist/index.html
 
       - name: Disable Jekyll processing
         run: touch dist/.nojekyll
