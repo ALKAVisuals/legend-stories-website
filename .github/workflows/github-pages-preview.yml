@@ -3,7 +3,8 @@ name: Temporary GitHub Pages preview
 on:
   push:
     branches:
-      - preview/github-pages
+      - gh-pages
+  workflow_dispatch:
 
 permissions:
   contents: read
