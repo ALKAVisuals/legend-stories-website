@@ -7,6 +7,7 @@ import { createNeonPayPalWebhookStore } from '../server/adapters/neon-paypal-web
 import { createNeonWithdrawalStore } from '../server/adapters/neon-withdrawal-store.mjs';
 import { createPendingOrderRecord } from '../server/orders/order-status.mjs';
 import { runOrderStoreConformance } from '../server/orders/store-conformance.mjs';
+import { WITHDRAWAL_DECLARATION } from '../server/withdrawals/statement.mjs';
 
 function requireEnvironmentUrl(name) {
   const value = process.env[name];
@@ -23,6 +24,7 @@ const PAYPAL_ORDER_ID = '5O190127TN364715T';
 const PAYPAL_CAPTURE_ID = '3Y662965014333303';
 const PAYPAL_EVENT_ID = 'WH-SYNTHETIC-PAYPAL-001';
 const PAYPAL_CUSTOMER_EMAIL = 'paypal-integration@example.invalid';
+const WITHDRAWAL_CONSUMER_NAME = 'PayPal Integration';
 const WITHDRAWAL_AT = 1_800_100_020;
 
 async function withClient(connectionString, action) {
@@ -38,6 +40,7 @@ async function withClient(connectionString, action) {
 async function clearSyntheticRecords() {
   await withClient(migrationUrl, (client) => client.query(`
     TRUNCATE TABLE
+      legend_commerce.withdrawal_acknowledgements,
       legend_commerce.withdrawal_requests,
       legend_commerce.paypal_webhook_events,
       legend_commerce.stripe_events,
@@ -158,20 +161,41 @@ async function verifyWithdrawalPersistence() {
   const first = await withdrawalStore.createWithdrawal({
     orderId: PAYPAL_ORDER_ID,
     email: PAYPAL_CUSTOMER_EMAIL,
+    consumerName: WITHDRAWAL_CONSUMER_NAME,
     withdrawnAt: WITHDRAWAL_AT,
   });
   if (!first.created || first.withdrawal.orderId !== PAYPAL_ORDER_ID
     || !/^LM-WD-[A-F0-9]{16}$/.test(first.withdrawal.confirmationCode)) {
     throw new Error('Runtime role could not create a valid withdrawal record.');
   }
+  if (first.acknowledgement.consumerName !== WITHDRAWAL_CONSUMER_NAME
+    || first.acknowledgement.confirmationEmail !== PAYPAL_CUSTOMER_EMAIL
+    || first.acknowledgement.declaration !== WITHDRAWAL_DECLARATION
+    || first.acknowledgement.deliveryStatus !== 'pending') {
+    throw new Error('Runtime role could not persist the durable withdrawal acknowledgement snapshot.');
+  }
+
+  const failed = await withdrawalStore.recordAcknowledgementDelivery({
+    confirmationCode: first.withdrawal.confirmationCode,
+    status: 'failed',
+    attemptedAt: WITHDRAWAL_AT + 1,
+    errorCode: 'SYNTHETIC_PROVIDER_FAILURE',
+  });
+  if (failed.deliveryStatus !== 'failed' || failed.deliveryAttempts !== 1) {
+    throw new Error('Runtime role could not persist acknowledgement delivery failure metadata.');
+  }
 
   const duplicate = await withdrawalStore.createWithdrawal({
     orderId: PAYPAL_ORDER_ID,
     email: PAYPAL_CUSTOMER_EMAIL,
-    withdrawnAt: WITHDRAWAL_AT,
+    consumerName: 'Changed Consumer',
+    withdrawnAt: WITHDRAWAL_AT + 100,
   });
-  if (duplicate.created || duplicate.withdrawal.confirmationCode !== first.withdrawal.confirmationCode) {
-    throw new Error('Duplicate withdrawal registration was not idempotent.');
+  if (duplicate.created
+    || duplicate.withdrawal.confirmationCode !== first.withdrawal.confirmationCode
+    || duplicate.acknowledgement.consumerName !== WITHDRAWAL_CONSUMER_NAME
+    || duplicate.acknowledgement.withdrawnAt !== WITHDRAWAL_AT) {
+    throw new Error('Duplicate withdrawal did not preserve the original durable acknowledgement snapshot.');
   }
 }
 
@@ -187,7 +211,12 @@ async function inspectRuntimePrivilegeBoundary() {
       "UPDATE legend_commerce.paypal_webhook_events SET event_type = event_type WHERE event_id = 'none'",
       'DELETE FROM legend_commerce.withdrawal_requests WHERE false',
       'TRUNCATE TABLE legend_commerce.withdrawal_requests',
-      "UPDATE legend_commerce.withdrawal_requests SET confirmation_code = confirmation_code WHERE order_reference = '${PAYPAL_REFERENCE}'",
+      `UPDATE legend_commerce.withdrawal_requests SET confirmation_code = confirmation_code WHERE order_reference = '${PAYPAL_REFERENCE}'`,
+      'DELETE FROM legend_commerce.withdrawal_acknowledgements WHERE false',
+      'TRUNCATE TABLE legend_commerce.withdrawal_acknowledgements',
+      `UPDATE legend_commerce.withdrawal_acknowledgements SET consumer_name = consumer_name WHERE order_reference = '${PAYPAL_REFERENCE}'`,
+      `UPDATE legend_commerce.withdrawal_acknowledgements SET confirmation_email = confirmation_email WHERE order_reference = '${PAYPAL_REFERENCE}'`,
+      `UPDATE legend_commerce.withdrawal_acknowledgements SET declaration = declaration WHERE order_reference = '${PAYPAL_REFERENCE}'`,
     ]) {
       try {
         await client.query(statement);
@@ -223,7 +252,8 @@ try {
   console.log('- PayPal completed webhook reconciles pending -> paid');
   console.log('- duplicate PayPal webhook remains idempotent');
   console.log('- PayPal webhook event ledger accepts immutable runtime reservations');
-  console.log('- withdrawal registration persists idempotently through the runtime role');
+  console.log('- withdrawal registration persists with a durable acknowledgement snapshot');
+  console.log('- acknowledgement delivery metadata is retryable without mutating the withdrawal statement snapshot');
 
   if (leastPrivilegeVerified) {
     console.log('- least-privilege runtime role');
