@@ -100,6 +100,29 @@ function mapError(error, origin) {
   return errorResponse(500, 'WITHDRAWAL_REQUEST_FAILED', 'The withdrawal request could not be processed.', origin);
 }
 
+function requireAcknowledgement(result) {
+  const acknowledgement = result?.acknowledgement;
+  if (!acknowledgement
+    || !acknowledgement.consumerName
+    || !acknowledgement.confirmationEmail
+    || !acknowledgement.declaration
+    || !acknowledgement.confirmationCode) {
+    throw new Error('Durable withdrawal acknowledgement snapshot is unavailable.');
+  }
+  return acknowledgement;
+}
+
+async function recordDeliveryState(withdrawalStore, input) {
+  if (typeof withdrawalStore?.recordAcknowledgementDelivery !== 'function') {
+    throw new Error('Withdrawal acknowledgement delivery store is unavailable.');
+  }
+  return withdrawalStore.recordAcknowledgementDelivery(input);
+}
+
+function deliveryErrorCode(error) {
+  return String(error?.code || error?.name || 'UNKNOWN').slice(0, 120);
+}
+
 export async function handleCreateWithdrawal(request, {
   withdrawalStore,
   withdrawalNotifier = null,
@@ -133,25 +156,58 @@ export async function handleCreateWithdrawal(request, {
     const result = await withdrawalStore.createWithdrawal({
       orderId: payload.orderId,
       email: payload.email,
+      consumerName,
       withdrawnAt,
     });
     const withdrawal = result.withdrawal;
+    const acknowledgement = requireAcknowledgement(result);
 
-    let confirmationDelivery = 'unavailable';
-    if (withdrawalNotifier) {
+    let confirmationDelivery = acknowledgement.deliveryStatus === 'sent'
+      ? 'sent'
+      : (acknowledgement.deliveryStatus === 'failed' ? 'failed' : 'unavailable');
+
+    if (withdrawalNotifier && acknowledgement.deliveryStatus !== 'sent') {
+      const attemptedAt = now();
       try {
-        await sendWithdrawalConfirmation(withdrawalNotifier, {
-          name: consumerName,
-          email: payload.email,
-          orderId: withdrawal.orderId,
-          confirmationCode: withdrawal.confirmationCode,
-          withdrawnAt: withdrawal.withdrawnAt,
+        const delivery = await sendWithdrawalConfirmation(withdrawalNotifier, {
+          name: acknowledgement.consumerName,
+          email: acknowledgement.confirmationEmail,
+          orderId: acknowledgement.orderId,
+          declaration: acknowledgement.declaration,
+          confirmationCode: acknowledgement.confirmationCode,
+          withdrawnAt: acknowledgement.withdrawnAt,
         });
         confirmationDelivery = 'sent';
+        try {
+          await recordDeliveryState(withdrawalStore, {
+            confirmationCode: acknowledgement.confirmationCode,
+            status: 'sent',
+            attemptedAt,
+            providerMessageId: delivery.providerMessageId,
+          });
+        } catch (error) {
+          console.error('Withdrawal acknowledgement delivery-state update failed.', {
+            code: deliveryErrorCode(error),
+            state: 'sent',
+          });
+        }
       } catch (error) {
         confirmationDelivery = 'failed';
+        try {
+          await recordDeliveryState(withdrawalStore, {
+            confirmationCode: acknowledgement.confirmationCode,
+            status: 'failed',
+            attemptedAt,
+            errorCode: deliveryErrorCode(error),
+          });
+        } catch (stateError) {
+          console.error('Withdrawal acknowledgement delivery-state update failed.', {
+            code: deliveryErrorCode(stateError),
+            state: 'failed',
+          });
+        }
         console.error('Withdrawal confirmation delivery failed.', {
-          code: error?.code || error?.name || 'UNKNOWN',
+          code: deliveryErrorCode(error),
         });
       }
     }
