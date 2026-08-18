@@ -26,8 +26,13 @@ export function createNetlifyWithdrawalHandler({
       const withdrawalStore = storeFactory({ connectionString });
       const resendApiKey = String(env.RESEND_API_KEY || '').trim();
       const resendFrom = String(env.RESEND_FROM || '').trim();
+      const resendReplyTo = String(env.RESEND_REPLY_TO || '').trim();
       const withdrawalNotifier = resendApiKey && resendFrom
-        ? notifierFactory({ apiKey: resendApiKey, from: resendFrom })
+        ? notifierFactory({
+          apiKey: resendApiKey,
+          from: resendFrom,
+          ...(resendReplyTo ? { replyTo: resendReplyTo } : {}),
+        })
         : null;
 
       return handleCreateWithdrawal(request, {
