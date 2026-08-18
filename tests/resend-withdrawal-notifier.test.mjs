@@ -5,6 +5,7 @@ import {
   ResendNotifierError,
   RESEND_EMAIL_ENDPOINT,
 } from '../server/notifications/resend-withdrawal-notifier.mjs';
+import { WITHDRAWAL_DECLARATION } from '../server/withdrawals/statement.mjs';
 
 const message = {
   to: 'customer@example.com',
@@ -14,6 +15,7 @@ const message = {
     consumerName: 'Ada Example',
     confirmationEmail: 'customer@example.com',
     orderId: '82T24251E7500724R',
+    declaration: WITHDRAWAL_DECLARATION,
     confirmationCode: 'LM-WD-0123456789ABCDEF',
     withdrawnAt: 1786819200,
     withdrawnAtIso: '2026-08-15T16:00:00.000Z',
@@ -52,6 +54,25 @@ test('sends statutory withdrawal acknowledgement content to the Resend email end
   assert.match(payload.html, /I withdraw from the contract identified by the Order ID below/);
   assert.match(payload.html, /2026-08-15T16:00:00\.000Z/);
   assert.deepEqual(payload.tags, [{ name: 'category', value: 'withdrawal_confirmation' }]);
+});
+
+test('renders the declaration snapshot supplied by durable storage', async () => {
+  let body;
+  const notifier = createResendWithdrawalNotifier({
+    apiKey: 're_test_key',
+    from: 'LegendMural <orders@example.com>',
+    fetchImpl: async (_url, options) => {
+      body = JSON.parse(options.body);
+      return { ok: true, status: 200, async json() { return { id: 'snapshot-message' }; } };
+    },
+  });
+
+  await notifier.sendWithdrawalConfirmation({
+    ...message,
+    data: { ...message.data, declaration: 'Historic statement snapshot.' },
+  });
+  assert.match(body.text, /Historic statement snapshot\./);
+  assert.match(body.html, /Historic statement snapshot\./);
 });
 
 test('rejects unsupported notification message types before network delivery', async () => {
