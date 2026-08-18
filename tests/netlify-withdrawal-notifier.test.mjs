@@ -57,6 +57,7 @@ test('Netlify withdrawal handler wires Resend only when both production values a
       CHECKOUT_ALLOWED_ORIGINS: 'https://legendmural.test',
       RESEND_API_KEY: 're_test_key',
       RESEND_FROM: 'LegendMural <orders@example.com>',
+      RESEND_REPLY_TO: 'support@example.com',
     },
     storeFactory,
     notifierFactory(config) {
@@ -76,11 +77,41 @@ test('Netlify withdrawal handler wires Resend only when both production values a
   assert.deepEqual(notifierConfig, {
     apiKey: 're_test_key',
     from: 'LegendMural <orders@example.com>',
+    replyTo: 'support@example.com',
   });
   assert.equal(delivered.data.consumerName, 'Ada Example');
   assert.equal(delivered.data.declaration, WITHDRAWAL_DECLARATION);
   const body = await response.json();
   assert.equal(body.confirmationDelivery, 'sent');
+});
+
+test('Netlify withdrawal handler does not require a Reply-To value', async () => {
+  let notifierConfig;
+  const handler = createNetlifyWithdrawalHandler({
+    env: {
+      NEON_DATABASE_URL: 'postgresql://example.invalid/db',
+      CHECKOUT_ALLOWED_ORIGINS: 'https://legendmural.test',
+      RESEND_API_KEY: 're_test_key',
+      RESEND_FROM: 'LegendMural <orders@example.com>',
+    },
+    storeFactory,
+    notifierFactory(config) {
+      notifierConfig = config;
+      return {
+        async sendWithdrawalConfirmation() {
+          return { accepted: true, providerMessageId: 'msg-no-reply' };
+        },
+      };
+    },
+    handlerOptions: { now: () => 1786800000 },
+  });
+
+  const response = await handler(request());
+  assert.equal(response.status, 201);
+  assert.deepEqual(notifierConfig, {
+    apiKey: 're_test_key',
+    from: 'LegendMural <orders@example.com>',
+  });
 });
 
 test('Netlify withdrawal handler keeps registration available but leaves acknowledgement pending without Resend config', async () => {
