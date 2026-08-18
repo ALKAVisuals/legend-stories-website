@@ -12,6 +12,10 @@ function requiredEnv(name) {
   return value;
 }
 
+function optionalEnv(name) {
+  return String(process.env[name] || '').trim();
+}
+
 function errorCode(error) {
   return String(error?.code || error?.name || 'UNKNOWN').slice(0, 120);
 }
@@ -25,9 +29,11 @@ async function main() {
   const store = createNeonWithdrawalStore({
     connectionString: requiredEnv('NEON_DATABASE_URL'),
   });
+  const replyTo = optionalEnv('RESEND_REPLY_TO');
   const notifier = createResendWithdrawalNotifier({
     apiKey: requiredEnv('RESEND_API_KEY'),
     from: requiredEnv('RESEND_FROM'),
+    ...(replyTo ? { replyTo } : {}),
   });
 
   const acknowledgement = await store.getAcknowledgementByConfirmationCode(confirmationCode);

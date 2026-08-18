@@ -21,6 +21,15 @@ function requiredText(value, field, maxLength) {
   return normalized;
 }
 
+function optionalText(value, field, maxLength) {
+  const normalized = String(value || '').trim();
+  if (!normalized) return '';
+  if (normalized.length > maxLength || /[\u0000-\u001F\u007F]/.test(normalized)) {
+    fail('RESEND_NOTIFIER_INVALID_CONFIG', `${field} is invalid.`, { field });
+  }
+  return normalized;
+}
+
 function escapeHtml(value) {
   return String(value)
     .replaceAll('&', '&amp;')
@@ -58,11 +67,13 @@ function renderWithdrawalConfirmation(message) {
 export function createResendWithdrawalNotifier({
   apiKey,
   from,
+  replyTo = '',
   fetchImpl = globalThis.fetch,
   endpoint = RESEND_EMAIL_ENDPOINT,
 } = {}) {
   const normalizedApiKey = requiredText(apiKey, 'apiKey', 512);
   const normalizedFrom = requiredText(from, 'from', 320);
+  const normalizedReplyTo = optionalText(replyTo, 'replyTo', 320);
   if (typeof fetchImpl !== 'function') {
     fail('RESEND_NOTIFIER_INVALID_CONFIG', 'fetchImpl must be a function.', { field: 'fetchImpl' });
   }
@@ -86,6 +97,7 @@ export function createResendWithdrawalNotifier({
           subject: message.subject,
           text,
           html,
+          ...(normalizedReplyTo ? { reply_to: normalizedReplyTo } : {}),
           tags: [{ name: 'category', value: 'withdrawal_confirmation' }],
         }),
       });

@@ -27,6 +27,7 @@ test('sends statutory withdrawal acknowledgement content to the Resend email end
   const notifier = createResendWithdrawalNotifier({
     apiKey: 're_test_key',
     from: 'LegendMural <orders@example.com>',
+    replyTo: 'support@example.com',
     fetchImpl: async (url, options) => {
       captured = { url, options };
       return { ok: true, status: 200, async json() { return { id: 'resend-message-123' }; } };
@@ -43,6 +44,7 @@ test('sends statutory withdrawal acknowledgement content to the Resend email end
 
   const payload = JSON.parse(captured.options.body);
   assert.equal(payload.from, 'LegendMural <orders@example.com>');
+  assert.equal(payload.reply_to, 'support@example.com');
   assert.deepEqual(payload.to, ['customer@example.com']);
   assert.match(payload.subject, /82T24251E7500724R/);
   assert.match(payload.text, /Ada Example/);
@@ -54,6 +56,21 @@ test('sends statutory withdrawal acknowledgement content to the Resend email end
   assert.match(payload.html, /I withdraw from the contract identified by the Order ID below/);
   assert.match(payload.html, /2026-08-15T16:00:00\.000Z/);
   assert.deepEqual(payload.tags, [{ name: 'category', value: 'withdrawal_confirmation' }]);
+});
+
+test('omits reply_to when no operational reply address is configured', async () => {
+  let body;
+  const notifier = createResendWithdrawalNotifier({
+    apiKey: 're_test_key',
+    from: 'LegendMural <orders@example.com>',
+    fetchImpl: async (_url, options) => {
+      body = JSON.parse(options.body);
+      return { ok: true, status: 200, async json() { return { id: 'no-reply-message' }; } };
+    },
+  });
+
+  await notifier.sendWithdrawalConfirmation(message);
+  assert.equal(Object.hasOwn(body, 'reply_to'), false);
 });
 
 test('renders the declaration snapshot supplied by durable storage', async () => {
@@ -112,5 +129,18 @@ test('requires explicit provider configuration', () => {
   assert.throws(
     () => createResendWithdrawalNotifier({ apiKey: '', from: 'LegendMural <orders@example.com>' }),
     (error) => error instanceof ResendNotifierError && error.code === 'RESEND_NOTIFIER_INVALID_CONFIG',
+  );
+});
+
+test('rejects unsafe reply-to configuration before network use', () => {
+  assert.throws(
+    () => createResendWithdrawalNotifier({
+      apiKey: 're_test_key',
+      from: 'LegendMural <orders@example.com>',
+      replyTo: 'support@example.com\nBcc: attacker@example.com',
+    }),
+    (error) => error instanceof ResendNotifierError
+      && error.code === 'RESEND_NOTIFIER_INVALID_CONFIG'
+      && error.details.field === 'replyTo',
   );
 });
