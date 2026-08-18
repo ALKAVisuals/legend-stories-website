@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { createNetlifyWithdrawalHandler } from '../netlify/functions/create-withdrawal.mjs';
+import { WITHDRAWAL_DECLARATION } from '../server/withdrawals/statement.mjs';
 
 function request() {
   return new Request('https://legendmural.test/.netlify/functions/create-withdrawal', {
@@ -29,7 +30,20 @@ function storeFactory() {
           confirmationCode: 'LM-WD-0123456789ABCDEF',
           withdrawnAt: 1786800000,
         },
+        acknowledgement: {
+          orderId: '5O190127TN364715T',
+          consumerName: 'Ada Example',
+          confirmationEmail: 'buyer@example.com',
+          declaration: WITHDRAWAL_DECLARATION,
+          confirmationCode: 'LM-WD-0123456789ABCDEF',
+          withdrawnAt: 1786800000,
+          deliveryStatus: 'pending',
+          deliveryAttempts: 0,
+        },
       };
+    },
+    async recordAcknowledgementDelivery(input) {
+      return { confirmationCode: input.confirmationCode, deliveryStatus: input.status };
     },
   };
 }
@@ -64,11 +78,12 @@ test('Netlify withdrawal handler wires Resend only when both production values a
     from: 'LegendMural <orders@example.com>',
   });
   assert.equal(delivered.data.consumerName, 'Ada Example');
+  assert.equal(delivered.data.declaration, WITHDRAWAL_DECLARATION);
   const body = await response.json();
   assert.equal(body.confirmationDelivery, 'sent');
 });
 
-test('Netlify withdrawal handler keeps registration available but marks acknowledgement unavailable without Resend config', async () => {
+test('Netlify withdrawal handler keeps registration available but leaves acknowledgement pending without Resend config', async () => {
   let notifierFactoryCalls = 0;
   const handler = createNetlifyWithdrawalHandler({
     env: {
