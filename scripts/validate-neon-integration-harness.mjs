@@ -9,6 +9,8 @@ const [
   baseGrants,
   paypalMigration,
   paypalGrants,
+  withdrawalMigration,
+  withdrawalGrants,
   activationDoc,
 ] = await Promise.all([
   readFile(new URL('package.json', ROOT), 'utf8'),
@@ -18,6 +20,8 @@ const [
   readFile(new URL('server/db/migrations/002_grant_order_store_runtime.sql', ROOT), 'utf8'),
   readFile(new URL('server/db/migrations/003_add_paypal_reconciliation.sql', ROOT), 'utf8'),
   readFile(new URL('server/db/migrations/004_grant_paypal_reconciliation_runtime.sql', ROOT), 'utf8'),
+  readFile(new URL('server/db/migrations/005_create_withdrawal_requests.sql', ROOT), 'utf8'),
+  readFile(new URL('server/db/migrations/006_grant_withdrawal_runtime.sql', ROOT), 'utf8'),
   readFile(new URL('docs/NEON_INTEGRATION_ACTIVATION.md', ROOT), 'utf8'),
 ]);
 
@@ -79,6 +83,8 @@ for (const marker of [
   'quoteIdentifier(runtimeRole)',
   '003_add_paypal_reconciliation.sql',
   '004_grant_paypal_reconciliation_runtime.sql',
+  '005_create_withdrawal_requests.sql',
+  '006_grant_withdrawal_runtime.sql',
 ]) {
   if (!migrationRunner.includes(marker)) {
     errors.push(`Migration runner is missing safety marker: ${marker}`);
@@ -96,6 +102,10 @@ for (const marker of [
   'TRUNCATE TABLE legend_commerce.orders',
   'DELETE FROM legend_commerce.paypal_webhook_events WHERE false',
   'TRUNCATE TABLE legend_commerce.paypal_webhook_events',
+  'legend_commerce.withdrawal_requests',
+  'createNeonWithdrawalStore',
+  'DELETE FROM legend_commerce.withdrawal_requests WHERE false',
+  'TRUNCATE TABLE legend_commerce.withdrawal_requests',
   "error?.code === '42501'",
 ]) {
   if (!integrationRunner.includes(marker)) {
@@ -136,6 +146,30 @@ for (const marker of [
 }
 if (/\b(DELETE|TRUNCATE|CREATE|DROP|ALTER)\b/.test(paypalGrants)) {
   errors.push('The PayPal runtime grant migration must not grant destructive or DDL privileges.');
+}
+
+for (const marker of [
+  'CREATE TABLE IF NOT EXISTS legend_commerce.withdrawal_requests',
+  'REFERENCES legend_commerce.orders(reference)',
+]) {
+  if (!withdrawalMigration.includes(marker)) {
+    errors.push(`Withdrawal migration is missing: ${marker}`);
+  }
+}
+for (const marker of [
+  'GRANT SELECT ON legend_commerce.orders',
+  'GRANT SELECT, INSERT ON legend_commerce.withdrawal_requests',
+  '__LEGEND_RUNTIME_ROLE__',
+]) {
+  if (!withdrawalGrants.includes(marker)) {
+    errors.push(`Withdrawal runtime grant migration is missing: ${marker}`);
+  }
+}
+if (withdrawalGrants.includes('CURRENT_USER')) {
+  errors.push('Withdrawal runtime grants must target the explicit runtime-role placeholder, not CURRENT_USER.');
+}
+if (/\b(DELETE|TRUNCATE|CREATE|DROP|ALTER)\b/.test(withdrawalGrants)) {
+  errors.push('The withdrawal runtime grant migration must not grant destructive or DDL privileges.');
 }
 
 for (const marker of [

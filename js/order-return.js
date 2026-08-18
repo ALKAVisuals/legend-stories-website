@@ -19,6 +19,9 @@ const elements = {
   title: document.getElementById('order-status-title'),
   message: document.getElementById('order-status-message'),
   note: document.getElementById('order-status-note'),
+  orderIdBlock: document.getElementById('order-id-block'),
+  orderIdValue: document.getElementById('order-id-value'),
+  withdrawLink: document.getElementById('order-withdraw-link'),
 };
 
 function render(copy, state) {
@@ -54,6 +57,12 @@ async function verifyStoredOrder(reference, sessionId) {
     reference,
     sessionId,
   });
+  if (elements.orderIdValue) elements.orderIdValue.textContent = status.sessionId;
+  if (elements.orderIdBlock) elements.orderIdBlock.classList.remove('hidden');
+  if (elements.withdrawLink) {
+    elements.withdrawLink.href = `withdraw.html?order=${encodeURIComponent(status.sessionId)}`;
+    elements.withdrawLink.classList.remove('hidden');
+  }
   const copy = applyVerifiedOrderStatus(status, {
     localStorage: window.localStorage,
     sessionStorage: window.sessionStorage,
