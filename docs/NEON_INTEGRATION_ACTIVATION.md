@@ -165,7 +165,7 @@ De compute-instelling `passwordless_access=true` is beoordeeld als Neons account
 ## Veiligheidsgrenzen
 
 - De normale echte-Neon regressieworkflow is handmatig (`workflow_dispatch`) en repository-permissions blijven read-only.
-- De manual Neon integration workflow raakt geen Netlify production deployment/configuratie.
+- The manual Neon integration workflow does not touch Netlify or production deployment configuration.
 - Testworkflows mogen geen productioncredentials gebruiken.
 - PayPal Live wordt niet door database-integratietests geactiveerd.
 - Full PayPal/customerpayloads worden niet in de event-ledger opgeslagen.
