@@ -134,7 +134,10 @@ function mapError(error, origin) {
     return errorResponse(503, error.code, 'PayPal payment was captured but order confirmation storage is temporarily unavailable.', origin);
   }
 
-  console.error('Unexpected PayPal capture error:', error);
+  console.error('Unexpected PayPal capture error.', {
+    name: error?.name || 'Error',
+    code: String(error?.code || 'UNKNOWN').slice(0, 120),
+  });
   return errorResponse(500, 'PAYPAL_CAPTURE_FAILED', 'PayPal payment could not be confirmed.', origin);
 }
 

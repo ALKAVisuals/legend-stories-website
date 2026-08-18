@@ -96,7 +96,10 @@ function mapError(error, origin) {
     }
     return errorResponse(503, 'WITHDRAWAL_STORE_UNAVAILABLE', 'The withdrawal request could not be stored.', origin);
   }
-  console.error('Unexpected withdrawal request error:', error);
+  console.error('Unexpected withdrawal request error.', {
+    name: error?.name || 'Error',
+    code: String(error?.code || 'UNKNOWN').slice(0, 120),
+  });
   return errorResponse(500, 'WITHDRAWAL_REQUEST_FAILED', 'The withdrawal request could not be processed.', origin);
 }
 
