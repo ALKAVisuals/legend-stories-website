@@ -1,6 +1,6 @@
 # Neon integration validation
 
-Laatst inhoudelijk bijgewerkt: 15 augustus 2026.
+Laatst inhoudelijk bijgewerkt: 18 augustus 2026.
 
 Dit document beschrijft de blijvende echte-Neon testharness, de bewezen databasecontracten en de grens tussen geïsoleerde validatie en production-activatie.
 
@@ -19,9 +19,10 @@ De bestaande echte Neon-validatie heeft onder andere bewezen:
 - pending -> paid overgang met versiecontrole;
 - duplicate PayPal webhook-idempotency;
 - least-privilege event-ledgergrenzen;
+- immutable withdrawal-ledgergrenzen;
 - synthetische fixture-cleanup.
 
-De legal/customer-operationsfase voegt migrations `005` en `006` toe voor een aparte immutable withdrawal-ledger. De testharness is daarom uitgebreid zodat de volledige migrationketen nu `001` t/m `006` omvat.
+De volledige migrationketen omvat migrations `001` t/m `006`.
 
 ## Pinned runtime dependencies
 
@@ -43,13 +44,28 @@ De migrationrunner verwerkt migrations strikt in numerieke volgorde:
 5. `005_create_withdrawal_requests.sql`;
 6. `006_grant_withdrawal_runtime.sql`.
 
-Runtime grants gebruiken een expliciete `__LEGEND_RUNTIME_ROLE__` placeholder die door de migrationrunner veilig als identifier wordt ingevuld. Migration `006` gebruikt dus niet `CURRENT_USER` als impliciete production-default.
+Runtime grants gebruiken een expliciete `__LEGEND_RUNTIME_ROLE__` placeholder die door de migrationrunner veilig als identifier wordt ingevuld.
 
-De runtime role krijgt voor withdrawal-operaties alleen wat nodig is:
+De runtime role krijgt:
 
-- order lookup via `SELECT` op `legend_commerce.orders`;
-- `SELECT` en `INSERT` op `legend_commerce.withdrawal_requests`;
-- geen `UPDATE`, `DELETE` of `TRUNCATE` op de withdrawal-ledger.
+- `orders`: SELECT, INSERT en UPDATE;
+- `stripe_events`: SELECT en INSERT;
+- `paypal_webhook_events`: SELECT en INSERT;
+- `withdrawal_requests`: SELECT en INSERT;
+- geen DELETE of TRUNCATE op de commerce-tabellen;
+- geen UPDATE op de immutable Stripe-, PayPal-webhook- of withdrawal-ledgers.
+
+## Production role model
+
+Op 18 augustus 2026 zijn op de Neon production branch drie least-privilege NOLOGIN-rollen ingericht:
+
+- `legendmural_runtime` — privilegegroep voor migrations `002`, `004` en `006`;
+- `legendmural_app` — toekomstige applicatierol en lid van `legendmural_runtime`;
+- `legendmural_migrator` — migration-owner met beperkte database-create capability en zonder CREATEDB, CREATEROLE, REPLICATION of BYPASSRLS.
+
+Deze rollen zijn bewust NOLOGIN. Gate 5 kon zonder standalone migration password worden uitgevoerd via de geauthenticeerde Neon operator-sessie met `SET ROLE legendmural_migrator`. Daardoor zijn de production-objecten eigendom van de beperkte migratorrol zonder een extra langlevend migration-secret te creëren.
+
+De echte `legendmural_app` logincredential blijft uitgesteld tot Gate 6 en wordt uitsluitend server-side opgeslagen. `neondb_owner` blijft een beheer/operatorrol en mag niet als Netlify applicatiecredential worden gebruikt.
 
 ## Vereiste secrets voor de handmatige echte-Neon regressierun
 
@@ -76,33 +92,108 @@ De workflow:
 10. ruimt synthetische records ook na fouten op;
 11. draait daarna de credential-free Neon architectuurvalidatie.
 
-## Aanvullend production-bootstrapbewijs
+## Production-derived bootstrapbewijs — 18 augustus 2026
 
-Op 15 augustus 2026 is de daadwerkelijke Neon `production` branch read-only geïnspecteerd. Daar bestonden nog geen `legend_commerce` tabellen. Productie is dus een lege commerce-baseline en moet later volledig `001 -> 006` worden gebootstrapt.
+De repositorybaseline voor de Gate 5 preflight was Git SHA `5bb4783ec83438bb1ebe5f25922fbd2a8d50e4a4`.
 
-Daarom is een tijdelijke branch rechtstreeks vanaf die lege production-baseline gemaakt. Op die tijdelijke branch is bewezen dat:
+Vanaf de toen lege production branch is tijdelijke branch `gate5-migration-validation-20260818` gemaakt. Op die branch zijn exact migrations `001` t/m `006` uitgevoerd onder `legendmural_migrator`, met `legendmural_runtime` als runtime-placeholderdoel.
 
-- migrations `001` t/m `006` het volledige schema vanaf nul kunnen opbouwen;
-- de resulterende tabellen `orders`, historisch `stripe_events`, `paypal_webhook_events` en `withdrawal_requests` aanwezig zijn;
-- een PayPal order ID als `payment_provider=paypal` wordt afgeleid;
-- een withdrawal-record correct aan een bestaande order kan worden gekoppeld;
-- de test-runtime-role noodzakelijke order/withdrawalrechten krijgt;
-- die role geen withdrawal `UPDATE`, `DELETE` of `TRUNCATE` recht krijgt.
+Daarmee is bewezen dat:
 
-De tijdelijke preflightbranch is na de controle verwijderd. De production-branch zelf is niet gemuteerd.
+- migrations `001` t/m `006` het volledige commerce-schema vanaf nul kunnen opbouwen;
+- `orders`, historisch `stripe_events`, `paypal_webhook_events` en `withdrawal_requests` aanwezig zijn;
+- alle commerce-tabellen en indexen eigendom zijn van `legendmural_migrator`;
+- `legendmural_app` de runtimeprivileges via `legendmural_runtime` kan gebruiken;
+- een synthetische PayPal order `payment_provider=paypal` oplevert;
+- een synthetische PayPal webhook en withdrawal door het app-role contract kunnen worden geregistreerd;
+- `orders` SELECT/INSERT/UPDATE toestaat maar DELETE/TRUNCATE weigert;
+- de immutable Stripe-, PayPal-webhook- en withdrawal-ledgers SELECT/INSERT toestaan maar UPDATE/DELETE/TRUNCATE weigeren.
+
+De tijdelijke validation branch is na succesvolle controle verwijderd.
+
+## Production bootstrap — 18 augustus 2026
+
+Na expliciete owner approval is Gate 5 uitgevoerd op production branch `br-misty-cloud-as0rofc8`.
+
+Uitvoering:
+
+- exact reviewed migrationketen `001 -> 006` uit Git SHA `5bb4783ec83438bb1ebe5f25922fbd2a8d50e4a4`;
+- geauthenticeerde Neon operator-sessie;
+- `SET ROLE legendmural_migrator` vóór schema/objectcreatie;
+- `legendmural_runtime` als expliciet grant-doel;
+- één atomaire production-transactie voor de migrationketen;
+- geen standalone migration password of connection string gecreëerd of opgeslagen.
+
+Post-migration verificatie bevestigde:
+
+- `legend_commerce.orders` bestaat;
+- `legend_commerce.stripe_events` bestaat voor historische compatibiliteit;
+- `legend_commerce.paypal_webhook_events` bestaat;
+- `legend_commerce.withdrawal_requests` bestaat;
+- alle commerce-tabellen en indexen eigendom zijn van `legendmural_migrator`;
+- `legendmural_app` exact de bedoelde SELECT/INSERT-rechten erft en alleen op `orders` UPDATE heeft;
+- DELETE/TRUNCATE voor `legendmural_app` op alle vier commerce-tabellen ontbreekt;
+- UPDATE op de immutable Stripe-, PayPal-webhook- en withdrawal-ledgers ontbreekt;
+- een synthetische production PayPal order `payment_provider=paypal` opleverde;
+- een synthetisch PayPal webhook-event en withdrawal-record konden worden geregistreerd;
+- alle synthetische smoke records direct daarna werden verwijderd;
+- eindtelling op `orders`, `stripe_events`, `paypal_webhook_events` en `withdrawal_requests` gelijk was aan nul.
+
+Gate 5 heeft geen Netlify production secret, Resend production secret of PayPal Live instelling gewijzigd.
+
+## Neon Free-plan compensating controls
+
+De Neon organisatie `ALKAGroup` staat momenteel op het Free-plan.
+
+De huidige Free-planbeperkingen die voor LegendMural relevant zijn:
+
+- production kan niet als protected branch worden gemarkeerd;
+- de project history-retention blijft 6 uur;
+- een paid-plan branch-protection/longer-PITR model is dus niet beschikbaar zolang Free wordt gebruikt.
+
+LegendMural accepteert dit voor de huidige launch-preparatiefase met compensating controls:
+
+1. destructive production database actions vereisen expliciete operator approval;
+2. migrations worden eerst op een production-derived child branch bewezen;
+3. een persistente pre-change recovery branch wordt aangehouden;
+4. runtime en migration ownership blijven gescheiden;
+5. `neondb_owner` wordt niet als appcredential gebruikt;
+6. production application credentials worden just-in-time gemaakt;
+7. PayPal Live blijft een latere aparte gate;
+8. een upgrade naar Neon Launch wordt opnieuw beoordeeld wanneer real-world volume/risk stijgt.
+
+Zie `docs/NEON_FREE_PLAN_PRODUCTION_CONTROLS.md` voor de volledige Free-plan policy.
+
+## Persistent pre-bootstrap recovery point
+
+Op 18 augustus 2026 is vóór production schema-bootstrap een persistente child branch gemaakt:
+
+- naam: `pre-prod-bootstrap-20260818`;
+- branch ID: `br-long-field-aspnw4co`;
+- parent: production `br-misty-cloud-as0rofc8`;
+- inhoud: lege commerce-baseline plus de production role-architectuur vóór migrations `001–006`.
+
+Deze branch blijft bestaan tot de eerste gecontroleerde end-to-end launchvalidatie is afgerond en de release operator hem bewust retireert.
+
+De branch is een extra recovery/checkpoint-control en vervangt geen volledige backupstrategie.
 
 ## Huidige production-observaties
 
-Read-only Neon-inspectie op 15 augustus 2026 liet zien:
+Inspectie na Gate 5 op 18 augustus 2026 bevestigt:
 
 - project: `Legendmural`;
-- primary/default branch: `production`;
-- production commerce-schema: nog leeg;
-- production branch: momenteel niet protected;
-- production compute: passwordless access momenteel enabled;
-- project history-retention: momenteel 21.600 seconden (6 uur).
+- primary/default root branch: `production`;
+- production branch: niet protected omdat de organisatie Free gebruikt;
+- project history-retention: 21.600 seconden (6 uur);
+- production runtime/migration/app role-architectuur: ingericht als NOLOGIN;
+- production migrations `001–006`: uitgevoerd;
+- volledige `legend_commerce` schema aanwezig;
+- alle vier commerce-tabellen leeg na synthetic smoke cleanup;
+- persistente pre-bootstrap recovery branch: aanwezig;
+- production appcredential/Netlify runtime URL: nog niet geactiveerd;
+- PayPal Live: nog niet geactiveerd.
 
-Dit zijn observaties, geen goedkeuring van deze instellingen. Branch protection, access policy, dedicated migration/runtimecredentials en recovery window moeten vóór Live expliciet worden beoordeeld.
+De compute-instelling `passwordless_access=true` is beoordeeld als Neons account-geauthenticeerde interactieve tooling en niet als applicatie-authenticatiemethode. De production app zal een aparte least-privilege credential gebruiken.
 
 ## Veiligheidsgrenzen
 
@@ -112,20 +203,19 @@ Dit zijn observaties, geen goedkeuring van deze instellingen. Branch protection,
 - PayPal Live wordt niet door database-integratietests geactiveerd.
 - Full PayPal/customerpayloads worden niet in de event-ledger opgeslagen.
 - Historische migrations worden niet herschreven om oude Stripe-schemahistorie cosmetisch te verwijderen.
-- Production migration, credentialconfiguratie en restorebeleid zijn afzonderlijke operationele gates.
+- Production application credential/configuratie en restorebeleid blijven afzonderlijke operationele controls.
+- De persistente pre-bootstrap branch mag niet als algemene ontwikkelbranch worden gebruikt.
 
-## Productiegrens
+## Volgende productiegrens
 
-Een groene staging/preflight betekent niet dat production automatisch mag worden geactiveerd. Voor de live databasefase blijven minimaal vereist:
+Gate 5 is afgerond. De volgende databasegerelateerde production boundary is Gate 6:
 
-- exact reviewed `main` SHA;
-- protected/controlled production branch policy;
-- dedicated migration-owner en least-privilege runtime credential;
-- vastgesteld recovery/restorebeleid en voldoende restore window;
-- definitief privacy-/retentiebeleid;
-- gescheiden Netlify production secrets;
-- monitoring, incident- en rollbackprocedure;
-- expliciete toestemming vóór migrations `001–006` op production;
-- PayPal Live als aparte, latere expliciet goedgekeurde fase.
+- just-in-time least-privilege `legendmural_app` logincredential creëren;
+- production runtime connection string server-side opslaan;
+- `neondb_owner` uitsluiten van Netlify runtime;
+- same-origin API smoke checks uitvoeren zonder echte charge;
+- PayPal Live uitgeschakeld houden totdat alle voorafgaande gates GO zijn.
 
-Zie `docs/PRODUCTION_READINESS_RUNBOOK.md` voor de volledige volgorde.
+Daarnaast blijven Gate 2/3 voor durable withdrawal acknowledgement, Gate 7 monitoring/incident readiness en Gate 1 final deployed-domain verification open.
+
+Zie `docs/PRODUCTION_GO_NO_GO_CHECKLIST.md`, `docs/NEON_FREE_PLAN_PRODUCTION_CONTROLS.md` en `docs/PRODUCTION_READINESS_RUNBOOK.md` voor de volledige volgorde.
