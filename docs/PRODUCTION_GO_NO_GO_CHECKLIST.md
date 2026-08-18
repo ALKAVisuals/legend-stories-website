@@ -6,15 +6,15 @@ This checklist converts production readiness into explicit release gates. A **GO
 
 ## Gate 0 — reviewed code baseline
 
-- [x] PRs #96, #97, #98, #99 and #101 intentionally merged.
+- [x] PRs #96, #97, #98, #99, #101, #102 and #103 intentionally merged.
 - [x] Current reviewed repository baseline is `main`.
-- [x] Current reviewed Git SHA is `b47da33573358fc6896233cba3e24f91ba5af900`.
+- [x] Current reviewed Git SHA is `1b5158e789de9f903cea1490853f2388631fb2a3`.
 - [x] PR #101 exact-head Quality checks passed, including unit tests, Neon integration harness, Vite production build and output validation.
-- [x] Accessibility / purchase-flow audit passed on the same reviewed head.
-- [x] Netlify Node 22 preview compatibility passed on the same reviewed head.
+- [x] PR #102 documentation/handoff exact-head Quality and Accessibility checks passed before merge.
+- [x] PR #103 exact-head Quality, Accessibility / purchase-flow and Netlify Node 22 compatibility checks passed before merge.
 - [x] Temporary write-enabled migration/test branches used for validation were removed after use.
 
-**Current status:** GO for the reviewed code baseline. This does not by itself activate current production deployment, PayPal Live or Resend.
+**Current status:** GO for the reviewed code baseline. This does not by itself activate a fresh production deployment, PayPal Live or Resend production sending.
 
 ## Gate 1 — public domain and HTTPS
 
@@ -36,7 +36,7 @@ This checklist converts production readiness into explicit release gates. A **GO
 - [x] Online withdrawal function does not require an account or a reason.
 - [x] Withdrawal statement collects consumer name, contract-identifying Order ID and electronic confirmation address.
 - [x] Withdrawal registration is durable and separate from refund execution.
-- [x] Production now has a separate durable acknowledgement snapshot/outbox for statement evidence and delivery state.
+- [x] Production has a separate durable acknowledgement snapshot/outbox for statement evidence and delivery state.
 - [x] Statement fields in the acknowledgement record are immutable to the application runtime; only delivery metadata is updateable.
 - [ ] Trader acknowledgement is actually delivered without undue delay on a durable medium after each valid online withdrawal.
 - [ ] Controlled delivery proves the acknowledgement contains declaration, consumer name, Order ID, confirmation address, confirmation code and receipt date/time.
@@ -50,16 +50,18 @@ This checklist converts production readiness into explicit release gates. A **GO
 - [x] Privacy notice identifies Resend and the reviewed international-transfer position.
 - [x] Durable acknowledgement outbox exists in production so delivery failure does not erase the withdrawal statement.
 - [x] Controlled operator resend script exists and refuses to resend an acknowledgement already recorded as sent.
+- [x] Optional server-side `RESEND_REPLY_TO` support is implemented for both initial delivery and controlled retry.
+- [x] `docs/RESEND_PRODUCTION_ACTIVATION.md` documents sending-domain, least-privilege API-key, Reply-To, delivery/failure proof and provider-retention acceptance.
 - [ ] Definitive sending domain/subdomain configured and verified with Resend.
 - [ ] Production `from` identity approved.
-- [ ] Reply/customer-operations address approved.
+- [ ] Monitored Reply-To/customer-operations address approved.
 - [ ] Provider API key stored only as a production server-side secret.
-- [ ] Provider-side retention/logging behaviour operationally accepted/documented for the production account.
+- [ ] Provider-side retention/logging behaviour operationally accepted for the production account.
 - [ ] Controlled non-production acknowledgement succeeds with the final sending identity.
-- [ ] Delivered content and delivery timing verified.
+- [ ] Delivered content, reply routing and delivery timing verified.
 - [ ] Failure + controlled resend procedure exercised without exposing secrets/customer payloads in logs.
 
-**Current status:** NO-GO. Code, privacy and durable resend architecture are ready; provider/DNS/secrets/delivery proof remain intentionally inactive.
+**Current status:** NO-GO. Code, privacy, Reply-To and durable resend architecture are ready; provider/DNS/secrets/delivery proof remain intentionally inactive.
 
 ## Gate 4 — Neon production security and recovery
 
@@ -97,7 +99,8 @@ This checklist converts production readiness into explicit release gates. A **GO
 - [x] Connection target uses production branch/database, pooling and required TLS parameters.
 - [x] Tracked routes map checkout, capture, webhook and order-status to their intended Netlify Functions.
 - [x] Checkout kill switch is opt-in: `LEGENDMURAL_CHECKOUT_PAUSED=true` blocks only new checkout creation while preserving capture/webhook/status reconciliation paths.
-- [x] Reviewed production build passed on PR #101.
+- [x] `docs/FIRST_PRODUCTION_DEPLOY_CHECKLIST.md` defines the exact deployment and no-charge smoke procedure.
+- [x] Current runtime changes through PR #103 passed Quality and Netlify Node 22 compatibility before merge.
 - [ ] A fresh production deploy has consumed the new Production environment value. **Blocked by current Netlify deploy capacity.**
 - [ ] Production `CHECKOUT_ALLOWED_ORIGINS`, success/cancel URLs and PayPal variables reverified for the final apex origin.
 - [ ] `PAYPAL_ALLOW_LIVE` confirmed disabled during infrastructure validation.
@@ -115,17 +118,22 @@ This checklist converts production readiness into explicit release gates. A **GO
 - [x] Checkout containment model preserves capture, webhook and order-status reconciliation.
 - [x] Payment reconciliation checklist exists.
 - [x] Withdrawal acknowledgement failure has a durable delivery state and controlled CLI resend path.
+- [x] `docs/PRODUCTION_MONITORING_HANDOFF.md` documents Netlify Function log, PayPal webhook, Neon and withdrawal-queue review procedures.
+- [x] Netlify Function log review location/process documented from current Netlify guidance.
+- [x] PayPal webhook delivery/failure dashboard and resend process documented from current PayPal guidance.
+- [x] Neon production branch monitoring process documented.
 - [ ] Checkout/payment incident owner assigned by name.
 - [ ] Customer withdrawal/refund operations owner assigned by name.
 - [ ] Database recovery decision authority assigned by name.
-- [ ] Netlify Function log review location/process confirmed on the production account after deploys resume.
-- [ ] PayPal webhook delivery/failure review process confirmed on the production account.
-- [ ] Neon/API failure review process confirmed on the production account.
+- [ ] Named owners/backups recorded in the monitoring handoff.
+- [ ] Netlify Function log access confirmed on the real production account after deploys resume.
+- [ ] PayPal Webhooks Events access confirmed for the intended app/environment.
+- [ ] Neon production Monitoring access confirmed by the release operator.
 - [ ] `LEGENDMURAL_CHECKOUT_PAUSED` containment procedure exercised in a non-production or controlled production-safe scenario.
 - [ ] Known-good Netlify rollback procedure confirmed against an actual deploy once current deploy capacity resumes.
-- [ ] Release operator has reviewed `docs/INCIDENT_AND_ROLLBACK_RUNBOOK.md` and the deploy-day checklist.
+- [ ] Release operator has reviewed the incident, deploy-day and monitoring handoff documents.
 
-**Current status:** PARTIAL. Technical containment/reconciliation architecture is prepared; named operational owners and account-level monitoring/rollback checks remain.
+**Current status:** PARTIAL. Technical monitoring, containment and reconciliation procedures are documented; named owners and live account/deploy exercises remain.
 
 ## Gate 8 — PayPal Live enablement
 
