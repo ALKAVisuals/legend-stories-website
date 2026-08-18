@@ -4,17 +4,19 @@ Last reviewed: 18 August 2026.
 
 This checklist converts production readiness into explicit release gates. A **GO** means every mandatory item for that gate is verified. Any unresolved mandatory item means **NO-GO** for the dependent production phase.
 
+The repository baseline is `main`. Do not hard-code a rolling preparation SHA here: the **exact final release Git SHA** must be captured in `docs/LAUNCH_COMPLETION_RECORD.md` at Gate 9 immediately before/after the actual production release. This prevents documentation-only merges from making the readiness checklist falsely stale.
+
 ## Gate 0 — reviewed code baseline
 
-- [x] PRs #96, #97, #98, #99, #101, #102 and #103 intentionally merged.
-- [x] Current reviewed repository baseline is `main`.
-- [x] Current reviewed Git SHA is `1b5158e789de9f903cea1490853f2388631fb2a3`.
-- [x] PR #101 exact-head Quality checks passed, including unit tests, Neon integration harness, Vite production build and output validation.
-- [x] PR #102 documentation/handoff exact-head Quality and Accessibility checks passed before merge.
-- [x] PR #103 exact-head Quality, Accessibility / purchase-flow and Netlify Node 22 compatibility checks passed before merge.
-- [x] Temporary write-enabled migration/test branches used for validation were removed after use.
+- [x] Core launch-preparation PRs #96, #97, #98, #99 and #101 intentionally merged.
+- [x] Gate 6/7 readiness PRs #102, #103, #104 and #105 intentionally merged.
+- [x] Commerce logging hardening PR #107 intentionally merged after exact-head Quality, Accessibility and Netlify Node 22 compatibility passed.
+- [x] PR #101 exact-head validation passed, including unit tests, Neon integration harness, Vite production build and output validation.
+- [x] Temporary write-enabled migration/test branches used for production-derived validation were removed after use.
+- [x] Public production code does not depend on an unmerged staging branch.
+- [ ] Final release SHA recorded in the launch completion record after the deploy candidate is frozen.
 
-**Current status:** GO for the reviewed code baseline. This does not by itself activate a fresh production deployment, PayPal Live or Resend production sending.
+**Current status:** GO for the reviewed pre-deploy code baseline. The final release SHA is intentionally a Gate 9 launch-time record, not a moving preparation constant.
 
 ## Gate 1 — public domain and HTTPS
 
@@ -25,9 +27,9 @@ This checklist converts production readiness into explicit release gates. A **GO
 - [ ] HTTPS certificate state reverified against the first current production deployment.
 - [ ] HTTP -> HTTPS redirect reverified against the first current production deployment.
 - [ ] `www` -> apex redirect reverified against the first current production deployment.
-- [ ] PayPal production return/cancel origin revalidated after that deployment.
+- [ ] PayPal return/cancel origin revalidated after that deployment.
 
-**Current status:** CONDITIONAL. The domain is linked, but Netlify production deploy capacity is currently unavailable, so final live-origin verification must wait for the next production deployment.
+**Current status:** CONDITIONAL. Domain configuration is prepared; live verification waits for the next current production deployment because Netlify deploy capacity is unavailable.
 
 ## Gate 2 — legal and customer operations
 
@@ -61,7 +63,7 @@ This checklist converts production readiness into explicit release gates. A **GO
 - [ ] Delivered content, reply routing and delivery timing verified.
 - [ ] Failure + controlled resend procedure exercised without exposing secrets/customer payloads in logs.
 
-**Current status:** NO-GO. Code, privacy, Reply-To and durable resend architecture are ready; provider/DNS/secrets/delivery proof remain intentionally inactive.
+**Current status:** NO-GO. Code, privacy, Reply-To and durable resend architecture are prepared; provider/DNS/secrets/delivery proof remain intentionally inactive until a separate Gate 3 approval.
 
 ## Gate 4 — Neon production security and recovery
 
@@ -72,7 +74,7 @@ This checklist converts production readiness into explicit release gates. A **GO
 - [x] `legendmural_migrator` remains NOLOGIN and owns the commerce schema objects created by the reviewed migrations.
 - [x] `neondb_owner` is excluded from application runtime use.
 - [x] Persistent original checkpoint `pre-prod-bootstrap-20260818` remains available.
-- [x] Current pre-acknowledgement checkpoint `pre-ack-outbox-20260818` (`br-falling-art-asrdqbvp`) was created immediately before migrations `007–008`.
+- [x] Pre-acknowledgement checkpoint `pre-ack-outbox-20260818` (`br-falling-art-asrdqbvp`) was created immediately before migrations `007–008`.
 - [x] Production-derived temporary branch testing/recovery workflow has been exercised successfully.
 
 **Current status:** GO under documented Free-plan compensating controls. This is not equivalent to Neon paid branch protection.
@@ -80,9 +82,8 @@ This checklist converts production readiness into explicit release gates. A **GO
 ## Gate 5 — Neon production schema
 
 - [x] Migrations `001–006` executed and verified on production.
-- [x] PR #101 introduced additive migrations `007–008` for the durable withdrawal acknowledgement outbox.
-- [x] `007–008` were first proven on a temporary production-derived branch.
-- [x] Owner explicitly approved the production `007–008` execution on 18 August 2026.
+- [x] Additive migrations `007–008` for the durable withdrawal acknowledgement outbox were first proven on a production-derived temporary branch.
+- [x] Owner explicitly approved production `007–008` execution on 18 August 2026.
 - [x] New recovery checkpoint created immediately before production execution.
 - [x] Migrations `007–008` executed atomically on production branch `br-misty-cloud-as0rofc8` under `legendmural_migrator` with runtime grants targeted at `legendmural_runtime`.
 - [x] `withdrawal_acknowledgements` and its index are owned by `legendmural_migrator`.
@@ -99,10 +100,12 @@ This checklist converts production readiness into explicit release gates. A **GO
 - [x] Connection target uses production branch/database, pooling and required TLS parameters.
 - [x] Tracked routes map checkout, capture, webhook and order-status to their intended Netlify Functions.
 - [x] Checkout kill switch is opt-in: `LEGENDMURAL_CHECKOUT_PAUSED=true` blocks only new checkout creation while preserving capture/webhook/status reconciliation paths.
+- [x] Automated test proves the checkout pause returns `503 CHECKOUT_PAUSED` before database/PayPal bootstrap.
+- [x] `docs/PRODUCTION_ENV_CONTEXT_MATRIX.md` documents exact Production expectations for Neon, origin, PayPal Sandbox and inactive Resend variables.
 - [x] `docs/FIRST_PRODUCTION_DEPLOY_CHECKLIST.md` defines the exact deployment and no-charge smoke procedure.
-- [x] Current runtime changes through PR #103 passed Quality and Netlify Node 22 compatibility before merge.
+- [x] Unexpected commerce fallback logging is hardened so checkout/capture/order-status/withdrawal do not dump complete error objects; regression coverage verifies secret-like error details are not logged.
 - [ ] A fresh production deploy has consumed the new Production environment value. **Blocked by current Netlify deploy capacity.**
-- [ ] Production `CHECKOUT_ALLOWED_ORIGINS`, success/cancel URLs and PayPal variables reverified for the final apex origin.
+- [ ] Production `CHECKOUT_ALLOWED_ORIGINS`, success/cancel URLs and PayPal variables reverified in the real Netlify Production context.
 - [ ] `PAYPAL_ALLOW_LIVE` confirmed disabled during infrastructure validation.
 - [ ] `PAYPAL_API_BASE` confirmed to use the intended Sandbox environment during infrastructure validation.
 - [ ] Production PayPal client/webhook secret contexts inspected without exposing their values.
@@ -110,12 +113,13 @@ This checklist converts production readiness into explicit release gates. A **GO
 - [ ] Netlify Function logs inspected for configuration failures and secret/PII leakage after the smoke checks.
 - [ ] Resend variables remain absent/inactive until Gate 3 activation is deliberately approved.
 
-**Current status:** CONDITIONAL / deployment-blocked. The production database secret is stored, but it is not considered runtime-proven until a fresh Netlify production deployment and no-charge smoke test succeed.
+**Current status:** CONDITIONAL / deployment-blocked. Database configuration and tracked runtime are prepared; the remaining pre-deploy manual Netlify context review can be completed now, while live runtime proof must wait for deploy capacity.
 
 ## Gate 7 — monitoring and incident readiness
 
 - [x] Incident/rollback runbook exists.
 - [x] Checkout containment model preserves capture, webhook and order-status reconciliation.
+- [x] Checkout containment code path is covered by automated tests and runs before database/PayPal bootstrap.
 - [x] Payment reconciliation checklist exists.
 - [x] Withdrawal acknowledgement failure has a durable delivery state and controlled CLI resend path.
 - [x] `docs/PRODUCTION_MONITORING_HANDOFF.md` documents Netlify Function log, PayPal webhook, Neon and withdrawal-queue review procedures.
@@ -129,11 +133,11 @@ This checklist converts production readiness into explicit release gates. A **GO
 - [ ] Netlify Function log access confirmed on the real production account after deploys resume.
 - [ ] PayPal Webhooks Events access confirmed for the intended app/environment.
 - [ ] Neon production Monitoring access confirmed by the release operator.
-- [ ] `LEGENDMURAL_CHECKOUT_PAUSED` containment procedure exercised in a non-production or controlled production-safe scenario.
+- [ ] `LEGENDMURAL_CHECKOUT_PAUSED` containment exercised against an actual non-production/current deployment; automated coverage alone is not treated as an operations drill.
 - [ ] Known-good Netlify rollback procedure confirmed against an actual deploy once current deploy capacity resumes.
 - [ ] Release operator has reviewed the incident, deploy-day and monitoring handoff documents.
 
-**Current status:** PARTIAL. Technical monitoring, containment and reconciliation procedures are documented; named owners and live account/deploy exercises remain.
+**Current status:** PARTIAL. Technical monitoring, containment and reconciliation procedures are prepared; named owners and live account/deploy exercises remain.
 
 ## Gate 8 — PayPal Live enablement
 
@@ -153,18 +157,15 @@ Any mismatch during the controlled Live order is an immediate **NO-GO**: pause n
 
 ## Gate 9 — launch completion record
 
-Before handover, record:
+- [x] Sanitized launch record template exists at `docs/LAUNCH_COMPLETION_RECORD.md`.
+- [ ] Final release Git SHA recorded.
+- [ ] Netlify production deploy ID/timestamp recorded.
+- [ ] Domain/origin verification outcome recorded.
+- [ ] Neon branch/migration level and runtime role names recorded without secrets/URLs.
+- [ ] PayPal mode/app/webhook identity reference and controlled Live outcome recorded without real customer/payment identifiers in the public repo.
+- [ ] Transactional sending identity and acknowledgement proof recorded, with customer evidence kept in an approved private location.
+- [ ] Named operators/decision authorities recorded.
+- [ ] Accepted risks/exceptions have a named owner and review date.
+- [ ] Recovery-checkpoint retirement/retention decision recorded explicitly after successful launch validation.
 
-- release Git SHA;
-- Netlify production deploy ID;
-- domain/origin;
-- Neon project/branch and migration level/timestamp;
-- runtime/migration role names (never passwords/URLs);
-- PayPal mode/app identity and webhook ID reference;
-- transactional sending identity;
-- named operators/decision authorities;
-- time checkout was opened;
-- controlled Live order reference/outcome;
-- any accepted risk/exception and owner.
-
-Launch is not considered fully handed over until this release record exists.
+Launch is not considered fully handed over until this release record is completed.
