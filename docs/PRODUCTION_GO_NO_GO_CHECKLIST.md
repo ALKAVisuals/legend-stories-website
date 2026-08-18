@@ -81,34 +81,32 @@ This checklist converts the production-readiness runbook into explicit release g
 - [x] Current 6-hour history window explicitly accepted as a Free-plan limitation for this phase.
 - [x] Persistent pre-bootstrap recovery checkpoint `pre-prod-bootstrap-20260818` (`br-long-field-aspnw4co`) created from production.
 - [x] Production-derived branch creation/recovery-point workflow tested.
-- [x] Production login credentials are intentionally deferred until Gate 6 so long-lived unused secrets are not created early.
+- [x] Production application login credential remains intentionally deferred until Gate 6 so a long-lived unused runtime secret is not created early.
 
-**Current status:** GO for the Free-plan pre-bootstrap security/recovery model with documented compensating controls. This is not equivalent to Neon Launch/Scale protection. Reconsider a paid plan when real order/customer volume increases.
+**Current status:** GO for the Free-plan security/recovery model with documented compensating controls. This is not equivalent to Neon Launch/Scale protection. Reconsider a paid plan when real order/customer volume increases.
 
 ## Gate 5 — Neon production bootstrap
 
 - [x] Exact migration files `001–006` verified against reviewed release SHA `5bb4783ec83438bb1ebe5f25922fbd2a8d50e4a4`.
 - [x] Persistent pre-bootstrap recovery checkpoint exists before production execution.
-- [x] Migration-owner role has been proven capable of applying `001–006` on a production-derived branch.
-- [x] Explicit runtime role substitution with `legendmural_runtime` has been proven on a production-derived branch.
-- [x] Full migration sequence `001 -> 006` has been re-proven on 18 August 2026 on a temporary branch cloned from current production.
-- [x] Test tables verified: `orders`, historical `stripe_events`, `paypal_webhook_events`, `withdrawal_requests`.
-- [x] Test ownership verified: commerce tables/indexes owned by `legendmural_migrator`.
-- [x] Constraints/generated provider behaviour verified on the test branch.
-- [x] Synthetic PayPal Order ID derived `payment_provider=paypal`.
-- [x] App/runtime SELECT/INSERT rights verified on the test branch.
-- [x] `orders` UPDATE allowed while DELETE/TRUNCATE remain denied to the app role.
+- [x] Migration-owner role proven capable of applying `001–006` on a production-derived branch.
+- [x] Explicit runtime role substitution with `legendmural_runtime` proven before production execution.
+- [x] Explicit owner approval obtained for Gate 5 production migrations on 18 August 2026.
+- [x] Production execution used the authenticated Neon operator session with `SET ROLE legendmural_migrator`; no standalone migration password was created.
+- [x] Migrations `001 -> 006` executed atomically on production branch `br-misty-cloud-as0rofc8`.
+- [x] Production tables verified: `orders`, historical `stripe_events`, `paypal_webhook_events`, `withdrawal_requests`.
+- [x] Production ownership verified: commerce tables and indexes owned by `legendmural_migrator`.
+- [x] Constraints/generated provider behaviour verified after production execution.
+- [x] Synthetic PayPal Order ID derived `payment_provider=paypal` on production.
+- [x] `legendmural_app` SELECT/INSERT rights verified on production.
+- [x] `orders` UPDATE allowed while DELETE/TRUNCATE remain denied to `legendmural_app`.
 - [x] UPDATE/DELETE/TRUNCATE denied on immutable Stripe, PayPal webhook and withdrawal ledgers.
-- [x] Synthetic PayPal webhook and withdrawal inserts succeeded through the app-role contract.
-- [x] Temporary migration-validation branch deleted after successful verification.
-- [ ] Just-in-time production migration credential created and secured.
-- [ ] Direct, non-pooled production migration endpoint selected with that credential.
-- [ ] Explicit owner approval obtained for production migrations.
-- [ ] Migrations `001 -> 006` executed on production.
-- [ ] Production tables/constraints/ownership/privileges verified after execution.
-- [ ] Production migration timestamp/operator/release SHA recorded.
+- [x] Synthetic PayPal webhook and withdrawal inserts succeeded during the production smoke test.
+- [x] Synthetic smoke records removed immediately after verification.
+- [x] Final production row counts verified as zero for all four commerce tables.
+- [x] Production migration operator/release SHA recorded in the Gate 5 audit documentation.
 
-**Current status:** NO-GO for production execution only. The complete bootstrap and least-privilege contract are proven from the current production baseline, but production remains empty and untouched until a separate explicit migration approval is given.
+**Current status:** GO. Production contains the reviewed commerce schema and is empty after smoke-test cleanup. No application runtime credential, Netlify production secret, Resend production secret or PayPal Live setting was activated by Gate 5.
 
 ## Gate 6 — Netlify production configuration
 
