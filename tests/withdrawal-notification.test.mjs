@@ -5,6 +5,7 @@ import {
   sendWithdrawalConfirmation,
   WithdrawalNotificationError,
 } from '../server/notifications/withdrawal-confirmation.mjs';
+import { WITHDRAWAL_DECLARATION } from '../server/withdrawals/statement.mjs';
 
 const base = {
   name: 'Ada Example',
@@ -22,9 +23,19 @@ test('creates a normalized provider-neutral withdrawal confirmation message', ()
   assert.equal(message.data.consumerName, 'Ada Example');
   assert.equal(message.data.confirmationEmail, 'customer@example.com');
   assert.equal(message.data.orderId, '82T24251E7500724R');
+  assert.equal(message.data.declaration, WITHDRAWAL_DECLARATION);
   assert.equal(message.data.confirmationCode, 'LM-WD-0123456789ABCDEF');
   assert.equal(message.data.withdrawnAt, base.withdrawnAt);
   assert.match(message.data.withdrawnAtIso, /^2026-/);
+});
+
+test('preserves a persisted declaration snapshot for later acknowledgement retry', () => {
+  const historicDeclaration = 'Historic withdrawal declaration snapshot.';
+  const message = createWithdrawalConfirmationMessage({
+    ...base,
+    declaration: historicDeclaration,
+  });
+  assert.equal(message.data.declaration, historicDeclaration);
 });
 
 test('requires consumer name for the acknowledgement content', () => {
@@ -82,6 +93,7 @@ test('passes only the normalized confirmation message to the provider adapter', 
   assert.equal(result.providerMessageId, 'provider-123');
   assert.equal(received.to, 'customer@example.com');
   assert.equal(received.data.consumerName, 'Ada Example');
+  assert.equal(received.data.declaration, WITHDRAWAL_DECLARATION);
   assert.deepEqual(Object.keys(received).sort(), ['data', 'subject', 'template', 'to']);
 });
 
