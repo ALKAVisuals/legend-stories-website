@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import { handleCreateWithdrawal } from '../server/api/create-withdrawal.mjs';
 import { NeonWithdrawalStoreError } from '../server/adapters/neon-withdrawal-store.mjs';
+import { WITHDRAWAL_DECLARATION } from '../server/withdrawals/statement.mjs';
 
 function request(body, origin = 'https://legendmural.test') {
   return new Request('https://legendmural.test/.netlify/functions/create-withdrawal', {
@@ -22,26 +23,49 @@ const validBody = {
   confirm: true,
 };
 
-function storedWithdrawal() {
+function storedWithdrawal({ created = true, deliveryStatus = 'pending' } = {}) {
   return {
-    created: true,
+    created,
     withdrawal: {
       orderId: '5O190127TN364715T',
       confirmationCode: 'LM-WD-0123456789ABCDEF',
       withdrawnAt: 1786800000,
     },
+    acknowledgement: {
+      orderId: '5O190127TN364715T',
+      consumerName: 'Ada Example',
+      confirmationEmail: 'buyer@example.com',
+      declaration: WITHDRAWAL_DECLARATION,
+      confirmationCode: 'LM-WD-0123456789ABCDEF',
+      withdrawnAt: 1786800000,
+      deliveryStatus,
+      deliveryAttempts: deliveryStatus === 'pending' ? 0 : 1,
+    },
   };
 }
 
-test('withdrawal API records the request and sends the acknowledgement after persistence', async () => {
+function storeWithDelivery(result = storedWithdrawal()) {
   const storeCalls = [];
-  const notificationCalls = [];
-  const withdrawalStore = {
-    async createWithdrawal(input) {
-      storeCalls.push(input);
-      return storedWithdrawal();
+  const deliveryCalls = [];
+  return {
+    storeCalls,
+    deliveryCalls,
+    store: {
+      async createWithdrawal(input) {
+        storeCalls.push(input);
+        return result;
+      },
+      async recordAcknowledgementDelivery(input) {
+        deliveryCalls.push(input);
+        return { ...result.acknowledgement, deliveryStatus: input.status };
+      },
     },
   };
+}
+
+test('withdrawal API durably snapshots the statement before sending the acknowledgement', async () => {
+  const notificationCalls = [];
+  const { store, storeCalls, deliveryCalls } = storeWithDelivery();
   const withdrawalNotifier = {
     async sendWithdrawalConfirmation(message) {
       notificationCalls.push(message);
@@ -50,7 +74,7 @@ test('withdrawal API records the request and sends the acknowledgement after per
   };
 
   const response = await handleCreateWithdrawal(request(validBody), {
-    withdrawalStore,
+    withdrawalStore: store,
     withdrawalNotifier,
     allowedOrigins: 'https://legendmural.test',
     now: () => 1786800000,
@@ -60,12 +84,20 @@ test('withdrawal API records the request and sends the acknowledgement after per
   assert.deepEqual(storeCalls, [{
     orderId: '5O190127TN364715T',
     email: 'buyer@example.com',
+    consumerName: 'Ada Example',
     withdrawnAt: 1786800000,
   }]);
   assert.equal(notificationCalls.length, 1);
   assert.equal(notificationCalls[0].to, 'buyer@example.com');
   assert.equal(notificationCalls[0].data.consumerName, 'Ada Example');
+  assert.equal(notificationCalls[0].data.declaration, WITHDRAWAL_DECLARATION);
   assert.equal(notificationCalls[0].data.confirmationCode, 'LM-WD-0123456789ABCDEF');
+  assert.deepEqual(deliveryCalls, [{
+    confirmationCode: 'LM-WD-0123456789ABCDEF',
+    status: 'sent',
+    attemptedAt: 1786800000,
+    providerMessageId: 'msg-1',
+  }]);
 
   const body = await response.json();
   assert.equal(body.orderId, '5O190127TN364715T');
@@ -104,34 +136,38 @@ test('withdrawal API requires explicit final confirmation', async () => {
   assert.equal(body.error.code, 'WITHDRAWAL_CONFIRMATION_REQUIRED');
 });
 
-test('withdrawal registration remains valid when acknowledgement delivery fails', async () => {
-  let stored = 0;
+test('withdrawal registration remains valid and delivery failure is persisted when email delivery fails', async () => {
+  const { store, storeCalls, deliveryCalls } = storeWithDelivery();
   const response = await handleCreateWithdrawal(request(validBody), {
-    withdrawalStore: {
-      async createWithdrawal() {
-        stored += 1;
-        return storedWithdrawal();
-      },
-    },
+    withdrawalStore: store,
     withdrawalNotifier: {
       async sendWithdrawalConfirmation() {
-        throw new Error('provider unavailable');
+        const error = new Error('provider unavailable');
+        error.code = 'PROVIDER_UNAVAILABLE';
+        throw error;
       },
     },
     allowedOrigins: 'https://legendmural.test',
     now: () => 1786800000,
   });
 
-  assert.equal(stored, 1);
+  assert.equal(storeCalls.length, 1);
   assert.equal(response.status, 201);
+  assert.deepEqual(deliveryCalls, [{
+    confirmationCode: 'LM-WD-0123456789ABCDEF',
+    status: 'failed',
+    attemptedAt: 1786800000,
+    errorCode: 'WITHDRAWAL_NOTIFICATION_FAILED',
+  }]);
   const body = await response.json();
   assert.equal(body.confirmationDelivery, 'failed');
   assert.equal(body.confirmationCode, 'LM-WD-0123456789ABCDEF');
 });
 
-test('withdrawal API reports unavailable delivery when no notifier is configured', async () => {
+test('withdrawal API reports unavailable delivery when acknowledgement is pending and no notifier is configured', async () => {
+  const { store } = storeWithDelivery(storedWithdrawal({ deliveryStatus: 'pending' }));
   const response = await handleCreateWithdrawal(request(validBody), {
-    withdrawalStore: { async createWithdrawal() { return storedWithdrawal(); } },
+    withdrawalStore: store,
     allowedOrigins: 'https://legendmural.test',
     now: () => 1786800000,
   });
@@ -139,6 +175,55 @@ test('withdrawal API reports unavailable delivery when no notifier is configured
   assert.equal(response.status, 201);
   const body = await response.json();
   assert.equal(body.confirmationDelivery, 'unavailable');
+});
+
+test('withdrawal API does not resend an acknowledgement already recorded as sent', async () => {
+  let notificationCalls = 0;
+  const result = storedWithdrawal({ created: false, deliveryStatus: 'sent' });
+  const { store, deliveryCalls } = storeWithDelivery(result);
+  const response = await handleCreateWithdrawal(request({ ...validBody, name: 'Changed Name' }), {
+    withdrawalStore: store,
+    withdrawalNotifier: {
+      async sendWithdrawalConfirmation() {
+        notificationCalls += 1;
+        throw new Error('must not send twice');
+      },
+    },
+    allowedOrigins: 'https://legendmural.test',
+    now: () => 1786800100,
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(notificationCalls, 0);
+  assert.equal(deliveryCalls.length, 0);
+  const body = await response.json();
+  assert.equal(body.alreadyReceived, true);
+  assert.equal(body.confirmationDelivery, 'sent');
+});
+
+test('withdrawal API retries a failed acknowledgement using the original durable statement snapshot', async () => {
+  const result = storedWithdrawal({ created: false, deliveryStatus: 'failed' });
+  result.acknowledgement.consumerName = 'Original Consumer';
+  const { store, deliveryCalls } = storeWithDelivery(result);
+  let delivered;
+
+  const response = await handleCreateWithdrawal(request({ ...validBody, name: 'Changed Name' }), {
+    withdrawalStore: store,
+    withdrawalNotifier: {
+      async sendWithdrawalConfirmation(message) {
+        delivered = message;
+        return { accepted: true, providerMessageId: 'retry-msg' };
+      },
+    },
+    allowedOrigins: 'https://legendmural.test',
+    now: () => 1786800200,
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(delivered.data.consumerName, 'Original Consumer');
+  assert.equal(delivered.data.confirmationEmail, 'buyer@example.com');
+  assert.equal(delivered.data.declaration, WITHDRAWAL_DECLARATION);
+  assert.equal(deliveryCalls[0].status, 'sent');
 });
 
 test('withdrawal API does not disclose order data when lookup does not match', async () => {

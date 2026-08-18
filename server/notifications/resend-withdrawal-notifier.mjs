@@ -36,7 +36,7 @@ function renderWithdrawalConfirmation(message) {
   const orderId = escapeHtml(message.data.orderId);
   const confirmationCode = escapeHtml(message.data.confirmationCode);
   const withdrawnAtIso = escapeHtml(message.data.withdrawnAtIso);
-  const declaration = 'I withdraw from the contract identified by the Order ID below.';
+  const declaration = String(message.data.declaration || '');
   const text = [
     'LegendMural withdrawal confirmation',
     '',

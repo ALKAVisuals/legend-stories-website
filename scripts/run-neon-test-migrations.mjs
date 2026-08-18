@@ -52,6 +52,8 @@ const migrations = [
   new URL('../server/db/migrations/004_grant_paypal_reconciliation_runtime.sql', import.meta.url),
   new URL('../server/db/migrations/005_create_withdrawal_requests.sql', import.meta.url),
   new URL('../server/db/migrations/006_grant_withdrawal_runtime.sql', import.meta.url),
+  new URL('../server/db/migrations/007_create_withdrawal_acknowledgements.sql', import.meta.url),
+  new URL('../server/db/migrations/008_grant_withdrawal_acknowledgement_runtime.sql', import.meta.url),
 ];
 
 const client = await createDefaultNeonClient(migrationUrl);
