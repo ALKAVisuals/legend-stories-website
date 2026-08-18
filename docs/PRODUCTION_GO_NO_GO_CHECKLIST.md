@@ -2,177 +2,161 @@
 
 Last reviewed: 18 August 2026.
 
-This checklist converts the production-readiness runbook into explicit release gates. A **GO** means every mandatory item for that gate is verified. Any unresolved mandatory item means **NO-GO** for the dependent production phase.
+This checklist converts production readiness into explicit release gates. A **GO** means every mandatory item for that gate is verified. Any unresolved mandatory item means **NO-GO** for the dependent production phase.
 
 ## Gate 0 — reviewed code baseline
 
-- [x] PR #96 was reviewed and intentionally merged.
-- [x] Permanent Quality checks were green on the exact final reviewed heads.
-- [x] Accessibility / purchase-flow audit was green on the exact final reviewed heads.
-- [x] Netlify Node 22 compatibility passed where its path-filtered commerce/runtime scope applied.
-- [x] Netlify Deploy Previews were green for the reviewed release-preparation PRs.
+- [x] PRs #96, #97, #98, #99 and #101 intentionally merged.
 - [x] Current reviewed repository baseline is `main`.
-- [x] Current reviewed Git SHA is `5bb4783ec83438bb1ebe5f25922fbd2a8d50e4a4`.
-- [x] Temporary write-enabled test workflows/scripts are absent from the reviewed baseline.
+- [x] Current reviewed Git SHA is `b47da33573358fc6896233cba3e24f91ba5af900`.
+- [x] PR #101 exact-head Quality checks passed, including unit tests, Neon integration harness, Vite production build and output validation.
+- [x] Accessibility / purchase-flow audit passed on the same reviewed head.
+- [x] Netlify Node 22 preview compatibility passed on the same reviewed head.
+- [x] Temporary write-enabled migration/test branches used for validation were removed after use.
 
-**Current status:** GO for the reviewed code baseline. PR #96, the production-origin PR #97 and the Resend readiness PR #98 have been merged. This does not by itself activate production infrastructure.
+**Current status:** GO for the reviewed code baseline. This does not by itself activate current production deployment, PayPal Live or Resend.
 
 ## Gate 1 — public domain and HTTPS
 
-- [x] Definitive LegendMural public domain confirmed by the owner: `https://legendmural.com`.
-- [x] Domain attached to the intended Netlify production site according to the owner.
-- [ ] HTTPS certificate state independently verified in the final deployed production environment.
-- [ ] HTTP -> HTTPS redirect independently verified in the final deployed production environment.
-- [ ] `www` -> apex redirect independently verified in the final deployed production environment.
-- [x] Canonical production origin in tracked build code is `https://legendmural.com`.
-- [x] Open Graph/canonical production-origin migration is enforced by the production build validator.
-- [x] The tracked production build rejects the historical GitHub Pages origin as authoritative output.
-- [ ] PayPal production return/cancel allow-list revalidated against the final deployed origin during Gate 6.
+- [x] Definitive public origin confirmed as `https://legendmural.com`.
+- [x] Domain attached to the intended Netlify site according to the owner.
+- [x] Tracked build, canonical, Open Graph, sitemap/robots and redirect configuration use the apex production origin.
+- [x] Tracked Netlify configuration normalizes HTTP, `www` and the Netlify subdomain to HTTPS apex.
+- [ ] HTTPS certificate state reverified against the first current production deployment.
+- [ ] HTTP -> HTTPS redirect reverified against the first current production deployment.
+- [ ] `www` -> apex redirect reverified against the first current production deployment.
+- [ ] PayPal production return/cancel origin revalidated after that deployment.
 
-**Current status:** CONDITIONAL. The owner confirms the domain resolves and serves the site, but the live site is still an older Netlify deployment because the current Netlify deploy allowance is exhausted. Final HTTPS/redirect/runtime-origin checks must therefore be repeated when the current build can actually be deployed.
+**Current status:** CONDITIONAL. The domain is linked, but Netlify production deploy capacity is currently unavailable, so final live-origin verification must wait for the next production deployment.
 
 ## Gate 2 — legal and customer operations
 
-- [x] Seller/controller identified as Alka Group trading through LegendMural.
-- [x] KvK and VAT details published on the Company Information surface.
-- [x] Dutch parcel-return address confirmed and published before purchase.
-- [x] Shipping page exists.
-- [x] Returns / statutory withdrawal information exists.
-- [x] Online withdrawal function exists without requiring an account or a reason.
-- [x] Withdrawal statement collects the consumer name, contract-identifying Order ID and the electronic confirmation address.
-- [x] Final withdrawal action is explicit and unambiguous.
+- [x] Seller/controller, KvK, VAT and Dutch parcel-return address published.
+- [x] Shipping, Returns/withdrawal, FAQ, Privacy and Terms of Sale surfaces exist.
+- [x] Online withdrawal function does not require an account or a reason.
+- [x] Withdrawal statement collects consumer name, contract-identifying Order ID and electronic confirmation address.
 - [x] Withdrawal registration is durable and separate from refund execution.
-- [ ] The trader acknowledgement is sent without undue delay on a durable medium after each valid online withdrawal.
-- [ ] The durable acknowledgement includes the declaration content, consumer name, Order ID, confirmation address, confirmation code, and receipt date/time.
-- [ ] End-to-end non-production proof confirms a valid withdrawal remains recorded even if acknowledgement delivery fails.
-- [x] FAQ, Privacy and Terms of Sale pages exist.
+- [x] Production now has a separate durable acknowledgement snapshot/outbox for statement evidence and delivery state.
+- [x] Statement fields in the acknowledgement record are immutable to the application runtime; only delivery metadata is updateable.
+- [ ] Trader acknowledgement is actually delivered without undue delay on a durable medium after each valid online withdrawal.
+- [ ] Controlled delivery proves the acknowledgement contains declaration, consumer name, Order ID, confirmation address, confirmation code and receipt date/time.
 - [ ] Final customer-support/social identities reviewed if they are to be published at launch.
 
-**Current status:** NO-GO. The registration flow exists, but launch remains blocked until durable acknowledgement delivery is configured and proven end-to-end.
+**Current status:** NO-GO until transactional acknowledgement delivery is configured and proven end-to-end.
 
 ## Gate 3 — statutory transactional email
 
 - [x] Transactional provider selected: Resend.
+- [x] Privacy notice identifies Resend and the reviewed international-transfer position.
+- [x] Durable acknowledgement outbox exists in production so delivery failure does not erase the withdrawal statement.
+- [x] Controlled operator resend script exists and refuses to resend an acknowledgement already recorded as sent.
 - [ ] Definitive sending domain/subdomain configured and verified with Resend.
 - [ ] Production `from` identity approved.
 - [ ] Reply/customer-operations address approved.
 - [ ] Provider API key stored only as a production server-side secret.
-- [x] Public Privacy notice identifies Resend and the reviewed international-transfer position before production activation.
-- [ ] Provider-side retention/logging behaviour for withdrawal acknowledgement data operationally accepted/documented for the production account.
-- [ ] Controlled non-production withdrawal acknowledgement succeeds with the final sending identity.
-- [ ] Acknowledgement arrives at the customer-provided electronic confirmation address without undue delay.
-- [ ] Delivered content includes the withdrawal declaration and receipt date/time.
-- [ ] Mail failure does not erase or reverse a durable withdrawal record.
-- [ ] Failure handling gives operations enough signal to resend the acknowledgement without exposing secrets or customer payload in logs.
+- [ ] Provider-side retention/logging behaviour operationally accepted/documented for the production account.
+- [ ] Controlled non-production acknowledgement succeeds with the final sending identity.
+- [ ] Delivered content and delivery timing verified.
+- [ ] Failure + controlled resend procedure exercised without exposing secrets/customer payloads in logs.
 
-**Current status:** NO-GO. Provider/privacy readiness is merged, but production DNS, sending identity, API key and delivery proof are intentionally not activated yet.
+**Current status:** NO-GO. Code, privacy and durable resend architecture are ready; provider/DNS/secrets/delivery proof remain intentionally inactive.
 
 ## Gate 4 — Neon production security and recovery
 
-- [x] Neon plan reviewed: organization is currently on Free and the limitations are explicitly accepted for the current launch-preparation phase.
-- [x] Branch-protection policy reviewed. Protected branches are unavailable on the current Free plan, so compensating controls are required instead.
-- [x] Passwordless-access setting reviewed as Neon account-authenticated interactive tooling; it is not treated as the application runtime authentication method.
-- [x] NOLOGIN privilege role `legendmural_runtime` created on production.
-- [x] NOLOGIN application role `legendmural_app` created on production and linked to `legendmural_runtime`.
-- [x] NOLOGIN migration-owner role `legendmural_migrator` created with limited database-create capability and without CREATEDB/CREATEROLE/REPLICATION/BYPASSRLS.
-- [x] Runtime grant contract limited to the reviewed migrations `002`, `004`, `006` and proven on a production-derived test branch.
-- [x] `neondb_owner` is explicitly excluded from application runtime use.
-- [x] Free-plan recovery procedure and compensating controls documented in `docs/NEON_FREE_PLAN_PRODUCTION_CONTROLS.md`.
-- [x] Current 6-hour history window explicitly accepted as a Free-plan limitation for this phase.
-- [x] Persistent pre-bootstrap recovery checkpoint `pre-prod-bootstrap-20260818` (`br-long-field-aspnw4co`) created from production.
-- [x] Production-derived branch creation/recovery-point workflow tested.
-- [x] Production application login credential remains intentionally deferred until Gate 6 so a long-lived unused runtime secret is not created early.
+- [x] Neon Free-plan limitations and 6-hour history window explicitly accepted for launch preparation.
+- [x] `legendmural_runtime` is the NOLOGIN privilege group.
+- [x] `legendmural_app` is the least-privilege LOGIN application role and is a member of `legendmural_runtime`.
+- [x] `legendmural_app` has no CREATEDB, CREATEROLE, REPLICATION or BYPASSRLS privilege.
+- [x] `legendmural_migrator` remains NOLOGIN and owns the commerce schema objects created by the reviewed migrations.
+- [x] `neondb_owner` is excluded from application runtime use.
+- [x] Persistent original checkpoint `pre-prod-bootstrap-20260818` remains available.
+- [x] Current pre-acknowledgement checkpoint `pre-ack-outbox-20260818` (`br-falling-art-asrdqbvp`) was created immediately before migrations `007–008`.
+- [x] Production-derived temporary branch testing/recovery workflow has been exercised successfully.
 
-**Current status:** GO for the Free-plan security/recovery model with documented compensating controls. This is not equivalent to Neon Launch/Scale protection. Reconsider a paid plan when real order/customer volume increases.
+**Current status:** GO under documented Free-plan compensating controls. This is not equivalent to Neon paid branch protection.
 
-## Gate 5 — Neon production bootstrap
+## Gate 5 — Neon production schema
 
-- [x] Exact migration files `001–006` verified against reviewed release SHA `5bb4783ec83438bb1ebe5f25922fbd2a8d50e4a4`.
-- [x] Persistent pre-bootstrap recovery checkpoint exists before production execution.
-- [x] Migration-owner role proven capable of applying `001–006` on a production-derived branch.
-- [x] Explicit runtime role substitution with `legendmural_runtime` proven before production execution.
-- [x] Explicit owner approval obtained for Gate 5 production migrations on 18 August 2026.
-- [x] Production execution used the authenticated Neon operator session with `SET ROLE legendmural_migrator`; no standalone migration password was created.
-- [x] Migrations `001 -> 006` executed atomically on production branch `br-misty-cloud-as0rofc8`.
-- [x] Production tables verified: `orders`, historical `stripe_events`, `paypal_webhook_events`, `withdrawal_requests`.
-- [x] Production ownership verified: commerce tables and indexes owned by `legendmural_migrator`.
-- [x] Constraints/generated provider behaviour verified after production execution.
-- [x] Synthetic PayPal Order ID derived `payment_provider=paypal` on production.
-- [x] `legendmural_app` SELECT/INSERT rights verified on production.
-- [x] `orders` UPDATE allowed while DELETE/TRUNCATE remain denied to `legendmural_app`.
-- [x] UPDATE/DELETE/TRUNCATE denied on immutable Stripe, PayPal webhook and withdrawal ledgers.
-- [x] Synthetic PayPal webhook and withdrawal inserts succeeded during the production smoke test.
-- [x] Synthetic smoke records removed immediately after verification.
-- [x] Final production row counts verified as zero for all four commerce tables.
-- [x] Production migration operator/release SHA recorded in the Gate 5 audit documentation.
+- [x] Migrations `001–006` executed and verified on production.
+- [x] PR #101 introduced additive migrations `007–008` for the durable withdrawal acknowledgement outbox.
+- [x] `007–008` were first proven on a temporary production-derived branch.
+- [x] Owner explicitly approved the production `007–008` execution on 18 August 2026.
+- [x] New recovery checkpoint created immediately before production execution.
+- [x] Migrations `007–008` executed atomically on production branch `br-misty-cloud-as0rofc8` under `legendmural_migrator` with runtime grants targeted at `legendmural_runtime`.
+- [x] `withdrawal_acknowledgements` and its index are owned by `legendmural_migrator`.
+- [x] `legendmural_app` has SELECT/INSERT on acknowledgements and no DELETE/TRUNCATE/table-wide UPDATE.
+- [x] Immutable statement fields cannot be updated by `legendmural_app`; only reviewed delivery metadata can be updated.
+- [x] Final production row counts after verification: 0 orders, 0 withdrawals, 0 acknowledgements.
 
-**Current status:** GO. Production contains the reviewed commerce schema and is empty after smoke-test cleanup. No application runtime credential, Netlify production secret, Resend production secret or PayPal Live setting was activated by Gate 5.
+**Current status:** GO. Production schema is at reviewed migration level `001–008` with no synthetic/customer rows left from verification.
 
 ## Gate 6 — Netlify production configuration
 
-- [ ] Just-in-time least-privilege Neon application credential created and configured server-side only.
-- [ ] Production Neon runtime URL uses `legendmural_app`, never `neondb_owner`.
-- [ ] Correct PayPal environment variables configured.
-- [ ] `PAYPAL_ALLOW_LIVE` remains disabled during infrastructure validation.
-- [ ] `LEGENDMURAL_CHECKOUT_PAUSED` defaults absent/false for normal service.
-- [ ] Incident operator knows how to set `LEGENDMURAL_CHECKOUT_PAUSED=true`.
-- [ ] PayPal checkout, capture, webhook and order-status routes point to the intended Functions.
-- [ ] Statutory withdrawal email is configured only after Gate 3 preparation is complete.
-- [ ] Logs inspected for secret/PII leakage.
-- [ ] Production build passes.
-- [ ] Same-origin API smoke checks pass without a real charge.
+- [x] Least-privilege production database role is `legendmural_app`, never `neondb_owner`.
+- [x] Production `NEON_DATABASE_URL` has been stored by the owner in the Netlify **Production** deploy context as a secret; the existing Deploy Preview value remains separate.
+- [x] Connection target uses production branch/database, pooling and required TLS parameters.
+- [x] Tracked routes map checkout, capture, webhook and order-status to their intended Netlify Functions.
+- [x] Checkout kill switch is opt-in: `LEGENDMURAL_CHECKOUT_PAUSED=true` blocks only new checkout creation while preserving capture/webhook/status reconciliation paths.
+- [x] Reviewed production build passed on PR #101.
+- [ ] A fresh production deploy has consumed the new Production environment value. **Blocked by current Netlify deploy capacity.**
+- [ ] Production `CHECKOUT_ALLOWED_ORIGINS`, success/cancel URLs and PayPal variables reverified for the final apex origin.
+- [ ] `PAYPAL_ALLOW_LIVE` confirmed disabled during infrastructure validation.
+- [ ] `PAYPAL_API_BASE` confirmed to use the intended Sandbox environment during infrastructure validation.
+- [ ] Production PayPal client/webhook secret contexts inspected without exposing their values.
+- [ ] Same-origin API smoke checks pass after the fresh deploy without creating a real charge.
+- [ ] Netlify Function logs inspected for configuration failures and secret/PII leakage after the smoke checks.
+- [ ] Resend variables remain absent/inactive until Gate 3 activation is deliberately approved.
 
-**Current status:** NO-GO until production infrastructure secrets/configuration are intentionally activated.
+**Current status:** CONDITIONAL / deployment-blocked. The production database secret is stored, but it is not considered runtime-proven until a fresh Netlify production deployment and no-charge smoke test succeed.
 
 ## Gate 7 — monitoring and incident readiness
 
-- [ ] Checkout/payment incident owner assigned.
-- [ ] Customer withdrawal/refund operations owner assigned.
-- [ ] Netlify Function log review location/process documented.
-- [ ] PayPal webhook failure detection process documented.
-- [ ] Neon/API failure detection process documented.
-- [ ] Withdrawal acknowledgement delivery-failure detection and resend procedure documented.
-- [ ] `LEGENDMURAL_CHECKOUT_PAUSED` containment procedure tested in a non-production environment.
-- [ ] Known-good Netlify deployment rollback procedure understood.
-- [ ] Database recovery decision authority assigned.
-- [ ] Payment reconciliation checklist understood.
-- [ ] `docs/INCIDENT_AND_ROLLBACK_RUNBOOK.md` reviewed by the release operator.
+- [x] Incident/rollback runbook exists.
+- [x] Checkout containment model preserves capture, webhook and order-status reconciliation.
+- [x] Payment reconciliation checklist exists.
+- [x] Withdrawal acknowledgement failure has a durable delivery state and controlled CLI resend path.
+- [ ] Checkout/payment incident owner assigned by name.
+- [ ] Customer withdrawal/refund operations owner assigned by name.
+- [ ] Database recovery decision authority assigned by name.
+- [ ] Netlify Function log review location/process confirmed on the production account after deploys resume.
+- [ ] PayPal webhook delivery/failure review process confirmed on the production account.
+- [ ] Neon/API failure review process confirmed on the production account.
+- [ ] `LEGENDMURAL_CHECKOUT_PAUSED` containment procedure exercised in a non-production or controlled production-safe scenario.
+- [ ] Known-good Netlify rollback procedure confirmed against an actual deploy once current deploy capacity resumes.
+- [ ] Release operator has reviewed `docs/INCIDENT_AND_ROLLBACK_RUNBOOK.md` and the deploy-day checklist.
 
-**Current status:** operational runbook exists; named owners and real production monitoring still need to be assigned/configured.
+**Current status:** PARTIAL. Technical containment/reconciliation architecture is prepared; named operational owners and account-level monitoring/rollback checks remain.
 
 ## Gate 8 — PayPal Live enablement
 
 - [ ] Gates 0–7 are GO.
 - [ ] PayPal Business account fully verified.
 - [ ] Dedicated Live app/credentials configured server-side.
-- [ ] Live webhook created for the definitive environment.
-- [ ] `PAYPAL_WEBHOOK_ID` exactly matches the intended Live webhook.
-- [ ] `PAYPAL_ALLOW_LIVE=true` enabled only after all preceding verification.
-- [ ] Checkout is not paused.
-- [ ] One controlled low-value real order is authorized.
-- [ ] Browser return succeeds.
-- [ ] Capture amount/currency/reference match expectations.
-- [ ] Neon reaches durable `paid` state.
-- [ ] Webhook reconciliation is visible and idempotent.
-- [ ] Statutory/customer confirmation operations record succeeds.
-- [ ] Fulfillment is released only after durable paid verification.
+- [ ] Live webhook created and its ID matched exactly.
+- [ ] `PAYPAL_ALLOW_LIVE=true` enabled only after separate explicit approval.
+- [ ] Checkout not paused.
+- [ ] One controlled low-value real order authorized.
+- [ ] Browser return, capture amount/currency/reference, Neon durable paid state and webhook idempotency all verified.
+- [ ] Fulfilment released only after durable paid verification.
 
 Any mismatch during the controlled Live order is an immediate **NO-GO**: pause new checkout and use the incident runbook.
 
+**Current status:** NO-GO. PayPal Live is intentionally not enabled.
+
 ## Gate 9 — launch completion record
 
-Record:
+Before handover, record:
 
 - release Git SHA;
 - Netlify production deploy ID;
 - domain/origin;
-- Neon project/branch and migration timestamp;
+- Neon project/branch and migration level/timestamp;
 - runtime/migration role names (never passwords/URLs);
 - PayPal mode/app identity and webhook ID reference;
 - transactional sending identity;
-- operator(s);
+- named operators/decision authorities;
 - time checkout was opened;
-- controlled Live order reference and outcome;
+- controlled Live order reference/outcome;
 - any accepted risk/exception and owner.
 
 Launch is not considered fully handed over until this release record exists.
