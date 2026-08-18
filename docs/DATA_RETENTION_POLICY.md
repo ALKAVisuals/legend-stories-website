@@ -2,7 +2,7 @@
 
 Status: production-readiness policy; enforcement is **not yet enabled**.
 
-Last reviewed: 17 August 2026.
+Last reviewed: 18 August 2026.
 
 ## Purpose
 
@@ -85,7 +85,28 @@ Important: because `customer` and `shipping` are currently JSON blobs inside the
 
 A withdrawal row must not be deleted merely because the refund was completed if a dispute/chargeback/legal hold remains open. Conversely, the withdrawal table must not automatically be retained for the full fiscal period simply because the linked order is R7/R10.
 
-The consumer name and acknowledgement email used by the online withdrawal function are not added as duplicate fields to `withdrawal_requests`; the purchase remains linked to the authoritative order record. Any transactional-email provider may process the minimum statement data needed to deliver the statutory acknowledgement, subject to the production provider contract, privacy notice and applicable transfer safeguards.
+The immutable withdrawal row intentionally remains minimal. Consumer name, confirmation email and the declaration snapshot belong to the separate acknowledgement evidence record below rather than being added as mutable or duplicate statement fields to `withdrawal_requests`.
+
+### `legend_commerce.withdrawal_acknowledgements`
+
+This table is the durable statutory acknowledgement snapshot/outbox proposed by migrations `007–008`. It is separate from the immutable withdrawal registration so delivery can be retried and evidenced without allowing the underlying withdrawal statement to be rewritten.
+
+| Field / data group | Class | Reason / treatment |
+| --- | --- | --- |
+| `order_reference`, `payment_session_id`, `confirmation_code` | R5, subject to HOLD | Links the acknowledgement evidence to the same consumer-right event and contract without duplicating the full order payload. |
+| `consumer_name` | R5, subject to HOLD | Name submitted for the statutory withdrawal acknowledgement and needed to reproduce/evidence the acknowledgement. |
+| `confirmation_email` | R5, subject to HOLD | Electronic confirmation address used to deliver and, if necessary, retry the acknowledgement. Do not repurpose for marketing. |
+| `declaration` | R5, subject to HOLD | Immutable snapshot of the withdrawal declaration that was acknowledged. Preserving the snapshot prevents later template changes from altering historical evidence. |
+| `withdrawn_at`, `created_at` | R5, subject to HOLD | Receipt chronology for the acknowledgement and underlying withdrawal. |
+| `delivery_status`, `delivery_attempts`, `last_attempt_at`, `sent_at`, `updated_at` | R5, subject to HOLD | Limited delivery evidence used to distinguish pending/failed/sent acknowledgement handling and support a controlled retry. |
+| `provider_message_id` | R5, subject to HOLD | Minimal provider-side message reference used for delivery investigation/reconciliation; not a substitute for the statutory statement itself. |
+| `last_error_code` | R5, subject to HOLD; minimise | Sanitised technical failure code only. Do not store provider response bodies, email content or arbitrary error text in this field. |
+
+The runtime may update only the delivery metadata columns. It must not update the name, confirmation email, declaration, confirmation code, order identifiers or original withdrawal timestamp. DELETE/TRUNCATE remain outside the runtime role.
+
+The acknowledgement evidence must not automatically be retained for the full fiscal R7/R10 period solely because the linked order is retained longer. Its R5 timer and any HOLD need a concrete case-closure/start rule before destructive enforcement is enabled.
+
+Any transactional-email provider may additionally process the minimum statement data needed to deliver the statutory acknowledgement, subject to the production provider contract, privacy notice, transfer safeguards and provider-side retention configuration.
 
 ## Data deliberately not retained in the current reconciliation schema
 
@@ -114,7 +135,8 @@ Before any automated retention job is enabled, all of the following are required
 8. Require a second explicit production approval before the first destructive run.
 9. Log retention actions without logging the personal data being removed.
 10. Update the public Privacy notice when the production schedule is activated and concrete periods can be stated accurately.
-11. Before transactional withdrawal email is activated, identify the actual provider, processing location/transfer position, safeguards and operational retention of provider-side message data.
+11. Before transactional withdrawal email is activated, verify the actual provider, processing location/transfer position, safeguards and operational retention of provider-side message data.
+12. Before acknowledgement retention is enforced, define how failed/pending delivery cases and resend investigations keep the R5 clock open until the operational case is resolved.
 
 ## Public Privacy notice mapping
 
