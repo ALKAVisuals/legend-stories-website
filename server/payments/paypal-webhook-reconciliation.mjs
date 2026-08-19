@@ -195,7 +195,7 @@ export function createPayPalWebhookReconciler({
       }
 
       if (typeof paypalClient.captureOrder !== 'function') {
-        fail('PAYPAL_WEBHOOK_CLIENT_NOT_CONFIGURED', 'PayPal webhook recovery capture is unavailable.');
+        fail('PAYPAL_WEBHOOK_CLIENT_NOT_CONFIGURED', 'PayPal recovery capture is unavailable.');
       }
       const capturePayload = await paypalClient.captureOrder(parsed.orderId, {
         idempotencyKey: `legend-paypal-capture-${parsed.reference}`,
