@@ -8,6 +8,7 @@ const SUPPORTED_EVENTS = new Set([
   'CHECKOUT.PAYMENT-APPROVAL.REVERSED',
   'PAYMENT.CAPTURE.COMPLETED',
   'PAYMENT.CAPTURE.PENDING',
+  'PAYMENT.CAPTURE.DENIED',
   'PAYMENT.CAPTURE.DECLINED',
 ]);
 
@@ -194,7 +195,7 @@ export function createPayPalWebhookReconciler({
       }
 
       if (typeof paypalClient.captureOrder !== 'function') {
-        fail('PAYPAL_WEBHOOK_CLIENT_NOT_CONFIGURED', 'PayPal recovery capture is unavailable.');
+        fail('PAYPAL_WEBHOOK_CLIENT_NOT_CONFIGURED', 'PayPal webhook recovery capture is unavailable.');
       }
       const capturePayload = await paypalClient.captureOrder(parsed.orderId, {
         idempotencyKey: `legend-paypal-capture-${parsed.reference}`,
@@ -244,8 +245,9 @@ export function createPayPalWebhookReconciler({
         targetStatus: 'payment_processing',
       });
     }
-    if (parsed.resourceStatus !== 'DECLINED') {
-      fail('INVALID_PAYPAL_WEBHOOK_EVENT', 'Declined capture webhook has an unexpected resource status.');
+    const expectedFailureStatus = eventType === 'PAYMENT.CAPTURE.DENIED' ? 'DENIED' : 'DECLINED';
+    if (parsed.resourceStatus !== expectedFailureStatus) {
+      fail('INVALID_PAYPAL_WEBHOOK_EVENT', 'Failed capture webhook has an unexpected resource status.');
     }
     return orderStore.processPaypalWebhookEvent({
       ...parsed,
