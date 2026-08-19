@@ -8,8 +8,10 @@ const SUPPORTED_EVENTS = new Set([
   'CHECKOUT.PAYMENT-APPROVAL.REVERSED',
   'PAYMENT.CAPTURE.COMPLETED',
   'PAYMENT.CAPTURE.PENDING',
+  'PAYMENT.CAPTURE.DENIED',
   'PAYMENT.CAPTURE.DECLINED',
 ]);
+const FAILED_CAPTURE_STATUSES = new Set(['DENIED', 'DECLINED']);
 
 export class PayPalWebhookReconciliationError extends Error {
   constructor(code, message, details = {}) {
@@ -244,8 +246,8 @@ export function createPayPalWebhookReconciler({
         targetStatus: 'payment_processing',
       });
     }
-    if (parsed.resourceStatus !== 'DECLINED') {
-      fail('INVALID_PAYPAL_WEBHOOK_EVENT', 'Declined capture webhook has an unexpected resource status.');
+    if (!FAILED_CAPTURE_STATUSES.has(parsed.resourceStatus)) {
+      fail('INVALID_PAYPAL_WEBHOOK_EVENT', 'Failed capture webhook has an unexpected resource status.');
     }
     return orderStore.processPaypalWebhookEvent({
       ...parsed,
