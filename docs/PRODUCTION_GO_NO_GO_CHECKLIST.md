@@ -62,12 +62,12 @@ The repository baseline is `main`. Do not hard-code a rolling preparation SHA he
 - [x] Monitored Reply-To/customer-operations address configured.
 - [x] Provider API key stored only as a production server-side secret in Netlify.
 - [x] `docs/RESEND_PRODUCTION_ACTIVATION.md` documents sending-domain, least-privilege API-key, Reply-To, delivery/failure proof and provider-retention acceptance.
-- [ ] Provider-side retention/logging behaviour operationally accepted for the production account.
+- [x] Provider-side retention/logging behaviour operationally accepted for the production account by the owner on 19 August 2026.
 - [ ] A current deployed acknowledgement succeeds with the final production sending identity.
 - [ ] Delivered content, provider delivery state, inbox receipt, reply routing and delivery timing verified.
 - [ ] Controlled failure + retry procedure exercised without exposing secrets/customer payloads in logs.
 
-**Current status:** NO-GO for final launch. Provider/domain/DNS/API-key/FROM/Reply-To preparation is complete; production delivery, reply and controlled retry evidence still require a current deployment.
+**Current status:** NO-GO for final launch. Provider/domain/DNS/API-key/FROM/Reply-To and provider-retention acceptance are complete; production delivery, reply and controlled retry evidence still require a current deployment.
 
 ## Gate 4 — Neon production security and recovery
 
