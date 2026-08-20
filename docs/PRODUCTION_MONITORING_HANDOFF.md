@@ -1,6 +1,6 @@
 # LegendMural production monitoring handoff
 
-Last reviewed: 19 August 2026.
+Last reviewed: 20 August 2026.
 
 Purpose: define exactly where LegendMural operations should look after the first current production deploy and during payment/withdrawal incidents. This document does not authorize PayPal Live, refunds, destructive database recovery, Resend production activation or credential changes.
 
@@ -175,7 +175,7 @@ Gate 7 can be GO only when:
 - known-good Netlify rollback is understood against an actual deploy;
 - payment reconciliation and withdrawal acknowledgement retry procedures are understood.
 
-The three named-owner requirements were completed on 19 August 2026. The remaining Gate 7 items still require release-operator review and real deployment/account exercises before the gate can become GO.
+The three named-owner requirements were completed on 19 August 2026. On 20 August 2026, Karam Jako completed the release-operator review of the incident/rollback, deploy-day and monitoring procedures, including checkout containment, payment-state reconciliation, withdrawal acknowledgement retry boundaries and database recovery authority. The remaining Gate 7 items require real deployment/account exercises before the gate can become GO.
 
 Until those items are complete, the technical architecture may be ready but Gate 7 remains **PARTIAL**.
 
