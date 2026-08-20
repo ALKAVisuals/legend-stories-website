@@ -1,6 +1,6 @@
 # LegendMural production go / no-go checklist
 
-Last reviewed: 19 August 2026.
+Last reviewed: 20 August 2026.
 
 This checklist converts production readiness into explicit release gates. A **GO** means every mandatory item for that gate is verified. Any unresolved mandatory item means **NO-GO** for the dependent production phase.
 
@@ -140,9 +140,9 @@ The repository baseline is `main`. Do not hard-code a rolling preparation SHA he
 - [ ] Neon production Monitoring access confirmed by the release operator.
 - [ ] `LEGENDMURAL_CHECKOUT_PAUSED` containment exercised against an actual non-production/current deployment; automated coverage alone is not an operations drill.
 - [ ] Known-good Netlify rollback procedure confirmed against an actual deploy once current deploy capacity resumes.
-- [ ] Release operator has reviewed the incident, deploy-day and monitoring handoff documents.
+- [x] Release operator has reviewed the incident, deploy-day and monitoring handoff documents on 20 August 2026.
 
-**Current status:** PARTIAL. Technical monitoring, containment and reconciliation procedures are prepared and the three primary operational owners are assigned; real deployment/account exercises and release-operator review remain.
+**Current status:** PARTIAL. Technical monitoring, containment and reconciliation procedures are prepared, the three primary operational owners are assigned and the release-operator review is complete; real deployment/account exercises remain.
 
 ## Gate 8 — PayPal Live enablement
 
