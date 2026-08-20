@@ -1,6 +1,6 @@
 # LegendMural production monitoring handoff
 
-Last reviewed: 18 August 2026.
+Last reviewed: 19 August 2026.
 
 Purpose: define exactly where LegendMural operations should look after the first current production deploy and during payment/withdrawal incidents. This document does not authorize PayPal Live, refunds, destructive database recovery, Resend production activation or credential changes.
 
@@ -10,9 +10,11 @@ Do not infer these names from repository access. They must be assigned explicitl
 
 | Responsibility | Named owner | Backup / escalation | Status |
 | --- | --- | --- | --- |
-| Checkout/payment incident owner | **TO ASSIGN** | **TO ASSIGN** | Open |
-| Withdrawal/refund customer-operations owner | **TO ASSIGN** | **TO ASSIGN** | Open |
-| Database recovery decision authority | **TO ASSIGN** | **TO ASSIGN** | Open |
+| Checkout/payment incident owner | Karam Jako | No backup assigned (temporary) | Assigned |
+| Withdrawal/refund customer-operations owner | Karam Jako | No backup assigned (temporary) | Assigned |
+| Database recovery decision authority | Karam Jako | No backup assigned (temporary) | Assigned |
+
+The owner explicitly accepted these three primary assignments on 19 August 2026. No backup is currently assigned; that absence is recorded explicitly rather than inferred. The primary authority remains Karam Jako until a replacement or backup is deliberately assigned.
 
 The checkout/payment incident owner may contain checkout and coordinate reconciliation, but that does not automatically grant authority to restore/rewrite production data or execute refunds.
 
@@ -172,6 +174,8 @@ Gate 7 can be GO only when:
 - checkout-pause containment is exercised safely;
 - known-good Netlify rollback is understood against an actual deploy;
 - payment reconciliation and withdrawal acknowledgement retry procedures are understood.
+
+The three named-owner requirements were completed on 19 August 2026. The remaining Gate 7 items still require release-operator review and real deployment/account exercises before the gate can become GO.
 
 Until those items are complete, the technical architecture may be ready but Gate 7 remains **PARTIAL**.
 

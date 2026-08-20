@@ -131,10 +131,10 @@ The repository baseline is `main`. Do not hard-code a rolling preparation SHA he
 - [x] Netlify Function log review location/process documented from current Netlify guidance.
 - [x] PayPal webhook delivery/failure dashboard and resend process documented from current PayPal guidance.
 - [x] Neon production branch monitoring process documented.
-- [ ] Checkout/payment incident owner assigned by name.
-- [ ] Customer withdrawal/refund operations owner assigned by name.
-- [ ] Database recovery decision authority assigned by name.
-- [ ] Named owners/backups recorded in the monitoring handoff.
+- [x] Checkout/payment incident owner assigned by name.
+- [x] Customer withdrawal/refund operations owner assigned by name.
+- [x] Database recovery decision authority assigned by name.
+- [x] Named owners/backups recorded in the monitoring handoff; no backup is currently assigned and that temporary state is explicit.
 - [ ] Netlify Function log access confirmed against a current production deployment.
 - [ ] PayPal Webhooks Events delivery visibility confirmed for the intended Live app after a controlled event.
 - [ ] Neon production Monitoring access confirmed by the release operator.
@@ -142,7 +142,7 @@ The repository baseline is `main`. Do not hard-code a rolling preparation SHA he
 - [ ] Known-good Netlify rollback procedure confirmed against an actual deploy once current deploy capacity resumes.
 - [ ] Release operator has reviewed the incident, deploy-day and monitoring handoff documents.
 
-**Current status:** PARTIAL. Technical monitoring, containment and reconciliation procedures are prepared; named owners and real deployment/account exercises remain.
+**Current status:** PARTIAL. Technical monitoring, containment and reconciliation procedures are prepared and the three primary operational owners are assigned; real deployment/account exercises and release-operator review remain.
 
 ## Gate 8 — PayPal Live enablement
 
