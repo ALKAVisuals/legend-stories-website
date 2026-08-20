@@ -1,24 +1,25 @@
 # LegendMural first current production deploy checklist
 
-Last reviewed: 18 August 2026.
+Last reviewed: 20 August 2026.
 
-Purpose: make the first production deployment after Netlify deploy capacity resumes deterministic and low-risk. This checklist **does not authorize PayPal Live or Resend production sending**.
+Purpose: make the first production deployment after Netlify deploy capacity resumes deterministic and low-risk. This checklist **does not authorize PayPal Live or a controlled Resend production acknowledgement send**.
 
 Current prerequisite state before the deploy:
 
-- reviewed `main` SHA: `b47da33573358fc6896233cba3e24f91ba5af900`;
+- the deploy candidate will be the current reviewed `main` state when Netlify production deploy capacity resumes; freeze and record the exact intended Git SHA immediately before deployment rather than hard-coding a rolling preparation SHA here;
 - Neon production branch: `br-misty-cloud-as0rofc8`;
 - production schema level: migrations `001–008`;
 - production `NEON_DATABASE_URL` has been stored in the Netlify **Production** context using `legendmural_app`;
 - Deploy Preview database value remains separate/staging-only;
 - production row counts were 0 orders / 0 withdrawals / 0 acknowledgements immediately after the `007–008` migration verification;
-- PayPal Live and Resend production activation remain outside this deploy scope.
+- production Resend API key/FROM/Reply-To values have been deliberately prepared in the Netlify Production context so the fresh deploy can consume them; a controlled production acknowledgement send remains a separate explicit approval step;
+- PayPal Live activation remains outside this deploy scope.
 
 ## A. Before pressing Deploy
 
 Do not change secrets while doing this review. Confirm the **context and non-secret values only**.
 
-1. Target branch is `main` and intended SHA is known.
+1. Target branch is `main`; freeze and record the exact intended Git SHA before deployment.
 2. `NEON_DATABASE_URL`:
    - Production has a secret value;
    - Deploy Previews keeps its existing separate value;
@@ -33,12 +34,16 @@ Do not change secrets while doing this review. Confirm the **context and non-sec
    - `PAYPAL_API_BASE` is `https://api-m.sandbox.paypal.com`;
    - `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` are present only as server-side secrets for the intended Sandbox app;
    - `PAYPAL_WEBHOOK_ID` belongs to the intended Sandbox webhook for this validation phase.
-5. Do not add `RESEND_API_KEY` or `RESEND_FROM` as part of this deploy unless Gate 3 is separately approved.
+5. Confirm the already-prepared Production Resend configuration remains present without exposing or rotating secrets:
+   - `RESEND_API_KEY` exists as a Production server-side secret;
+   - `RESEND_FROM` is configured for the verified production sending identity;
+   - `RESEND_REPLY_TO` is configured for the monitored customer-operations address;
+   - do not perform the controlled production acknowledgement send until that separate Gate 3 approval is explicitly given.
 6. Do not set `LEGENDMURAL_CHECKOUT_PAUSED=true` merely for this smoke test unless containment is intentionally being tested. Its absence/`false` is the normal state.
 
 ## B. Deploy
 
-1. Trigger one normal Netlify production deployment from the reviewed `main` state.
+1. Trigger one normal Netlify production deployment from the frozen reviewed `main` state.
 2. Record the Netlify deploy ID, deploy timestamp and deployed Git SHA.
 3. Confirm the build completes successfully and the expected Functions are included:
    - `create-paypal-order`;
@@ -46,7 +51,7 @@ Do not change secrets while doing this review. Confirm the **context and non-sec
    - `paypal-webhook`;
    - `order-status`;
    - `create-withdrawal`.
-4. If build or Function packaging fails, do not change PayPal/Neon credentials speculatively. Keep checkout closed/unlaunched and inspect the concrete build error first.
+4. If build or Function packaging fails, do not change PayPal/Neon/Resend credentials speculatively. Keep checkout closed/unlaunched and inspect the concrete build error first.
 
 ## C. Domain / redirect verification
 
@@ -121,6 +126,7 @@ After D1/D2, inspect the logs for the exact deployment/window and confirm:
 
 - no database URI/password is printed;
 - no PayPal client secret/token is printed;
+- no Resend API key is printed;
 - no customer payload is printed;
 - no unexpected bootstrap errors occurred;
 - D1 correlates with the expected `ORDER_NOT_FOUND` outcome;
@@ -138,6 +144,7 @@ Gate 6 can move to GO only when all of the following are recorded:
 - invalid checkout smoke returns expected local `400` without PayPal order creation;
 - production DB row counts unchanged;
 - PayPal remains Sandbox-only / `PAYPAL_ALLOW_LIVE` disabled;
+- prepared Resend Production configuration is consumed by the fresh deploy without secrets being exposed;
 - production Function logs are clean of secrets/PII and unexpected errors.
 
 Only after Gate 6 and the remaining Gate 2/3/7 work are GO may PayPal Live be considered under the separate Gate 8 approval.
