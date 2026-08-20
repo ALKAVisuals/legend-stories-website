@@ -137,12 +137,12 @@ The repository baseline is `main`. Do not hard-code a rolling preparation SHA he
 - [x] Named owners/backups recorded in the monitoring handoff; no backup is currently assigned and that temporary state is explicit.
 - [ ] Netlify Function log access confirmed against a current production deployment.
 - [ ] PayPal Webhooks Events delivery visibility confirmed for the intended Live app after a controlled event.
-- [ ] Neon production Monitoring access confirmed by the release operator.
+- [x] Neon production Monitoring access confirmed by the release operator on 20 August 2026; production/Primary Monitoring view was visible and the compute was idle as expected before launch traffic.
 - [ ] `LEGENDMURAL_CHECKOUT_PAUSED` containment exercised against an actual non-production/current deployment; automated coverage alone is not an operations drill.
 - [ ] Known-good Netlify rollback procedure confirmed against an actual deploy once current deploy capacity resumes.
 - [x] Release operator has reviewed the incident, deploy-day and monitoring handoff documents on 20 August 2026.
 
-**Current status:** PARTIAL. Technical monitoring, containment and reconciliation procedures are prepared, the three primary operational owners are assigned and the release-operator review is complete; real deployment/account exercises remain.
+**Current status:** PARTIAL. Technical monitoring, containment and reconciliation procedures are prepared, the three primary operational owners are assigned, the release-operator review and Neon production Monitoring access are confirmed; Netlify deployment exercises and PayPal webhook delivery evidence remain.
 
 ## Gate 8 — PayPal Live enablement
 
