@@ -105,7 +105,8 @@ The repository baseline is `main`. Do not hard-code a rolling preparation SHA he
 - [x] Production `CHECKOUT_SUCCESS_URL` is configured for `https://legendmural.com/order-success.html`.
 - [x] Production `CHECKOUT_CANCEL_URL` is configured for `https://legendmural.com/order-cancelled.html`.
 - [x] Production `CHECKOUT_ALLOWED_ORIGINS` is configured for `https://legendmural.com`.
-- [x] `PAYPAL_ALLOW_LIVE=false` was explicitly confirmed during pre-launch preparation and remains the required safety state until Gate 8 approval.
+- [x] `PAYPAL_ALLOW_LIVE=false` is explicitly configured in Production and remains the required safety state until Gate 8 approval.
+- [x] Production PayPal Live endpoint, Live client ID, Live client secret and Live webhook ID have been prepared in the Production deploy context; Deploy Preview remains separately configured for Sandbox.
 - [x] Production Resend API key/FROM/Reply-To values have been prepared in the Production context.
 - [x] Tracked routes map checkout, capture, webhook and order-status to their intended Netlify Functions.
 - [x] Checkout kill switch is opt-in: `LEGENDMURAL_CHECKOUT_PAUSED=true` blocks only new checkout creation while preserving capture/webhook/status reconciliation paths.
@@ -118,7 +119,7 @@ The repository baseline is `main`. Do not hard-code a rolling preparation SHA he
 - [ ] Netlify Function logs inspected for configuration failures and secret/PII leakage after the smoke checks.
 - [ ] Production Resend configuration proven by a controlled acknowledgement after the fresh deploy.
 
-**Current status:** CONDITIONAL / deployment-blocked. Production configuration is substantially prepared, but none of the newly stored values are considered runtime-proven until a fresh Netlify production deployment and controlled smoke/E2E checks succeed.
+**Current status:** CONDITIONAL / deployment-blocked. Production PayPal Live values are prepared with the Live kill switch explicitly false and Preview remains Sandbox-separated, but none of the newly stored values are considered runtime-proven until a fresh Netlify production deployment and controlled smoke/E2E checks succeed.
 
 ## Gate 7 — monitoring and incident readiness
 
@@ -147,14 +148,14 @@ The repository baseline is `main`. Do not hard-code a rolling preparation SHA he
 ## Gate 8 — PayPal Live enablement
 
 - [ ] Gates 0–7 are GO.
-- [ ] PayPal Business account fully verified for launch use.
+- [x] PayPal Business account has no visible notifications, account limitations, verification requests, open issues or investigations in the owner dashboard/Action Center as verified on 24 August 2026; final payment capability is still proven by the controlled Live order below.
 - [x] Dedicated Live REST app `LegendMural Production` created.
-- [ ] Live client credentials stored and reverified in the Netlify Production context as a coherent Live configuration.
+- [x] Live client credentials are stored in the Netlify Production context and paired with the official Live API base and Live webhook ID; Preview remains Sandbox-separated. Runtime proof still requires a fresh production deploy.
 - [x] Live webhook registration is present in the PayPal Live app and the listener URL is `https://legendmural.com/api/paypal/webhook`, verified by the owner on 24 August 2026.
 - [x] Exact Live webhook ID copied from the PayPal Live app into the Netlify Production `PAYPAL_WEBHOOK_ID` value and saved by the owner on 24 August 2026.
 - [x] Live webhook tracks `CHECKOUT.ORDER.APPROVED`, `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.PENDING`, `PAYMENT.CAPTURE.DECLINED` and `PAYMENT.CAPTURE.DENIED`, verified by the owner on 24 August 2026.
-- [ ] `CHECKOUT.PAYMENT-APPROVAL.REVERSED` subscription availability/final handling decision documented; the production reconciler supports it but it was not shown among the currently tracked Live events.
-- [ ] Production API base confirmed as the official Live endpoint immediately before activation.
+- [x] `CHECKOUT.PAYMENT-APPROVAL.REVERSED` is not offered in the current PayPal Live webhook UI for this app; no incorrect substitute event is selected. The production reconciler retains defensive support, and the decision must be revisited if alternative payment methods are added or PayPal exposes the event for this app later.
+- [ ] Production API base reverified as the official Live endpoint immediately before activation.
 - [ ] `PAYPAL_ALLOW_LIVE=true` enabled only after separate explicit approval.
 - [ ] Checkout not paused.
 - [ ] One controlled low-value real order authorized.
@@ -163,7 +164,7 @@ The repository baseline is `main`. Do not hard-code a rolling preparation SHA he
 
 Any mismatch during the controlled Live order is an immediate **NO-GO**: pause new checkout and use the incident runbook.
 
-**Current status:** NO-GO. The dedicated Live app, Live webhook listener URL, five core tracked events and exact Netlify Production webhook-ID coherence are verified. The approval-reversal subscription decision, Live runtime activation and controlled order evidence remain intentionally open.
+**Current status:** NO-GO. The Business account shows no visible restrictions or required actions; the dedicated Live app, Live webhook listener URL, five core tracked events, exact Netlify Production webhook-ID coherence and the Production Live credential/API-base preparation are verified. `CHECKOUT.PAYMENT-APPROVAL.REVERSED` is documented as unavailable in the current Live UI with no substitute selected. Runtime activation and controlled order evidence remain intentionally open and deployment-blocked.
 
 ## Gate 9 — launch completion record
 
