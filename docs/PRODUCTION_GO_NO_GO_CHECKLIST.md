@@ -148,7 +148,7 @@ The repository baseline is `main`. Do not hard-code a rolling preparation SHA he
 ## Gate 8 — PayPal Live enablement
 
 - [ ] Gates 0–7 are GO.
-- [ ] PayPal Business account fully verified for launch use.
+- [x] PayPal Business account has no visible notifications, account limitations, verification requests, open issues or investigations in the owner dashboard/Action Center as verified on 24 August 2026; final payment capability is still proven by the controlled Live order below.
 - [x] Dedicated Live REST app `LegendMural Production` created.
 - [x] Live client credentials are stored in the Netlify Production context and paired with the official Live API base and Live webhook ID; Preview remains Sandbox-separated. Runtime proof still requires a fresh production deploy.
 - [x] Live webhook registration is present in the PayPal Live app and the listener URL is `https://legendmural.com/api/paypal/webhook`, verified by the owner on 24 August 2026.
@@ -164,7 +164,7 @@ The repository baseline is `main`. Do not hard-code a rolling preparation SHA he
 
 Any mismatch during the controlled Live order is an immediate **NO-GO**: pause new checkout and use the incident runbook.
 
-**Current status:** NO-GO. The dedicated Live app, Live webhook listener URL, five core tracked events, exact Netlify Production webhook-ID coherence and the Production Live credential/API-base preparation are verified. `CHECKOUT.PAYMENT-APPROVAL.REVERSED` is documented as unavailable in the current Live UI with no substitute selected. Runtime activation and controlled order evidence remain intentionally open and deployment-blocked.
+**Current status:** NO-GO. The Business account shows no visible restrictions or required actions; the dedicated Live app, Live webhook listener URL, five core tracked events, exact Netlify Production webhook-ID coherence and the Production Live credential/API-base preparation are verified. `CHECKOUT.PAYMENT-APPROVAL.REVERSED` is documented as unavailable in the current Live UI with no substitute selected. Runtime activation and controlled order evidence remain intentionally open and deployment-blocked.
 
 ## Gate 9 — launch completion record
 
