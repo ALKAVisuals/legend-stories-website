@@ -151,7 +151,7 @@ The repository baseline is `main`. Do not hard-code a rolling preparation SHA he
 - [x] Dedicated Live REST app `LegendMural Production` created.
 - [ ] Live client credentials stored and reverified in the Netlify Production context as a coherent Live configuration.
 - [x] Live webhook registration is present in the PayPal Live app and the listener URL is `https://legendmural.com/api/paypal/webhook`, verified by the owner on 24 August 2026.
-- [ ] Exact Live webhook ID matched to the Netlify Production `PAYPAL_WEBHOOK_ID` value.
+- [x] Exact Live webhook ID copied from the PayPal Live app into the Netlify Production `PAYPAL_WEBHOOK_ID` value and saved by the owner on 24 August 2026.
 - [x] Live webhook tracks `CHECKOUT.ORDER.APPROVED`, `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.PENDING`, `PAYMENT.CAPTURE.DECLINED` and `PAYMENT.CAPTURE.DENIED`, verified by the owner on 24 August 2026.
 - [ ] `CHECKOUT.PAYMENT-APPROVAL.REVERSED` subscription availability/final handling decision documented; the production reconciler supports it but it was not shown among the currently tracked Live events.
 - [ ] Production API base confirmed as the official Live endpoint immediately before activation.
@@ -163,7 +163,7 @@ The repository baseline is `main`. Do not hard-code a rolling preparation SHA he
 
 Any mismatch during the controlled Live order is an immediate **NO-GO**: pause new checkout and use the incident runbook.
 
-**Current status:** NO-GO. The dedicated Live app, Live webhook listener URL and five core tracked events are verified. Exact Netlify Live webhook-ID coherence, the approval-reversal subscription decision, Live runtime activation and controlled order evidence remain intentionally open.
+**Current status:** NO-GO. The dedicated Live app, Live webhook listener URL, five core tracked events and exact Netlify Production webhook-ID coherence are verified. The approval-reversal subscription decision, Live runtime activation and controlled order evidence remain intentionally open.
 
 ## Gate 9 — launch completion record
 
