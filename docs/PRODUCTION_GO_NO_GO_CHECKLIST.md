@@ -1,6 +1,6 @@
 # LegendMural production go / no-go checklist
 
-Last reviewed: 20 August 2026.
+Last reviewed: 24 August 2026.
 
 This checklist converts production readiness into explicit release gates. A **GO** means every mandatory item for that gate is verified. Any unresolved mandatory item means **NO-GO** for the dependent production phase.
 
@@ -150,8 +150,10 @@ The repository baseline is `main`. Do not hard-code a rolling preparation SHA he
 - [ ] PayPal Business account fully verified for launch use.
 - [x] Dedicated Live REST app `LegendMural Production` created.
 - [ ] Live client credentials stored and reverified in the Netlify Production context as a coherent Live configuration.
-- [ ] Live webhook registration and exact webhook ID matched to the Netlify Production value.
-- [ ] Live webhook event selection verified against the event types currently supported by the production reconciler, including `PAYMENT.CAPTURE.DENIED` from PR #109.
+- [x] Live webhook registration is present in the PayPal Live app and the listener URL is `https://legendmural.com/api/paypal/webhook`, verified by the owner on 24 August 2026.
+- [ ] Exact Live webhook ID matched to the Netlify Production `PAYPAL_WEBHOOK_ID` value.
+- [x] Live webhook tracks `CHECKOUT.ORDER.APPROVED`, `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.PENDING`, `PAYMENT.CAPTURE.DECLINED` and `PAYMENT.CAPTURE.DENIED`, verified by the owner on 24 August 2026.
+- [ ] `CHECKOUT.PAYMENT-APPROVAL.REVERSED` subscription availability/final handling decision documented; the production reconciler supports it but it was not shown among the currently tracked Live events.
 - [ ] Production API base confirmed as the official Live endpoint immediately before activation.
 - [ ] `PAYPAL_ALLOW_LIVE=true` enabled only after separate explicit approval.
 - [ ] Checkout not paused.
@@ -161,7 +163,7 @@ The repository baseline is `main`. Do not hard-code a rolling preparation SHA he
 
 Any mismatch during the controlled Live order is an immediate **NO-GO**: pause new checkout and use the incident runbook.
 
-**Current status:** NO-GO. The dedicated Live app exists, but Live runtime activation remains intentionally blocked behind the remaining gates and separate explicit approval.
+**Current status:** NO-GO. The dedicated Live app, Live webhook listener URL and five core tracked events are verified. Exact Netlify Live webhook-ID coherence, the approval-reversal subscription decision, Live runtime activation and controlled order evidence remain intentionally open.
 
 ## Gate 9 — launch completion record
 
