@@ -46,7 +46,7 @@ html[data-theme="light"] footer .bg-surface-light\/50,
 html.light-mode footer .bg-surface-light,
 html.light-mode footer .bg-surface-light\/30,
 html.light-mode footer .bg-surface-light\/50 {
-  background: rgba(17, 17, 17, 0.06) !important;
+  background: rgba(17, 17, 17, 0.06);
 }
 
 html[data-theme="light"] footer svg,
