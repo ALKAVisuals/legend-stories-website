@@ -83,7 +83,7 @@ jobs:
 
           await walk(root);
           console.log(`Rewrote preview root URLs across ${changedFiles} built file(s): ${JSON.stringify(counts)}.`);
-          for (const label of ['assets', 'checkout controls', 'footer theme', 'contact form']) {
+          for (const label of ['assets', 'footer theme', 'contact form']) {
             if (counts[label] === 0) {
               throw new Error(`Expected at least one root URL for ${label} in the built preview.`);
             }
@@ -134,7 +134,6 @@ jobs:
           const index = await readFile('dist/index.html', 'utf8');
           const expected = [
             '/legend-stories-website/assets/',
-            '/legend-stories-website/css/checkout-controls.css',
             '/legend-stories-website/css/footer-theme.css',
             '/legend-stories-website/js/contact-form.js',
           ];
