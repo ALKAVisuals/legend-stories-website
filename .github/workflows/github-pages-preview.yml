@@ -42,9 +42,14 @@ jobs:
 
           const root = 'dist';
           const extensions = new Set(['.html', '.json', '.js', '.css']);
+          const replacements = [
+            ['/assets/', '/legend-stories-website/assets/', 'assets'],
+            ['/css/checkout-controls.css', '/legend-stories-website/css/checkout-controls.css', 'checkout controls'],
+            ['/css/footer-theme.css', '/legend-stories-website/css/footer-theme.css', 'footer theme'],
+            ['/js/contact-form.js', '/legend-stories-website/js/contact-form.js', 'contact form'],
+          ];
+          const counts = Object.fromEntries(replacements.map(([, , label]) => [label, 0]));
           let changedFiles = 0;
-          let assetReplacements = 0;
-          let footerThemeReplacements = 0;
 
           async function walk(dir) {
             for (const name of await readdir(dir)) {
@@ -59,28 +64,29 @@ jobs:
               if (!extensions.has(extension)) continue;
 
               const original = await readFile(path, 'utf8');
-              const assetMatches = original.match(/\/assets\//g) || [];
-              const footerMatches = original.match(/\/css\/footer-theme\.css/g) || [];
-              if (!assetMatches.length && !footerMatches.length) continue;
+              let updated = original;
+              let changed = false;
 
-              const updated = original
-                .replaceAll('/assets/', '/legend-stories-website/assets/')
-                .replaceAll('/css/footer-theme.css', '/legend-stories-website/css/footer-theme.css');
+              for (const [from, to, label] of replacements) {
+                const matches = updated.split(from).length - 1;
+                if (!matches) continue;
+                updated = updated.replaceAll(from, to);
+                counts[label] += matches;
+                changed = true;
+              }
 
+              if (!changed) continue;
               await writeFile(path, updated, 'utf8');
               changedFiles += 1;
-              assetReplacements += assetMatches.length;
-              footerThemeReplacements += footerMatches.length;
             }
           }
 
           await walk(root);
-          console.log(`Rewrote ${assetReplacements} root asset URL(s) and ${footerThemeReplacements} footer theme URL(s) across ${changedFiles} built file(s).`);
-          if (assetReplacements === 0) {
-            throw new Error('Expected at least one root /assets/ URL in the built preview.');
-          }
-          if (footerThemeReplacements === 0) {
-            throw new Error('Expected at least one root /css/footer-theme.css URL in the built preview.');
+          console.log(`Rewrote preview root URLs across ${changedFiles} built file(s): ${JSON.stringify(counts)}.`);
+          for (const label of ['assets', 'checkout controls', 'footer theme', 'contact form']) {
+            if (counts[label] === 0) {
+              throw new Error(`Expected at least one root URL for ${label} in the built preview.`);
+            }
           }
           EOF
 
@@ -92,10 +98,13 @@ jobs:
 
           const root = 'dist';
           const extensions = new Set(['.html', '.json', '.js', '.css']);
-          const unresolvedAssets = [];
-          const unresolvedFooterTheme = [];
-          const rootAssetPattern = /(^|["'(`=:,\s])\/assets\//m;
-          const rootFooterThemePattern = /(^|["'(`=:,\s])\/css\/footer-theme\.css/m;
+          const unresolved = [];
+          const patterns = [
+            ['assets', /(^|["'(`=:,\s])\/assets\//m],
+            ['checkout controls', /(^|["'(`=:,\s])\/css\/checkout-controls\.css/m],
+            ['footer theme', /(^|["'(`=:,\s])\/css\/footer-theme\.css/m],
+            ['contact form', /(^|["'(`=:,\s])\/js\/contact-form\.js/m],
+          ];
 
           async function walk(dir) {
             for (const name of await readdir(dir)) {
@@ -109,29 +118,28 @@ jobs:
               const extension = dot >= 0 ? name.slice(dot) : '';
               if (!extensions.has(extension)) continue;
               const text = await readFile(path, 'utf8');
-              if (rootAssetPattern.test(text)) unresolvedAssets.push(path);
-              if (rootFooterThemePattern.test(text)) unresolvedFooterTheme.push(path);
+              for (const [label, pattern] of patterns) {
+                if (pattern.test(text)) unresolved.push(`${label}: ${path}`);
+              }
             }
           }
 
           await walk(root);
-          if (unresolvedAssets.length) {
-            console.error('Found unresolved root /assets/ URLs:');
-            unresolvedAssets.slice(0, 20).forEach((path) => console.error(`- ${path}`));
-            process.exit(1);
-          }
-          if (unresolvedFooterTheme.length) {
-            console.error('Found unresolved root footer-theme.css URLs:');
-            unresolvedFooterTheme.slice(0, 20).forEach((path) => console.error(`- ${path}`));
+          if (unresolved.length) {
+            console.error('Found unresolved root URLs:');
+            unresolved.slice(0, 30).forEach((entry) => console.error(`- ${entry}`));
             process.exit(1);
           }
 
           const index = await readFile('dist/index.html', 'utf8');
-          if (!index.includes('/legend-stories-website/assets/')) {
-            throw new Error('index.html does not contain the expected GitHub Pages asset prefix.');
-          }
-          if (!index.includes('/legend-stories-website/css/footer-theme.css')) {
-            throw new Error('index.html does not contain the expected GitHub Pages footer theme path.');
+          const expected = [
+            '/legend-stories-website/assets/',
+            '/legend-stories-website/css/checkout-controls.css',
+            '/legend-stories-website/css/footer-theme.css',
+            '/legend-stories-website/js/contact-form.js',
+          ];
+          for (const path of expected) {
+            if (!index.includes(path)) throw new Error(`index.html is missing expected GitHub Pages path: ${path}`);
           }
           console.log('GitHub Pages asset-path verification passed.');
           EOF
