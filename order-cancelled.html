@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Your LegendMural payment was cancelled. Your saved cart remains available.">
+  <meta name="description" content="Your LegendMural checkout was cancelled. Your saved cart remains available in this browser.">
   <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0a0a0a">
   <title>Payment Cancelled — LegendMural</title>
   <meta property="og:title" content="Payment Cancelled — LegendMural">
-  <meta property="og:description" content="Your LegendMural payment was cancelled. Your saved cart remains available.">
+  <meta property="og:description" content="Your LegendMural checkout was cancelled. Your saved cart remains available in this browser.">
   <meta property="og:image" content="https://alkavisuals.github.io/legend-stories-website/media/LOGO/lm-logo-transparant.png">
   <meta property="og:url" content="https://alkavisuals.github.io/legend-stories-website/order-cancelled.html">
   <meta property="og:type" content="website">
@@ -21,38 +22,113 @@
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/shared.css">
+  <link rel="stylesheet" href="css/order-experience.css">
+  <link rel="stylesheet" href="css/order-cancelled.css">
 </head>
-<body class="min-h-screen bg-void text-text-primary font-body flex flex-col">
-  <header class="border-b border-surface-border/20 glass">
-    <div class="max-w-6xl mx-auto px-5 sm:px-6 h-16 md:h-20 flex items-center justify-between">
-      <a href="index.html" class="flex items-center" aria-label="LegendMural Home">
-        <img src="media/LOGO/lm-logo-transparant.png" alt="LegendMural" class="h-8 md:h-10 w-auto object-contain">
+<body class="order-page order-cancelled text-text-primary font-body">
+  <header class="order-header glass">
+    <div class="order-shell order-header__inner">
+      <a href="index.html" class="flex items-center logo-wrap" aria-label="LegendMural Home">
+        <img src="media/LOGO/lm-logo-transparant.png" alt="" class="h-8 md:h-10 w-auto object-contain logo-glow">
       </a>
-      <a href="shop.html" class="text-sm font-medium text-text-secondary hover:text-mint transition-colors">Back to shop</a>
+      <a href="shop.html" class="order-header__link">Return to shop</a>
     </div>
   </header>
 
-  <main class="flex-1 flex items-center justify-center px-5 py-16">
-    <section class="w-full max-w-2xl text-center rounded-3xl border border-surface-border/30 bg-surface/70 p-8 sm:p-12 shadow-2xl">
-      <div class="mx-auto mb-7 w-16 h-16 rounded-full bg-surface-light border border-surface-border/40 flex items-center justify-center" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
+  <main class="order-main">
+    <section data-order-status="cancelled" class="order-shell order-experience">
+      <div class="order-hero">
+        <div class="order-status-mark" aria-hidden="true">
+          <svg class="order-cancelled__icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 7l10 10M17 7L7 17" />
+          </svg>
+        </div>
+        <p class="order-status-kicker">Payment cancelled</p>
+        <h1 class="order-status-title">Your cart is still here.</h1>
+        <p class="order-status-message">
+          You left the payment flow before this browser received a confirmed payment result. Nothing in your saved cart has been cleared, so you can review it and try again whenever you are ready.
+        </p>
       </div>
-      <p class="text-xs uppercase tracking-[0.28em] text-text-muted font-semibold mb-3">No payment completed</p>
-      <h1 class="font-display text-4xl sm:text-5xl font-semibold mb-5">Payment cancelled</h1>
-      <p class="text-text-secondary leading-relaxed max-w-xl mx-auto">
-        No order has been marked as paid. Your cart remains saved in this browser, so you can review the products and return to checkout when you are ready.
-      </p>
-      <div class="mt-9 flex flex-col sm:flex-row gap-3 justify-center">
-        <a href="shop.html" class="inline-flex items-center justify-center rounded-xl bg-mint text-void px-6 py-3 font-semibold hover:opacity-90 transition-opacity">Return to shop</a>
-        <a href="index.html#contact" class="inline-flex items-center justify-center rounded-xl border border-surface-border/50 px-6 py-3 font-semibold text-text-secondary hover:text-mint hover:border-mint/40 transition-colors">Need help?</a>
+
+      <div class="order-progress" aria-label="Checkout status">
+        <div class="order-progress__track">
+          <div class="order-progress__step order-cancelled__step--stopped">
+            <span class="order-progress__dot">×</span>
+            <span class="order-progress__label">Payment</span>
+            <span class="order-progress__meta">Cancelled</span>
+          </div>
+          <div class="order-progress__step order-cancelled__step--saved">
+            <span class="order-progress__dot">✓</span>
+            <span class="order-progress__label">Cart</span>
+            <span class="order-progress__meta">Still saved</span>
+          </div>
+          <div class="order-progress__step">
+            <span class="order-progress__dot">03</span>
+            <span class="order-progress__label">Checkout</span>
+            <span class="order-progress__meta">Ready when you are</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="order-grid order-cancelled__grid">
+        <section class="order-panel" aria-labelledby="cancelled-meaning-title">
+          <p id="cancelled-meaning-title" class="order-panel__eyebrow">What this means</p>
+          <div class="order-details">
+            <div class="order-detail-row">
+              <span class="order-detail-label">Payment</span>
+              <span class="order-detail-value">Not confirmed in this checkout</span>
+            </div>
+            <div class="order-detail-row">
+              <span class="order-detail-label">Order flow</span>
+              <span class="order-detail-value">Stopped before confirmation</span>
+            </div>
+          </div>
+          <p class="order-note">
+            This page does not mark an order as paid and does not clear your cart. If you are unsure about a PayPal transaction, check your PayPal activity before starting another payment.
+          </p>
+        </section>
+
+        <section class="order-panel" aria-labelledby="cancelled-next-title">
+          <p id="cancelled-next-title" class="order-panel__eyebrow">When you’re ready</p>
+          <div class="next-steps order-cancelled__next-steps">
+            <article class="next-step">
+              <span class="next-step__number">01</span>
+              <h3>Review your cart</h3>
+              <p>Your saved items remain available in this browser.</p>
+            </article>
+            <article class="next-step">
+              <span class="next-step__number">02</span>
+              <h3>Try checkout again</h3>
+              <p>Return to the shop and continue to secure payment when it suits you.</p>
+            </article>
+          </div>
+        </section>
+      </div>
+
+      <div class="order-actions">
+        <a href="shop.html" class="btn-primary">Review saved cart</a>
+        <a href="index.html#contact" class="btn-secondary">Need help?</a>
+      </div>
+
+      <div class="order-trust" aria-label="Cancelled checkout safeguards">
+        <span>Payment not confirmed</span>
+        <span>Cart stays saved</span>
+        <span>Retry when ready</span>
       </div>
     </section>
   </main>
 
-  <footer class="border-t border-surface-border/20 py-6 text-center text-xs text-text-muted">
-    <p>LegendMural — Premium wall art for legendary spaces.</p>
+  <footer class="order-footer">
+    <div class="order-shell order-footer__inner">
+      <p class="order-footer__copy">LegendMural — Premium wall art for legendary spaces.</p>
+      <nav class="order-footer__links" aria-label="Order page footer">
+        <a href="shop.html">Shop</a>
+        <a href="index.html#contact">Contact</a>
+        <a href="shipping.html">Shipping</a>
+        <a href="returns.html">Returns</a>
+        <a href="privacy.html">Privacy</a>
+      </nav>
+    </div>
   </footer>
 </body>
 </html>
