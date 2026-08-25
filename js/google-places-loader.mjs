@@ -16,23 +16,19 @@ function deleteTemporaryCallback(windowRef, callbackName) {
   }
 }
 
-export function installPlacesRequestTimeout({
-  windowRef = globalThis.window,
-  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
-} = {}) {
-  const places = windowRef?.google?.maps?.places;
-  const prototype = places?.PlacesService?.prototype;
-  const originalFindPlaceFromQuery = prototype?.findPlaceFromQuery;
-
-  if (typeof originalFindPlaceFromQuery !== 'function') return false;
-  if (prototype[REQUEST_TIMEOUT_FLAG]) return true;
-
-  const safeTimeoutMs = Math.max(500, Number(timeoutMs) || DEFAULT_REQUEST_TIMEOUT_MS);
+function createFindPlaceFromQueryWithTimeout({
+  originalFindPlaceFromQuery,
+  windowRef,
+  places,
+  timeoutMs,
+  receiver = null,
+}) {
   const fallbackStatus = places.PlacesServiceStatus?.UNKNOWN_ERROR || 'UNKNOWN_ERROR';
 
   function findPlaceFromQueryWithTimeout(request, callback) {
+    const target = receiver || this;
     if (typeof callback !== 'function') {
-      return originalFindPlaceFromQuery.call(this, request, callback);
+      return originalFindPlaceFromQuery.call(target, request, callback);
     }
 
     let settled = false;
@@ -47,11 +43,11 @@ export function installPlacesRequestTimeout({
 
     timerId = windowRef.setTimeout(
       () => settleOnce(null, fallbackStatus),
-      safeTimeoutMs,
+      timeoutMs,
     );
 
     try {
-      return originalFindPlaceFromQuery.call(this, request, settleOnce);
+      return originalFindPlaceFromQuery.call(target, request, settleOnce);
     } catch (error) {
       settled = true;
       if (timerId !== null) windowRef.clearTimeout?.(timerId);
@@ -60,21 +56,162 @@ export function installPlacesRequestTimeout({
   }
 
   try {
-    Object.defineProperty(prototype, 'findPlaceFromQuery', {
-      configurable: true,
-      writable: true,
-      value: findPlaceFromQueryWithTimeout,
-    });
-    Object.defineProperty(prototype, REQUEST_TIMEOUT_FLAG, {
+    Object.defineProperty(findPlaceFromQueryWithTimeout, REQUEST_TIMEOUT_FLAG, {
       configurable: false,
       enumerable: false,
       writable: false,
       value: true,
     });
+  } catch {
+    // The wrapper still works even if the marker cannot be attached.
+  }
+
+  return findPlaceFromQueryWithTimeout;
+}
+
+function installPrototypeRequestTimeout({
+  prototype,
+  originalFindPlaceFromQuery,
+  windowRef,
+  places,
+  timeoutMs,
+}) {
+  const wrapped = createFindPlaceFromQueryWithTimeout({
+    originalFindPlaceFromQuery,
+    windowRef,
+    places,
+    timeoutMs,
+  });
+  const descriptor = Object.getOwnPropertyDescriptor(prototype, 'findPlaceFromQuery');
+
+  try {
+    Object.defineProperty(prototype, 'findPlaceFromQuery', {
+      configurable: descriptor?.configurable ?? true,
+      enumerable: descriptor?.enumerable ?? false,
+      writable: descriptor && 'writable' in descriptor ? descriptor.writable : true,
+      value: wrapped,
+    });
+    try {
+      Object.defineProperty(prototype, REQUEST_TIMEOUT_FLAG, {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: true,
+      });
+    } catch {
+      // The wrapped method itself is marked, so a prototype marker is optional.
+    }
     return true;
   } catch {
     return false;
   }
+}
+
+function installConstructorRequestTimeout({
+  places,
+  OriginalPlacesService,
+  windowRef,
+  timeoutMs,
+}) {
+  function TimedPlacesService(...args) {
+    const service = Reflect.construct(OriginalPlacesService, args, OriginalPlacesService);
+    const originalFindPlaceFromQuery = service?.findPlaceFromQuery;
+
+    if (typeof originalFindPlaceFromQuery !== 'function') {
+      return service;
+    }
+
+    const wrapped = createFindPlaceFromQueryWithTimeout({
+      originalFindPlaceFromQuery,
+      windowRef,
+      places,
+      timeoutMs,
+      receiver: service,
+    });
+
+    try {
+      Object.defineProperty(service, 'findPlaceFromQuery', {
+        configurable: true,
+        enumerable: false,
+        writable: true,
+        value: wrapped,
+      });
+      return service;
+    } catch {
+      if (typeof Proxy !== 'function') {
+        throw new Error('Google Places request timeout guard could not be installed.');
+      }
+      return new Proxy(service, {
+        get(target, property, receiverRef) {
+          if (property === 'findPlaceFromQuery') return wrapped;
+          return Reflect.get(target, property, receiverRef);
+        },
+      });
+    }
+  }
+
+  try {
+    TimedPlacesService.prototype = OriginalPlacesService.prototype;
+    Object.setPrototypeOf?.(TimedPlacesService, OriginalPlacesService);
+    Object.defineProperty(TimedPlacesService, REQUEST_TIMEOUT_FLAG, {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: true,
+    });
+  } catch {
+    // Static/prototype metadata is best-effort; construction still returns the real service instance.
+  }
+
+  const descriptor = Object.getOwnPropertyDescriptor(places, 'PlacesService');
+  try {
+    Object.defineProperty(places, 'PlacesService', {
+      configurable: descriptor?.configurable ?? true,
+      enumerable: descriptor?.enumerable ?? true,
+      writable: descriptor && 'writable' in descriptor ? descriptor.writable : true,
+      value: TimedPlacesService,
+    });
+    return places.PlacesService === TimedPlacesService;
+  } catch {
+    return false;
+  }
+}
+
+export function installPlacesRequestTimeout({
+  windowRef = globalThis.window,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+} = {}) {
+  const places = windowRef?.google?.maps?.places;
+  const PlacesService = places?.PlacesService;
+  const prototype = PlacesService?.prototype;
+  const originalFindPlaceFromQuery = prototype?.findPlaceFromQuery;
+
+  if (typeof originalFindPlaceFromQuery !== 'function') return false;
+  if (
+    prototype?.[REQUEST_TIMEOUT_FLAG]
+    || originalFindPlaceFromQuery?.[REQUEST_TIMEOUT_FLAG]
+    || PlacesService?.[REQUEST_TIMEOUT_FLAG]
+  ) {
+    return true;
+  }
+
+  const safeTimeoutMs = Math.max(500, Number(timeoutMs) || DEFAULT_REQUEST_TIMEOUT_MS);
+  if (installPrototypeRequestTimeout({
+    prototype,
+    originalFindPlaceFromQuery,
+    windowRef,
+    places,
+    timeoutMs: safeTimeoutMs,
+  })) {
+    return true;
+  }
+
+  return installConstructorRequestTimeout({
+    places,
+    OriginalPlacesService: PlacesService,
+    windowRef,
+    timeoutMs: safeTimeoutMs,
+  });
 }
 
 export function createGooglePlacesLoader({
@@ -100,12 +237,18 @@ export function createGooglePlacesLoader({
   }
 
   function preparePlacesApi() {
-    installPlacesRequestTimeout({ windowRef, timeoutMs: requestTimeoutMs });
+    const timeoutInstalled = installPlacesRequestTimeout({
+      windowRef,
+      timeoutMs: requestTimeoutMs,
+    });
+    if (!timeoutInstalled) {
+      throw new Error('Google Places request timeout guard could not be installed.');
+    }
     return windowRef.google;
   }
 
   function load() {
-    if (isReady()) return Promise.resolve(preparePlacesApi());
+    if (isReady()) return Promise.resolve().then(() => preparePlacesApi());
     if (loadPromise) return loadPromise;
 
     loadPromise = new Promise((resolve, reject) => {
@@ -123,7 +266,11 @@ export function createGooglePlacesLoader({
         if (settled) return;
         settled = true;
         cleanup();
-        resolve(preparePlacesApi());
+        try {
+          resolve(preparePlacesApi());
+        } catch (error) {
+          reject(error);
+        }
       }
 
       function fail(message) {
