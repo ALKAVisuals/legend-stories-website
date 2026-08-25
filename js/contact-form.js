@@ -35,10 +35,6 @@
     form.prepend(honeypot);
   }
 
-  const oldEmail = Array.from(section.querySelectorAll('p'))
-    .find((element) => element.textContent.trim() === 'hello@legendstories.nl');
-  if (oldEmail) oldEmail.textContent = 'info@legendmural.com';
-
   const submitButton = form.querySelector('button[type="submit"]');
   const originalButtonText = submitButton?.textContent || 'Send message';
   const status = document.createElement('p');
