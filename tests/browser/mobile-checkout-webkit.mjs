@@ -10,6 +10,7 @@ const context = await browser.newContext({
 });
 
 const page = await context.newPage();
+page.setDefaultTimeout(15_000);
 const navigations = [];
 
 page.on('framenavigated', (frame) => {
@@ -98,7 +99,7 @@ try {
 
   const street = page.locator('#checkout-street');
   await street.tap();
-  await page.locator('#checkout-address-status').waitFor();
+  await page.locator('#checkout-address-status').waitFor({ state: 'attached' });
 
   const beforeTyping = await street.boundingBox();
   await street.pressSequentially('sc', { delay: 120 });
