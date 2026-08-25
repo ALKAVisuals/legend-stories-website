@@ -11,6 +11,8 @@ const [
   paypalGrants,
   withdrawalMigration,
   withdrawalGrants,
+  acknowledgementMigration,
+  acknowledgementGrants,
   activationDoc,
 ] = await Promise.all([
   readFile(new URL('package.json', ROOT), 'utf8'),
@@ -22,6 +24,8 @@ const [
   readFile(new URL('server/db/migrations/004_grant_paypal_reconciliation_runtime.sql', ROOT), 'utf8'),
   readFile(new URL('server/db/migrations/005_create_withdrawal_requests.sql', ROOT), 'utf8'),
   readFile(new URL('server/db/migrations/006_grant_withdrawal_runtime.sql', ROOT), 'utf8'),
+  readFile(new URL('server/db/migrations/007_create_withdrawal_acknowledgements.sql', ROOT), 'utf8'),
+  readFile(new URL('server/db/migrations/008_grant_withdrawal_acknowledgement_runtime.sql', ROOT), 'utf8'),
   readFile(new URL('docs/NEON_INTEGRATION_ACTIVATION.md', ROOT), 'utf8'),
 ]);
 
@@ -85,6 +89,8 @@ for (const marker of [
   '004_grant_paypal_reconciliation_runtime.sql',
   '005_create_withdrawal_requests.sql',
   '006_grant_withdrawal_runtime.sql',
+  '007_create_withdrawal_acknowledgements.sql',
+  '008_grant_withdrawal_acknowledgement_runtime.sql',
 ]) {
   if (!migrationRunner.includes(marker)) {
     errors.push(`Migration runner is missing safety marker: ${marker}`);
@@ -106,6 +112,13 @@ for (const marker of [
   'createNeonWithdrawalStore',
   'DELETE FROM legend_commerce.withdrawal_requests WHERE false',
   'TRUNCATE TABLE legend_commerce.withdrawal_requests',
+  'legend_commerce.withdrawal_acknowledgements',
+  'DELETE FROM legend_commerce.withdrawal_acknowledgements WHERE false',
+  'TRUNCATE TABLE legend_commerce.withdrawal_acknowledgements',
+  'consumer_name = consumer_name',
+  'confirmation_email = confirmation_email',
+  'declaration = declaration',
+  'recordAcknowledgementDelivery',
   "error?.code === '42501'",
 ]) {
   if (!integrationRunner.includes(marker)) {
@@ -173,11 +186,55 @@ if (/\b(DELETE|TRUNCATE|CREATE|DROP|ALTER)\b/.test(withdrawalGrants)) {
 }
 
 for (const marker of [
+  'CREATE TABLE IF NOT EXISTS legend_commerce.withdrawal_acknowledgements',
+  'consumer_name text NOT NULL',
+  'confirmation_email text NOT NULL',
+  'declaration text NOT NULL',
+  "delivery_status text NOT NULL DEFAULT 'pending'",
+  'REFERENCES legend_commerce.withdrawal_requests(order_reference) ON DELETE RESTRICT',
+]) {
+  if (!acknowledgementMigration.includes(marker)) {
+    errors.push(`Withdrawal acknowledgement migration is missing: ${marker}`);
+  }
+}
+for (const marker of [
+  'GRANT SELECT, INSERT ON legend_commerce.withdrawal_acknowledgements',
+  'GRANT UPDATE (',
+  'delivery_status',
+  'provider_message_id',
+  'last_error_code',
+  '__LEGEND_RUNTIME_ROLE__',
+]) {
+  if (!acknowledgementGrants.includes(marker)) {
+    errors.push(`Withdrawal acknowledgement runtime grants are missing: ${marker}`);
+  }
+}
+const acknowledgementUpdateGrant = acknowledgementGrants.match(/GRANT UPDATE \(([\s\S]*?)\) ON/)?.[1] || '';
+for (const immutableField of [
+  'order_reference',
+  'payment_session_id',
+  'confirmation_code',
+  'consumer_name',
+  'confirmation_email',
+  'declaration',
+  'withdrawn_at',
+]) {
+  if (new RegExp(`\\b${immutableField}\\b`).test(acknowledgementUpdateGrant)) {
+    errors.push(`Acknowledgement runtime must not update immutable statement field: ${immutableField}`);
+  }
+}
+if (/\b(DELETE|TRUNCATE|CREATE|DROP|ALTER)\b/.test(acknowledgementGrants)) {
+  errors.push('The acknowledgement runtime grant migration must not grant destructive or DDL privileges.');
+}
+
+for (const marker of [
   'NEON_TEST_DATABASE_URL',
   'NEON_TEST_MIGRATION_URL',
   'workflow_dispatch',
   'does not touch Netlify',
   'PayPal',
+  '007_create_withdrawal_acknowledgements.sql',
+  '008_grant_withdrawal_acknowledgement_runtime.sql',
 ]) {
   if (!activationDoc.includes(marker)) {
     errors.push(`Neon activation documentation is missing: ${marker}`);
@@ -190,4 +247,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log('Neon integration harness validation passed with pinned drivers, manual execution, PayPal-compatible migrations, least-privilege grants and guaranteed fixture cleanup.');
+console.log('Neon integration harness validation passed with pinned drivers, manual execution, PayPal-compatible migrations, durable withdrawal acknowledgement outbox, least-privilege grants and guaranteed fixture cleanup.');

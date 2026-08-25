@@ -136,7 +136,7 @@ test('already paid approved order does not call PayPal capture again', async () 
   assert.equal(captureCalls, 0);
 });
 
-test('pending and declined V2 events map to non-paid states', async () => {
+test('pending and both PayPal capture failure variants map to non-paid states', async () => {
   const targets = [];
   const reconciler = createPayPalWebhookReconciler({
     orderStore: {
@@ -150,8 +150,28 @@ test('pending and declined V2 events map to non-paid states', async () => {
   });
 
   await reconciler({ event: captureEvent('PAYMENT.CAPTURE.PENDING', 'PENDING'), mode: 'test' });
+  // PayPal's current checkout documentation shows PAYMENT.CAPTURE.DENIED with resource.status DECLINED.
+  await reconciler({ event: captureEvent('PAYMENT.CAPTURE.DENIED', 'DECLINED'), mode: 'test' });
   await reconciler({ event: captureEvent('PAYMENT.CAPTURE.DECLINED', 'DECLINED'), mode: 'test' });
-  assert.deepEqual(targets, ['payment_processing', 'payment_failed']);
+  assert.deepEqual(targets, ['payment_processing', 'payment_failed', 'payment_failed']);
+});
+
+test('failed capture webhooks reject non-failure resource statuses', async () => {
+  const reconciler = createPayPalWebhookReconciler({
+    orderStore: {
+      async getOrderByReference() { return order(); },
+      async processPaypalWebhookEvent() { assert.fail('must not persist invalid failure event'); },
+    },
+    paypalClient: { mode: 'test' },
+  });
+
+  await assert.rejects(
+    () => reconciler({
+      event: captureEvent('PAYMENT.CAPTURE.DENIED', 'COMPLETED'),
+      mode: 'test',
+    }),
+    (error) => error.code === 'INVALID_PAYPAL_WEBHOOK_EVENT',
+  );
 });
 
 test('refund and reversal events stay verified-but-ignored until their state machine exists', async () => {

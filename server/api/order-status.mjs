@@ -167,7 +167,10 @@ function mapError(error, origin) {
     return errorResponse(400, error.code, error.message, origin);
   }
 
-  console.error('Unexpected order status error:', error);
+  console.error('Unexpected order status error.', {
+    name: error?.name || 'Error',
+    code: String(error?.code || 'UNKNOWN').slice(0, 120),
+  });
   return errorResponse(500, 'ORDER_STATUS_FAILED', 'Order status could not be checked.', origin);
 }
 
