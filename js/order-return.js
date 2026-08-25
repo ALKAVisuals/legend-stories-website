@@ -13,6 +13,91 @@ import {
   resolveOrderReturnCopy,
 } from './commerce/order-return.mjs';
 
+const ORDER_RETURN_PRESENTATION = Object.freeze({
+  'verification-disabled': Object.freeze({
+    detailStatus: 'Awaiting server confirmation',
+    paymentMeta: 'Confirmation pending',
+    paymentDot: '01',
+    actionLabel: 'Continue shopping',
+    actionHref: 'shop.html',
+    documentTitle: 'Payment Submitted — LegendMural',
+  }),
+  'paypal-capture-disabled': Object.freeze({
+    detailStatus: 'Payment confirmation pending',
+    paymentMeta: 'Confirmation pending',
+    paymentDot: '01',
+    actionLabel: 'Continue shopping',
+    actionHref: 'shop.html',
+    documentTitle: 'Payment Submitted — LegendMural',
+  }),
+  'capturing-paypal': Object.freeze({
+    detailStatus: 'Securing PayPal payment',
+    paymentMeta: 'Finalizing payment',
+    paymentDot: '01',
+    actionLabel: 'Securing payment…',
+    actionHref: null,
+    documentTitle: 'Finalizing Payment — LegendMural',
+  }),
+  verifying: Object.freeze({
+    detailStatus: 'Checking payment status',
+    paymentMeta: 'Secure verification',
+    paymentDot: '01',
+    actionLabel: 'Checking payment…',
+    actionHref: null,
+    documentTitle: 'Checking Payment — LegendMural',
+  }),
+  payment_pending: Object.freeze({
+    detailStatus: 'Awaiting confirmation',
+    paymentMeta: 'Confirmation pending',
+    paymentDot: '01',
+    actionLabel: 'Continue shopping',
+    actionHref: 'shop.html',
+    documentTitle: 'Payment Pending — LegendMural',
+  }),
+  payment_processing: Object.freeze({
+    detailStatus: 'Payment processing',
+    paymentMeta: 'Processing payment',
+    paymentDot: '01',
+    actionLabel: 'Continue shopping',
+    actionHref: 'shop.html',
+    documentTitle: 'Payment Processing — LegendMural',
+  }),
+  payment_failed: Object.freeze({
+    detailStatus: 'Payment not completed',
+    paymentMeta: 'Action required',
+    paymentDot: '!',
+    actionLabel: 'Review saved cart',
+    actionHref: 'shop.html',
+    documentTitle: 'Payment Not Completed — LegendMural',
+  }),
+  expired: Object.freeze({
+    detailStatus: 'Checkout expired',
+    paymentMeta: 'New checkout required',
+    paymentDot: '!',
+    actionLabel: 'Review saved cart',
+    actionHref: 'shop.html',
+    documentTitle: 'Checkout Expired — LegendMural',
+  }),
+  paid: Object.freeze({
+    detailStatus: 'Payment confirmed',
+    paymentMeta: 'Payment secured',
+    paymentDot: '✓',
+    actionLabel: 'Explore more legends',
+    actionHref: 'shop.html',
+    documentTitle: 'Order Confirmed — LegendMural',
+    title: 'Your legend is on its way.',
+    message: 'Your payment has been verified by the server and your order is confirmed. We’ll take it from here.',
+  }),
+  unavailable: Object.freeze({
+    detailStatus: 'Verification unavailable',
+    paymentMeta: 'Review required',
+    paymentDot: '?',
+    actionLabel: 'Continue shopping',
+    actionHref: 'shop.html',
+    documentTitle: 'Payment Status — LegendMural',
+  }),
+});
+
 const elements = {
   card: document.getElementById('order-status-card'),
   label: document.getElementById('order-status-label'),
@@ -22,13 +107,46 @@ const elements = {
   orderIdBlock: document.getElementById('order-id-block'),
   orderIdValue: document.getElementById('order-id-value'),
   withdrawLink: document.getElementById('order-withdraw-link'),
+  detailStatus: document.getElementById('order-detail-status'),
+  paymentDot: document.getElementById('order-progress-payment-dot'),
+  paymentMeta: document.getElementById('order-progress-payment-meta'),
+  primaryAction: document.getElementById('order-primary-action'),
 };
+
+function resolvePresentation(state) {
+  return ORDER_RETURN_PRESENTATION[state] || ORDER_RETURN_PRESENTATION.unavailable;
+}
+
+function applyPresentation(state) {
+  const presentation = resolvePresentation(state);
+
+  if (elements.detailStatus) elements.detailStatus.textContent = presentation.detailStatus;
+  if (elements.paymentDot) elements.paymentDot.textContent = presentation.paymentDot;
+  if (elements.paymentMeta) elements.paymentMeta.textContent = presentation.paymentMeta;
+  if (presentation.documentTitle) document.title = presentation.documentTitle;
+
+  if (elements.primaryAction) {
+    elements.primaryAction.textContent = presentation.actionLabel;
+    if (presentation.actionHref) {
+      elements.primaryAction.setAttribute('href', presentation.actionHref);
+      elements.primaryAction.removeAttribute('aria-disabled');
+      elements.primaryAction.classList.remove('order-action--disabled');
+    } else {
+      elements.primaryAction.removeAttribute('href');
+      elements.primaryAction.setAttribute('aria-disabled', 'true');
+      elements.primaryAction.classList.add('order-action--disabled');
+    }
+  }
+
+  return presentation;
+}
 
 function render(copy, state) {
   if (elements.card) elements.card.dataset.orderStatus = state;
+  const presentation = applyPresentation(state);
   if (elements.label) elements.label.textContent = copy.label;
-  if (elements.title) elements.title.textContent = copy.title;
-  if (elements.message) elements.message.textContent = copy.message;
+  if (elements.title) elements.title.textContent = presentation.title || copy.title;
+  if (elements.message) elements.message.textContent = presentation.message || copy.message;
 }
 
 function renderUnavailable(message) {
