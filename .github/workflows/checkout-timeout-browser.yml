@@ -1,0 +1,87 @@
+name: Checkout timeout browser regression
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checkout-timeout-browser-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser-regression:
+    name: Chrome checkout timeout regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set up Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v2
+
+      - name: Start Vite and run the real browser regression
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+        run: |
+          set -euo pipefail
+          npm run dev -- --host 127.0.0.1 > /tmp/legendmural-vite.log 2>&1 &
+          VITE_PID=$!
+          trap 'kill "$VITE_PID" 2>/dev/null || true' EXIT
+
+          READY=0
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:5173/tests/browser/checkout-timeout-harness.html > /dev/null; then
+              READY=1
+              break
+            fi
+            sleep 1
+          done
+
+          if [ "$READY" -ne 1 ]; then
+            echo "Vite did not become ready."
+            cat /tmp/legendmural-vite.log || true
+            exit 1
+          fi
+
+          "$CHROME_PATH" \
+            --headless=new \
+            --no-sandbox \
+            --disable-gpu \
+            --virtual-time-budget=7000 \
+            --dump-dom \
+            http://127.0.0.1:5173/tests/browser/checkout-timeout-harness.html \
+            > /tmp/checkout-timeout-browser.html
+
+          cat /tmp/checkout-timeout-browser.html
+
+          grep -q 'data-test-status="passed"' /tmp/checkout-timeout-browser.html
+          grep -q 'data-callback-count="1"' /tmp/checkout-timeout-browser.html
+          grep -q 'data-fallback-source="manual"' /tmp/checkout-timeout-browser.html
+
+      - name: Upload diagnostics on failure only
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: checkout-timeout-browser-diagnostics
+          path: |
+            /tmp/legendmural-vite.log
+            /tmp/checkout-timeout-browser.html
+          if-no-files-found: warn
+          retention-days: 1
