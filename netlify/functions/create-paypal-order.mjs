@@ -78,7 +78,13 @@ export function createNetlifyPayPalCheckoutHandler({
         code: 'PAYPAL_CHECKOUT_SERVICE_NOT_CONFIGURED',
         message: 'The PayPal checkout service is not configured.',
       });
-      if (configurationResponse) return configurationResponse;
+      if (configurationResponse) {
+        console.error('Netlify PayPal checkout configuration error.', {
+          name: error?.name || 'Error',
+          code: error?.code || 'UNKNOWN',
+        });
+        return configurationResponse;
+      }
 
       console.error('Unexpected Netlify PayPal checkout bootstrap error.', {
         name: error?.name || 'Error',
