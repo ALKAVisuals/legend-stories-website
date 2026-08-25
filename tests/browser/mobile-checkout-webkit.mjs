@@ -98,17 +98,28 @@ try {
   await page.locator('#checkout-email').fill('mobile-test@example.invalid');
 
   const street = page.locator('#checkout-street');
+  const zip = page.locator('#checkout-zip');
+  const addressStatus = page.locator('#checkout-address-status');
   await street.tap();
-  await page.locator('#checkout-address-status').waitFor({ state: 'attached' });
+  await addressStatus.waitFor({ state: 'attached' });
 
   const beforeTyping = await street.boundingBox();
+  const zipBeforeTyping = await zip.boundingBox();
+  const streetFontSize = await street.evaluate((element) => getComputedStyle(element).fontSize);
+
   await street.pressSequentially('sc', { delay: 120 });
   await page.waitForTimeout(150);
-  const afterTyping = await street.boundingBox();
-  const activeId = await page.evaluate(() => document.activeElement?.id || '');
 
-  if (!beforeTyping || !afterTyping) {
-    throw new Error('Street input bounding box was unavailable.');
+  const afterTyping = await street.boundingBox();
+  const zipAfterTyping = await zip.boundingBox();
+  const activeId = await page.evaluate(() => document.activeElement?.id || '');
+  const hiddenStatusStyle = await addressStatus.evaluate((element) => ({
+    display: getComputedStyle(element).display,
+    visibility: getComputedStyle(element).visibility,
+  }));
+
+  if (!beforeTyping || !afterTyping || !zipBeforeTyping || !zipAfterTyping) {
+    throw new Error('Checkout address field bounding box was unavailable.');
   }
 
   const positionDelta = Math.max(
@@ -116,16 +127,26 @@ try {
     Math.abs(beforeTyping.y - afterTyping.y),
     Math.abs(beforeTyping.width - afterTyping.width),
   );
+  const followingFieldDelta = Math.abs(zipBeforeTyping.y - zipAfterTyping.y);
 
+  if (streetFontSize !== '16px') {
+    throw new Error(`Expected 16px mobile checkout font size, received ${streetFontSize}.`);
+  }
   if (positionDelta > 1) {
     throw new Error(`Street input shifted by ${positionDelta.toFixed(2)}px while typing.`);
+  }
+  if (followingFieldDelta > 1) {
+    throw new Error(`Postal-code field shifted by ${followingFieldDelta.toFixed(2)}px while address helper text changed.`);
   }
   if (activeId !== 'checkout-street') {
     throw new Error(`Street input lost focus while typing; active element is ${activeId || 'none'}.`);
   }
+  if (hiddenStatusStyle.display === 'none') {
+    throw new Error('Address helper row collapsed while hidden.');
+  }
 
   await street.fill('Example Street 4');
-  await page.locator('#checkout-zip').fill('1015 AB');
+  await zip.fill('1015 AB');
   await page.locator('#checkout-city').fill('Amsterdam');
   await page.locator('#checkout-country').selectOption('NL');
 
@@ -153,8 +174,12 @@ try {
     result: 'passed',
     browser: 'webkit',
     device: 'iPhone 13',
+    streetFontSize,
     streetPositionDeltaPx: Number(positionDelta.toFixed(2)),
+    followingFieldDeltaPx: Number(followingFieldDelta.toFixed(2)),
     streetFocusPreserved: activeId === 'checkout-street',
+    hiddenStatusDisplay: hiddenStatusStyle.display,
+    hiddenStatusVisibility: hiddenStatusStyle.visibility,
     navigationCount: navigations.length,
     finalUrl: currentUrl,
   }, null, 2));
