@@ -5,7 +5,7 @@ html[data-theme="light"] footer,
 html.light-mode footer {
   background: #f1f0ec !important;
   color: #1a1a1a !important;
-  border-color: rgba(17, 17, 17, 0.12) !important;
+  border-color: rgba(17, 17, 17, 0.12);
 }
 
 html[data-theme="light"] footer .text-text-primary,
