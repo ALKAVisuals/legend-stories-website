@@ -11,8 +11,8 @@ This document is the current operational handoff for the LegendMural production 
 - Public origin: `https://legendmural.com`
 - Payment provider for launch: PayPal Live
 - Database: Neon Postgres
-- Current `main`: `649deded0eaa53e5d10967397e16de3b11bbcd3b` (PR #132, documentation-only handoff update).
-- Last runtime-code-changing baseline before that docs-only merge: `93cd30fae5208d2d853bd6dbe7116b69adadd3d0` (PR #131).
+- Last runtime-code-changing baseline: `93cd30fae5208d2d853bd6dbe7116b69adadd3d0` (PR #131).
+- Subsequent handoff maintenance PRs #132 and #133 are documentation-only and do not change the runtime website behavior.
 - GitHub Pages is being used only as a temporary visual/static preview before publishing newer work to Netlify Production.
 - Latest reviewed GitHub Pages preview commit: `ff87f6e46ab7085e6185493c252c9e2cc82077d0`; its build and deploy both completed successfully.
 - Workflow rule: do not publish newer website changes to Netlify Production until the owner has visually approved them in the GitHub Pages preview.
@@ -34,7 +34,7 @@ This document is the current operational handoff for the LegendMural production 
 - PR #129 — light-mode footer contrast hardening; dark mode deliberately unchanged.
 - PR #130 — homepage contact email source updated directly to `info@legendmural.com`.
 - PR #131 — obsolete runtime replacement of the legacy contact email removed; contract tests updated accordingly.
-- PR #132 — this production handoff refreshed with the latest runtime observations and next-chat tasks; documentation only.
+- PR #132/#133 — production-handoff refresh and baseline clarification; documentation only.
 
 ## GitHub Pages preview status
 
@@ -206,14 +206,14 @@ Do not bundle multiple risky production changes into one step.
 
 Do not immediately deploy or run a real payment. Start by establishing the runtime baseline.
 
-1. Confirm the exact runtime-code commit currently published by Netlify Production and compare it with current `main` (`649deded...`, with runtime code equivalent to `93cd30f...`).
+1. Confirm the exact runtime-code commit currently published by Netlify Production and compare it with runtime-code baseline `93cd30f...`.
 2. Reproduce/analyse the mobile checkout address behavior and unexpected product-page navigation without speculative code changes.
 3. Fix the checkout/mobile address blocker and add regression coverage.
 4. Validate the fix in GitHub/appropriate safe preview or test path first.
 5. Rebuild the About Us section from a newly agreed narrative architecture.
 6. Add the supplied YouTube and Facebook links and verify social navigation.
 7. Obtain owner visual approval of all new frontend work in GitHub preview.
-8. Only then publish the approved `main` to Netlify Production.
+8. Only then publish the approved runtime code to Netlify Production.
 9. Perform production smoke checks, including Netlify Forms.
 10. Perform one controlled real PayPal Live order and verify capture/webhook/Neon/order-status/PayPal receipt end-to-end.
 11. Use that real order to test the withdrawal flow safely.
