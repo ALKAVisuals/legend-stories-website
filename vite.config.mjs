@@ -27,6 +27,22 @@ function checkoutControlsStylesPlugin() {
   };
 }
 
+function footerThemeStylesPlugin() {
+  return {
+    name: 'footer-theme-styles',
+    transformIndexHtml: {
+      order: 'post',
+      handler() {
+        return [{
+          tag: 'link',
+          attrs: { rel: 'stylesheet', href: '/css/footer-theme.css' },
+          injectTo: 'head',
+        }];
+      },
+    },
+  };
+}
+
 function contactFormScriptPlugin() {
   return {
     name: 'contact-form-script',
@@ -49,6 +65,7 @@ export default defineConfig({
   plugins: [
     checkoutControlsStylesPlugin(),
     contactFormScriptPlugin(),
+    footerThemeStylesPlugin(),
     productionOriginPlugin({ root: ROOT, outDir: 'dist' }),
   ],
   build: {
