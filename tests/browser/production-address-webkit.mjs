@@ -1,15 +1,36 @@
 import { webkit, devices } from 'playwright';
 
 const baseUrl = 'https://legendmural.com';
+const appSourceResponse = await fetch(`${baseUrl}/js/app.js`, { redirect: 'follow' });
+if (!appSourceResponse.ok) {
+  throw new Error(`Could not read production app.js: HTTP ${appSourceResponse.status}`);
+}
+const productionAppSource = await appSourceResponse.text();
+const schemaMatch = productionAppSource.match(/CART_SCHEMA_VERSION\s*=\s*['"]([^'"]+)['"]/);
+if (!schemaMatch) {
+  throw new Error('Could not determine the production cart schema version.');
+}
+const cartSchemaVersion = schemaMatch[1];
+
 const browser = await webkit.launch({ headless: true });
 const context = await browser.newContext({
   ...devices['iPhone 13'],
   locale: 'en-NL',
+  reducedMotion: 'reduce',
 });
 
 const page = await context.newPage();
 const navigations = [];
 const consoleMessages = [];
+
+await page.route('**/*', async (route) => {
+  const type = route.request().resourceType();
+  if (['image', 'media', 'font'].includes(type)) {
+    await route.abort();
+    return;
+  }
+  await route.continue();
+});
 
 page.on('framenavigated', (frame) => {
   if (frame === page.mainFrame()) navigations.push(frame.url());
@@ -19,9 +40,9 @@ page.on('console', (message) => {
   if (/google|places|address/i.test(text)) consoleMessages.push(`${message.type()}: ${text}`);
 });
 
-await page.addInitScript(() => {
+await page.addInitScript(({ schemaVersion }) => {
   try {
-    localStorage.setItem('legendCartVersion', '4');
+    localStorage.setItem('legendCartVersion', schemaVersion);
     localStorage.setItem('legendShippingCountry', 'NL');
     localStorage.setItem('legendDiscountCode', '');
     localStorage.setItem('legendCart', JSON.stringify([
@@ -43,7 +64,7 @@ await page.addInitScript(() => {
   } catch {
     // The destination document gets another chance to run this init script.
   }
-});
+}, { schemaVersion: cartSchemaVersion });
 
 function roundedBox(box) {
   if (!box) return null;
@@ -67,9 +88,19 @@ function maxBoxDelta(a, b) {
 
 try {
   await page.goto(`${baseUrl}/shop.html`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-  await page.waitForFunction(() => document.getElementById('cart-count')?.textContent === '1', null, { timeout: 15_000 });
-  navigations.length = 0;
 
+  try {
+    await page.waitForFunction(() => document.getElementById('cart-count')?.textContent === '1', null, { timeout: 15_000 });
+  } catch {
+    const cartState = await page.evaluate(() => ({
+      cartCount: document.getElementById('cart-count')?.textContent || '',
+      cartVersion: localStorage.getItem('legendCartVersion'),
+      cart: localStorage.getItem('legendCart'),
+    }));
+    throw new Error(`Production did not load the seeded cart. Runtime schema=${cartSchemaVersion}; state=${JSON.stringify(cartState)}`);
+  }
+
+  navigations.length = 0;
   await page.locator('#cart-btn').tap();
   await page.locator('#checkout-btn').tap();
   await page.locator('#checkout-drawer[aria-hidden="false"]').waitFor({ timeout: 10_000 });
@@ -119,6 +150,7 @@ try {
   const result = {
     result: 'observed',
     target: baseUrl,
+    productionCartSchemaVersion: cartSchemaVersion,
     browser: 'webkit',
     device: 'iPhone 13',
     before: roundedBox(before),
