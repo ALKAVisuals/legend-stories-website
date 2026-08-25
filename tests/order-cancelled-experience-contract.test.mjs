@@ -11,9 +11,10 @@ test('cancelled checkout remains premium, static and non-destructive', () => {
   assert.match(html, /css\/order-experience\.css/);
   assert.match(html, /css\/order-cancelled\.css/);
   assert.match(html, /data-order-status=["']cancelled["']/);
-  assert.match(html, />Your cart is still here\.</);
+  assert.match(html, />Payment cancelled<\/h1>/);
+  assert.match(html, /Your cart is still here\./);
+  assert.match(html, /Your cart remains saved in this browser/);
   assert.match(html, /href=["']shop\.html["'][^>]*>Review saved cart</);
-  assert.match(html, /Nothing in your saved cart has been cleared/i);
   assert.match(html, /This page does not mark an order as paid/i);
 
   assert.doesNotMatch(html, /order-return\.js/);
