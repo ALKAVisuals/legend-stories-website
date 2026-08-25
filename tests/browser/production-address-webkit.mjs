@@ -1,16 +1,16 @@
 import { webkit, devices } from 'playwright';
 
 const baseUrl = 'https://legendmural.com';
+const targetPath = '/music-truth-seeker.html';
 const appSourceResponse = await fetch(`${baseUrl}/js/app.js`, { redirect: 'follow' });
 if (!appSourceResponse.ok) {
   throw new Error(`Could not read production app.js: HTTP ${appSourceResponse.status}`);
 }
 const productionAppSource = await appSourceResponse.text();
 const schemaMatch = productionAppSource.match(/CART_SCHEMA_VERSION\s*=\s*['"]([^'"]+)['"]/);
-if (!schemaMatch) {
-  throw new Error('Could not determine the production cart schema version.');
-}
+if (!schemaMatch) throw new Error('Could not determine the production cart schema version.');
 const cartSchemaVersion = schemaMatch[1];
+console.log(`Production cart schema: ${cartSchemaVersion}`);
 
 const browser = await webkit.launch({ headless: true });
 const context = await browser.newContext({
@@ -18,18 +18,14 @@ const context = await browser.newContext({
   locale: 'en-NL',
   reducedMotion: 'reduce',
 });
-
 const page = await context.newPage();
 const navigations = [];
 const consoleMessages = [];
 
 await page.route('**/*', async (route) => {
   const type = route.request().resourceType();
-  if (['image', 'media', 'font'].includes(type)) {
-    await route.abort();
-    return;
-  }
-  await route.continue();
+  if (['image', 'media', 'font'].includes(type)) return route.abort();
+  return route.continue();
 });
 
 page.on('framenavigated', (frame) => {
@@ -39,6 +35,7 @@ page.on('console', (message) => {
   const text = message.text();
   if (/google|places|address/i.test(text)) consoleMessages.push(`${message.type()}: ${text}`);
 });
+page.on('pageerror', (error) => consoleMessages.push(`pageerror: ${error.message}`));
 
 await page.addInitScript(({ schemaVersion }) => {
   try {
@@ -47,9 +44,9 @@ await page.addInitScript(({ schemaVersion }) => {
     localStorage.setItem('legendDiscountCode', '');
     localStorage.setItem('legendCart', JSON.stringify([
       {
-        id: 'combat-balanced-mind-combat-legend-mural.html::statement-45',
-        page: 'combat-balanced-mind-combat-legend-mural.html',
-        name: 'The Balanced Mind',
+        id: 'music-truth-seeker.html::statement-45',
+        page: 'music-truth-seeker.html',
+        name: 'The Truth Seeker',
         price: 45,
         variantId: 'statement-45',
         variantLabel: 'Statement',
@@ -58,47 +55,29 @@ await page.addInitScript(({ schemaVersion }) => {
         widthCm: 45,
         heightCm: 45,
         quantity: 1,
-        image: 'media/stikkers/2026/Batch 4/combat Legends/balanced-mind-combat-legend-mural.png',
+        image: '',
       },
     ]));
-  } catch {
-    // The destination document gets another chance to run this init script.
-  }
+  } catch {}
 }, { schemaVersion: cartSchemaVersion });
 
-function roundedBox(box) {
-  if (!box) return null;
-  return {
-    x: Number(box.x.toFixed(2)),
-    y: Number(box.y.toFixed(2)),
-    width: Number(box.width.toFixed(2)),
-    height: Number(box.height.toFixed(2)),
-  };
-}
+const roundedBox = (box) => box ? {
+  x: Number(box.x.toFixed(2)),
+  y: Number(box.y.toFixed(2)),
+  width: Number(box.width.toFixed(2)),
+  height: Number(box.height.toFixed(2)),
+} : null;
 
-function maxBoxDelta(a, b) {
-  if (!a || !b) return null;
-  return Math.max(
-    Math.abs(a.x - b.x),
-    Math.abs(a.y - b.y),
-    Math.abs(a.width - b.width),
-    Math.abs(a.height - b.height),
-  );
-}
+const maxBoxDelta = (a, b) => (!a || !b) ? null : Math.max(
+  Math.abs(a.x - b.x),
+  Math.abs(a.y - b.y),
+  Math.abs(a.width - b.width),
+  Math.abs(a.height - b.height),
+);
 
 try {
-  await page.goto(`${baseUrl}/shop.html`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-
-  try {
-    await page.waitForFunction(() => document.getElementById('cart-count')?.textContent === '1', null, { timeout: 15_000 });
-  } catch {
-    const cartState = await page.evaluate(() => ({
-      cartCount: document.getElementById('cart-count')?.textContent || '',
-      cartVersion: localStorage.getItem('legendCartVersion'),
-      cart: localStorage.getItem('legendCart'),
-    }));
-    throw new Error(`Production did not load the seeded cart. Runtime schema=${cartSchemaVersion}; state=${JSON.stringify(cartState)}`);
-  }
+  await page.goto(`${baseUrl}${targetPath}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+  await page.waitForFunction(() => document.getElementById('cart-count')?.textContent === '1', null, { timeout: 12_000 });
 
   navigations.length = 0;
   await page.locator('#cart-btn').tap();
@@ -107,7 +86,6 @@ try {
 
   const street = page.locator('#checkout-street');
   await street.tap();
-
   const before = await street.boundingBox();
   const focusBefore = await page.evaluate(() => document.activeElement?.id || '');
 
@@ -123,12 +101,6 @@ try {
   const state = await page.evaluate(() => {
     const input = document.getElementById('checkout-street');
     const status = document.getElementById('checkout-address-status');
-    const pac = [...document.querySelectorAll('.pac-container')].map((node) => ({
-      display: getComputedStyle(node).display,
-      visibility: getComputedStyle(node).visibility,
-      childCount: node.children.length,
-      text: String(node.textContent || '').trim().slice(0, 300),
-    }));
     return {
       activeElementId: document.activeElement?.id || '',
       value: input?.value || '',
@@ -137,19 +109,23 @@ try {
       statusText: String(status?.textContent || '').trim(),
       statusHidden: Boolean(status?.classList.contains('hidden')),
       googlePlacesReady: Boolean(window.google?.maps?.places),
-      autocompleteContainers: pac,
-      parentChildCount: input?.parentElement?.children?.length || 0,
+      autocompleteContainers: [...document.querySelectorAll('.pac-container')].map((node) => ({
+        display: getComputedStyle(node).display,
+        visibility: getComputedStyle(node).visibility,
+        childCount: node.children.length,
+        text: String(node.textContent || '').trim().slice(0, 300),
+      })),
     };
   });
 
   const currentUrl = page.url();
-  if (!currentUrl.startsWith(`${baseUrl}/shop.html`)) {
-    throw new Error(`Address-only probe unexpectedly navigated away from shop: ${currentUrl}`);
+  if (!currentUrl.startsWith(`${baseUrl}${targetPath}`)) {
+    throw new Error(`Address-only probe unexpectedly navigated away: ${currentUrl}`);
   }
 
   const result = {
     result: 'observed',
-    target: baseUrl,
+    target: `${baseUrl}${targetPath}`,
     productionCartSchemaVersion: cartSchemaVersion,
     browser: 'webkit',
     device: 'iPhone 13',
@@ -165,7 +141,6 @@ try {
     finalUrl: currentUrl,
     consoleMessages: consoleMessages.slice(-20),
   };
-
   console.log(JSON.stringify(result, null, 2));
 
   if (state.value !== 'sc') throw new Error(`Street value changed unexpectedly: ${state.value}`);
@@ -175,16 +150,6 @@ try {
   if ((result.deltaAfterSC ?? 0) > 1) {
     throw new Error(`Street input shifted by ${result.deltaAfterSC.toFixed(2)}px after typing sc.`);
   }
-} catch (error) {
-  console.error(error?.stack || error);
-  try {
-    await page.screenshot({ path: '/tmp/production-address-webkit.png', fullPage: true });
-    const html = await page.content();
-    await import('node:fs/promises').then(({ writeFile }) => writeFile('/tmp/production-address-webkit.html', html));
-  } catch (diagnosticError) {
-    console.error('Could not write production probe diagnostics:', diagnosticError);
-  }
-  throw error;
 } finally {
   await context.close();
   await browser.close();
