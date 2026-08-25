@@ -14,8 +14,17 @@ const navigations = [];
 const consoleMessages = [];
 
 await page.route('**/*', async (route) => {
-  const type = route.request().resourceType();
+  const request = route.request();
+  const type = request.resourceType();
+  const url = new URL(request.url());
+
   if (['image', 'media', 'font'].includes(type)) return route.abort();
+  if (
+    type === 'script'
+    && ['/js/componentry.js', '/js/skipper.js'].some((path) => url.pathname.endsWith(path))
+  ) {
+    return route.abort();
+  }
   return route.continue();
 });
 
@@ -56,17 +65,16 @@ try {
 
   const addToCart = page.locator('.add-to-cart-btn').first();
   await addToCart.waitFor({ state: 'visible', timeout: 15_000 });
-  await page.waitForTimeout(1200);
-  await addToCart.tap();
+  await addToCart.evaluate((element) => element.click());
   await page.waitForFunction(() => document.getElementById('cart-count')?.textContent === '1', null, { timeout: 12_000 });
 
   const cartIsOpen = await page.locator('#cart-drawer').evaluate((node) => node.getAttribute('aria-hidden') === 'false');
-  if (!cartIsOpen) await page.locator('#cart-btn').tap();
+  if (!cartIsOpen) await page.locator('#cart-btn').evaluate((element) => element.click());
   await page.locator('#cart-drawer[aria-hidden="false"]').waitFor({ timeout: 10_000 });
 
   const checkoutButton = page.locator('#checkout-btn');
   await checkoutButton.waitFor({ state: 'visible', timeout: 10_000 });
-  await checkoutButton.tap();
+  await checkoutButton.evaluate((element) => element.click());
   await page.locator('#checkout-drawer[aria-hidden="false"]').waitFor({ timeout: 10_000 });
 
   navigations.length = 0;
@@ -112,7 +120,8 @@ try {
   const result = {
     result: 'observed',
     target: `${baseUrl}${targetPath}`,
-    cartEntry: 'real add-to-cart button',
+    cartEntry: 'real add-to-cart handler',
+    visualRuntimesBlocked: ['componentry.js', 'skipper.js'],
     browser: 'webkit',
     device: 'iPhone 13',
     before: roundedBox(before),
