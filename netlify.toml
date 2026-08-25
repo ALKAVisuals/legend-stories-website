@@ -14,6 +14,7 @@
   LEGENDMURAL_HOSTED_CHECKOUT_ENDPOINT = "/api/paypal/checkout"
   LEGENDMURAL_ORDER_STATUS_ENDPOINT = "/api/order-status"
   LEGENDMURAL_PAYPAL_CAPTURE_ENDPOINT = "/api/paypal/capture"
+  SECRETS_SCAN_OMIT_KEYS = "RESEND_REPLY_TO"
 
 [functions]
   node_bundler = "esbuild"
