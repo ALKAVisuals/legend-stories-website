@@ -1,0 +1,82 @@
+name: Mobile checkout WebKit regression
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-checkout-webkit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  webkit-regression:
+    name: iPhone WebKit checkout regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install project dependencies
+        run: npm ci
+
+      - name: Install pinned Playwright WebKit for this test only
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.55.0
+          npx playwright install --with-deps webkit
+
+      - name: Start Vite
+        run: |
+          set -euo pipefail
+          npm run dev -- --host 127.0.0.1 > /tmp/legendmural-vite.log 2>&1 &
+          echo $! > /tmp/legendmural-vite.pid
+
+      - name: Wait for storefront
+        run: |
+          set -euo pipefail
+          READY=0
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:3001/shop.html > /dev/null; then
+              READY=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$READY" -ne 1 ]; then
+            echo "Vite did not become ready."
+            cat /tmp/legendmural-vite.log || true
+            exit 1
+          fi
+
+      - name: Run iPhone WebKit checkout regression
+        env:
+          TEST_BASE_URL: http://127.0.0.1:3001
+        run: node tests/browser/mobile-checkout-webkit.mjs
+
+      - name: Upload diagnostics on failure only
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mobile-checkout-webkit-diagnostics
+          path: /tmp/legendmural-vite.log
+          if-no-files-found: warn
+          retention-days: 1
+
+      - name: Stop Vite
+        if: always()
+        run: |
+          if [ -f /tmp/legendmural-vite.pid ]; then
+            kill "$(cat /tmp/legendmural-vite.pid)" 2>/dev/null || true
+          fi
