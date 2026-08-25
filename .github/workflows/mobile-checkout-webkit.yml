@@ -63,14 +63,18 @@ jobs:
       - name: Run iPhone WebKit checkout regression
         env:
           TEST_BASE_URL: http://127.0.0.1:3001
-        run: node tests/browser/mobile-checkout-webkit.mjs
+        run: |
+          set -o pipefail
+          node tests/browser/mobile-checkout-webkit.mjs 2>&1 | tee /tmp/mobile-checkout-webkit.log
 
       - name: Upload diagnostics on failure only
         if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: mobile-checkout-webkit-diagnostics
-          path: /tmp/legendmural-vite.log
+          path: |
+            /tmp/legendmural-vite.log
+            /tmp/mobile-checkout-webkit.log
           if-no-files-found: warn
           retention-days: 1
 
