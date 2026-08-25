@@ -1,5 +1,6 @@
 # LegendMural uses Netlify as the single intended production host.
 # GitHub Pages is not maintained as a parallel production target.
+# The canonical public origin is https://legendmural.com (apex, HTTPS).
 # PayPal is the only intended launch payment provider.
 # PayPal remains sandbox-only unless live mode is explicitly enabled at deployment.
 
@@ -13,10 +14,37 @@
   LEGENDMURAL_HOSTED_CHECKOUT_ENDPOINT = "/api/paypal/checkout"
   LEGENDMURAL_ORDER_STATUS_ENDPOINT = "/api/order-status"
   LEGENDMURAL_PAYPAL_CAPTURE_ENDPOINT = "/api/paypal/capture"
+  SECRETS_SCAN_OMIT_KEYS = "RESEND_REPLY_TO"
 
 [functions]
   node_bundler = "esbuild"
   included_files = ["data/products/catalog.json"]
+
+# Keep one authoritative public host. These host-level redirects take effect
+# after the corresponding domains are assigned to this Netlify site.
+[[redirects]]
+  from = "http://legendmural.com/*"
+  to = "https://legendmural.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://www.legendmural.com/*"
+  to = "https://legendmural.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.legendmural.com/*"
+  to = "https://legendmural.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://legendmural.netlify.app/*"
+  to = "https://legendmural.com/:splat"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/api/paypal/checkout"

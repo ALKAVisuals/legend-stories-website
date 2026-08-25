@@ -138,7 +138,10 @@ function mapError(error, origin) {
   if (error instanceof PayPalApiError) {
     return errorResponse(502, error.code, 'PayPal could not create the order.', origin);
   }
-  console.error('Unexpected PayPal checkout error:', error);
+  console.error('Unexpected PayPal checkout error.', {
+    name: error?.name || 'Error',
+    code: String(error?.code || 'UNKNOWN').slice(0, 120),
+  });
   return errorResponse(500, 'PAYPAL_CHECKOUT_FAILED', 'Checkout could not be started.', origin);
 }
 

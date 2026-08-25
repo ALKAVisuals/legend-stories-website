@@ -1,5 +1,7 @@
+import { WITHDRAWAL_DECLARATION } from '../withdrawals/statement.mjs';
+
 const ORDER_ID_PATTERN = /^[A-Z0-9]{1,36}$/;
-const CONFIRMATION_CODE_PATTERN = /^WD-[A-Z0-9-]{6,64}$/;
+const CONFIRMATION_CODE_PATTERN = /^LM-WD-[A-F0-9]{16}$/;
 
 export class WithdrawalNotificationError extends Error {
   constructor(code, message, details = {}) {
@@ -32,11 +34,14 @@ function normalizeEmail(value) {
 }
 
 export function createWithdrawalConfirmationMessage({
+  name,
   email,
   orderId,
   confirmationCode,
   withdrawnAt,
+  declaration = WITHDRAWAL_DECLARATION,
 } = {}) {
+  const consumerName = requiredText(name, 'name', 200);
   const normalizedEmail = normalizeEmail(email);
   const normalizedOrderId = requiredText(orderId, 'orderId', 36).toUpperCase();
   if (!ORDER_ID_PATTERN.test(normalizedOrderId)) {
@@ -46,6 +51,7 @@ export function createWithdrawalConfirmationMessage({
   if (!CONFIRMATION_CODE_PATTERN.test(normalizedCode)) {
     fail('INVALID_WITHDRAWAL_NOTIFICATION', 'Confirmation code is invalid.', { field: 'confirmationCode' });
   }
+  const normalizedDeclaration = requiredText(declaration, 'declaration', 500);
   if (!Number.isInteger(withdrawnAt) || withdrawnAt <= 0) {
     fail('INVALID_WITHDRAWAL_NOTIFICATION', 'Withdrawal timestamp is invalid.', { field: 'withdrawnAt' });
   }
@@ -56,7 +62,10 @@ export function createWithdrawalConfirmationMessage({
     template: 'withdrawal-confirmation',
     subject: `LegendMural withdrawal confirmation — ${normalizedOrderId}`,
     data: Object.freeze({
+      consumerName,
+      confirmationEmail: normalizedEmail,
       orderId: normalizedOrderId,
+      declaration: normalizedDeclaration,
       confirmationCode: normalizedCode,
       withdrawnAt,
       withdrawnAtIso,

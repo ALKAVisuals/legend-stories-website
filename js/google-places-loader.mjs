@@ -1,7 +1,7 @@
 const DEFAULT_CALLBACK_NAME = '__legendGooglePlacesReady';
 const DEFAULT_SCRIPT_ID = 'legend-google-places-script';
 const DEFAULT_TIMEOUT_MS = 10000;
-const DEFAULT_REQUEST_TIMEOUT_MS = 2500;
+const DEFAULT_REQUEST_TIMEOUT_MS = 4000;
 const REQUEST_TIMEOUT_FLAG = '__legendPlacesRequestTimeoutInstalled';
 
 function hasPlacesApi(windowRef) {
@@ -73,7 +73,21 @@ export function installPlacesRequestTimeout({
     });
     return true;
   } catch {
-    return false;
+    // Some browser/API combinations expose a non-configurable prototype method.
+    // Direct assignment can still be allowed in that case. Without this fallback,
+    // Google Places may never call back and the checkout can remain stuck forever.
+    try {
+      prototype.findPlaceFromQuery = findPlaceFromQueryWithTimeout;
+      if (prototype.findPlaceFromQuery !== findPlaceFromQueryWithTimeout) return false;
+      try {
+        prototype[REQUEST_TIMEOUT_FLAG] = true;
+      } catch {
+        // The timeout wrapper itself is the important part; the flag is optional here.
+      }
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 

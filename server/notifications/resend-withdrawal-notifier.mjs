@@ -21,6 +21,15 @@ function requiredText(value, field, maxLength) {
   return normalized;
 }
 
+function optionalText(value, field, maxLength) {
+  const normalized = String(value || '').trim();
+  if (!normalized) return '';
+  if (normalized.length > maxLength || /[\u0000-\u001F\u007F]/.test(normalized)) {
+    fail('RESEND_NOTIFIER_INVALID_CONFIG', `${field} is invalid.`, { field });
+  }
+  return normalized;
+}
+
 function escapeHtml(value) {
   return String(value)
     .replaceAll('&', '&amp;')
@@ -31,32 +40,40 @@ function escapeHtml(value) {
 }
 
 function renderWithdrawalConfirmation(message) {
+  const consumerName = escapeHtml(message.data.consumerName);
+  const confirmationEmail = escapeHtml(message.data.confirmationEmail);
   const orderId = escapeHtml(message.data.orderId);
   const confirmationCode = escapeHtml(message.data.confirmationCode);
   const withdrawnAtIso = escapeHtml(message.data.withdrawnAtIso);
+  const declaration = String(message.data.declaration || '');
   const text = [
     'LegendMural withdrawal confirmation',
     '',
+    `Consumer: ${message.data.consumerName}`,
     `Order ID: ${message.data.orderId}`,
+    `Confirmation email: ${message.data.confirmationEmail}`,
+    `Declaration: ${declaration}`,
     `Confirmation code: ${message.data.confirmationCode}`,
     `Received at: ${message.data.withdrawnAtIso}`,
     '',
-    'We have recorded your withdrawal request. This confirmation does not by itself confirm that a refund has been completed.',
+    'We have recorded your withdrawal notice. This confirmation does not by itself confirm that a refund has been completed.',
     '',
     'Keep this email for your records.',
   ].join('\n');
-  const html = `<!doctype html><html><body style="font-family:Arial,sans-serif;line-height:1.5;color:#111"><h1 style="font-size:20px">LegendMural withdrawal confirmation</h1><p>We have recorded your withdrawal request.</p><p><strong>Order ID:</strong> ${orderId}<br><strong>Confirmation code:</strong> ${confirmationCode}<br><strong>Received at:</strong> ${withdrawnAtIso}</p><p>This confirmation does not by itself confirm that a refund has been completed.</p><p>Keep this email for your records.</p></body></html>`;
+  const html = `<!doctype html><html><body style="font-family:Arial,sans-serif;line-height:1.5;color:#111"><h1 style="font-size:20px">LegendMural withdrawal confirmation</h1><p>We have recorded your withdrawal notice.</p><p><strong>Consumer:</strong> ${consumerName}<br><strong>Order ID:</strong> ${orderId}<br><strong>Confirmation email:</strong> ${confirmationEmail}<br><strong>Declaration:</strong> ${escapeHtml(declaration)}<br><strong>Confirmation code:</strong> ${confirmationCode}<br><strong>Received at:</strong> ${withdrawnAtIso}</p><p>This confirmation does not by itself confirm that a refund has been completed.</p><p>Keep this email for your records.</p></body></html>`;
   return { text, html };
 }
 
 export function createResendWithdrawalNotifier({
   apiKey,
   from,
+  replyTo = '',
   fetchImpl = globalThis.fetch,
   endpoint = RESEND_EMAIL_ENDPOINT,
 } = {}) {
   const normalizedApiKey = requiredText(apiKey, 'apiKey', 512);
   const normalizedFrom = requiredText(from, 'from', 320);
+  const normalizedReplyTo = optionalText(replyTo, 'replyTo', 320);
   if (typeof fetchImpl !== 'function') {
     fail('RESEND_NOTIFIER_INVALID_CONFIG', 'fetchImpl must be a function.', { field: 'fetchImpl' });
   }
@@ -80,6 +97,7 @@ export function createResendWithdrawalNotifier({
           subject: message.subject,
           text,
           html,
+          ...(normalizedReplyTo ? { reply_to: normalizedReplyTo } : {}),
           tags: [{ name: 'category', value: 'withdrawal_confirmation' }],
         }),
       });

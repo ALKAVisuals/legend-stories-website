@@ -1,0 +1,26 @@
+/* LegendMural checkout-native control fixes.
+   Keep this scoped to the checkout country selector so other native controls
+   retain their existing page-specific styling. */
+
+#checkout-country {
+  color-scheme: dark;
+}
+
+#checkout-country option,
+#checkout-country optgroup {
+  background-color: #111214;
+  color: #f3f4f6;
+}
+
+[data-theme="light"] #checkout-country,
+.light-mode #checkout-country {
+  color-scheme: light;
+}
+
+[data-theme="light"] #checkout-country option,
+[data-theme="light"] #checkout-country optgroup,
+.light-mode #checkout-country option,
+.light-mode #checkout-country optgroup {
+  background-color: #ffffff;
+  color: #171717;
+}

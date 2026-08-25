@@ -5,24 +5,29 @@ import {
   ResendNotifierError,
   RESEND_EMAIL_ENDPOINT,
 } from '../server/notifications/resend-withdrawal-notifier.mjs';
+import { WITHDRAWAL_DECLARATION } from '../server/withdrawals/statement.mjs';
 
 const message = {
   to: 'customer@example.com',
   template: 'withdrawal-confirmation',
   subject: 'LegendMural withdrawal confirmation — 82T24251E7500724R',
   data: {
+    consumerName: 'Ada Example',
+    confirmationEmail: 'customer@example.com',
     orderId: '82T24251E7500724R',
-    confirmationCode: 'WD-ABC12345',
+    declaration: WITHDRAWAL_DECLARATION,
+    confirmationCode: 'LM-WD-0123456789ABCDEF',
     withdrawnAt: 1786819200,
     withdrawnAtIso: '2026-08-15T16:00:00.000Z',
   },
 };
 
-test('sends the normalized withdrawal confirmation to the Resend email endpoint', async () => {
+test('sends statutory withdrawal acknowledgement content to the Resend email endpoint', async () => {
   let captured;
   const notifier = createResendWithdrawalNotifier({
     apiKey: 're_test_key',
     from: 'LegendMural <orders@example.com>',
+    replyTo: 'support@example.com',
     fetchImpl: async (url, options) => {
       captured = { url, options };
       return { ok: true, status: 200, async json() { return { id: 'resend-message-123' }; } };
@@ -35,15 +40,56 @@ test('sends the normalized withdrawal confirmation to the Resend email endpoint'
   assert.equal(captured.url, RESEND_EMAIL_ENDPOINT);
   assert.equal(captured.options.method, 'POST');
   assert.equal(captured.options.headers.authorization, 'Bearer re_test_key');
-  assert.equal(captured.options.headers['idempotency-key'], 'withdrawal-WD-ABC12345');
+  assert.equal(captured.options.headers['idempotency-key'], 'withdrawal-LM-WD-0123456789ABCDEF');
 
   const payload = JSON.parse(captured.options.body);
   assert.equal(payload.from, 'LegendMural <orders@example.com>');
+  assert.equal(payload.reply_to, 'support@example.com');
   assert.deepEqual(payload.to, ['customer@example.com']);
   assert.match(payload.subject, /82T24251E7500724R/);
-  assert.match(payload.text, /WD-ABC12345/);
-  assert.match(payload.html, /WD-ABC12345/);
+  assert.match(payload.text, /Ada Example/);
+  assert.match(payload.text, /customer@example\.com/);
+  assert.match(payload.text, /I withdraw from the contract identified by the Order ID below/);
+  assert.match(payload.text, /2026-08-15T16:00:00\.000Z/);
+  assert.match(payload.text, /LM-WD-0123456789ABCDEF/);
+  assert.match(payload.html, /Ada Example/);
+  assert.match(payload.html, /I withdraw from the contract identified by the Order ID below/);
+  assert.match(payload.html, /2026-08-15T16:00:00\.000Z/);
   assert.deepEqual(payload.tags, [{ name: 'category', value: 'withdrawal_confirmation' }]);
+});
+
+test('omits reply_to when no operational reply address is configured', async () => {
+  let body;
+  const notifier = createResendWithdrawalNotifier({
+    apiKey: 're_test_key',
+    from: 'LegendMural <orders@example.com>',
+    fetchImpl: async (_url, options) => {
+      body = JSON.parse(options.body);
+      return { ok: true, status: 200, async json() { return { id: 'no-reply-message' }; } };
+    },
+  });
+
+  await notifier.sendWithdrawalConfirmation(message);
+  assert.equal(Object.hasOwn(body, 'reply_to'), false);
+});
+
+test('renders the declaration snapshot supplied by durable storage', async () => {
+  let body;
+  const notifier = createResendWithdrawalNotifier({
+    apiKey: 're_test_key',
+    from: 'LegendMural <orders@example.com>',
+    fetchImpl: async (_url, options) => {
+      body = JSON.parse(options.body);
+      return { ok: true, status: 200, async json() { return { id: 'snapshot-message' }; } };
+    },
+  });
+
+  await notifier.sendWithdrawalConfirmation({
+    ...message,
+    data: { ...message.data, declaration: 'Historic statement snapshot.' },
+  });
+  assert.match(body.text, /Historic statement snapshot\./);
+  assert.match(body.html, /Historic statement snapshot\./);
 });
 
 test('rejects unsupported notification message types before network delivery', async () => {
@@ -83,5 +129,18 @@ test('requires explicit provider configuration', () => {
   assert.throws(
     () => createResendWithdrawalNotifier({ apiKey: '', from: 'LegendMural <orders@example.com>' }),
     (error) => error instanceof ResendNotifierError && error.code === 'RESEND_NOTIFIER_INVALID_CONFIG',
+  );
+});
+
+test('rejects unsafe reply-to configuration before network use', () => {
+  assert.throws(
+    () => createResendWithdrawalNotifier({
+      apiKey: 're_test_key',
+      from: 'LegendMural <orders@example.com>',
+      replyTo: 'support@example.com\nBcc: attacker@example.com',
+    }),
+    (error) => error instanceof ResendNotifierError
+      && error.code === 'RESEND_NOTIFIER_INVALID_CONFIG'
+      && error.details.field === 'replyTo',
   );
 });
