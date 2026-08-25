@@ -2,15 +2,6 @@ import { webkit, devices } from 'playwright';
 
 const baseUrl = 'https://legendmural.com';
 const targetPath = '/music-truth-seeker.html';
-const appSourceResponse = await fetch(`${baseUrl}/js/app.js`, { redirect: 'follow' });
-if (!appSourceResponse.ok) {
-  throw new Error(`Could not read production app.js: HTTP ${appSourceResponse.status}`);
-}
-const productionAppSource = await appSourceResponse.text();
-const schemaMatch = productionAppSource.match(/CART_SCHEMA_VERSION\s*=\s*['"]([^'"]+)['"]/);
-if (!schemaMatch) throw new Error('Could not determine the production cart schema version.');
-const cartSchemaVersion = schemaMatch[1];
-console.log(`Production cart schema: ${cartSchemaVersion}`);
 
 const browser = await webkit.launch({ headless: true });
 const context = await browser.newContext({
@@ -37,29 +28,14 @@ page.on('console', (message) => {
 });
 page.on('pageerror', (error) => consoleMessages.push(`pageerror: ${error.message}`));
 
-await page.addInitScript(({ schemaVersion }) => {
+await page.addInitScript(() => {
   try {
-    localStorage.setItem('legendCartVersion', schemaVersion);
-    localStorage.setItem('legendShippingCountry', 'NL');
-    localStorage.setItem('legendDiscountCode', '');
-    localStorage.setItem('legendCart', JSON.stringify([
-      {
-        id: 'music-truth-seeker.html::statement-45',
-        page: 'music-truth-seeker.html',
-        name: 'The Truth Seeker',
-        price: 45,
-        variantId: 'statement-45',
-        variantLabel: 'Statement',
-        sizeCm: 45,
-        sizeLabel: '45 cm',
-        widthCm: 45,
-        heightCm: 45,
-        quantity: 1,
-        image: '',
-      },
-    ]));
+    localStorage.removeItem('legendCart');
+    localStorage.removeItem('legendCartVersion');
+    localStorage.removeItem('legendShippingCountry');
+    localStorage.removeItem('legendDiscountCode');
   } catch {}
-}, { schemaVersion: cartSchemaVersion });
+});
 
 const roundedBox = (box) => box ? {
   x: Number(box.x.toFixed(2)),
@@ -77,13 +53,23 @@ const maxBoxDelta = (a, b) => (!a || !b) ? null : Math.max(
 
 try {
   await page.goto(`${baseUrl}${targetPath}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+
+  const addToCart = page.locator('.add-to-cart-btn').first();
+  await addToCart.waitFor({ state: 'visible', timeout: 15_000 });
+  await page.waitForTimeout(1200);
+  await addToCart.tap();
   await page.waitForFunction(() => document.getElementById('cart-count')?.textContent === '1', null, { timeout: 12_000 });
 
-  navigations.length = 0;
-  await page.locator('#cart-btn').tap();
-  await page.locator('#checkout-btn').tap();
+  const cartIsOpen = await page.locator('#cart-drawer').evaluate((node) => node.getAttribute('aria-hidden') === 'false');
+  if (!cartIsOpen) await page.locator('#cart-btn').tap();
+  await page.locator('#cart-drawer[aria-hidden="false"]').waitFor({ timeout: 10_000 });
+
+  const checkoutButton = page.locator('#checkout-btn');
+  await checkoutButton.waitFor({ state: 'visible', timeout: 10_000 });
+  await checkoutButton.tap();
   await page.locator('#checkout-drawer[aria-hidden="false"]').waitFor({ timeout: 10_000 });
 
+  navigations.length = 0;
   const street = page.locator('#checkout-street');
   await street.tap();
   const before = await street.boundingBox();
@@ -126,7 +112,7 @@ try {
   const result = {
     result: 'observed',
     target: `${baseUrl}${targetPath}`,
-    productionCartSchemaVersion: cartSchemaVersion,
+    cartEntry: 'real add-to-cart button',
     browser: 'webkit',
     device: 'iPhone 13',
     before: roundedBox(before),
@@ -150,6 +136,16 @@ try {
   if ((result.deltaAfterSC ?? 0) > 1) {
     throw new Error(`Street input shifted by ${result.deltaAfterSC.toFixed(2)}px after typing sc.`);
   }
+} catch (error) {
+  console.error(error?.stack || error);
+  try {
+    await page.screenshot({ path: '/tmp/production-address-webkit.png', fullPage: true });
+    const html = await page.content();
+    await import('node:fs/promises').then(({ writeFile }) => writeFile('/tmp/production-address-webkit.html', html));
+  } catch (diagnosticError) {
+    console.error('Could not write diagnostics:', diagnosticError);
+  }
+  throw error;
 } finally {
   await context.close();
   await browser.close();
