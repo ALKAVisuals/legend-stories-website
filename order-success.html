@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Your secure LegendMural payment has been submitted and is awaiting confirmation.">
   <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0a0a0a">
   <title>Payment Submitted — LegendMural</title>
   <meta property="og:title" content="Payment Submitted — LegendMural">
   <meta property="og:description" content="Your secure LegendMural payment has been submitted and is awaiting confirmation.">
@@ -21,42 +22,123 @@
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/shared.css">
+  <link rel="stylesheet" href="css/order-experience.css">
 </head>
-<body class="min-h-screen bg-void text-text-primary font-body flex flex-col">
-  <header class="border-b border-surface-border/20 glass">
-    <div class="max-w-6xl mx-auto px-5 sm:px-6 h-16 md:h-20 flex items-center justify-between">
-      <a href="index.html" class="flex items-center" aria-label="LegendMural Home">
-        <img src="media/LOGO/lm-logo-transparant.png" alt="LegendMural" class="h-8 md:h-10 w-auto object-contain">
+<body class="order-page text-text-primary font-body">
+  <header class="order-header glass">
+    <div class="order-shell order-header__inner">
+      <a href="index.html" class="flex items-center logo-wrap" aria-label="LegendMural Home">
+        <img src="media/LOGO/lm-logo-transparant.png" alt="" class="h-8 md:h-10 w-auto object-contain logo-glow" data-hide-on-error>
       </a>
-      <a href="shop.html" class="text-sm font-medium text-text-secondary hover:text-mint transition-colors">Back to shop</a>
+      <a href="shop.html" class="order-header__link">Continue shopping</a>
     </div>
   </header>
 
-  <main class="flex-1 flex items-center justify-center px-5 py-16">
-    <section id="order-status-card" data-order-status="verification-disabled" class="w-full max-w-2xl text-center rounded-3xl border border-surface-border/30 bg-surface/70 p-8 sm:p-12 shadow-2xl" aria-live="polite">
-      <div class="mx-auto mb-7 w-16 h-16 rounded-full bg-mint/10 border border-mint/30 flex items-center justify-center" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-mint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-        </svg>
+  <main class="order-main">
+    <section id="order-status-card" data-order-status="verification-disabled" class="order-shell order-experience" aria-live="polite">
+      <div class="order-hero">
+        <div class="order-status-mark" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+        </div>
+        <p id="order-status-label" class="order-status-kicker">Payment awaiting confirmation</p>
+        <h1 id="order-status-title" class="order-status-title">Payment submitted</h1>
+        <p id="order-status-message" class="order-status-message">
+          Your payment has not been confirmed by the server yet. Your cart remains saved while confirmation is pending.
+        </p>
       </div>
-      <p id="order-status-label" class="text-xs uppercase tracking-[0.28em] text-mint font-semibold mb-3">Payment awaiting confirmation</p>
-      <h1 id="order-status-title" class="font-display text-4xl sm:text-5xl font-semibold mb-5">Payment submitted</h1>
-      <p id="order-status-message" class="text-text-secondary leading-relaxed max-w-xl mx-auto">
-        Your payment has not been confirmed by the server yet. Your cart remains saved while confirmation is pending.
-      </p>
-      <div id="order-id-block" class="hidden mt-6 rounded-xl border border-surface-border/30 bg-void/40 p-4 text-left"><p class="text-xs uppercase tracking-wider text-text-muted mb-1">Order ID</p><p id="order-id-value" class="font-mono text-sm break-all text-text-primary"></p><p class="text-xs text-text-muted mt-2">Keep this Order ID with your payment records. It can be used with your order email for the online withdrawal function.</p></div><p id="order-status-note" class="mt-4 text-sm text-text-muted">
-        Keep your payment confirmation email for your records. Your cart is not cleared automatically until the server verifies this exact Checkout Session.
-      </p>
-      <div class="mt-9 flex flex-col sm:flex-row gap-3 justify-center">
-        <a href="shop.html" class="inline-flex items-center justify-center rounded-xl bg-mint text-void px-6 py-3 font-semibold hover:opacity-90 transition-opacity">Continue shopping</a>
-        <a id="order-withdraw-link" href="withdraw.html" class="hidden inline-flex items-center justify-center rounded-xl border border-surface-border/50 px-6 py-3 font-semibold text-text-secondary hover:text-mint hover:border-mint/40 transition-colors">Withdraw from purchase</a><a href="index.html#contact" class="inline-flex items-center justify-center rounded-xl border border-surface-border/50 px-6 py-3 font-semibold text-text-secondary hover:text-mint hover:border-mint/40 transition-colors">Contact support</a>
+
+      <div class="order-progress" aria-label="Order journey">
+        <div class="order-progress__track">
+          <div class="order-progress__step">
+            <span class="order-progress__dot">01</span>
+            <span class="order-progress__label">Payment</span>
+            <span class="order-progress__meta">Secure verification</span>
+          </div>
+          <div class="order-progress__step">
+            <span class="order-progress__dot">02</span>
+            <span class="order-progress__label">Production</span>
+            <span class="order-progress__meta">Next step</span>
+          </div>
+          <div class="order-progress__step">
+            <span class="order-progress__dot">03</span>
+            <span class="order-progress__label">Shipping</span>
+            <span class="order-progress__meta">Update by email</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="order-grid">
+        <section class="order-panel" aria-labelledby="order-details-title">
+          <p id="order-details-title" class="order-panel__eyebrow">Order details</p>
+          <div class="order-details">
+            <div class="order-detail-row">
+              <span class="order-detail-label">Status</span>
+              <span class="order-detail-value">Secure server verification</span>
+            </div>
+            <div id="order-id-block" class="order-detail-row hidden">
+              <span class="order-detail-label">Order ID</span>
+              <div>
+                <p id="order-id-value" class="order-detail-value font-mono"></p>
+                <p class="order-note">Keep this Order ID with your payment records. It can be used with your order email for the online withdrawal function.</p>
+              </div>
+            </div>
+          </div>
+          <p id="order-status-note" class="order-note">
+            Keep your payment confirmation email for your records. Your cart is not cleared automatically until the server verifies this exact Checkout Session.
+          </p>
+        </section>
+
+        <section class="order-panel" aria-labelledby="next-steps-title">
+          <p id="next-steps-title" class="order-panel__eyebrow">What happens next</p>
+          <div class="next-steps">
+            <article class="next-step">
+              <span class="next-step__number">01</span>
+              <h3>Order received</h3>
+              <p>We securely verify the payment before the order moves forward.</p>
+            </article>
+            <article class="next-step">
+              <span class="next-step__number">02</span>
+              <h3>Prepared with care</h3>
+              <p>Your mural is prepared for the next stage once the order is confirmed.</p>
+            </article>
+            <article class="next-step">
+              <span class="next-step__number">03</span>
+              <h3>Shipping update</h3>
+              <p>Shipping information is sent when your order is ready to leave us.</p>
+            </article>
+          </div>
+        </section>
+      </div>
+
+      <div class="order-actions">
+        <a href="shop.html" class="btn-primary">Explore more legends</a>
+        <a id="order-withdraw-link" href="withdraw.html" class="btn-secondary hidden">Withdraw from purchase</a>
+        <a href="index.html#contact" class="btn-secondary">Need help?</a>
+      </div>
+
+      <div class="order-trust" aria-label="LegendMural service highlights">
+        <span>Secure payment</span>
+        <span>Ships from the Netherlands</span>
+        <span>Support available</span>
       </div>
     </section>
   </main>
 
-  <footer class="border-t border-surface-border/20 py-6 text-center text-xs text-text-muted">
-    <p>LegendMural — Premium wall art for legendary spaces.</p>
+  <footer class="order-footer">
+    <div class="order-shell order-footer__inner">
+      <p class="order-footer__copy">LegendMural — Premium wall art for legendary spaces.</p>
+      <nav class="order-footer__links" aria-label="Order page footer">
+        <a href="shop.html">Shop</a>
+        <a href="index.html#contact">Contact</a>
+        <a href="shipping.html">Shipping</a>
+        <a href="returns.html">Returns</a>
+        <a href="privacy.html">Privacy</a>
+      </nav>
+    </div>
   </footer>
+
   <script type="module" vite-ignore src="/js/order-return.js"></script>
 </body>
 </html>
