@@ -65,6 +65,7 @@
 }
 
 .order-status-mark {
+  position: relative;
   width: 76px;
   height: 76px;
   margin: 0 auto 1.75rem;
@@ -75,9 +76,50 @@
   border: 1px solid rgba(42, 138, 74, 0.36);
   background: radial-gradient(circle, rgba(42, 138, 74, 0.18), rgba(42, 138, 74, 0.05));
   box-shadow: 0 0 38px rgba(42, 138, 74, 0.14);
+  transition: color 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
 }
 
-.order-status-mark svg { width: 34px; height: 34px; }
+.order-status-icon {
+  display: none;
+  width: 34px;
+  height: 34px;
+}
+
+.order-status-icon--pending { display: block; }
+
+[data-order-status='paid'] .order-status-icon--pending,
+[data-order-status='payment_failed'] .order-status-icon--pending,
+[data-order-status='expired'] .order-status-icon--pending,
+[data-order-status='unavailable'] .order-status-icon--pending { display: none; }
+
+[data-order-status='paid'] .order-status-icon--confirmed { display: block; }
+[data-order-status='payment_failed'] .order-status-icon--issue,
+[data-order-status='expired'] .order-status-icon--issue,
+[data-order-status='unavailable'] .order-status-icon--issue { display: block; }
+
+[data-order-status='paid'] .order-status-mark {
+  color: var(--color-black);
+  border-color: var(--color-mint);
+  background: var(--color-mint);
+  box-shadow: 0 0 44px var(--color-mint-glow);
+}
+
+[data-order-status='verifying'] .order-status-mark::after,
+[data-order-status='capturing-paypal'] .order-status-mark::after,
+[data-order-status='payment_processing'] .order-status-mark::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  border-top-color: var(--color-mint);
+  border-right-color: rgba(42, 138, 74, 0.22);
+  animation: order-status-spin 1.15s linear infinite;
+}
+
+@keyframes order-status-spin {
+  to { transform: rotate(360deg); }
+}
 
 .order-status-kicker {
   margin-bottom: 0.9rem;
@@ -185,6 +227,19 @@
   background: linear-gradient(90deg, var(--color-mint), var(--color-border));
 }
 
+[data-order-status='payment_failed'] .order-progress__step:first-child .order-progress__dot {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+  background: rgba(139, 26, 26, 0.08);
+}
+
+[data-order-status='expired'] .order-progress__step:first-child .order-progress__dot,
+[data-order-status='unavailable'] .order-progress__step:first-child .order-progress__dot {
+  color: var(--color-text-secondary);
+  border-color: var(--color-border-hover);
+  background: var(--color-bg-secondary);
+}
+
 .order-grid {
   display: grid;
   grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
@@ -276,6 +331,19 @@
   line-height: 1.65;
 }
 
+[data-order-status='payment_failed'] .order-panel--next,
+[data-order-status='expired'] .order-panel--next,
+[data-order-status='unavailable'] .order-panel--next {
+  display: none;
+}
+
+[data-order-status='payment_failed'] .order-grid,
+[data-order-status='expired'] .order-grid,
+[data-order-status='unavailable'] .order-grid {
+  grid-template-columns: minmax(0, 760px);
+  justify-content: center;
+}
+
 .order-actions {
   display: flex;
   flex-wrap: wrap;
@@ -286,6 +354,14 @@
 
 .order-actions .btn-primary,
 .order-actions .btn-secondary { min-width: 190px; }
+
+.order-action--disabled {
+  opacity: 0.58;
+  cursor: wait;
+  pointer-events: none;
+  box-shadow: none !important;
+  transform: none !important;
+}
 
 .order-trust {
   display: flex;
@@ -318,7 +394,15 @@
 .order-footer__links a { color: var(--color-text-secondary); font-size: 0.74rem; transition: color 150ms ease; }
 .order-footer__links a:hover { color: var(--color-mint); }
 
-[data-order-status='payment_failed'] .order-status-mark,
+[data-order-status='payment_failed'] .order-status-mark {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+  background: rgba(139, 26, 26, 0.08);
+  box-shadow: none;
+}
+
+[data-order-status='payment_failed'] .order-status-kicker { color: var(--color-danger); }
+
 [data-order-status='expired'] .order-status-mark,
 [data-order-status='unavailable'] .order-status-mark {
   color: var(--color-text-secondary);
@@ -327,7 +411,6 @@
   box-shadow: none;
 }
 
-[data-order-status='payment_failed'] .order-status-kicker,
 [data-order-status='expired'] .order-status-kicker,
 [data-order-status='unavailable'] .order-status-kicker { color: var(--color-text-secondary); }
 
@@ -344,6 +427,24 @@
   color: var(--color-mint);
   border-color: rgba(181,148,91,.35);
   background: rgba(181,148,91,.08);
+}
+[data-theme='light'] [data-order-status='paid'] .order-status-mark {
+  color: var(--color-black);
+  border-color: var(--color-mint);
+  background: var(--color-mint);
+}
+[data-theme='light'] [data-order-status='payment_failed'] .order-status-mark {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+  background: rgba(139, 26, 26, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-order-status='verifying'] .order-status-mark::after,
+  [data-order-status='capturing-paypal'] .order-status-mark::after,
+  [data-order-status='payment_processing'] .order-status-mark::after {
+    animation: none;
+  }
 }
 
 @media (max-width: 820px) {
