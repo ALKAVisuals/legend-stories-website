@@ -11,10 +11,29 @@ const entries = Object.fromEntries(
   htmlFiles.map((file) => [file.replace(/\.html$/, ''), resolve(ROOT, file)]),
 );
 
+function checkoutControlsStylesPlugin() {
+  return {
+    name: 'checkout-controls-styles',
+    transformIndexHtml: {
+      order: 'pre',
+      handler() {
+        return [{
+          tag: 'link',
+          attrs: { rel: 'stylesheet', href: '/css/checkout-controls.css' },
+          injectTo: 'head',
+        }];
+      },
+    },
+  };
+}
+
 export default defineConfig({
   root: ROOT,
   publicDir: resolve(ROOT, 'generated/public'),
-  plugins: [productionOriginPlugin({ root: ROOT, outDir: 'dist' })],
+  plugins: [
+    checkoutControlsStylesPlugin(),
+    productionOriginPlugin({ root: ROOT, outDir: 'dist' }),
+  ],
   build: {
     outDir: resolve(ROOT, 'dist'),
     emptyOutDir: true,
