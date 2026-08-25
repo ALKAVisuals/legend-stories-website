@@ -1,0 +1,38 @@
+name: Post-checkout build readiness
+
+on:
+  pull_request:
+    paths:
+      - 'order-success.html'
+      - 'order-cancelled.html'
+      - 'css/order-experience.css'
+      - 'css/order-cancelled.css'
+      - 'js/order-return.js'
+      - 'scripts/validate-post-checkout-build.mjs'
+      - '.github/workflows/post-checkout-build-readiness.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-post-checkout-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production output
+        run: npm run build
+
+      - name: Validate post-checkout production output
+        run: node scripts/validate-post-checkout-build.mjs
