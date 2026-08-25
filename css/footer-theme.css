@@ -1,0 +1,55 @@
+/* LegendMural footer theme hardening.
+   Loaded after page styles so mobile Safari cannot leave light-mode footer text on a light surface. */
+
+html[data-theme="light"] footer,
+html.light-mode footer {
+  background: #f1f0ec !important;
+  color: #1a1a1a !important;
+  border-color: rgba(17, 17, 17, 0.12);
+}
+
+html[data-theme="light"] footer .text-text-primary,
+html.light-mode footer .text-text-primary,
+html[data-theme="light"] footer h1,
+html[data-theme="light"] footer h2,
+html[data-theme="light"] footer h3,
+html[data-theme="light"] footer h4,
+html[data-theme="light"] footer p.font-display,
+html.light-mode footer h1,
+html.light-mode footer h2,
+html.light-mode footer h3,
+html.light-mode footer h4,
+html.light-mode footer p.font-display {
+  color: #1a1a1a !important;
+}
+
+html[data-theme="light"] footer .text-text-secondary,
+html.light-mode footer .text-text-secondary,
+html[data-theme="light"] footer a,
+html.light-mode footer a {
+  color: #55555c !important;
+}
+
+html[data-theme="light"] footer .text-text-muted,
+html.light-mode footer .text-text-muted {
+  color: #74747b !important;
+}
+
+html[data-theme="light"] footer a:hover,
+html.light-mode footer a:hover {
+  color: #9a7d48 !important;
+}
+
+html[data-theme="light"] footer .bg-surface-light,
+html[data-theme="light"] footer .bg-surface-light\/30,
+html[data-theme="light"] footer .bg-surface-light\/50,
+html.light-mode footer .bg-surface-light,
+html.light-mode footer .bg-surface-light\/30,
+html.light-mode footer .bg-surface-light\/50 {
+  background: rgba(17, 17, 17, 0.06);
+}
+
+html[data-theme="light"] footer svg,
+html.light-mode footer svg {
+  color: currentColor;
+}

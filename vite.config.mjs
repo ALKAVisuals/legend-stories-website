@@ -1,4 +1,4 @@
-import { readdirSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
@@ -27,6 +27,29 @@ function checkoutControlsStylesPlugin() {
   };
 }
 
+function footerThemeStylesPlugin() {
+  return {
+    name: 'footer-theme-styles',
+    transformIndexHtml: {
+      order: 'post',
+      handler() {
+        return [{
+          tag: 'link',
+          attrs: { rel: 'stylesheet', href: '/css/footer-theme.css' },
+          injectTo: 'head',
+        }];
+      },
+    },
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'css/footer-theme.css',
+        source: readFileSync(resolve(ROOT, 'css/footer-theme.css'), 'utf8'),
+      });
+    },
+  };
+}
+
 function contactFormScriptPlugin() {
   return {
     name: 'contact-form-script',
@@ -49,6 +72,7 @@ export default defineConfig({
   plugins: [
     checkoutControlsStylesPlugin(),
     contactFormScriptPlugin(),
+    footerThemeStylesPlugin(),
     productionOriginPlugin({ root: ROOT, outDir: 'dist' }),
   ],
   build: {
