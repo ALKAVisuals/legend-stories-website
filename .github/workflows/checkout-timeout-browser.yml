@@ -45,9 +45,10 @@ jobs:
           VITE_PID=$!
           trap 'kill "$VITE_PID" 2>/dev/null || true' EXIT
 
+          TEST_URL="http://127.0.0.1:3001/tests/browser/checkout-timeout-harness.html"
           READY=0
           for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:5173/tests/browser/checkout-timeout-harness.html > /dev/null; then
+            if curl --fail --silent "$TEST_URL" > /dev/null; then
               READY=1
               break
             fi
@@ -66,7 +67,7 @@ jobs:
             --disable-gpu \
             --virtual-time-budget=7000 \
             --dump-dom \
-            http://127.0.0.1:5173/tests/browser/checkout-timeout-harness.html \
+            "$TEST_URL" \
             > /tmp/checkout-timeout-browser.html
 
           cat /tmp/checkout-timeout-browser.html
