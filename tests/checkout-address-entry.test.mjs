@@ -5,6 +5,7 @@ import {
   bindEditableAddressFields,
   configureStreetAddressInput,
   createManualAddress,
+  installCheckoutAddressStyles,
   resetValidatedAddressFields,
 } from '../js/checkout-address-entry.mjs';
 
@@ -28,6 +29,24 @@ class FakeInput {
   trigger(name) { this.listeners?.[name]?.(); }
 }
 
+function createFakeDocument() {
+  const elements = new Map();
+  const head = {
+    appendChild(node) {
+      elements.set(node.id, node);
+    },
+  };
+  return {
+    head,
+    createElement(tagName) {
+      return { tagName: String(tagName).toUpperCase(), id: '', textContent: '' };
+    },
+    getElementById(id) {
+      return elements.get(id) || null;
+    },
+  };
+}
+
 test('configures the street field for Google suggestions without Safari address autofill conflicts', () => {
   const input = new FakeInput();
   input.disabled = true;
@@ -47,6 +66,18 @@ test('configures the street field for Google suggestions without Safari address 
   assert.equal(input.attributes.get('autocorrect'), 'off');
   assert.equal(input.attributes.get('spellcheck'), 'false');
   assert.equal(input.customValidity, '');
+});
+
+test('installs mobile stability styles for iOS checkout fields and helper text', () => {
+  const documentRef = createFakeDocument();
+
+  assert.equal(installCheckoutAddressStyles(documentRef), true);
+  const style = documentRef.getElementById('checkout-address-editable-styles');
+  assert.ok(style);
+  assert.match(style.textContent, /@media \(max-width: 767px\)[\s\S]*#checkout-drawer input,[\s\S]*#checkout-drawer select[\s\S]*font-size:\s*16px !important/);
+  assert.match(style.textContent, /#checkout-address-status\s*\{[\s\S]*min-height:\s*2\.5rem/);
+  assert.match(style.textContent, /#checkout-address-status\.hidden\s*\{[\s\S]*display:\s*block !important;[\s\S]*visibility:\s*hidden !important/);
+  assert.equal(installCheckoutAddressStyles(documentRef), false);
 });
 
 test('normalizes a complete manually entered address', () => {
