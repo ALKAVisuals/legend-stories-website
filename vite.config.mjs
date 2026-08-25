@@ -27,11 +27,28 @@ function checkoutControlsStylesPlugin() {
   };
 }
 
+function contactFormScriptPlugin() {
+  return {
+    name: 'contact-form-script',
+    transformIndexHtml: {
+      order: 'pre',
+      handler() {
+        return [{
+          tag: 'script',
+          attrs: { src: '/js/contact-form.js', defer: true },
+          injectTo: 'body',
+        }];
+      },
+    },
+  };
+}
+
 export default defineConfig({
   root: ROOT,
   publicDir: resolve(ROOT, 'generated/public'),
   plugins: [
     checkoutControlsStylesPlugin(),
+    contactFormScriptPlugin(),
     productionOriginPlugin({ root: ROOT, outDir: 'dist' }),
   ],
   build: {
