@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Checkout timeout browser regression</title>
+</head>
+<body>
+  <main
+    id="result"
+    data-test-status="running"
+    data-callback-count="0"
+    data-fallback-source=""
+  >
+    Browser regression running…
+  </main>
+
+  <script type="module">
+    import { installPlacesRequestTimeout } from '/js/google-places-loader.mjs';
+    import { createManualAddress } from '/js/checkout-address-entry.mjs';
+
+    const result = document.getElementById('result');
+    let checkoutCallbackCount = 0;
+
+    function finish(status, message, extra = {}) {
+      result.dataset.testStatus = status;
+      result.dataset.callbackCount = String(checkoutCallbackCount);
+      if (extra.fallbackSource) result.dataset.fallbackSource = extra.fallbackSource;
+      result.textContent = message;
+    }
+
+    function PlacesService() {}
+
+    const basePrototype = {
+      findPlaceFromQuery(_request, callback) {
+        // Simulate Google answering too late. The watchdog must settle first,
+        // and this late provider callback must never trigger checkout twice.
+        window.setTimeout(() => {
+          callback([
+            {
+              formatted_address: 'Late Google result',
+              address_components: [],
+            },
+          ], 'OK');
+        }, 4500);
+      },
+    };
+
+    // Reproduce the browser/API shape that caused the production hang:
+    // defineProperty is rejected, while direct assignment is still allowed.
+    PlacesService.prototype = new Proxy(basePrototype, {
+      defineProperty() {
+        throw new TypeError('prototype property is non-configurable');
+      },
+      set(target, property, value) {
+        target[property] = value;
+        return true;
+      },
+    });
+
+    window.google = {
+      maps: {
+        places: {
+          PlacesService,
+          PlacesServiceStatus: {
+            OK: 'OK',
+            ZERO_RESULTS: 'ZERO_RESULTS',
+            UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+          },
+        },
+      },
+    };
+
+    const installed = installPlacesRequestTimeout({ windowRef: window });
+    if (!installed) {
+      finish('failed', 'Timeout wrapper could not be installed in browser.');
+      throw new Error('Timeout wrapper installation failed.');
+    }
+
+    const service = new window.google.maps.places.PlacesService();
+    const startedAt = performance.now();
+
+    service.findPlaceFromQuery(
+      { query: 'Example Street 4, 6582 DB Heumen, NL' },
+      (placesResults, placesStatus) => {
+        checkoutCallbackCount += 1;
+        result.dataset.callbackCount = String(checkoutCallbackCount);
+
+        if (checkoutCallbackCount > 1) {
+          finish('failed', 'Checkout callback fired more than once.');
+          return;
+        }
+
+        if (placesStatus !== 'UNKNOWN_ERROR' || placesResults !== null) {
+          finish('failed', `Expected timeout fallback, received ${placesStatus}.`);
+          return;
+        }
+
+        const fallback = createManualAddress({
+          street: 'Example Street 4',
+          postalCode: '6582 DB',
+          city: 'Heumen',
+          country: 'NL',
+        });
+
+        if (fallback.error || !fallback.address) {
+          finish('failed', fallback.error || 'Manual fallback did not create an address.');
+          return;
+        }
+
+        const elapsed = Math.round(performance.now() - startedAt);
+        result.dataset.fallbackSource = fallback.address.source || '';
+        result.textContent = `Watchdog settled after ${elapsed} ms; waiting for late Google callback guard…`;
+
+        // Give the intentionally late Google callback enough time to arrive.
+        // settleOnce() must suppress it, leaving checkoutCallbackCount at 1.
+        window.setTimeout(() => {
+          if (checkoutCallbackCount !== 1) {
+            finish('failed', `Late Google response triggered ${checkoutCallbackCount} callbacks.`);
+            return;
+          }
+
+          finish(
+            'passed',
+            `Browser regression passed: timeout fallback continued and late callback was ignored (${elapsed} ms).`,
+            { fallbackSource: fallback.address.source || '' },
+          );
+        }, 900);
+      },
+    );
+
+    window.setTimeout(() => {
+      if (result.dataset.testStatus === 'running') {
+        finish('failed', 'Browser regression exceeded its safety deadline.');
+      }
+    }, 6000);
+  </script>
+</body>
+</html>
