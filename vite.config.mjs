@@ -1,4 +1,4 @@
-import { readdirSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
@@ -39,6 +39,13 @@ function footerThemeStylesPlugin() {
           injectTo: 'head',
         }];
       },
+    },
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'css/footer-theme.css',
+        source: readFileSync(resolve(ROOT, 'css/footer-theme.css'), 'utf8'),
+      });
     },
   };
 }
