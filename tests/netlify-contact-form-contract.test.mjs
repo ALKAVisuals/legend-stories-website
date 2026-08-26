@@ -19,20 +19,22 @@ test('Netlify contact form has a static build-time definition with spam protecti
   assert.match(definition, /noindex,nofollow/);
 });
 
-test('homepage contact form keeps the expected customer fields', () => {
+test('homepage contact form keeps the expected customer fields and LegendMural email', () => {
   for (const field of ['name', 'email', 'subject', 'message']) {
     assert.match(homepage, new RegExp(`name="${field}"`));
   }
   assert.match(homepage, /id="contact"/);
+  assert.match(homepage, /info@legendmural\.com/);
+  assert.doesNotMatch(homepage, /hello@legendstories\.nl/);
 });
 
 test('contact client submits only the public form payload to Netlify', () => {
   assert.match(client, /data\.set\('form-name', 'contact'\)/);
   assert.match(client, /fetch\('\/', \{/);
   assert.match(client, /application\/x-www-form-urlencoded;charset=UTF-8/);
-  assert.match(client, /info@legendmural\.com/);
   assert.match(client, /contact-form-status/);
   assert.match(client, /aria-live/);
+  assert.doesNotMatch(client, /hello@legendstories\.nl/);
   assert.doesNotMatch(client, /RESEND_API_KEY|PAYPAL_CLIENT_SECRET|NEON_DATABASE_URL/);
 });
 
