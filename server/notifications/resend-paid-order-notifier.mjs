@@ -21,6 +21,14 @@ function requiredText(value, field, maxLength) {
   return normalized;
 }
 
+function requiredEmail(value, field) {
+  const email = requiredText(value, field, 320).toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    fail('RESEND_PAID_ORDER_INVALID_CONFIG', `${field} is invalid.`, { field });
+  }
+  return email;
+}
+
 function optionalText(value, field, maxLength) {
   const normalized = String(value || '').trim();
   if (!normalized) return '';
@@ -39,10 +47,16 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
-function euros(cents) {
+function eurosFromCents(cents) {
   const value = Number(cents);
   if (!Number.isInteger(value) || value < 0) return '€0.00';
   return `€${(value / 100).toFixed(2)}`;
+}
+
+function eurosFromAmount(amount) {
+  const value = Number(amount);
+  if (!Number.isFinite(value) || value < 0) return '€0.00';
+  return `€${value.toFixed(2)}`;
 }
 
 function displayReference(reference) {
@@ -61,20 +75,33 @@ function addressLines(customer = {}) {
 }
 
 function itemText(item = {}) {
+  const quantity = Number.isInteger(Number(item.quantity)) && Number(item.quantity) > 0
+    ? Number(item.quantity)
+    : 1;
   const size = item.variantLabel || item.sizeLabel || (item.sizeCm ? `${item.sizeCm} cm` : '');
   const details = [item.name || item.sku || 'LegendMural sticker', size].filter(Boolean).join(' — ');
-  return `${item.quantity || 1} × ${details} (${euros(item.lineTotal ?? ((item.unitPrice || 0) * (item.quantity || 1)))})`;
+  const unitPrice = eurosFromAmount(item.unitPrice || 0);
+  const lineTotal = eurosFromAmount(item.lineTotal ?? ((item.unitPrice || 0) * quantity));
+  return `${quantity} × ${details} — ${unitPrice} each — ${lineTotal}`;
 }
 
 function itemHtml(item = {}) {
   return `<li>${escapeHtml(itemText(item))}</li>`;
 }
 
+function discountLabel(order = {}) {
+  const code = String(order.discount?.code || '').trim();
+  const percent = Number(order.discount?.percent);
+  if (code && Number.isFinite(percent) && percent > 0) return `Discount (${code}, ${percent}%)`;
+  if (code) return `Discount (${code})`;
+  return 'Discount';
+}
+
 function totalRows(order = {}) {
   const totals = order.totals || {};
   return [
     ['Subtotal', totals.subtotal],
-    ['Discount', totals.discount],
+    [discountLabel(order), totals.discount],
     ['Shipping', totals.shipping],
     ['Total paid', totals.grandTotal ?? order.amountTotal],
   ];
@@ -86,8 +113,8 @@ function renderMerchant(order) {
   const lines = [
     'NEW PAID LEGENDMURAL ORDER',
     '',
-    `Order: ${ref}`,
-    `Status: PAID`,
+    `Reference: ${ref}`,
+    'Status: PAID',
     `Paid at: ${order.paidAt ? new Date(order.paidAt * 1000).toISOString() : 'confirmed'}`,
     `PayPal order ID: ${order.paymentSessionId || ''}`,
     `Customer: ${customer.firstname || ''} ${customer.lastname || ''}`.trim(),
@@ -95,20 +122,21 @@ function renderMerchant(order) {
     '',
     'Shipping address:',
     ...addressLines(customer),
+    `Shipping zone: ${order.shipping?.zone || ''}`,
     '',
     'Items:',
     ...(order.items || []).map(itemText),
     '',
-    ...totalRows(order).map(([label, value]) => `${label}: ${euros(value)}`),
+    ...totalRows(order).map(([label, value]) => `${label}: ${eurosFromCents(value)}`),
   ];
 
   const totals = totalRows(order)
-    .map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0">${escapeHtml(label)}</td><td style="padding:4px 0;text-align:right"><strong>${escapeHtml(euros(value))}</strong></td></tr>`)
+    .map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0">${escapeHtml(label)}</td><td style="padding:4px 0;text-align:right"><strong>${escapeHtml(eurosFromCents(value))}</strong></td></tr>`)
     .join('');
   const address = addressLines(customer).map((line) => escapeHtml(line)).join('<br>');
   const items = (order.items || []).map(itemHtml).join('');
-  const html = `<!doctype html><html><body style="font-family:Arial,sans-serif;line-height:1.5;color:#111;max-width:680px;margin:0 auto;padding:24px"><p style="font-size:12px;letter-spacing:.12em;font-weight:700">LEGENDMURAL · PAID ORDER</p><h1 style="font-size:24px">New paid order</h1><p><strong>${escapeHtml(ref)}</strong><br>Status: <strong>PAID</strong><br>Paid at: ${escapeHtml(order.paidAt ? new Date(order.paidAt * 1000).toISOString() : 'confirmed')}<br>PayPal order ID: ${escapeHtml(order.paymentSessionId || '')}</p><h2 style="font-size:17px">Customer</h2><p>${escapeHtml(`${customer.firstname || ''} ${customer.lastname || ''}`.trim())}<br>${escapeHtml(customer.email || '')}</p><h2 style="font-size:17px">Shipping address</h2><p>${address}</p><h2 style="font-size:17px">Items</h2><ul>${items}</ul><table style="border-collapse:collapse">${totals}</table></body></html>`;
-  return { subject: `New paid order — ${ref} — ${euros(order.amountTotal)}`, text: lines.join('\n'), html };
+  const html = `<!doctype html><html><body style="font-family:Arial,sans-serif;line-height:1.5;color:#111;max-width:680px;margin:0 auto;padding:24px"><p style="font-size:12px;letter-spacing:.12em;font-weight:700">LEGENDMURAL · PAID ORDER</p><h1 style="font-size:24px">New paid order</h1><p><strong>${escapeHtml(ref)}</strong><br>Status: <strong>PAID</strong><br>Paid at: ${escapeHtml(order.paidAt ? new Date(order.paidAt * 1000).toISOString() : 'confirmed')}<br>PayPal order ID: ${escapeHtml(order.paymentSessionId || '')}</p><h2 style="font-size:17px">Customer</h2><p>${escapeHtml(`${customer.firstname || ''} ${customer.lastname || ''}`.trim())}<br>${escapeHtml(customer.email || '')}</p><h2 style="font-size:17px">Shipping address</h2><p>${address}</p><p><strong>Shipping zone:</strong> ${escapeHtml(order.shipping?.zone || '')}</p><h2 style="font-size:17px">Items</h2><ul>${items}</ul><table style="border-collapse:collapse">${totals}</table></body></html>`;
+  return { subject: `New paid order — ${ref} — ${eurosFromCents(order.amountTotal)}`, text: lines.join('\n'), html };
 }
 
 function renderCustomer(order) {
@@ -120,12 +148,13 @@ function renderCustomer(order) {
     '',
     'Thank you for your LegendMural order. Your payment has been received and your order is confirmed.',
     '',
-    `Order: ${ref}`,
+    `Order ID: ${order.paymentSessionId || ''}`,
+    `Reference: ${ref}`,
     '',
     'Items:',
     ...(order.items || []).map(itemText),
     '',
-    ...totalRows(order).map(([label, value]) => `${label}: ${euros(value)}`),
+    ...totalRows(order).map(([label, value]) => `${label}: ${eurosFromCents(value)}`),
     '',
     'Shipping to:',
     ...addressLines(customer),
@@ -135,11 +164,11 @@ function renderCustomer(order) {
     'LegendMural',
   ];
   const totals = totalRows(order)
-    .map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0">${escapeHtml(label)}</td><td style="padding:4px 0;text-align:right"><strong>${escapeHtml(euros(value))}</strong></td></tr>`)
+    .map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0">${escapeHtml(label)}</td><td style="padding:4px 0;text-align:right"><strong>${escapeHtml(eurosFromCents(value))}</strong></td></tr>`)
     .join('');
   const address = addressLines(customer).map((line) => escapeHtml(line)).join('<br>');
   const items = (order.items || []).map(itemHtml).join('');
-  const html = `<!doctype html><html><body style="font-family:Arial,sans-serif;line-height:1.6;color:#111;max-width:680px;margin:0 auto;padding:24px"><p style="font-size:12px;letter-spacing:.12em;font-weight:700">LEGENDMURAL</p><h1 style="font-size:26px">Your order is confirmed</h1><p>Hi ${escapeHtml(firstName)},</p><p>Thank you for your LegendMural order. Your payment has been received.</p><p><strong>Order ${escapeHtml(ref)}</strong></p><h2 style="font-size:17px">Your order</h2><ul>${items}</ul><table style="border-collapse:collapse">${totals}</table><h2 style="font-size:17px">Shipping address</h2><p>${address}</p><p>If anything looks incorrect, reply to this email as soon as possible.</p><p>LegendMural</p></body></html>`;
+  const html = `<!doctype html><html><body style="font-family:Arial,sans-serif;line-height:1.6;color:#111;max-width:680px;margin:0 auto;padding:24px"><p style="font-size:12px;letter-spacing:.12em;font-weight:700">LEGENDMURAL</p><h1 style="font-size:26px">Your order is confirmed</h1><p>Hi ${escapeHtml(firstName)},</p><p>Thank you for your LegendMural order. Your payment has been received.</p><p><strong>Order ID:</strong> ${escapeHtml(order.paymentSessionId || '')}<br><strong>Reference:</strong> ${escapeHtml(ref)}</p><h2 style="font-size:17px">Your order</h2><ul>${items}</ul><table style="border-collapse:collapse">${totals}</table><h2 style="font-size:17px">Shipping address</h2><p>${address}</p><p>If anything looks incorrect, reply to this email as soon as possible.</p><p>LegendMural</p></body></html>`;
   return { subject: `Your LegendMural order is confirmed — ${ref}`, text: lines.join('\n'), html };
 }
 
@@ -162,7 +191,7 @@ export function createResendPaidOrderNotifier({
       if (!['merchant_paid_order', 'customer_paid_order'].includes(notificationType)) {
         fail('RESEND_PAID_ORDER_INVALID_MESSAGE', 'Unsupported paid-order notification type.');
       }
-      const recipient = requiredText(to, 'to', 320);
+      const recipient = requiredEmail(to, 'to');
       if (!order?.reference || order?.status !== 'paid' || order?.mode !== 'live') {
         fail('RESEND_PAID_ORDER_INVALID_MESSAGE', 'Only verified live paid orders may be emailed.');
       }
