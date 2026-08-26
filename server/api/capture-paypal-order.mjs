@@ -106,6 +106,28 @@ function normalizeCaptureLookup(payload = {}) {
   return Object.freeze({ reference, orderId });
 }
 
+function safeNotificationFailureLog(error, order) {
+  const reference = String(order?.reference || '').trim().toLowerCase();
+  try {
+    console.error('Paid-order notification reconciliation failed after PayPal confirmation.', {
+      name: String(error?.name || 'Error').slice(0, 120),
+      code: String(error?.code || 'UNKNOWN').slice(0, 120),
+      reference: REFERENCE_PATTERN.test(reference) ? reference : 'unknown',
+    });
+  } catch {
+    // Notification logging must never affect payment truth.
+  }
+}
+
+async function attemptPaidOrderNotifications(reconcile, order) {
+  if (typeof reconcile !== 'function') return;
+  try {
+    await reconcile(order);
+  } catch (error) {
+    safeNotificationFailureLog(error, order);
+  }
+}
+
 function mapError(error, origin) {
   if (error instanceof PayPalCaptureRequestError) {
     return errorResponse(400, error.code, error.message, origin);
@@ -146,6 +168,7 @@ export async function handleCapturePayPalOrder(request, {
   orderStore = null,
   paypalClient = null,
   paypalClientFactory = createPayPalApiClient,
+  reconcilePaidOrderNotifications = null,
   allowedOrigins = env.CHECKOUT_ALLOWED_ORIGINS || '',
   capturedAt = Math.floor(Date.now() / 1000),
 } = {}) {
@@ -180,6 +203,7 @@ export async function handleCapturePayPalOrder(request, {
       );
     }
     if (reservedOrder.status === 'paid') {
+      await attemptPaidOrderNotifications(reconcilePaidOrderNotifications, reservedOrder);
       return jsonResponse(200, {
         provider: 'paypal',
         reference: lookup.reference,
@@ -223,6 +247,8 @@ export async function handleCapturePayPalOrder(request, {
     if (!persisted?.order || persisted.order.status !== 'paid') {
       throw new Error('PayPal capture store did not persist a paid order.');
     }
+
+    await attemptPaidOrderNotifications(reconcilePaidOrderNotifications, persisted.order);
 
     return jsonResponse(200, {
       provider: 'paypal',
