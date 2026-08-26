@@ -84,6 +84,7 @@ test('merchant email uses stable Resend idempotency and correct euro units', asy
   const body = JSON.parse(calls[0].options.body);
   assert.deepEqual(body.to, ['owner@example.com']);
   assert.equal(body.reply_to, 'info@legendmural.com');
+  assert.deepEqual(body.tags, [{ name: 'category', value: 'merchant_paid_order' }]);
   assert.match(body.subject, /New paid order/);
   assert.match(body.text, /PayPal order ID: 5O190127TN364715T/);
   assert.match(body.text, /€45\.00 each — €45\.00/);
@@ -113,6 +114,7 @@ test('customer confirmation contains the PayPal order ID needed for order suppor
   assert.match(body.subject, /Your LegendMural order is confirmed/);
   assert.match(body.text, /Order ID: 5O190127TN364715T/);
   assert.match(body.text, /Total paid: €54\.95/);
+  assert.deepEqual(body.tags, [{ name: 'category', value: 'customer_paid_order' }]);
   assert.equal(
     calls[0].options.headers['idempotency-key'],
     `paid-order-${order.reference}-customer_paid_order`,
