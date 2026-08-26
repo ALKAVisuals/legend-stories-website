@@ -31,6 +31,8 @@
   };
 
   const CART_SCHEMA_VERSION = '4';
+  // Used by the separate Sticker Fact / Knowledge Graph feature only.
+  const GP_API_KEY = 'V5yqGyVnJ1IFk3fpZojBuvxMAic=';
 
   // ==========================================
   // LOCAL STORAGE - Cart Persistence
@@ -133,21 +135,6 @@ function loadMobileNavigationModule() {
     mobileNavigationModulePromise = import('./mobile-navigation.mjs');
   }
   return mobileNavigationModulePromise;
-}
-
-let googlePlacesLoaderModule = null;
-let googlePlacesLoaderModulePromise = null;
-let googlePlacesLoader = null;
-
-function loadGooglePlacesLoaderModule() {
-  if (!googlePlacesLoaderModulePromise) {
-    googlePlacesLoaderModulePromise = import('./google-places-loader.mjs')
-      .then((module) => {
-        googlePlacesLoaderModule = module;
-        return module;
-      });
-  }
-  return googlePlacesLoaderModulePromise;
 }
 
 let checkoutAddressModule = null;
@@ -467,8 +454,6 @@ function loadDialogAccessibilityModule() {
       document.body.style.overflow = 'hidden';
     }
 
-    validatedAddress = null;
-
     // Build the country list from the shared browser/server shipping policy.
     const countrySelect = document.getElementById('checkout-country');
     if (countrySelect) {
@@ -503,30 +488,23 @@ function loadDialogAccessibilityModule() {
           return;
         }
         state.shippingCountry = nextCountry;
-        validatedAddress = null;
         saveCart();
-        updateGooglePlacesCountryRestriction(nextCountry);
         updateShippingMarketNotice(nextCountry);
         updateCheckoutTotals();
       };
     }
 
-    // Google suggestions only pre-fill the form. Every address field stays editable.
+    // Address fields stay fully editable and are validated locally on submit.
     const streetField = document.getElementById('checkout-street');
     const zipField = document.getElementById('checkout-zip');
     const cityField = document.getElementById('checkout-city');
     const countryField = document.getElementById('checkout-country');
     if (streetField) checkoutAddressModule.configureStreetAddressInput(streetField);
-    ensureCheckoutAddressStatus();
     checkoutAddressModule.bindEditableAddressFields({
       streetInput: streetField,
       zipInput: zipField,
       cityInput: cityField,
       countryInput: countryField,
-      onEdit: () => {
-        validatedAddress = null;
-        setCheckoutAddressStatus('');
-      },
     });
   }
 
@@ -623,8 +601,6 @@ function loadDialogAccessibilityModule() {
     updateInternationalShippingNotice(totals.countryCode);
     updateShippingMarketNotice(totals.countryCode);
   }
-
-  let validatedAddress = null;
 
   // ==========================================
   // DISCOUNT CODE
@@ -762,120 +738,21 @@ function loadDialogAccessibilityModule() {
       return;
     }
 
-    // Address validation: use Google Places validated address if available,
-    // otherwise validate manually entered address via Google Places API
-    if (validatedAddress) {
-      processOrder(validatedAddress, firstname, lastname, email);
-    } else {
-      // Show loading state
-      const payBtn = document.getElementById('checkout-pay-btn');
-      const originalBtnText = payBtn ? payBtn.textContent : 'Continue to payment';
-      if (payBtn) { payBtn.disabled = true; payBtn.textContent = 'Validating address...'; }
-
-      validateAddressWithGoogle(street, zip, city, country, function(err, googleAddress) {
-        if (payBtn) { payBtn.disabled = false; payBtn.textContent = originalBtnText; }
-        if (err) {
-          announcePurchaseFeedback(err, {
-            assertive: true,
-            focusTarget: document.getElementById('checkout-street'),
-          });
-          return;
-        }
-        processOrder(googleAddress, firstname, lastname, email);
+    const result = checkoutAddressModule.createManualAddress({
+      street,
+      postalCode: zip,
+      city,
+      country,
+    });
+    if (result.error) {
+      announcePurchaseFeedback(result.error, {
+        assertive: true,
+        focusTarget: document.getElementById('checkout-street'),
       });
-    }
-  }
-
-  function validateAddressWithGoogle(street, zip, city, country, callback) {
-    const useManualFallback = () => {
-      const result = manualAddressFallback(street, zip, city, country);
-      if (result.error) {
-        callback(result.error);
-        return;
-      }
-      setCheckoutAddressStatus('Address entered manually because suggestions are unavailable.', { warning: true });
-      callback(null, result.address);
-    };
-
-    if (googlePlacesUnavailable) {
-      useManualFallback();
       return;
     }
 
-    loadGooglePlaces().then(() => {
-      doGoogleValidation(street, zip, city, country, callback);
-    }).catch((error) => {
-      googlePlacesUnavailable = true;
-      console.warn('Google address validation could not start:', error);
-      useManualFallback();
-    });
-  }
-
-  function doGoogleValidation(street, zip, city, country, callback) {
-    var service = new window.google.maps.places.PlacesService(document.createElement('div'));
-    var query = street + ', ' + zip + ' ' + city + ', ' + country.toUpperCase();
-
-    service.findPlaceFromQuery({
-      query: query,
-      fields: ['address_components', 'formatted_address', 'geometry', 'name']
-    }, function(results, status) {
-      if (status !== window.google.maps.places.PlacesServiceStatus.OK) {
-        if (status === window.google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-          callback('Address not found. Please check your street, postal code, city and country, or select an address from the suggestions.');
-          return;
-        }
-        googlePlacesUnavailable = true;
-        const fallback = manualAddressFallback(street, zip, city, country);
-        callback(fallback.error, fallback.address);
-        return;
-      }
-      if (!results || results.length === 0) {
-        callback('Address not found. Please check your street, postal code, city and country, or select an address from the suggestions.');
-        return;
-      }
-
-      var place = results[0];
-      if (!place.address_components) {
-        callback('Address not found. Please check your street, postal code, city and country, or select an address from the suggestions.');
-        return;
-      }
-
-      // Parse the Google result into our address format
-      var components = place.address_components;
-      var gStreetNumber = '';
-      var gRoute = '';
-      var gPostalCode = '';
-      var gCity = '';
-      var gCountryCode = '';
-
-      for (var i = 0; i < components.length; i++) {
-        var types = components[i].types;
-        if (types.includes('street_number')) gStreetNumber = components[i].long_name;
-        if (types.includes('route')) gRoute = components[i].long_name;
-        if (types.includes('postal_code')) gPostalCode = components[i].long_name;
-        if (types.includes('locality') || types.includes('postal_town')) gCity = components[i].long_name;
-        if (types.includes('country')) gCountryCode = components[i].short_name.toUpperCase();
-      }
-
-      var gStreet = (gRoute + ' ' + gStreetNumber).trim();
-
-      // Verify the returned address roughly matches what the user entered
-      // (Google may return a nearby match — we check postal code match)
-      var normalizedInputZip = zip.replace(/\s/g, '').toUpperCase();
-      var normalizedGoogleZip = gPostalCode.replace(/\s/g, '').toUpperCase();
-      if (normalizedInputZip && normalizedGoogleZip && normalizedInputZip !== normalizedGoogleZip) {
-        callback('Address verification failed. The postal code does not match the street and city. Please check your address or select one from the suggestions.');
-        return;
-      }
-
-      callback(null, {
-        street: gStreet,
-        postal_code: gPostalCode,
-        city: gCity,
-        country: gCountryCode,
-        formatted: place.formatted_address || query,
-      });
-    });
+    processOrder(result.address, firstname, lastname, email);
   }
 
   async function processOrder(address, firstname, lastname, email) {
@@ -1239,159 +1116,6 @@ function initProductCards() {
   }
 
   // ==========================================
-  // GOOGLE PLACES AUTOCOMPLETE
-  // ==========================================
-  let placeAutocomplete = null;
-  let placeAutocompleteInitialized = false;
-  let googlePlacesUnavailable = false;
-
-  const GP_API_KEY = 'V5yqGyVnJ1IFk3fpZojBuvxMAic=';
-
-  function ensureCheckoutAddressStatus() {
-    const streetInput = document.getElementById('checkout-street');
-    if (!streetInput?.parentElement) return null;
-    let status = document.getElementById('checkout-address-status');
-    if (!status) {
-      status = document.createElement('p');
-      status.id = 'checkout-address-status';
-      status.className = 'hidden text-[11px] leading-relaxed mt-1.5 text-text-muted';
-      status.setAttribute('role', 'status');
-      status.setAttribute('aria-live', 'polite');
-      streetInput.parentElement.appendChild(status);
-    }
-    streetInput.setAttribute('aria-describedby', status.id);
-    return status;
-  }
-
-  function setCheckoutAddressStatus(message, { warning = false } = {}) {
-    const status = ensureCheckoutAddressStatus();
-    if (!status) return;
-    status.textContent = message || '';
-    status.classList.toggle('hidden', !message);
-    status.classList.toggle('text-amber-300', Boolean(message) && warning);
-    status.classList.toggle('text-text-muted', !warning);
-  }
-
-  function manualAddressFallback(street, zip, city, country) {
-    if (!checkoutAddressModule) {
-      return { address: null, error: 'Address entry is temporarily unavailable. Please reload the page.' };
-    }
-    return checkoutAddressModule.createManualAddress({
-      street,
-      postalCode: zip,
-      city,
-      country,
-    });
-  }
-
-  async function loadGooglePlaces() {
-    if (placeAutocompleteInitialized) return;
-    if (!googlePlacesLoader) {
-      throw new Error('Google Places loader is not initialized.');
-    }
-    await googlePlacesLoader.load();
-    initGooglePlacesAutocomplete();
-    googlePlacesUnavailable = false;
-  }
-
-  function initGooglePlacesAutocomplete() {
-    const streetInput = document.getElementById('checkout-street');
-    if (!streetInput) return;
-
-    placeAutocomplete = new window.google.maps.places.Autocomplete(streetInput, {
-      types: ['address'],
-      fields: ['address_components', 'formatted_address', 'geometry', 'name'],
-      componentRestrictions: {
-        country: commerceModule.getPlacesCountryRestriction(state.shippingCountry),
-      },
-    });
-
-    placeAutocompleteInitialized = true;
-    updateGooglePlacesCountryRestriction(state.shippingCountry);
-
-    placeAutocomplete.addListener('place_changed', function() {
-      const place = placeAutocomplete.getPlace();
-      if (!place || !place.address_components) return;
-
-      parseAndFillAddress(place);
-    });
-  }
-
-  function updateGooglePlacesCountryRestriction(countryCode = state.shippingCountry) {
-    if (!placeAutocomplete?.setComponentRestrictions || !commerceModule) return;
-    placeAutocomplete.setComponentRestrictions({
-      country: commerceModule.getPlacesCountryRestriction(countryCode),
-    });
-  }
-
-  function parseAndFillAddress(place) {
-    const components = place.address_components;
-    let street_number = '';
-    let route = '';
-    let postal_code = '';
-      let city = '';
-    let country_code = '';
-
-    for (const comp of components) {
-      const types = comp.types;
-      if (types.includes('street_number')) street_number = comp.long_name;
-      if (types.includes('route')) route = comp.long_name;
-      if (types.includes('postal_code')) postal_code = comp.long_name;
-      if (types.includes('locality') || types.includes('postal_town')) city = comp.long_name;
-      if (types.includes('country')) country_code = comp.short_name.toLowerCase();
-    }
-
-    const resolvedCountry = country_code.toUpperCase();
-    if (!commerceModule.isShippingCountryEnabled(resolvedCountry)) {
-      validatedAddress = null;
-      setCheckoutAddressStatus(commerceModule.getShippingMarketNotice(resolvedCountry), { warning: true });
-      return;
-    }
-
-    // Fill street
-    const streetInput = document.getElementById('checkout-street');
-    if (streetInput) streetInput.value = (route + ' ' + street_number).trim();
-
-    // Fill postal code
-    const zipInput = document.getElementById('checkout-zip');
-    if (zipInput) zipInput.value = postal_code;
-
-    // Fill city
-    const cityInput = document.getElementById('checkout-city');
-    if (cityInput) cityInput.value = city;
-
-    // Fill country
-    const countryInput = document.getElementById('checkout-country');
-    if (countryInput) {
-      const codeUpper = country_code.toUpperCase();
-      const match = Array.from(countryInput.options).find(o => o.value === codeUpper);
-      if (match) {
-        countryInput.value = codeUpper;
-        if (state) state.shippingCountry = codeUpper;
-        updateCheckoutTotals();
-      }
-      // Google pre-fills the country, but every address field remains editable.
-      countryInput.disabled = false;
-      countryInput.title = '';
-    }
-
-    // Lock street, zip, city — they come from the validated address
-    if (streetInput) { streetInput.dataset.validated = 'true'; }
-    if (zipInput) { zipInput.dataset.validated = 'true'; }
-    if (cityInput) { cityInput.dataset.validated = 'true'; }
-
-    // Mark as validated
-    validatedAddress = {
-      street: (route + ' ' + street_number).trim(),
-      postal_code: postal_code,
-      city: city,
-      country: resolvedCountry,
-      formatted: place.formatted_address || '',
-    };
-    setCheckoutAddressStatus('Address selected. You can edit any field before continuing.');
-  }
-
-  // ==========================================
   // EVENT LISTENERS
   // ==========================================
   function initEventListeners() {
@@ -1407,38 +1131,10 @@ function initProductCards() {
     }
 
     const checkoutBtn = document.getElementById('checkout-btn');
-    if (checkoutBtn) checkoutBtn.addEventListener('click', function() {
-      openCheckoutModal();
-      // Google Places will be loaded lazily when the user focuses the street field after filling required info.
-    });
-    // Load Google suggestions as an optional enhancement. Manual typing always remains available.
+    if (checkoutBtn) checkoutBtn.addEventListener('click', openCheckoutModal);
+
     const streetInput = document.getElementById('checkout-street');
-    if (streetInput) {
-      checkoutAddressModule.configureStreetAddressInput(streetInput);
-      streetInput.addEventListener('focus', async function() {
-        if (placeAutocompleteInitialized || streetInput.dataset.placesLoading === 'true') return;
-
-        const failedAt = Number(streetInput.dataset.placesFailedAt || 0);
-        if (googlePlacesUnavailable && Date.now() - failedAt < 30000) {
-          setCheckoutAddressStatus('Address suggestions are unavailable. You can enter the address manually.', { warning: true });
-          return;
-        }
-
-        streetInput.dataset.placesLoading = 'true';
-        setCheckoutAddressStatus('Loading address suggestions...');
-        try {
-          await loadGooglePlaces();
-          setCheckoutAddressStatus('Choose a suggestion or continue typing the address manually.');
-        } catch (error) {
-          googlePlacesUnavailable = true;
-          streetInput.dataset.placesFailedAt = String(Date.now());
-          console.warn('Google Places autocomplete could not be loaded:', error);
-          setCheckoutAddressStatus('Address suggestions are unavailable. You can enter the address manually.', { warning: true });
-        } finally {
-          delete streetInput.dataset.placesLoading;
-        }
-      });
-    }
+    if (streetInput) checkoutAddressModule.configureStreetAddressInput(streetInput);
 
     const checkoutCloseBtn = document.getElementById('checkout-close');
     if (checkoutCloseBtn) checkoutCloseBtn.addEventListener('click', closeCheckoutModal);
@@ -1797,13 +1493,7 @@ function initStickerModalClose() {
     await loadDialogAccessibilityModule();
     await loadMotionPreferencesModule();
     await loadCartControlsModule();
-    await loadGooglePlacesLoaderModule();
     await loadCheckoutAddressModule();
-    googlePlacesLoader = googlePlacesLoader || googlePlacesLoaderModule.createGooglePlacesLoader({
-      apiKey: GP_API_KEY,
-      windowRef: window,
-      documentRef: document,
-    });
     const mobileNavigationModule = await loadMobileNavigationModule();
     if (dom.cartDrawer && dom.cartOverlay) {
       cartDialogController = dialogAccessibilityModule.createDialogController({

@@ -57,17 +57,6 @@ export function installCheckoutAddressStyles(documentRef = globalThis.document) 
       pointer-events: none !important;
     }
 
-    /* Keep the Google Places helper row in the document flow even when empty.
-       This prevents the address form below it from jumping while Safari is typing. */
-    #checkout-address-status {
-      min-height: 2.5rem;
-    }
-
-    #checkout-address-status.hidden {
-      display: block !important;
-      visibility: hidden !important;
-    }
-
     /* iOS Safari zooms focused form controls below 16px. Keep the mobile
        checkout controls at 16px without changing the desktop presentation. */
     @media (max-width: 767px) {
