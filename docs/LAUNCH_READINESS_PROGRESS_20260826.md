@@ -20,6 +20,18 @@ The percentages below are planning estimates, not release gates. A task can be 1
 
 Do not use a percentage to override the payment/security/release gates in `docs/CURRENT_PRODUCTION_STATUS_20260826.md`.
 
+### Critical preview/payment interpretation
+
+GitHub Pages is static/visual only. It cannot provide the real Netlify Functions + PayPal Live + Neon + Resend backend chain.
+
+Therefore this Pages/static-harness message is expected behavior:
+
+`Order ready. Secure online payment is not enabled on this deployment yet.`
+
+Do **not** treat that message as a payment defect. Pages can validate frontend checkout behavior, but actual payment, capture, webhook, Neon `paid`, PayPal funds and order-email delivery must later be proven on the approved Netlify Production release.
+
+For the exact next-chat starting state also read `docs/NEXT_CHAT_START_20260826.md` on this documentation branch / PR #143 until it is merged.
+
 ---
 
 ## 2. Original Production / launch-readiness track
@@ -34,7 +46,7 @@ This is the worklist that was active before paid-order email became the immediat
 | Add iPhone/WebKit checkout regression coverage | ✅ Complete | **100%** | Regression workflow/tests exist and have passed on later PRs. |
 | Remove `VALIDATING ADDRESS...` dependency from current repository checkout | ✅ Complete in repository | **100%** | Current checkout proceeds after local validation; no Google Places wait remains. |
 | Refresh safe GitHub Pages checkout preview | ✅ Complete | **100%** | Pages preview refreshed after checkout simplification; Pages remains visual/static only. |
-| Validate checkout path safely in GitHub Pages | 🟡 Mostly complete | **80%** | Static fallback proved local validation reached order processing; one screenshot showed legacy cached helper text, so fresh proof is preferable. |
+| Validate checkout path safely in GitHub Pages | 🟡 Mostly complete | **80%** | Static fallback correctly proved local validation reached order processing; real payment is intentionally unavailable on Pages. One screenshot showed legacy cached helper text, so fresh frontend/device proof remains preferable. |
 | Fresh/private real iPhone Safari checkout validation | ⏳ Open | **25%** | Related WebKit/Pages evidence exists, but the final fresh/private physical-device validation is still outstanding. |
 | Explain or definitively exclude unexpected/random product-page navigation | ⏳ Open blocker | **40%** | Repository regression harness does not reproduce it, but the original Production trigger has not been conclusively explained. Do not mark fixed yet. |
 | Confirm exact Netlify Production runtime currently served | 🟡 Needs fresh reconfirmation | **60%** | Earlier investigation supported `c1345f22489bf9f8259c55e6432ef4c247c0153` as the last positively supportable runtime, but the exact current deploy must be re-proven before release work. |
@@ -156,11 +168,28 @@ Known official social URLs are preserved in `docs/CURRENT_PRODUCTION_STATUS_2026
 
 ---
 
-## 7. Instruction for a future chat
+## 7. Current GitHub handoff nuance
 
-A future LegendMural production chat should read **both** of these files before making repository changes:
+PR #143 is documentation-only but currently has a red existing WebKit regression check caused by a cart-initialization timeout before the checkout fallback assertion. Do not merge it blindly while that check is red.
+
+A separate experiment branch exists only to harden diagnostics/seeding for that WebKit test:
+
+`test/webkit-cart-seeding-hardening-20260826`
+
+It is not Production code and must not be treated as the fix for the original mobile Production symptom.
+
+See `docs/NEXT_CHAT_START_20260826.md` for the exact current branch/PR distinction and next-chat starting order.
+
+---
+
+## 8. Instruction for a future chat
+
+A future LegendMural production chat should read **all current handoff material available for this state** before making repository changes:
 
 1. `docs/CURRENT_PRODUCTION_STATUS_20260826.md` — architecture, security boundaries, decisions and next implementation sequence.
 2. `docs/LAUNCH_READINESS_PROGRESS_20260826.md` — detailed worklist, percentages and remaining launch path.
+3. `docs/NEXT_CHAT_START_20260826.md` — environment distinction, current open PR/test-branch nuance and exact next starting action.
 
-If the two documents ever appear to conflict, prefer verified current repository/runtime evidence and update the documentation before proceeding with risky Production work.
+If PR #143 has not yet been merged, documents 2 and 3 live on its branch and should be read there.
+
+If the documents ever appear to conflict, prefer verified current repository/runtime evidence and update the documentation before proceeding with risky Production work.
