@@ -47,7 +47,7 @@ function createFakeDocument() {
   };
 }
 
-test('configures the street field for Google suggestions without Safari address autofill conflicts', () => {
+test('configures the street field for stable manual entry without Safari autofill conflicts', () => {
   const input = new FakeInput();
   input.disabled = true;
   input.readOnly = true;
@@ -68,15 +68,14 @@ test('configures the street field for Google suggestions without Safari address 
   assert.equal(input.customValidity, '');
 });
 
-test('installs mobile stability styles for iOS checkout fields and helper text', () => {
+test('installs mobile stability styles for iOS checkout fields', () => {
   const documentRef = createFakeDocument();
 
   assert.equal(installCheckoutAddressStyles(documentRef), true);
   const style = documentRef.getElementById('checkout-address-editable-styles');
   assert.ok(style);
   assert.match(style.textContent, /@media \(max-width: 767px\)[\s\S]*#checkout-drawer input,[\s\S]*#checkout-drawer select[\s\S]*font-size:\s*16px !important/);
-  assert.match(style.textContent, /#checkout-address-status\s*\{[\s\S]*min-height:\s*2\.5rem/);
-  assert.match(style.textContent, /#checkout-address-status\.hidden\s*\{[\s\S]*display:\s*block !important;[\s\S]*visibility:\s*hidden !important/);
+  assert.doesNotMatch(style.textContent, /checkout-address-status/);
   assert.equal(installCheckoutAddressStyles(documentRef), false);
 });
 
@@ -99,7 +98,7 @@ test('normalizes a complete manually entered address', () => {
   });
 });
 
-test('requires a house number before accepting manual fallback', () => {
+test('requires a house number before accepting a manually entered address', () => {
   const result = createManualAddress({
     street: 'Dorpsstraat',
     postalCode: '6585 XZ',
@@ -111,7 +110,7 @@ test('requires a house number before accepting manual fallback', () => {
   assert.match(result.error, /house number/i);
 });
 
-test('editing a selected address unlocks and clears validated field state', () => {
+test('editing address fields unlocks and clears stale validated field state', () => {
   const streetInput = new FakeInput();
   const zipInput = new FakeInput();
   const cityInput = new FakeInput();
@@ -133,7 +132,7 @@ test('editing a selected address unlocks and clears validated field state', () =
   assert.equal('validated' in cityInput.dataset, false);
 });
 
-test('every address field is unlocked immediately and invalidates a selected address when changed', () => {
+test('every address field is editable and remains editable when changed', () => {
   const streetInput = new FakeInput();
   const zipInput = new FakeInput();
   const cityInput = new FakeInput();
