@@ -18,10 +18,12 @@ test('unsupported markets cannot reach payment even after DOM manipulation', () 
   assert.match(app, /commerceModule\.getShippingMarketNotice/);
 });
 
-test('Google Places follows the active enabled shipping market', () => {
-  assert.match(app, /componentRestrictions:/);
-  assert.match(app, /getPlacesCountryRestriction\(state\.shippingCountry\)/);
-  assert.match(app, /setComponentRestrictions/);
+test('shipping market changes no longer depend on Google Places state', () => {
+  assert.match(app, /state\.shippingCountry = nextCountry/);
+  assert.match(app, /updateShippingMarketNotice\(nextCountry\)/);
+  assert.match(app, /updateCheckoutTotals\(\)/);
+  assert.doesNotMatch(app, /componentRestrictions:/);
+  assert.doesNotMatch(app, /setComponentRestrictions/);
 });
 
 test('cart explains the active launch shipping rates without emoji flags', () => {
