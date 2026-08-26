@@ -1,50 +1,103 @@
 import { webkit, devices } from 'playwright';
 
 const baseUrl = process.env.TEST_BASE_URL || 'http://127.0.0.1:3001';
+const origin = new URL(baseUrl).origin;
 const productPagePattern = /\/(?:combat|music|sport|wisdom)-[^/]+\.html(?:[?#].*)?$/i;
+const seededCart = [
+  {
+    id: 'combat-balanced-mind-combat-legend-mural.html::statement-45',
+    page: 'combat-balanced-mind-combat-legend-mural.html',
+    name: 'The Balanced Mind',
+    price: 45,
+    variantId: 'statement-45',
+    variantLabel: 'Statement',
+    sizeCm: 45,
+    sizeLabel: '45 cm',
+    widthCm: 45,
+    heightCm: 45,
+    quantity: 1,
+    image: 'media/stikkers/2026/Batch 4/combat Legends/balanced-mind-combat-legend-mural.png',
+  },
+];
 
 const browser = await webkit.launch({ headless: true });
 const context = await browser.newContext({
   ...devices['iPhone 13'],
   locale: 'en-NL',
+  storageState: {
+    cookies: [],
+    origins: [
+      {
+        origin,
+        localStorage: [
+          { name: 'legendCartVersion', value: '4' },
+          { name: 'legendShippingCountry', value: 'NL' },
+          { name: 'legendDiscountCode', value: '' },
+          { name: 'legendCart', value: JSON.stringify(seededCart) },
+        ],
+      },
+    ],
+  },
 });
 
 const page = await context.newPage();
 page.setDefaultTimeout(15_000);
 const navigations = [];
+const browserErrors = [];
+const failedRequests = [];
+
+function recordDiagnostic(collection, value) {
+  if (collection.length < 20) collection.push(value);
+}
 
 page.on('framenavigated', (frame) => {
   if (frame === page.mainFrame()) navigations.push(frame.url());
 });
 
-await page.addInitScript(() => {
-  try {
-    localStorage.setItem('legendCartVersion', '4');
-    localStorage.setItem('legendShippingCountry', 'NL');
-    localStorage.setItem('legendDiscountCode', '');
-    localStorage.setItem('legendCart', JSON.stringify([
-      {
-        id: 'combat-balanced-mind-combat-legend-mural.html::statement-45',
-        page: 'combat-balanced-mind-combat-legend-mural.html',
-        name: 'The Balanced Mind',
-        price: 45,
-        variantId: 'statement-45',
-        variantLabel: 'Statement',
-        sizeCm: 45,
-        sizeLabel: '45 cm',
-        widthCm: 45,
-        heightCm: 45,
-        quantity: 1,
-        image: 'media/stikkers/2026/Batch 4/combat Legends/balanced-mind-combat-legend-mural.png',
-      },
-    ]));
-  } catch {
-    // about:blank can reject storage access; the destination document runs this again.
+page.on('pageerror', (error) => {
+  recordDiagnostic(browserErrors, `pageerror: ${error?.message || String(error)}`);
+});
+
+page.on('console', (message) => {
+  if (message.type() === 'error') {
+    recordDiagnostic(browserErrors, `console: ${message.text()}`);
   }
+});
+
+page.on('requestfailed', (request) => {
+  recordDiagnostic(failedRequests, {
+    url: request.url(),
+    error: request.failure()?.errorText || 'unknown',
+  });
 });
 
 try {
   await page.goto(`${baseUrl}/shop.html`, { waitUntil: 'domcontentloaded' });
+
+  const seededStorage = await page.evaluate(() => {
+    let cart = null;
+    try {
+      cart = JSON.parse(localStorage.getItem('legendCart') || 'null');
+    } catch {
+      cart = 'invalid-json';
+    }
+    return {
+      cartVersion: localStorage.getItem('legendCartVersion'),
+      shippingCountry: localStorage.getItem('legendShippingCountry'),
+      cart,
+    };
+  });
+
+  if (seededStorage.cartVersion !== '4') {
+    throw new Error(`Expected legendCartVersion=4 before checkout init, received ${seededStorage.cartVersion || '(missing)'}.`);
+  }
+  if (seededStorage.shippingCountry !== 'NL') {
+    throw new Error(`Expected legendShippingCountry=NL before checkout init, received ${seededStorage.shippingCountry || '(missing)'}.`);
+  }
+  if (!Array.isArray(seededStorage.cart) || seededStorage.cart.length !== 1 || seededStorage.cart[0]?.variantId !== 'statement-45') {
+    throw new Error(`Expected one deterministic seeded cart item before checkout init, received ${JSON.stringify(seededStorage.cart)}.`);
+  }
+
   await page.waitForFunction(() => document.getElementById('cart-count')?.textContent === '1');
   navigations.length = 0;
 
@@ -132,6 +185,7 @@ try {
     result: 'passed',
     browser: 'webkit',
     device: 'iPhone 13',
+    cartSeedMethod: 'storageState',
     streetFontSize,
     streetPositionDeltaPx: Number(positionDelta.toFixed(2)),
     followingFieldDeltaPx: Number(followingFieldDelta.toFixed(2)),
@@ -140,6 +194,31 @@ try {
     navigationCount: navigations.length,
     finalUrl: currentUrl,
   }, null, 2));
+} catch (error) {
+  let runtime = {};
+  try {
+    runtime = await page.evaluate(() => ({
+      url: location.href,
+      readyState: document.readyState,
+      cartCount: document.getElementById('cart-count')?.textContent || null,
+      cartVersion: localStorage.getItem('legendCartVersion'),
+      cartPresent: Boolean(localStorage.getItem('legendCart')),
+    }));
+  } catch (diagnosticError) {
+    runtime = { diagnosticError: diagnosticError?.message || String(diagnosticError) };
+  }
+
+  console.error(JSON.stringify({
+    result: 'failed',
+    browser: 'webkit',
+    device: 'iPhone 13',
+    error: error?.message || String(error),
+    runtime,
+    browserErrors,
+    failedRequests,
+    navigations,
+  }, null, 2));
+  throw error;
 } finally {
   await context.close();
   await browser.close();
