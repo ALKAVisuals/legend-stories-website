@@ -48,25 +48,34 @@ export async function deliverPaidOrderNotifications({
     return Object.freeze({ skipped: true, reason: 'not_live', deliveries: [] });
   }
 
+  const recipients = Object.freeze({
+    merchant: requiredEmail(merchantTo),
+    customer: requiredEmail(order.customer?.email),
+  });
+  if (!recipients.merchant && !recipients.customer) {
+    return Object.freeze({ skipped: true, reason: 'recipients_missing', deliveries: [] });
+  }
+
   assertStore(notificationStore);
   assertNotifier(notifier);
 
-  const merchantEmail = requiredEmail(merchantTo);
-  const customerEmail = requiredEmail(order.customer?.email);
-  if (!merchantEmail) {
-    return Object.freeze({ skipped: true, reason: 'merchant_recipient_missing', deliveries: [] });
-  }
-  if (!customerEmail) {
-    return Object.freeze({ skipped: true, reason: 'customer_recipient_missing', deliveries: [] });
-  }
-
   const deliveries = [];
   for (const target of NOTIFICATION_TARGETS) {
+    const recipient = recipients[target.recipient];
+    if (!recipient) {
+      deliveries.push(Object.freeze({
+        notificationType: target.type,
+        status: 'skipped',
+        duplicate: false,
+        reason: 'recipient_missing',
+      }));
+      continue;
+    }
+
     const attemptedAt = Number(now());
     if (!Number.isInteger(attemptedAt) || attemptedAt < 0) {
       throw new TypeError('Paid-order notification clock returned an invalid timestamp.');
     }
-    const recipient = target.recipient === 'merchant' ? merchantEmail : customerEmail;
     await notificationStore.ensureNotification({
       orderReference: order.reference,
       notificationType: target.type,
