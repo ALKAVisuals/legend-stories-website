@@ -3,21 +3,29 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
-const css = await readFile(new URL('../css/shared.css', import.meta.url), 'utf8');
 
-test('checkout address suggestions never block manual entry', () => {
-  assert.match(app, /Address suggestions are unavailable\. You can enter the address manually\./);
-  assert.match(app, /manualAddressFallback/);
-  assert.match(app, /googlePlacesUnavailable/);
-  assert.doesNotMatch(app, /Fill in your first name, last name and email before entering the address/);
+test('checkout validates the entered address locally before payment', () => {
+  assert.match(app, /checkoutAddressModule\.createManualAddress\(\{[\s\S]*street,[\s\S]*postalCode: zip,[\s\S]*city,[\s\S]*country/);
+  assert.match(app, /processOrder\(result\.address, firstname, lastname, email\)/);
+  assert.doesNotMatch(app, /validateAddressWithGoogle/);
+  assert.doesNotMatch(app, /doGoogleValidation/);
+  assert.doesNotMatch(app, /Validating address\.\.\./);
 });
 
-test('iOS address field is normalized and does not refocus itself after a Places failure', () => {
+test('checkout runtime no longer loads or initializes Google Places', () => {
+  assert.doesNotMatch(app, /google-places-loader\.mjs/);
+  assert.doesNotMatch(app, /createGooglePlacesLoader/);
+  assert.doesNotMatch(app, /google\.maps\.places/);
+  assert.doesNotMatch(app, /placeAutocomplete/);
+  assert.doesNotMatch(app, /checkout-address-status/);
+});
+
+test('street input keeps the iOS-safe editable address configuration', () => {
   assert.match(app, /configureStreetAddressInput\(streetInput\)/);
-  assert.doesNotMatch(app, /Google address suggestions are temporarily unavailable[\s\S]{0,220}focusTarget:\s*streetInput/);
+  assert.match(app, /bindEditableAddressFields\(\{/);
 });
 
-test('Google suggestion list stays above the checkout drawer on mobile', () => {
-  assert.match(css, /\.pac-container[\s\S]*z-index:\s*2147483647/);
-  assert.match(css, /@media \(max-width: 640px\)[\s\S]*\.pac-container[\s\S]*left:\s*12px/);
+test('Google API key remains scoped to the separate sticker fact feature', () => {
+  assert.match(app, /const GP_API_KEY =/);
+  assert.match(app, /kgsearch\.googleapis\.com\/v1\/entities:search/);
 });

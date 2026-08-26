@@ -41,47 +41,6 @@ await page.addInitScript(() => {
   } catch {
     // about:blank can reject storage access; the destination document runs this again.
   }
-
-  class FakeAutocomplete {
-    constructor(input) {
-      this.input = input;
-      this.listeners = new Map();
-    }
-    addListener(name, callback) {
-      this.listeners.set(name, callback);
-      return { remove: () => this.listeners.delete(name) };
-    }
-    getPlace() {
-      return {};
-    }
-    setComponentRestrictions() {}
-  }
-
-  function FakePlacesService() {}
-  FakePlacesService.prototype.findPlaceFromQuery = function findPlaceFromQuery(_request, callback) {
-    window.setTimeout(() => {
-      callback([
-        {
-          formatted_address: 'Late Google result',
-          address_components: [],
-        },
-      ], 'OK');
-    }, 4500);
-  };
-
-  window.google = {
-    maps: {
-      places: {
-        Autocomplete: FakeAutocomplete,
-        PlacesService: FakePlacesService,
-        PlacesServiceStatus: {
-          OK: 'OK',
-          ZERO_RESULTS: 'ZERO_RESULTS',
-          UNKNOWN_ERROR: 'UNKNOWN_ERROR',
-        },
-      },
-    },
-  };
 });
 
 try {
@@ -99,9 +58,7 @@ try {
 
   const street = page.locator('#checkout-street');
   const zip = page.locator('#checkout-zip');
-  const addressStatus = page.locator('#checkout-address-status');
   await street.tap();
-  await addressStatus.waitFor({ state: 'attached' });
 
   const beforeTyping = await street.boundingBox();
   const zipBeforeTyping = await zip.boundingBox();
@@ -113,10 +70,6 @@ try {
   const afterTyping = await street.boundingBox();
   const zipAfterTyping = await zip.boundingBox();
   const activeId = await page.evaluate(() => document.activeElement?.id || '');
-  const hiddenStatusStyle = await addressStatus.evaluate((element) => ({
-    display: getComputedStyle(element).display,
-    visibility: getComputedStyle(element).visibility,
-  }));
 
   if (!beforeTyping || !afterTyping || !zipBeforeTyping || !zipAfterTyping) {
     throw new Error('Checkout address field bounding box was unavailable.');
@@ -136,13 +89,10 @@ try {
     throw new Error(`Street input shifted by ${positionDelta.toFixed(2)}px while typing.`);
   }
   if (followingFieldDelta > 1) {
-    throw new Error(`Postal-code field shifted by ${followingFieldDelta.toFixed(2)}px while address helper text changed.`);
+    throw new Error(`Postal-code field shifted by ${followingFieldDelta.toFixed(2)}px while typing.`);
   }
   if (activeId !== 'checkout-street') {
     throw new Error(`Street input lost focus while typing; active element is ${activeId || 'none'}.`);
-  }
-  if (hiddenStatusStyle.display === 'none') {
-    throw new Error('Address helper row collapsed while hidden.');
   }
 
   await street.fill('Example Street 4');
@@ -151,10 +101,18 @@ try {
   await page.locator('#checkout-country').selectOption('NL');
 
   const payButton = page.locator('#checkout-pay-btn');
+  const startedAt = Date.now();
   await payButton.tap();
-  await page.waitForFunction(() => document.getElementById('checkout-pay-btn')?.textContent?.includes('Validating address'));
+  await page.waitForFunction(() => String(document.getElementById('purchase-feedback')?.textContent || '').includes('Secure online payment is not enabled'));
+  const checkoutDecisionMs = Date.now() - startedAt;
 
-  await page.waitForTimeout(5200);
+  const payButtonText = await payButton.textContent();
+  if (String(payButtonText || '').toLowerCase().includes('validating address')) {
+    throw new Error('Checkout still entered the removed Google address-validation loading state.');
+  }
+  if (checkoutDecisionMs >= 2000) {
+    throw new Error(`Local address validation took ${checkoutDecisionMs}ms; checkout should not wait on Google Places.`);
+  }
 
   const currentUrl = page.url();
   const unexpectedProductNavigation = navigations.find((url) => productPagePattern.test(new URL(url).pathname));
@@ -167,7 +125,7 @@ try {
 
   const feedback = await page.locator('#purchase-feedback').textContent();
   if (!String(feedback || '').includes('Secure online payment is not enabled')) {
-    throw new Error(`Expected safe no-payment fallback after address timeout, received: ${feedback || '(empty)'}`);
+    throw new Error(`Expected safe no-payment fallback after local address validation, received: ${feedback || '(empty)'}`);
   }
 
   console.log(JSON.stringify({
@@ -178,8 +136,7 @@ try {
     streetPositionDeltaPx: Number(positionDelta.toFixed(2)),
     followingFieldDeltaPx: Number(followingFieldDelta.toFixed(2)),
     streetFocusPreserved: activeId === 'checkout-street',
-    hiddenStatusDisplay: hiddenStatusStyle.display,
-    hiddenStatusVisibility: hiddenStatusStyle.visibility,
+    checkoutDecisionMs,
     navigationCount: navigations.length,
     finalUrl: currentUrl,
   }, null, 2));
