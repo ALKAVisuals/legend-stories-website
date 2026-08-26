@@ -170,19 +170,23 @@ Known official social URLs are preserved in `docs/CURRENT_PRODUCTION_STATUS_2026
 
 ## 7. Current GitHub handoff nuance
 
-PR #143 is documentation-only. On its current exact head at this update, all three GitHub Actions checks are green:
+PR #143 is documentation-only.
+
+On the previously verified head `8c5045ce1ccdc96732337c17a84f483e97a632fd`, all three GitHub Actions checks were green:
 
 - `Quality gate` — success;
 - `Static accessibility inventory` — success;
 - `iPhone WebKit checkout regression` — success.
 
-Earlier runs of the existing WebKit regression had failed while waiting for the seeded cart counter to become `1`, before the actual checkout/payment-fallback assertions were reached. That historical harness instability remains relevant context, but it no longer blocks PR #143 on its current head.
+Earlier runs of the existing WebKit regression had failed while waiting for the seeded cart counter to become `1`, before the actual checkout/payment-fallback assertions were reached. That historical harness instability remains relevant context, but the later green run removed the original CI blocker for PR #143.
+
+Because this documentation has since been refreshed, the **fresh current PR #143 head must receive its own green CI evidence before merge**. Do not infer green status for a newer documentation head from the older `8c5045ce...` run.
 
 A separate experiment branch / PR #144 exists only to harden diagnostics/seeding for that WebKit test:
 
 `test/webkit-cart-seeding-hardening-20260826`
 
-Its current net change is limited to `tests/browser/mobile-checkout-webkit.mjs`. The hardening approach uses Playwright `storageState`, explicit seeded-storage checks and additional browser/request diagnostics, but PR #144's own current iPhone WebKit regression check is red. Therefore PR #144 must not be merged as a prerequisite for PR #143 and must not be treated as proven hardening yet.
+Its net change is limited to `tests/browser/mobile-checkout-webkit.mjs`. The hardening approach uses Playwright `storageState`, explicit seeded-storage checks and additional browser/request diagnostics, but PR #144's own current iPhone WebKit regression check is red. Therefore PR #144 must not be merged as a prerequisite for PR #143 and must not be treated as proven hardening yet.
 
 PR #144 is not Production code and must not be treated as the fix for the original mobile Production symptom.
 
