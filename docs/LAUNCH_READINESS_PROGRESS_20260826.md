@@ -170,13 +170,21 @@ Known official social URLs are preserved in `docs/CURRENT_PRODUCTION_STATUS_2026
 
 ## 7. Current GitHub handoff nuance
 
-PR #143 is documentation-only but currently has a red existing WebKit regression check caused by a cart-initialization timeout before the checkout fallback assertion. Do not merge it blindly while that check is red.
+PR #143 is documentation-only. On its current exact head at this update, all three GitHub Actions checks are green:
 
-A separate experiment branch exists only to harden diagnostics/seeding for that WebKit test:
+- `Quality gate` — success;
+- `Static accessibility inventory` — success;
+- `iPhone WebKit checkout regression` — success.
+
+Earlier runs of the existing WebKit regression had failed while waiting for the seeded cart counter to become `1`, before the actual checkout/payment-fallback assertions were reached. That historical harness instability remains relevant context, but it no longer blocks PR #143 on its current head.
+
+A separate experiment branch / PR #144 exists only to harden diagnostics/seeding for that WebKit test:
 
 `test/webkit-cart-seeding-hardening-20260826`
 
-It is not Production code and must not be treated as the fix for the original mobile Production symptom.
+Its current net change is limited to `tests/browser/mobile-checkout-webkit.mjs`. The hardening approach uses Playwright `storageState`, explicit seeded-storage checks and additional browser/request diagnostics, but PR #144's own current iPhone WebKit regression check is red. Therefore PR #144 must not be merged as a prerequisite for PR #143 and must not be treated as proven hardening yet.
+
+PR #144 is not Production code and must not be treated as the fix for the original mobile Production symptom.
 
 See `docs/NEXT_CHAT_START_20260826.md` for the exact current branch/PR distinction and next-chat starting order.
 
