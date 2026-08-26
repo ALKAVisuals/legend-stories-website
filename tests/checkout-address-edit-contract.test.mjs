@@ -4,16 +4,17 @@ import test from 'node:test';
 
 const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
 
-test('Google-selected checkout addresses never lock customer fields', () => {
-  assert.doesNotMatch(app, /countryInput\.disabled = true/);
-  assert.match(app, /countryInput\.disabled = false/);
+test('checkout address fields remain editable with local validation', () => {
   assert.match(app, /bindEditableAddressFields\(\{/);
+  assert.match(app, /streetInput: streetField/);
   assert.match(app, /zipInput: zipField/);
   assert.match(app, /cityInput: cityField/);
   assert.match(app, /countryInput: countryField/);
+  assert.doesNotMatch(app, /countryInput\.disabled = true/);
 });
 
-test('editing any address field invalidates the previous Google selection', () => {
-  assert.match(app, /onEdit: \(\) => \{[\s\S]*validatedAddress = null/);
-  assert.match(app, /Address selected\. You can edit any field before continuing\./);
+test('checkout no longer carries Google-selected address state', () => {
+  assert.doesNotMatch(app, /validatedAddress/);
+  assert.doesNotMatch(app, /Address selected\. You can edit any field before continuing\./);
+  assert.doesNotMatch(app, /place_changed/);
 });
