@@ -145,31 +145,38 @@ Deferred but not cancelled:
 
 PR #143 — `Document detailed launch-readiness progress` — is open and documentation-only.
 
-It contains the detailed percentage/worklist document:
+It contains:
 
-`docs/LAUNCH_READINESS_PROGRESS_20260826.md`
+- `docs/LAUNCH_READINESS_PROGRESS_20260826.md`;
+- `docs/NEXT_CHAT_START_20260826.md`.
 
 The PR itself does not change checkout/runtime code.
 
-Its Quality and Accessibility checks were green, but the existing WebKit workflow failed twice while waiting for the seeded cart counter to become `1`, before the actual checkout/payment-fallback assertions were reached.
+On the previously verified head `8c5045ce1ccdc96732337c17a84f483e97a632fd`, all three GitHub Actions checks were green:
 
-Do not confuse this WebKit harness failure with the expected GitHub Pages no-payment fallback.
+- `Quality gate` — success;
+- `Static accessibility inventory` — success;
+- `iPhone WebKit checkout regression` — success.
 
-PR #143 should not be merged with a knowingly red required regression check merely because it is documentation-only; either obtain valid green evidence or explicitly decide how the repository CI policy should handle documentation-only changes.
+Earlier WebKit runs on the same documentation PR had failed while waiting for the seeded cart counter to become `1`, before the actual checkout/payment-fallback assertions were reached. That remains useful evidence of intermittent harness instability, but the later green run removed the original CI blocker for PR #143.
+
+Because this handoff itself is being updated, verify the **fresh current PR #143 head** and its new CI result before merging. Do not merge until that new exact head is green.
+
+The green WebKit result on PR #143 is repository regression evidence only; it does not prove that the original Production random-navigation symptom is solved.
 
 ---
 
-## 7. Separate WebKit test-harness experiment branch
+## 7. Separate WebKit test-harness experiment branch / PR #144
 
 A separate non-authoritative experiment branch exists:
 
 `test/webkit-cart-seeding-hardening-20260826`
 
-Current observed head at handoff time:
+Observed head before this documentation refresh:
 
 `b8fef4a3ea991674ebf814cefcccde872d51a965`
 
-Compared with `main`, this branch changes only:
+Compared with `main`, its net change is limited to:
 
 `tests/browser/mobile-checkout-webkit.mjs`
 
@@ -180,16 +187,25 @@ Important:
 - it is **not merged**;
 - it is **not Production code**;
 - it must not be described as a checkout fix;
-- it exists only to make the WebKit test harness deterministic/diagnostic;
-- the expected static no-payment fallback assertion remains valid for the local/static test harness.
+- it exists only to make the WebKit test harness more deterministic/diagnostic;
+- its current Quality and Accessibility checks are green;
+- its current iPhone WebKit checkout regression check is red;
+- therefore PR #144 is currently `unstable` and must not be merged as a prerequisite for PR #143.
 
-The next chat may inspect this branch if it needs to resolve PR #143 CI, but should not conflate it with the main paid-order email implementation track.
+Because PR #143 has already produced a later green WebKit result without PR #144, the hardening branch is not required to unblock the documentation handoff. Its own failure should be understood separately before any future merge decision.
 
 ---
 
-## 8. Exact recommended first technical action in the next chat
+## 8. Exact recommended next action
 
-Unless the owner explicitly changes priority, begin with a **read-only analysis** of the paid-order runtime integration.
+First finish the GitHub handoff cleanly:
+
+1. verify the fresh current PR #143 head after these documentation-only updates;
+2. require green Quality, Accessibility and iPhone WebKit checks on that exact head;
+3. if those checks are green, PR #143 can be merged as documentation-only work;
+4. keep PR #144 separate and unmerged while its WebKit check remains red.
+
+After PR #143 is safely finalized, the next **technical** action is a read-only analysis of the paid-order runtime integration.
 
 Inspect at minimum:
 
@@ -210,7 +226,7 @@ find the smallest safe shared boundary after authoritative `paid` persistence wh
 
 Explicitly analyse the already-paid/early-return path: a duplicate capture request must not permanently skip a previously failed notification.
 
-During that first step:
+During that technical analysis:
 
 - do not modify code;
 - do not execute Neon migrations;
