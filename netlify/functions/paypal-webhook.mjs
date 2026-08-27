@@ -5,6 +5,7 @@ import {
 } from '../../server/payments/paypal-api.mjs';
 import { createPayPalWebhookReconciler } from '../../server/payments/paypal-webhook-reconciliation.mjs';
 import { getCommerceOrderStore } from '../../server/netlify/commerce-runtime.mjs';
+import { createPaidOrderNotificationRuntime } from '../../server/netlify/paid-order-notification-runtime.mjs';
 
 function bootstrapErrorResponse(status, code, message) {
   return new Response(JSON.stringify({ error: { code, message } }), {
@@ -18,10 +19,22 @@ function bootstrapErrorResponse(status, code, message) {
   });
 }
 
+function safeNotificationBootstrapLog(error) {
+  try {
+    console.error('Paid-order notification runtime could not be prepared for PayPal webhook processing.', {
+      name: String(error?.name || 'Error').slice(0, 120),
+      code: String(error?.code || 'UNKNOWN').slice(0, 120),
+    });
+  } catch {
+    // Notification logging must never prevent verified webhook processing.
+  }
+}
+
 export function createNetlifyPayPalWebhookHandler({
   env = process.env,
   clientFactory = createPayPalApiClient,
   storeFactory,
+  notificationRuntimeFactory = createPaidOrderNotificationRuntime,
   processVerifiedEvent,
 } = {}) {
   return async function netlifyPayPalWebhookHandler(request) {
@@ -36,7 +49,17 @@ export function createNetlifyPayPalWebhookHandler({
       });
       if (!processor && String(env.NEON_DATABASE_URL || '').trim()) {
         const orderStore = getCommerceOrderStore({ env, storeFactory });
-        processor = createPayPalWebhookReconciler({ orderStore, paypalClient });
+        let reconcilePaidOrderNotifications = null;
+        try {
+          reconcilePaidOrderNotifications = notificationRuntimeFactory({ env });
+        } catch (error) {
+          safeNotificationBootstrapLog(error);
+        }
+        processor = createPayPalWebhookReconciler({
+          orderStore,
+          paypalClient,
+          reconcilePaidOrderNotifications,
+        });
       }
     } catch (error) {
       if (error instanceof PayPalConfigurationError

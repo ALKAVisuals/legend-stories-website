@@ -56,6 +56,45 @@ function normalizeReference(value) {
   return reference;
 }
 
+function safeNotificationFailureLog(logger, error, order) {
+  const reference = String(order?.reference || '').trim().toLowerCase();
+  try {
+    logger?.error?.('Paid-order notification reconciliation failed after PayPal webhook confirmation.', {
+      name: String(error?.name || 'Error').slice(0, 120),
+      code: String(error?.code || 'UNKNOWN').slice(0, 120),
+      reference: REFERENCE_PATTERN.test(reference) ? reference : 'unknown',
+    });
+  } catch {
+    // Notification logging must never affect payment truth or webhook acknowledgement.
+  }
+}
+
+async function attemptPaidOrderNotifications(reconcile, order, logger) {
+  if (typeof reconcile !== 'function' || order?.status !== 'paid') return;
+  try {
+    await reconcile(order);
+  } catch (error) {
+    safeNotificationFailureLog(logger, error, order);
+  }
+}
+
+async function persistWebhookEvent({
+  orderStore,
+  mutation,
+  reconcilePaidOrderNotifications,
+  logger,
+}) {
+  const persisted = await orderStore.processPaypalWebhookEvent(mutation);
+  if (persisted?.order?.status === 'paid') {
+    await attemptPaidOrderNotifications(
+      reconcilePaidOrderNotifications,
+      persisted.order,
+      logger,
+    );
+  }
+  return persisted;
+}
+
 function eventIdentity(event = {}) {
   const eventId = String(event.id || '').trim();
   const eventType = String(event.event_type || '').trim().toUpperCase();
@@ -162,6 +201,8 @@ function assertReservedOrder(order, expected, mode, { requireAmount = true } = {
 export function createPayPalWebhookReconciler({
   orderStore,
   paypalClient,
+  reconcilePaidOrderNotifications = null,
+  logger = console,
   fallbackCapturedAt = () => Math.floor(Date.now() / 1000),
 } = {}) {
   if (typeof orderStore?.getOrderByReference !== 'function'
@@ -171,6 +212,13 @@ export function createPayPalWebhookReconciler({
   if (!paypalClient || !['test', 'live'].includes(paypalClient.mode)) {
     fail('PAYPAL_WEBHOOK_CLIENT_NOT_CONFIGURED', 'PayPal webhook API client is not configured.');
   }
+
+  const persist = (mutation) => persistWebhookEvent({
+    orderStore,
+    mutation,
+    reconcilePaidOrderNotifications,
+    logger,
+  });
 
   return async function processVerifiedPayPalEvent({ event, mode } = {}) {
     const eventType = String(event?.event_type || '').trim().toUpperCase();
@@ -187,7 +235,7 @@ export function createPayPalWebhookReconciler({
       assertReservedOrder(reserved, parsed, mode);
 
       if (reserved.status === 'paid') {
-        return orderStore.processPaypalWebhookEvent({
+        return persist({
           ...parsed,
           mode,
           targetStatus: 'paid',
@@ -208,7 +256,7 @@ export function createPayPalWebhookReconciler({
         currency: reserved.currency,
         fallbackCapturedAt: fallbackCapturedAt(),
       });
-      return orderStore.processPaypalWebhookEvent({
+      return persist({
         ...parsed,
         captureId: capture.captureIds[0] || null,
         mode,
@@ -221,7 +269,7 @@ export function createPayPalWebhookReconciler({
       const parsed = parseApprovalReversedEvent(event);
       const reserved = await orderStore.getOrderByReference(parsed.reference);
       assertReservedOrder(reserved, parsed, mode, { requireAmount: false });
-      return orderStore.processPaypalWebhookEvent({
+      return persist({
         ...parsed,
         mode,
         targetStatus: 'payment_failed',
@@ -234,13 +282,13 @@ export function createPayPalWebhookReconciler({
       if (parsed.resourceStatus !== 'COMPLETED') {
         fail('INVALID_PAYPAL_WEBHOOK_EVENT', 'Completed capture webhook has a non-completed resource.');
       }
-      return orderStore.processPaypalWebhookEvent({ ...parsed, mode, targetStatus: 'paid' });
+      return persist({ ...parsed, mode, targetStatus: 'paid' });
     }
     if (eventType === 'PAYMENT.CAPTURE.PENDING') {
       if (parsed.resourceStatus !== 'PENDING') {
         fail('INVALID_PAYPAL_WEBHOOK_EVENT', 'Pending capture webhook has a non-pending resource.');
       }
-      return orderStore.processPaypalWebhookEvent({
+      return persist({
         ...parsed,
         mode,
         targetStatus: 'payment_processing',
@@ -249,7 +297,7 @@ export function createPayPalWebhookReconciler({
     if (!FAILED_CAPTURE_STATUSES.has(parsed.resourceStatus)) {
       fail('INVALID_PAYPAL_WEBHOOK_EVENT', 'Failed capture webhook has an unexpected resource status.');
     }
-    return orderStore.processPaypalWebhookEvent({
+    return persist({
       ...parsed,
       mode,
       targetStatus: 'payment_failed',

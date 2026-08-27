@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
+import { createNetlifyPayPalCaptureHandler } from '../netlify/functions/capture-paypal-order.mjs';
 import { handleCapturePayPalOrder } from '../server/api/capture-paypal-order.mjs';
 import { PayPalApiError } from '../server/payments/paypal-api.mjs';
 import { createPayPalWebhookReconciler } from '../server/payments/paypal-webhook-reconciliation.mjs';
@@ -70,6 +71,8 @@ function completedCaptureEvent() {
 
 test('already-paid PayPal return is idempotent without a second PayPal capture call', async () => {
   let captureCalls = 0;
+  let notificationCalls = 0;
+  let notifiedOrder;
   const store = {
     async getOrderByReference() {
       return reservedOrder({ status: 'paid', version: 1 });
@@ -86,6 +89,10 @@ test('already-paid PayPal return is idempotent without a second PayPal capture c
         captureCalls += 1;
       },
     },
+    reconcilePaidOrderNotifications: async (order) => {
+      notificationCalls += 1;
+      notifiedOrder = order;
+    },
     allowedOrigins: 'https://shop.example',
   });
   const payload = await response.json();
@@ -94,10 +101,14 @@ test('already-paid PayPal return is idempotent without a second PayPal capture c
   assert.equal(payload.paid, true);
   assert.equal(payload.duplicate, true);
   assert.equal(captureCalls, 0);
+  assert.equal(notificationCalls, 1);
+  assert.equal(notifiedOrder.status, 'paid');
 });
 
-test('approved PayPal order is captured and persisted as paid', async () => {
+test('approved PayPal order is captured, persisted as paid, then reconciles notifications', async () => {
   let persisted;
+  let notifiedOrder;
+  const sequence = [];
   const store = {
     async getOrderByReference(receivedReference) {
       assert.equal(receivedReference, reference);
@@ -105,6 +116,7 @@ test('approved PayPal order is captured and persisted as paid', async () => {
     },
     async processPaypalCapture(capture) {
       persisted = capture;
+      sequence.push('persist');
       return {
         duplicate: false,
         order: reservedOrder({ status: 'paid', version: 1 }),
@@ -123,6 +135,10 @@ test('approved PayPal order is captured and persisted as paid', async () => {
   const response = await handleCapturePayPalOrder(request(), {
     orderStore: store,
     paypalClient: client,
+    reconcilePaidOrderNotifications: async (order) => {
+      sequence.push('notify');
+      notifiedOrder = order;
+    },
     allowedOrigins: 'https://shop.example',
     capturedAt: 1_786_104_001,
   });
@@ -136,6 +152,39 @@ test('approved PayPal order is captured and persisted as paid', async () => {
   assert.equal(persisted.orderId, orderId);
   assert.equal(persisted.amountTotal, 4495);
   assert.equal(persisted.mode, 'test');
+  assert.deepEqual(sequence, ['persist', 'notify']);
+  assert.equal(notifiedOrder.status, 'paid');
+  assert.equal(notifiedOrder.version, 1);
+});
+
+test('notification reconciliation failure never turns a persisted paid capture into payment failure', async () => {
+  const response = await handleCapturePayPalOrder(request(), {
+    orderStore: {
+      async getOrderByReference() { return reservedOrder(); },
+      async processPaypalCapture() {
+        return {
+          duplicate: false,
+          order: reservedOrder({ status: 'paid', version: 1 }),
+        };
+      },
+    },
+    paypalClient: {
+      mode: 'test',
+      async captureOrder() { return completedCapture(); },
+    },
+    async reconcilePaidOrderNotifications() {
+      const error = new Error('temporary notification runtime failure');
+      error.code = 'ORDER_NOTIFICATION_RUNTIME_UNAVAILABLE';
+      throw error;
+    },
+    allowedOrigins: 'https://shop.example',
+  });
+  const payload = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(payload.status, 'paid');
+  assert.equal(payload.paid, true);
+  assert.equal(payload.duplicate, false);
 });
 
 test('PayPal capture lookup cannot be swapped to another reserved order ID', async () => {
@@ -156,8 +205,9 @@ test('PayPal capture lookup cannot be swapped to another reserved order ID', asy
   assert.equal(payload.error.code, 'ORDER_NOT_FOUND');
 });
 
-test('temporary PayPal API failure never persists a local paid state', async () => {
+test('temporary PayPal API failure never persists a local paid state or reconciles notifications', async () => {
   let persistCalls = 0;
+  let notificationCalls = 0;
   const response = await handleCapturePayPalOrder(request(), {
     orderStore: {
       async getOrderByReference() { return reservedOrder(); },
@@ -169,6 +219,9 @@ test('temporary PayPal API failure never persists a local paid state', async () 
         throw new PayPalApiError('PAYPAL_API_REQUEST_FAILED', 'temporary upstream failure');
       },
     },
+    async reconcilePaidOrderNotifications() {
+      notificationCalls += 1;
+    },
     allowedOrigins: 'https://shop.example',
   });
   const payload = await response.json();
@@ -176,6 +229,52 @@ test('temporary PayPal API failure never persists a local paid state', async () 
   assert.equal(response.status, 502);
   assert.equal(payload.error.code, 'PAYPAL_API_REQUEST_FAILED');
   assert.equal(persistCalls, 0);
+  assert.equal(notificationCalls, 0);
+});
+
+test('Netlify PayPal capture wrapper wires the paid-order notification runtime', async () => {
+  let runtimeFactoryCalls = 0;
+  let notifiedOrder;
+  const handler = createNetlifyPayPalCaptureHandler({
+    env: {
+      NEON_DATABASE_URL: 'test-neon-connection',
+      CHECKOUT_ALLOWED_ORIGINS: 'https://shop.example',
+    },
+    storeFactory({ connectionString }) {
+      assert.equal(connectionString, 'test-neon-connection');
+      return {
+        async getOrderByReference() { return reservedOrder(); },
+        async processPaypalCapture() {
+          return {
+            duplicate: false,
+            order: reservedOrder({ status: 'paid', version: 1 }),
+          };
+        },
+      };
+    },
+    notificationRuntimeFactory({ env }) {
+      runtimeFactoryCalls += 1;
+      assert.equal(env.NEON_DATABASE_URL, 'test-neon-connection');
+      return async (order) => {
+        notifiedOrder = order;
+      };
+    },
+    handlerOptions: {
+      paypalClient: {
+        mode: 'test',
+        async captureOrder() { return completedCapture(); },
+      },
+      capturedAt: 1_786_104_001,
+    },
+  });
+
+  const response = await handler(request());
+  const payload = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(payload.paid, true);
+  assert.equal(runtimeFactoryCalls, 1);
+  assert.equal(notifiedOrder.status, 'paid');
 });
 
 test('completed webhook recovers a capture when local Neon confirmation failed after PayPal success', async () => {

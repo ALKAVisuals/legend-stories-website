@@ -4,19 +4,24 @@ import {
   getCommerceOrderStore,
   unexpectedCommerceFunctionResponse,
 } from '../../server/netlify/commerce-runtime.mjs';
+import { createPaidOrderNotificationRuntime } from '../../server/netlify/paid-order-notification-runtime.mjs';
 
 export function createNetlifyPayPalCaptureHandler({
   env = process.env,
   storeFactory,
+  notificationRuntimeFactory = createPaidOrderNotificationRuntime,
   handlerOptions = {},
 } = {}) {
   return async function netlifyPayPalCaptureHandler(request) {
     try {
       const orderStore = getCommerceOrderStore({ env, storeFactory });
+      const reconcilePaidOrderNotifications = handlerOptions.reconcilePaidOrderNotifications
+        || notificationRuntimeFactory({ env });
       return await handleCapturePayPalOrder(request, {
         ...handlerOptions,
         env,
         orderStore,
+        reconcilePaidOrderNotifications,
       });
     } catch (error) {
       const configurationResponse = commerceBootstrapErrorResponse(error, {
