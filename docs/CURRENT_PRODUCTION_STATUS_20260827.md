@@ -1,51 +1,54 @@
-# LegendMural current production status — release + paid-order email handoff
+# LegendMural current production status — pre-deploy release handoff
 
-**Updated:** 27 August 2026  
+**Updated:** 27 August 2026, after real-device checkout validation and mobile-navigation investigation  
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Production host:** Netlify  
 **Public origin:** `https://legendmural.com`
 
-> **START HERE FOR THE NEXT CHAT.** This document supersedes `docs/CURRENT_PRODUCTION_STATUS_20260826.md` for current operational state. Older handoffs remain historical context only. If an older document, screenshot, branch or chat conflicts with this file plus current `main`, prefer current `main` and this handoff.
+> **START HERE FOR THE NEXT CHAT.** This document supersedes `docs/CURRENT_PRODUCTION_STATUS_20260826.md` for current operational state. Older handoffs remain historical context only. If an older document, screenshot, branch or chat conflicts with this file plus current GitHub state, prefer a fresh GitHub read plus this handoff.
 
 This file deliberately contains no passwords, API keys, full database connection strings or customer payloads.
 
 ---
 
-## 1. Current source-of-truth snapshot
+## 1. Immediate source-of-truth snapshot
 
-### GitHub
+### Public webshop only
 
-Latest runtime-code-changing baseline:
+This track concerns the **public LegendMural webshop** in:
+
+`ALKAVisuals/legend-stories-website`
+
+Do not switch to the separate dashboard repository `ALKAVisuals/legendmural-dashboard` unless the owner explicitly changes topic.
+
+### GitHub `main`
+
+`main` immediately before this handoff-update branch was created:
+
+`c9d8e6bc34f253f15bb5fd5a410ddf583de354d9`
+
+That commit is documentation-only PR #147 — **Clarify runtime baseline in current Production handoff**.
+
+Always fresh-check the exact current `main` SHA before repository or release decisions because documentation-only merges can move `main` without changing runtime code.
+
+### Latest merged runtime-code-changing baseline
 
 `663e4ebbe71bea8cd4097a452ab9f489daba34cb`
 
-This is the merge commit for PR #145 — **Wire paid-order notifications into PayPal runtime**.
+This is PR #145 — **Wire paid-order notifications into PayPal runtime**.
 
-PR #145 is merged. It wires paid-order notification reconciliation into both authoritative PayPal completion paths while keeping email failures non-fatal to payment truth.
+PR #145 is merged and contains the completed PayPal capture/webhook paid-order notification integration.
 
-Post-merge GitHub Actions on exact `663e4ebb...` include successful runs for this runtime baseline. Documentation-only merges after this baseline may move `main` without changing runtime code, so always fresh-check the exact current `main` SHA before repository or release decisions. Production is still intentionally not assumed to equal current `main`.
+### Separate open PR #144 — do not bundle automatically
 
-### Open PR that must not be confused with the release
-
-PR #144 — **Harden WebKit checkout cart seeding** — is still open.
+PR #144 — **Harden WebKit checkout cart seeding** — remains separate from this release track.
 
 - Branch: `test/webkit-cart-seeding-hardening-20260826`
 - Head: `b8fef4a3ea991674ebf814cefcccde872d51a965`
 - Scope: test harness only (`tests/browser/mobile-checkout-webkit.mjs`)
-- No runtime website, payment, Netlify, Neon or Production behavior change
-- Do **not** automatically merge it as part of the paid-order email/release track.
-
-### Production deployment state
-
-Do **not** assume Netlify Production is serving `663e4ebb...` yet.
-
-The last positively supportable Production runtime from earlier investigation remains:
-
-`c1345f22489bf9f8259c55e6432ef4c247c0153`
-
-The exact currently published Netlify runtime still needs a fresh read-only confirmation before any release decision.
-
-No deliberate Netlify Production deploy was performed while configuring the email/DNS settings described below.
+- No intended runtime website/payment/Netlify/Neon behavior change
+- It exists because the iPhone WebKit CI job has shown a recurring early cart-initialization flake
+- Do not merge it automatically merely because the release work continues
 
 ---
 
@@ -53,48 +56,84 @@ No deliberate Netlify Production deploy was performed while configuring the emai
 
 Work **one meaningful step at a time**.
 
-After every step report:
+After every completed step report:
 
-1. what was checked/changed;
+1. what was checked or changed;
 2. the result;
 3. what was deliberately not changed;
-4. how it was verified;
+4. how the result was verified;
 5. the next **single** step.
 
 Before every repository mutation:
 
-1. fully read the latest current-production handoff;
-2. fresh-check the exact current `main` SHA;
-3. use a feature/documentation branch, never direct `main`;
-4. merge only after adequate green evidence and explicit approval.
+1. fully read this current-production handoff;
+2. also fully read `docs/CURRENT_PRODUCTION_STATUS_20260826.md` while the project rule still requires it;
+3. fresh-check exact current `main`;
+4. use a feature/documentation branch, never direct `main`;
+5. merge only after adequate green evidence and explicit approval.
 
-Do not publish Netlify Production merely because repository work is complete.
+### Owner release preference
+
+The owner explicitly wants to **finish all feasible pre-deploy points first and then update Netlify Production once**, rather than spending multiple Netlify deploy/update points on intermediate experiments.
+
+Therefore:
+
+- do not deploy Netlify merely because one fix becomes ready;
+- finish the mobile-navigation blocker and other pre-deploy checks first;
+- keep Production intentionally behind until the final approved release candidate is ready.
 
 ---
 
-## 3. Non-negotiable payment/security boundaries
+## 3. Non-negotiable payment and security boundaries
 
 - Neon is authoritative order truth.
 - PayPal is payment proof.
-- Frontend may only show `paid` after server-authoritative confirmation.
+- Frontend may show `paid` only after server-authoritative confirmation.
 - Email delivery failure must never change a correctly persisted paid order into failed/pending.
 - Never expose or request `PAYPAL_CLIENT_SECRET`.
 - Never expose or request full Neon credentials/connection strings.
 - Never expose or request `RESEND_API_KEY`.
 - Never log full customer payloads.
 - Do not globally disable secret scanning.
-- GitHub Pages cannot validate PayPal, Neon, Netlify Functions, webhook delivery or Resend.
+- GitHub Pages is static/visual only and cannot validate PayPal, Neon, Netlify Functions, webhooks or Resend.
 - Preview/test environments must not accidentally gain Live payment/email credentials.
 
 LegendMural is not fully selling-ready until one controlled PayPal Live transaction proves the entire chain end-to-end.
 
 ---
 
-## 4. Checkout/mobile state that must be preserved
+## 4. Exact Netlify Production state — now confirmed
 
-### Historical Production symptom
+Step E1 read-only release readiness is **complete**.
 
-On 25 August 2026 mobile Safari showed:
+The owner opened Netlify Deploys and the currently **Published / Production** deploy was shown as:
+
+`main@95a57e8`
+
+GitHub resolved that short SHA to:
+
+`95a57e8f05a0af547efa0dfc4d044b8a96de7fe3`
+
+Commit message:
+
+**Log safe PayPal checkout bootstrap error code**
+
+At the time of E1, current `main` was 121 commits ahead of that Production commit. The exact numerical gap may change after later documentation/fix commits, so do not reuse 121 as a future authoritative count without rechecking.
+
+Important:
+
+- Netlify Production has **not** been deliberately updated during the current release work.
+- Netlify showed **Builds are stopped**.
+- A separate failed deploy row showed **Exposed secrets detected**; that failed row is not the Published Production runtime.
+- Do not press **Activate builds** or publish anything until the final pre-deploy release candidate is approved.
+
+---
+
+## 5. Checkout/mobile history and real-device proof
+
+### Historical Production symptom — 25 August
+
+On mobile Safari the old Production runtime showed:
 
 - unstable Street input;
 - long `VALIDATING ADDRESS...` behavior;
@@ -121,17 +160,120 @@ Current intended checkout behavior:
 - iOS checkout inputs remain at least 16px;
 - checkout proceeds to order processing after local validation.
 
-The old unexpected Production product-navigation symptom is **not yet proven fixed on the real Production runtime** merely because repository WebKit tests pass.
+### GitHub Pages release-candidate refresh
 
-A fresh/private real iPhone Safari release validation remains a release gate unless the owner explicitly records that it has already been completed successfully for the release candidate.
+Because Netlify Production must not be spent on intermediate validation, GitHub Pages was refreshed from current `main` through PR #148 with base `gh-pages` and head `main`.
+
+PR #148 merged into `gh-pages` as:
+
+`8b4a7e6ead3ad9dfd29266d11bde845ef94dc03f`
+
+The existing Pages-specific workflow remained present and the **Temporary GitHub Pages preview** workflow completed successfully for exact `8b4a7e6e...`.
+
+Preview URL:
+
+`https://alkavisuals.github.io/legend-stories-website/`
+
+### Real iPhone Safari checkout test — passed for checkout behavior
+
+The owner tested the refreshed Pages release candidate in a private real iPhone Safari session.
+
+Verified in that real-device run:
+
+- `Street + Number` remained stable while typing;
+- no jumping;
+- no focus loss;
+- no `VALIDATING ADDRESS...` dependency appeared;
+- no unexpected sticker/product navigation occurred in the tested checkout flow;
+- discount/shipping/total rendered correctly in the observed checkout;
+- checkout reached the expected static Pages fallback:
+  `Order ready. Secure online payment is not enabled on this deployment yet.`
+
+That is strong real-device evidence that the original address-entry/checkout symptom is resolved in the release candidate.
+
+### Important qualification
+
+The **checkout-specific** iPhone release gate passed, but the **overall mobile release gate is not yet complete**, because a separate hamburger/mobile-navigation problem was discovered immediately afterward.
 
 ---
 
-## 5. Paid-order email architecture — repository state
+## 6. Current release blocker — hamburger/mobile menu
 
-### Durable notification store
+### Observed problem
 
-PR #140 merged as:
+On the refreshed real iPhone Safari Pages preview, tapping the hamburger/mobile-menu button appeared to do nothing.
+
+This is now a release blocker. Do not deploy the current release candidate to Netlify until it is fixed and revalidated.
+
+### Read-only root-cause investigation
+
+Current source code does contain a real mobile-navigation controller:
+
+- `js/mobile-navigation.mjs`
+- `js/app.js` loads it and binds it to `#mobile-menu-btn` + `#mobile-menu`
+
+The controller moves the menu to `<body>` and dynamically requests:
+
+`css/premium-navigation.css`
+
+The actual successful GitHub Pages build artifact was inspected. It contained:
+
+- `js/mobile-navigation.mjs` — present
+- `js/app.js` — present
+- `css/premium-navigation.css` — **missing**
+
+The missing CSS is required for the portalled menu to become a full-screen mobile overlay. Without it, the JavaScript may toggle state while the menu remains effectively invisible/off-layout.
+
+### Why this also matters for Netlify
+
+This is not considered Pages-only.
+
+Netlify uses the repository build command and publishes `dist`, while the missing stylesheet was a Vite build-output problem. Therefore the same release candidate could ship a broken hamburger to Netlify Production if deployed without the fix.
+
+### Fix branch already created — NO PR YET
+
+Branch:
+
+`fix/mobile-navigation-build-css-20260827`
+
+The branch was created from exact `main`:
+
+`c9d8e6bc34f253f15bb5fd5a410ddf583de354d9`
+
+Current branch head:
+
+`286c8fff20f2cc9b538bee91633558e02703bca1`
+
+The branch is two commits ahead of that `main` baseline and changes only:
+
+1. `vite.config.mjs`
+   - explicitly emits `css/premium-navigation.css` into `dist/css/`;
+2. `scripts/validate-build.mjs`
+   - adds a build regression guard so the build fails if the mobile-navigation runtime/CSS contract is missing.
+
+At the time of this handoff update, a fresh GitHub search confirmed:
+
+**There is NO pull request yet for `fix/mobile-navigation-build-css-20260827`.**
+
+Do not recreate the branch or reimplement the fix from scratch.
+
+### Immediate next repository action
+
+Open exactly one PR:
+
+`fix/mobile-navigation-build-css-20260827` -> `main`
+
+Then stop and inspect CI before merge.
+
+Do not merge the fix in the same first action of a new chat.
+
+---
+
+## 7. Paid-order email architecture — repository complete
+
+### Durable notification store — PR #140
+
+Merged as:
 
 `30c60566801680ad21160d8c96a84ed98ba1f2c1`
 
@@ -152,9 +294,9 @@ or:
 
 `sending -> failed -> retry/claim later`
 
-### Guarded Resend layer
+### Guarded Resend layer — PR #141
 
-PR #141 merged as:
+Merged as:
 
 `370c873c3fec88abea6b0fd1ec4d2983e1491ea0`
 
@@ -163,38 +305,38 @@ Important behavior:
 - `ORDER_EMAILS_ENABLED` kill-switch;
 - only `paid` + `live` orders can email;
 - merchant/customer deliveries are independent;
-- DB claim protects against duplicate delivery;
-- Resend idempotency key adds provider-level duplicate protection;
+- database claim prevents duplicate processing;
+- Resend idempotency adds provider-level duplicate protection;
 - HTML/customer data is escaped;
-- item `unitPrice` / `lineTotal` are treated as EURO amounts;
-- authoritative order totals are treated as CENTS;
+- item `unitPrice` / `lineTotal` are EURO amounts;
+- authoritative order totals are CENTS;
 - email rejection is notification failure, not payment failure.
 
-### Runtime integration
+### Runtime PayPal integration — PR #145
 
-PR #145 merged as:
+Merged as:
 
 `663e4ebbe71bea8cd4097a452ab9f489daba34cb`
 
 Implemented:
 
 - shared `server/netlify/paid-order-notification-runtime.mjs`;
-- capture path attempts notification only after authoritative paid persistence;
-- already-paid capture can reconcile missing/failed notification without recapture;
-- webhook path attempts notification after authoritative reconciliation;
-- both paths may attempt the same notification safely because DB/provider idempotency owns duplicate prevention;
-- notification runtime/factory/provider failure stays non-fatal to payment truth and webhook acknowledgement;
-- safe logging only, no full customer payloads.
+- fresh capture attempts notification only after authoritative paid persistence;
+- already-paid capture can reconcile notification without recapture;
+- webhook attempts notification after authoritative reconciliation;
+- capture + webhook may both attempt safely because DB/provider idempotency owns duplicate prevention;
+- notification/provider failure remains non-fatal to payment truth and webhook acknowledgement;
+- safe logging only.
 
-Therefore, the old 26-August handoff statements saying runtime integration is not built are obsolete.
+The old 26-August handoff statements saying runtime integration is not built are obsolete.
 
 ---
 
-## 6. Neon Production — notification migrations complete
+## 8. Neon Production — notification migrations complete
 
-Production target used for the notification schema:
+Production target:
 
-- Neon project: `Legendmural`
+- Project: `Legendmural`
 - Project ID: `super-shape-69972279`
 - Branch: `production`
 - Branch ID: `br-misty-cloud-as0rofc8`
@@ -209,183 +351,188 @@ Completed on Production:
 Verified after migration:
 
 - `legend_commerce.order_notifications` exists;
-- owner is `legendmural_migrator`;
-- delivery index exists;
-- constraints exist;
+- owner `legendmural_migrator`;
+- delivery index and constraints exist;
 - runtime role has SELECT / INSERT / UPDATE;
 - runtime role does not have DELETE;
-- notification table was empty immediately after migration.
+- table was empty immediately after migration.
 
-The temporary migration-test branch was deleted after validation.
+The temporary migration-test branch was deleted.
 
-Do not recreate or re-run these migrations blindly.
+Do not recreate/re-run these migrations blindly.
 
-Separate known issue, deliberately deferred: `legendmural_netlify` has broader `neon_superuser` membership from earlier setup. Do not mix that least-privilege cleanup into the current email launch unless separately authorized.
+Separate deliberately deferred issue: `legendmural_netlify` has broader `neon_superuser` membership from earlier setup. Do not mix that least-privilege cleanup into this release unless explicitly authorized.
 
 ---
 
-## 7. Mailbox + DNS state
+## 9. Mailbox, DNS and Resend — setup complete
 
 ### DNS authority
 
 Netlify DNS is authoritative for `legendmural.com`.
 
-Nameservers previously confirmed:
+Nameservers:
 
 - `dns1.p01.nsone.net`
 - `dns2.p01.nsone.net`
 - `dns3.p01.nsone.net`
 - `dns4.p01.nsone.net`
 
-GoDaddy/Microsoft 365 hosts the `info@legendmural.com` mailbox but does not own active DNS.
+Microsoft 365/GoDaddy hosts `info@legendmural.com` but does not own active DNS.
 
-### Microsoft 365 / mailbox DNS
+### Mailbox
 
-Microsoft 365 mailbox records were added in Netlify DNS, including the root mailbox routing/config records required by GoDaddy.
-
-GoDaddy later displayed:
+Microsoft 365 mailbox DNS was added in Netlify DNS. GoDaddy subsequently showed:
 
 **“Je e-mail is klaar voor gebruik.”**
 
-This confirms GoDaddy/Microsoft 365 accepted the DNS setup for the mailbox configuration.
+The owner has already stated the mailbox test was performed. Do not restart mailbox/DNS setup from scratch unless a new delivery problem appears.
 
-The owner also stated that the mailbox test step had already been performed. Do not restart mailbox/DNS setup from scratch unless a new delivery problem is observed.
+### Resend domain
 
-### Resend DNS
-
-Existing Resend/Amazon SES DNS is on the dedicated mail subdomain and must remain separate from the Microsoft 365 root mailbox records.
-
-Resend domain currently shown in the Resend account:
+Verified sending domain:
 
 `mail.legendmural.com` — **Verified**
 
-Do not delete or replace the existing Resend DKIM/SPF/MX subdomain records when working on Microsoft 365 root mail records.
+Keep the existing Resend/Amazon SES DKIM/SPF/MX subdomain records separate from Microsoft 365 root mailbox records.
+
+No separate LegendMural Resend account is required.
 
 ---
 
-## 8. Resend account state
+## 10. Netlify email environment — configured and safely OFF
 
-A Resend account exists and is managed using the ALKA Visuals account/login. LegendMural does **not** require a second separate Resend account merely because its sending domain is different.
-
-The verified sending domain inside that account is:
-
-`mail.legendmural.com`
-
-Earlier `Hello World` Resend tests were visible in the account and showed `Opened` to the ALKA Visuals mailbox.
-
-No new paid subscription or separate LegendMural Resend account is required by the current architecture.
-
----
-
-## 9. Netlify Production email environment configuration — completed and intentionally OFF
-
-These values were manually reviewed/configured in Netlify. Secret values are intentionally not recorded here.
+Secret values are intentionally omitted from this handoff.
 
 ### `RESEND_API_KEY`
 
 - exists;
-- marked secret;
-- value present in **Production only**;
-- Deploy Previews: empty;
-- Branch deploys: empty;
-- Preview Server & Agent Runners: empty;
-- Local development (Netlify CLI): empty;
-- scopes shown: Builds, Functions, Runtime.
+- secret;
+- Production only;
+- preview/branch/local contexts empty.
 
 ### `RESEND_FROM`
 
-Known intended Production value was deliberately overwritten with:
+Production intended value:
 
 `LegendMural <orders@mail.legendmural.com>`
 
-Reason: `mail.legendmural.com` is the verified Resend sending domain.
-
-Deployment exposure:
-
-- Production only;
-- preview/branch/local contexts empty;
-- scopes shown: Builds, Functions, Runtime.
+Production only.
 
 ### `RESEND_REPLY_TO`
 
-Production value was deliberately overwritten and visually verified as exactly:
+Production value:
 
 `info@legendmural.com`
 
-No display-name wrapper or extra text.
-
-Deployment exposure:
-
-- Production only;
-- preview/branch/local contexts empty;
-- scopes shown: Builds, Functions, Runtime.
+Production only.
 
 ### `ORDER_NOTIFICATION_TO`
 
-Visually verified as exactly:
+Configured as:
 
 `info@legendmural.com`
 
-It currently has the same value across all Netlify deploy contexts. This is not itself a secret. It does not enable mail because the kill-switch and Resend credential exposure remain restrictive.
+It may be visible across deploy contexts; it does not itself enable mail.
 
 ### `ORDER_EMAILS_ENABLED`
 
-Now configured as **different value per deploy context** with every context explicitly set to:
+Every reviewed deploy context is explicitly:
 
 `false`
 
-Confirmed contexts:
+Confirmed:
 
 - Production: `false`
 - Deploy Previews: `false`
 - Branch deploys: `false`
 - Preview Server & Agent Runners: `false`
-- Local development (Netlify CLI): `false`
+- Local development / Netlify CLI: `false`
 
-This is intentional. Later activation must change **Production only** to `true` at the approved controlled test point.
+The Netlify UI may describe this as the same value in all contexts because all values are identical. Functionally the required safety state is achieved: **email delivery is disabled everywhere**.
 
-### Current email activation truth
-
-**Paid-order email delivery is intentionally disabled everywhere right now.**
-
-Do not set `ORDER_EMAILS_ENABLED=true` during ordinary configuration/review work.
-
-No deliberate Netlify Production deploy was performed during these environment-variable edits.
+Do not set Production to `true` until the controlled final Live-order test point.
 
 ---
 
-## 10. What is now complete vs still unproven
+## 11. Completed vs remaining proof
 
-### Complete
+### Completed
 
-- notification DB/store repository work;
+- paid-order notification DB/store repository work;
 - merchant/customer email templates;
 - Resend notifier;
-- paid/live guards;
-- DB + Resend idempotency protections;
-- capture + webhook runtime integration on `main`;
+- paid/live guards and idempotency protections;
+- PayPal capture + webhook notification runtime integration on merged code;
 - Production Neon migrations 009/010;
-- Microsoft 365/GoDaddy mailbox DNS setup accepted;
-- Resend sending domain `mail.legendmural.com` Verified;
-- Netlify Resend/merchant recipient environment configuration reviewed;
-- kill-switch split by deploy context and explicitly `false` everywhere.
+- Microsoft 365/GoDaddy mailbox DNS accepted;
+- Resend sending domain verified;
+- Netlify email configuration reviewed;
+- email kill-switch confirmed `false` everywhere;
+- exact currently Published Netlify Production commit established;
+- E1 read-only release readiness completed;
+- GitHub Pages refreshed for release-candidate validation;
+- real iPhone Safari checkout/address behavior successfully validated.
 
-### Still not proven
+### Current blocker before overall mobile approval
 
-- exact currently deployed Netlify Production commit/runtime;
-- current `main` released to Netlify Production;
-- original mobile Safari Production symptom absent on the actual release candidate;
+- hamburger/mobile navigation does not work visibly in the release-candidate Pages build;
+- root cause identified as missing `css/premium-navigation.css` in build output;
+- fix exists on `fix/mobile-navigation-build-css-20260827` but is not yet PR-reviewed/CI-validated/merged/retested.
+
+### Still unproven until final Production release/test
+
+- final release candidate with hamburger fix on `main`;
+- hamburger works on real iPhone Safari after fix;
+- final Production runtime after the one planned Netlify release;
+- Production payment flow on the final runtime;
 - Production paid-order email delivery with `ORDER_EMAILS_ENABLED=true`;
-- one real merchant paid-order email from the new runtime;
-- one real customer confirmation from the new runtime;
+- one real merchant paid-order email;
+- one real customer confirmation;
 - duplicate prevention under actual capture + webhook timing;
-- one complete controlled PayPal Live order from checkout through funds + Neon + order-status + both emails.
+- complete PayPal Live -> Neon paid -> order-status paid -> both emails chain.
 
 ---
 
-## 11. Required final controlled Live-order proof
+## 12. Release plan from this exact point
 
-For exactly one controlled real PayPal Live order, eventually verify:
+Do **not** jump to Netlify yet.
+
+### Phase P1 — finish hamburger fix
+
+1. Open PR from `fix/mobile-navigation-build-css-20260827` to `main`.
+2. Inspect CI.
+3. Merge only after adequate green evidence and approval.
+4. Refresh GitHub Pages from the new approved `main` while preserving the Pages workflow.
+5. Re-test hamburger on real iPhone Safari.
+6. Perform a quick checkout smoke test to ensure the earlier successful address/checkout behavior still holds.
+
+### Phase P2 — finish any other pre-deploy release checks
+
+Before Netlify, review whether any other release blockers remain. Do not invent a deploy merely to discover avoidable frontend issues.
+
+### Phase F — one controlled Netlify Production release
+
+Only after all feasible pre-deploy blockers are closed, publish the exact approved repository version **once**.
+
+Then perform safe Production smoke checks before a real payment.
+
+### Phase G — controlled email activation + one PayPal Live order
+
+At the approved final test point:
+
+- change **Production only** `ORDER_EMAILS_ENABLED` from `false` to `true`;
+- ensure activation is applied to the intended Production runtime;
+- perform exactly one controlled PayPal Live order;
+- verify the full checklist below.
+
+Do not enable previews/branches/local contexts.
+
+---
+
+## 13. Final controlled PayPal Live proof
+
+For exactly one controlled real Live order verify:
 
 1. checkout reaches PayPal Live;
 2. payment completes;
@@ -398,83 +545,37 @@ For exactly one controlled real PayPal Live order, eventually verify:
 9. exactly one merchant email arrives at `info@legendmural.com`;
 10. exactly one customer email arrives at the test customer address;
 11. email order/customer/product/shipping/total data is correct;
-12. capture + webhook do not create duplicate merchant/customer mail.
+12. capture + webhook do not create duplicate merchant/customer email.
 
 Only after this may the paid-order path be considered proven end-to-end.
 
 ---
 
-## 12. Release sequence from this point
+## 14. Work deliberately deferred
 
-### Step E1 — next single step: read-only release readiness check
-
-Do **not** deploy yet.
-
-Fresh-check:
-
-- exact current `main` SHA;
-- current main CI/workflow status;
-- exact currently deployed Netlify Production runtime if it can be proven safely;
-- release delta/scope between Production and `main`;
-- whether the real-device iPhone Safari release gate has been completed for the intended release candidate;
-- that PR #144 is not accidentally bundled/merged as unrelated scope.
-
-Return a release recommendation only. No repository mutation, Netlify deploy, Resend activation or PayPal transaction during this step.
-
-### Step E2 — real-device/release approval if still needed
-
-If the iPhone Safari gate is still outstanding, validate the intended release candidate before Production publication:
-
-- Street + Number remains stable while typing;
-- no `VALIDATING ADDRESS...` dependency;
-- no unexpected sticker-page navigation;
-- checkout reaches the expected payment handoff behavior.
-
-### Step F — one controlled Netlify Production release
-
-Only after explicit approval, publish the exact approved repository version.
-
-Do not spend multiple deploy/update points on intermediate experiments.
-
-Perform safe Production smoke checks before the real payment.
-
-### Step G — controlled email activation + one PayPal Live order
-
-At the approved point:
-
-- change **Production only** `ORDER_EMAILS_ENABLED` from `false` to `true`;
-- ensure the activation is applied to the intended Production runtime;
-- perform exactly one controlled PayPal Live order;
-- verify the full checklist in section 11.
-
-Do not enable previews/branches/local contexts.
-
----
-
-## 13. Work deliberately deferred
-
-Do not mix these into the current paid-order email/release track without explicit authorization:
+Do not mix these into the current pre-deploy/payment-email track unless explicitly authorized:
 
 - About Us narrative redesign;
 - social-link work;
 - broader contact-form Production validation;
 - withdrawal end-to-end validation;
-- Neon least-privilege cleanup for the broad `legendmural_netlify` membership;
+- Neon least-privilege cleanup for broad `legendmural_netlify` membership;
 - LegendMural Dashboard work in `ALKAVisuals/legendmural-dashboard`.
-
-The dashboard repository is a separate project. Do not switch to it because old dashboard screenshots/chat history are present.
 
 ---
 
-## 14. Immediate instruction for a new chat
+## 15. Immediate instructions for the next chat
 
-1. Read this file completely.
-2. Confirm the user is working on the **public LegendMural webshop**, not the dashboard.
-3. Fresh-check current `main` before any claim about repository state.
-4. Do **only Step E1: read-only release readiness check**.
-5. Do not recreate DNS/mailbox/Resend setup.
-6. Do not re-run Neon migrations 009/010.
-7. Do not set `ORDER_EMAILS_ENABLED=true`.
-8. Do not deploy Netlify Production.
-9. Do not run a PayPal Live transaction yet.
-10. After Step E1, report the next single action and stop.
+1. Read this entire file first.
+2. Also read `docs/CURRENT_PRODUCTION_STATUS_20260826.md` if the repository-mutation rule still requires it.
+3. Confirm this is the **public LegendMural webshop**, not the dashboard.
+4. Fresh-check exact current `main`.
+5. Fresh-check branch `fix/mobile-navigation-build-css-20260827`; expected handoff head is `286c8fff20f2cc9b538bee91633558e02703bca1` unless newer legitimate work exists.
+6. Confirm whether a PR now exists for that branch.
+7. If no PR exists, the next single action is to open the PR to `main` and then stop.
+8. Do not recreate the hamburger fix from scratch.
+9. Do not merge PR #144 automatically.
+10. Do not activate Netlify builds or deploy Production.
+11. Do not set `ORDER_EMAILS_ENABLED=true`.
+12. Do not run a PayPal Live transaction yet.
+13. Preserve the owner’s strategy: finish all feasible pre-deploy points first, then make one controlled Netlify Production update.
