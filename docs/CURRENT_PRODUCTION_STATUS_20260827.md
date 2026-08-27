@@ -15,7 +15,7 @@ This file deliberately contains no passwords, API keys, full database connection
 
 ### GitHub
 
-Current exact `main`:
+Latest runtime-code-changing baseline:
 
 `663e4ebbe71bea8cd4097a452ab9f489daba34cb`
 
@@ -23,7 +23,7 @@ This is the merge commit for PR #145 — **Wire paid-order notifications into Pa
 
 PR #145 is merged. It wires paid-order notification reconciliation into both authoritative PayPal completion paths while keeping email failures non-fatal to payment truth.
 
-Post-merge GitHub Actions on exact `663e4ebb...` include successful runs for the current main baseline. Production is still intentionally not assumed to equal current `main`.
+Post-merge GitHub Actions on exact `663e4ebb...` include successful runs for this runtime baseline. Documentation-only merges after this baseline may move `main` without changing runtime code, so always fresh-check the exact current `main` SHA before repository or release decisions. Production is still intentionally not assumed to equal current `main`.
 
 ### Open PR that must not be confused with the release
 
