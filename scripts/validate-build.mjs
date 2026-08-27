@@ -10,6 +10,8 @@ const RELATED_PRODUCTS_MODULE = join(DIST, 'js/catalog/related-products.mjs');
 const COLLECTION_VIDEO_CONTROLLER = join(DIST, 'js/collection-video.mjs');
 const COLLECTION_VIDEO_POLICY = join(DIST, 'js/media/collection-video-policy.mjs');
 const COLLECTION_VIDEO_MANIFEST = join(ROOT, 'data/video/collection-video-optimization.json');
+const MOBILE_NAVIGATION_MODULE = join(DIST, 'js/mobile-navigation.mjs');
+const PREMIUM_NAVIGATION_STYLESHEET = join(DIST, 'css/premium-navigation.css');
 const BASELINE = JSON.parse(
   await readFile(join(ROOT, 'config/build-validation-baseline.json'), 'utf8')
 );
@@ -104,6 +106,27 @@ async function validateRuntimeArtifacts(errors) {
     }
   } catch (error) {
     errors.push(`Collection video runtime modules are missing or unreadable (${error.message}).`);
+  }
+
+  try {
+    const [navigationModule, navigationStyles] = await Promise.all([
+      readFile(MOBILE_NAVIGATION_MODULE, 'utf8'),
+      readFile(PREMIUM_NAVIGATION_STYLESHEET, 'utf8'),
+    ]);
+    if (!navigationModule.includes("const PREMIUM_NAVIGATION_STYLESHEET = 'css/premium-navigation.css';")) {
+      errors.push('js/mobile-navigation.mjs: premium navigation stylesheet contract is missing.');
+    }
+    if (!navigationModule.includes('createMobileNavigationController')) {
+      errors.push('js/mobile-navigation.mjs: mobile navigation controller export is missing.');
+    }
+    if (!navigationStyles.includes('#mobile-menu[hidden]')) {
+      errors.push('css/premium-navigation.css: hidden mobile-menu rule is missing.');
+    }
+    if (!navigationStyles.includes('.premium-mobile-menu-panel')) {
+      errors.push('css/premium-navigation.css: mobile menu panel styles are missing.');
+    }
+  } catch (error) {
+    errors.push(`Mobile navigation runtime assets are missing or unreadable (${error.message}).`);
   }
 }
 

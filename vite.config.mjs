@@ -50,6 +50,19 @@ function footerThemeStylesPlugin() {
   };
 }
 
+function premiumNavigationStylesPlugin() {
+  return {
+    name: 'premium-navigation-styles',
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'css/premium-navigation.css',
+        source: readFileSync(resolve(ROOT, 'css/premium-navigation.css'), 'utf8'),
+      });
+    },
+  };
+}
+
 function contactFormScriptPlugin() {
   return {
     name: 'contact-form-script',
@@ -73,6 +86,7 @@ export default defineConfig({
     checkoutControlsStylesPlugin(),
     contactFormScriptPlugin(),
     footerThemeStylesPlugin(),
+    premiumNavigationStylesPlugin(),
     productionOriginPlugin({ root: ROOT, outDir: 'dist' }),
   ],
   build: {
