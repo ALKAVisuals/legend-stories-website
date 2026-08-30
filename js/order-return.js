@@ -80,13 +80,30 @@ const ORDER_RETURN_PRESENTATION = Object.freeze({
   }),
   paid: Object.freeze({
     detailStatus: 'Payment confirmed',
-    paymentMeta: 'Payment secured',
+    paymentMeta: 'Confirmed',
+    productionMeta: 'Preparing your mural',
+    shippingMeta: 'Update by email',
     paymentDot: '✓',
-    actionLabel: 'Explore more legends',
-    actionHref: 'shop.html',
+    actionLabel: 'View installation guides',
+    actionHref: 'https://youtube.com/playlist?list=PL69xq-QQTVxjbY7es-YDCGee06GruiRMW',
     documentTitle: 'Order Confirmed — LegendMural',
-    title: 'Your legend is on its way.',
-    message: 'Your payment has been verified by the server and your order is confirmed. We’ll take it from here.',
+    label: 'Order confirmed',
+    title: 'Your legend is officially yours.',
+    message: 'Payment confirmed. We’ll prepare your LegendMural and keep you updated as your order moves forward.',
+    nextSteps: Object.freeze([
+      Object.freeze({
+        title: 'We prepare your mural',
+        copy: 'Your confirmed order now moves forward for preparation.',
+      }),
+      Object.freeze({
+        title: 'We keep you updated',
+        copy: 'You’ll receive order and shipping information by email as your mural moves forward.',
+      }),
+      Object.freeze({
+        title: 'Get ready for your wall',
+        copy: 'When your LegendMural arrives, use our official installation guides to apply it correctly.',
+      }),
+    ]),
   }),
   unavailable: Object.freeze({
     detailStatus: 'Verification unavailable',
@@ -110,6 +127,18 @@ const elements = {
   detailStatus: document.getElementById('order-detail-status'),
   paymentDot: document.getElementById('order-progress-payment-dot'),
   paymentMeta: document.getElementById('order-progress-payment-meta'),
+  productionMeta: document.getElementById('order-progress-production-meta'),
+  shippingMeta: document.getElementById('order-progress-shipping-meta'),
+  nextStepTitles: [
+    document.getElementById('order-next-step-1-title'),
+    document.getElementById('order-next-step-2-title'),
+    document.getElementById('order-next-step-3-title'),
+  ],
+  nextStepCopies: [
+    document.getElementById('order-next-step-1-copy'),
+    document.getElementById('order-next-step-2-copy'),
+    document.getElementById('order-next-step-3-copy'),
+  ],
   primaryAction: document.getElementById('order-primary-action'),
 };
 
@@ -123,6 +152,14 @@ function applyPresentation(state) {
   if (elements.detailStatus) elements.detailStatus.textContent = presentation.detailStatus;
   if (elements.paymentDot) elements.paymentDot.textContent = presentation.paymentDot;
   if (elements.paymentMeta) elements.paymentMeta.textContent = presentation.paymentMeta;
+  if (presentation.productionMeta && elements.productionMeta) elements.productionMeta.textContent = presentation.productionMeta;
+  if (presentation.shippingMeta && elements.shippingMeta) elements.shippingMeta.textContent = presentation.shippingMeta;
+  if (presentation.nextSteps) {
+    presentation.nextSteps.forEach((step, index) => {
+      if (elements.nextStepTitles[index]) elements.nextStepTitles[index].textContent = step.title;
+      if (elements.nextStepCopies[index]) elements.nextStepCopies[index].textContent = step.copy;
+    });
+  }
   if (presentation.documentTitle) document.title = presentation.documentTitle;
 
   if (elements.primaryAction) {
@@ -144,7 +181,7 @@ function applyPresentation(state) {
 function render(copy, state) {
   if (elements.card) elements.card.dataset.orderStatus = state;
   const presentation = applyPresentation(state);
-  if (elements.label) elements.label.textContent = copy.label;
+  if (elements.label) elements.label.textContent = presentation.label || copy.label;
   if (elements.title) elements.title.textContent = presentation.title || copy.title;
   if (elements.message) elements.message.textContent = presentation.message || copy.message;
 }
@@ -188,7 +225,7 @@ async function verifyStoredOrder(reference, sessionId) {
   render(copy, status.status);
   if (elements.note) {
     elements.note.textContent = status.paid
-      ? 'The server verified this exact payment. Keep your payment confirmation email for your records.'
+      ? 'Keep your order confirmation email and Order ID for your records.'
       : 'Your cart remains saved until the server confirms this exact payment as paid.';
   }
 }
