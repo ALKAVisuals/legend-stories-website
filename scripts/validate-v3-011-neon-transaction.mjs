@@ -41,6 +41,7 @@ const refs = Object.freeze({
   v3Valid: '04'.repeat(32),
 });
 const syntheticRefs = Object.values(refs);
+const seriesKey = 'v3-011-neon-transaction-validation';
 
 const client = await createDefaultNeonClient(migrationUrl);
 let transactionOpen = false;
@@ -63,37 +64,71 @@ try {
         WHERE table_schema = 'legend_commerce'
           AND table_name = 'orders'
           AND column_name = 'document_profile_version'
-      ) AS v3_already_present
+      ) AS v3_already_present,
+      to_regclass('legend_commerce.document_number_series') IS NOT NULL AS series_table_exists,
+      to_regclass('legend_commerce.invoices') IS NOT NULL AS invoices_table_exists
   `);
   const state = baseline.rows?.[0] || {};
   if (!state.orders_exists || !state.paypal_schema_exists) {
-    throw new Error('Isolated Neon integration database is missing the expected pre-V3 order/PayPal schema.');
+    throw new Error('Isolated Neon integration database is missing the expected order/PayPal baseline schema.');
   }
-  if (state.v3_already_present) {
-    throw new Error('Isolated Neon integration database already contains V3 schema; transactional 011 validation requires a pre-V3 baseline.');
+  if (state.v3_already_present && (!state.series_table_exists || !state.invoices_table_exists)) {
+    throw new Error('Isolated Neon contains a partial V3 schema rather than the expected 011 architecture.');
+  }
+
+  const collision = await client.query(`
+    SELECT
+      (SELECT count(*)::int FROM legend_commerce.orders WHERE reference = ANY($1::text[])) AS synthetic_orders,
+      CASE WHEN to_regclass('legend_commerce.document_number_series') IS NULL THEN 0 ELSE
+        (SELECT count(*)::int FROM legend_commerce.document_number_series WHERE series_key = $2)
+      END AS synthetic_series
+  `, [syntheticRefs, seriesKey]);
+  const collisionState = collision.rows?.[0] || {};
+  if (collisionState.synthetic_orders !== 0 || collisionState.synthetic_series !== 0) {
+    throw new Error('Isolated Neon already contains synthetic V3 validation fixtures; refusing to overwrite them.');
   }
 
   await client.query('BEGIN');
   transactionOpen = true;
 
-  await client.query(`
-    INSERT INTO legend_commerce.orders (
-      reference, status, amount_total, currency, mode, payment_session_id,
-      created_at, updated_at, paid_at, customer, items, discount, shipping, totals
-    ) VALUES
-      ($1, 'payment_pending', 1995, 'EUR', 'test', 'V3NEONLEGACY001',
-       1000, 1000, NULL, '{}'::jsonb, '[{"sku":"LEGACY-PENDING"}]'::jsonb,
-       '{}'::jsonb, '{}'::jsonb, '{}'::jsonb),
-      ($2, 'paid', 2995, 'EUR', 'test', 'V3NEONLEGACY002',
-       1000, 1100, 1100, '{}'::jsonb, '[{"sku":"LEGACY-PAID"}]'::jsonb,
-       '{}'::jsonb, '{}'::jsonb, '{}'::jsonb)
-  `, [refs.legacyPending, refs.legacyPaid]);
+  if (!state.v3_already_present) {
+    // Seed rows before 011 so this path proves migration compatibility with
+    // already-existing pending and paid orders.
+    await client.query(`
+      INSERT INTO legend_commerce.orders (
+        reference, status, amount_total, currency, mode, payment_session_id,
+        created_at, updated_at, paid_at, customer, items, discount, shipping, totals
+      ) VALUES
+        ($1, 'payment_pending', 1995, 'EUR', 'test', 'V3NEONLEGACY001',
+         1000, 1000, NULL, '{}'::jsonb, '[{"sku":"LEGACY-PENDING"}]'::jsonb,
+         '{}'::jsonb, '{}'::jsonb, '{}'::jsonb),
+        ($2, 'paid', 2995, 'EUR', 'test', 'V3NEONLEGACY002',
+         1000, 1100, 1100, '{}'::jsonb, '[{"sku":"LEGACY-PAID"}]'::jsonb,
+         '{}'::jsonb, '{}'::jsonb, '{}'::jsonb)
+    `, [refs.legacyPending, refs.legacyPaid]);
 
-  let migration = await readFile(migrationFile, 'utf8');
-  migration = migration
-    .replace(/^\s*BEGIN;\s*/i, '')
-    .replace(/\s*COMMIT;\s*$/i, '');
-  await client.query(migration);
+    let migration = await readFile(migrationFile, 'utf8');
+    migration = migration
+      .replace(/^\s*BEGIN;\s*/i, '')
+      .replace(/\s*COMMIT;\s*$/i, '');
+    await client.query(migration);
+  } else {
+    // The shared isolated integration database may already have 011 from an
+    // earlier non-production exercise. In that case, validate its current
+    // V3 semantics without reapplying named constraints.
+    await client.query(`
+      INSERT INTO legend_commerce.orders (
+        reference, status, amount_total, currency, mode, payment_session_id,
+        created_at, updated_at, paid_at, customer, items, discount, shipping, totals
+      ) VALUES
+        ($1, 'payment_pending', 1995, 'EUR', 'test', 'V3NEONLEGACY001',
+         1000, 1000, NULL, '{}'::jsonb, '[{"sku":"LEGACY-PENDING"}]'::jsonb,
+         '{}'::jsonb, '{}'::jsonb, '{}'::jsonb),
+        ($2, 'paid', 2995, 'EUR', 'test', 'V3NEONLEGACY002',
+         1000, 1100, 1100, '{}'::jsonb, '[{"sku":"LEGACY-PAID"}]'::jsonb,
+         '{}'::jsonb, '{}'::jsonb, '{}'::jsonb)
+    `, [refs.legacyPending, refs.legacyPaid]);
+  }
 
   const legacy = await client.query(`
     SELECT count(*)::int AS count
@@ -105,7 +140,7 @@ try {
       AND invoice_id IS NULL
   `, [[refs.legacyPending, refs.legacyPaid]]);
   if (legacy.rows?.[0]?.count !== 2) {
-    throw new Error('011 did not preserve synthetic pre-V3 rows as legacy profile 0.');
+    throw new Error('V3 schema did not preserve/default synthetic legacy rows to profile 0.');
   }
 
   await client.query(`
@@ -142,15 +177,15 @@ try {
     INSERT INTO legend_commerce.document_number_series
       (document_type, series_key, next_value, updated_at)
     VALUES
-      ('order', 'neon-validation', 1, 2000),
-      ('invoice', 'neon-validation', 1, 2000)
-  `);
+      ('order', $1, 1, 2000),
+      ('invoice', $1, 1, 2000)
+  `, [seriesKey]);
 
   const series = await client.query(`
     SELECT count(*)::int AS count
     FROM legend_commerce.document_number_series
-    WHERE series_key = 'neon-validation'
-  `);
+    WHERE series_key = $1
+  `, [seriesKey]);
   if (series.rows?.[0]?.count !== 2) {
     throw new Error('Order and invoice number series are not independent.');
   }
@@ -233,15 +268,21 @@ try {
         WHERE table_schema = 'legend_commerce'
           AND table_name = 'orders'
           AND column_name = 'document_profile_version'
-      ) AS v3_column_persisted,
-      (SELECT count(*)::int FROM legend_commerce.orders WHERE reference = ANY($1::text[])) AS synthetic_rows
-  `, [syntheticRefs]);
+      ) AS v3_column_present,
+      (SELECT count(*)::int FROM legend_commerce.orders WHERE reference = ANY($1::text[])) AS synthetic_rows,
+      CASE WHEN to_regclass('legend_commerce.document_number_series') IS NULL THEN 0 ELSE
+        (SELECT count(*)::int FROM legend_commerce.document_number_series WHERE series_key = $2)
+      END AS synthetic_series
+  `, [syntheticRefs, seriesKey]);
   const proof = rollbackProof.rows?.[0] || {};
-  if (proof.v3_column_persisted || proof.synthetic_rows !== 0) {
-    throw new Error('Transactional Neon validation did not roll back cleanly.');
+  if (proof.v3_column_present !== state.v3_already_present
+    || proof.synthetic_rows !== 0
+    || proof.synthetic_series !== 0) {
+    throw new Error('Transactional Neon validation did not restore the original isolated database state.');
   }
 
-  console.log('V3 011 isolated Neon transactional validation passed and rolled back cleanly.');
+  const mode = state.v3_already_present ? 'existing-V3 semantics' : 'pre-V3 migration application';
+  console.log(`V3 011 isolated Neon validation passed (${mode}) and rolled back cleanly.`);
 } catch (error) {
   if (transactionOpen) {
     try {
