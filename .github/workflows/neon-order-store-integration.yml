@@ -2,9 +2,6 @@ name: Neon order-store integration
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - feature/v3-gate2-schema-allocator-20260830
 
 permissions:
   contents: read
