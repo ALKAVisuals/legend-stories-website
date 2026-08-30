@@ -3,6 +3,7 @@ import {
   createNeonOrderStore,
   validateNeonConnectionString,
 } from '../server/adapters/neon-order-store.mjs';
+import { createNeonDocumentNumberAllocator } from '../server/adapters/neon-document-number-allocator.mjs';
 import { createNeonPayPalWebhookStore } from '../server/adapters/neon-paypal-webhook-store.mjs';
 import { createNeonWithdrawalStore } from '../server/adapters/neon-withdrawal-store.mjs';
 import { createPendingOrderRecord } from '../server/orders/order-status.mjs';
@@ -26,6 +27,7 @@ const PAYPAL_EVENT_ID = 'WH-SYNTHETIC-PAYPAL-001';
 const PAYPAL_CUSTOMER_EMAIL = 'paypal-integration@example.invalid';
 const WITHDRAWAL_CONSUMER_NAME = 'PayPal Integration';
 const WITHDRAWAL_AT = 1_800_100_020;
+const DOCUMENT_NUMBER_AT = 1_800_100_030;
 
 async function withClient(connectionString, action) {
   const client = await createDefaultNeonClient(connectionString);
@@ -202,6 +204,69 @@ async function verifyWithdrawalPersistence() {
   }
 }
 
+async function verifyDocumentNumberAllocator() {
+  const allocator = createNeonDocumentNumberAllocator({ connectionString: runtimeUrl });
+  const concurrentKey = 'gate2-concurrent';
+
+  const allocations = await Promise.all([
+    allocator.transact(({ allocate }) => allocate({
+      documentType: 'order',
+      seriesKey: concurrentKey,
+      updatedAt: DOCUMENT_NUMBER_AT,
+    })),
+    allocator.transact(({ allocate }) => allocate({
+      documentType: 'order',
+      seriesKey: concurrentKey,
+      updatedAt: DOCUMENT_NUMBER_AT + 1,
+    })),
+  ]);
+  const allocatedValues = allocations.map(({ value }) => value).sort((a, b) => a - b);
+  if (allocatedValues[0] !== 1 || allocatedValues[1] !== 2) {
+    throw new Error(`Concurrent document allocation returned ${allocatedValues.join(',')} instead of 1,2.`);
+  }
+
+  await withClient(runtimeUrl, async (client) => {
+    const seriesResult = await client.query(
+      `SELECT next_value
+       FROM legend_commerce.document_number_series
+       WHERE document_type = 'order' AND series_key = $1`,
+      [concurrentKey],
+    );
+    if (Number(seriesResult.rows?.[0]?.next_value) !== 3) {
+      throw new Error('Concurrent document allocation did not persist next_value=3.');
+    }
+  });
+
+  const rollbackKey = 'gate2-rollback';
+  try {
+    await allocator.transact(async ({ allocate }) => {
+      const allocation = await allocate({
+        documentType: 'invoice',
+        seriesKey: rollbackKey,
+        updatedAt: DOCUMENT_NUMBER_AT + 2,
+      });
+      if (allocation.value !== 1) {
+        throw new Error('Rollback precondition did not allocate value 1.');
+      }
+      const rollback = new Error('Synthetic rollback after document number allocation.');
+      rollback.code = 'EXPECTED_DOCUMENT_NUMBER_ROLLBACK';
+      throw rollback;
+    });
+    throw new Error('Document number rollback transaction unexpectedly committed.');
+  } catch (error) {
+    if (error?.code !== 'EXPECTED_DOCUMENT_NUMBER_ROLLBACK') throw error;
+  }
+
+  const afterRollback = await allocator.transact(({ allocate }) => allocate({
+    documentType: 'invoice',
+    seriesKey: rollbackKey,
+    updatedAt: DOCUMENT_NUMBER_AT + 3,
+  }));
+  if (afterRollback.value !== 1 || afterRollback.nextValue !== 2) {
+    throw new Error('Rolled-back document number was burned instead of becoming reusable.');
+  }
+}
+
 async function inspectRuntimePrivilegeBoundary() {
   return withClient(runtimeUrl, async (client) => {
     let leastPrivilegeVerified = true;
@@ -243,6 +308,7 @@ try {
   await clearSyntheticRecords();
   await verifyPaypalProviderCompatibilityAndReconciliation();
   await verifyWithdrawalPersistence();
+  await verifyDocumentNumberAllocator();
   const leastPrivilegeVerified = await inspectRuntimePrivilegeBoundary();
 
   console.log(
@@ -257,6 +323,8 @@ try {
   console.log('- PayPal webhook event ledger accepts immutable runtime reservations');
   console.log('- withdrawal registration persists with a durable acknowledgement snapshot');
   console.log('- acknowledgement delivery metadata is retryable without mutating the withdrawal statement snapshot');
+  console.log('- V3 document number allocator serializes concurrent allocations without duplicates');
+  console.log('- V3 document number allocation rolls back without burning a number');
 
   if (leastPrivilegeVerified) {
     console.log('- least-privilege runtime role');
