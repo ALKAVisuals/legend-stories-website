@@ -1,0 +1,37 @@
+name: V3 Gate 2 document number allocator validation
+
+on:
+  push:
+    branches:
+      - v3/gate2-schema-allocator
+    paths:
+      - server/commerce/document-number-allocator.mjs
+      - tests/document-number-allocator.test.mjs
+      - server/db/tests/document-number-allocator-postgres18-validation.sh
+      - server/db/migrations/011_add_v3_order_invoice_architecture.sql
+      - server/db/migrations/012_grant_v3_order_invoice_runtime.sql
+      - .github/workflows/v3-gate2-document-number-allocator.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-allocator:
+    name: Validate allocator logic and PostgreSQL 18 concurrency
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out isolated V3 branch
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Run allocator unit tests
+        run: node --test tests/document-number-allocator.test.mjs
+
+      - name: Validate allocator against PostgreSQL 18
+        run: bash server/db/tests/document-number-allocator-postgres18-validation.sh
