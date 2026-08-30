@@ -1,0 +1,57 @@
+name: V3 Gate 2 012 isolated Neon validation
+
+on:
+  push:
+    branches:
+      - v3/gate2-schema-allocator
+    paths:
+      - 'server/db/migrations/001_create_order_store.sql'
+      - 'server/db/migrations/002_grant_order_store_runtime.sql'
+      - 'server/db/migrations/003_add_paypal_reconciliation.sql'
+      - 'server/db/migrations/004_grant_paypal_reconciliation_runtime.sql'
+      - 'server/db/migrations/011_add_v3_order_invoice_architecture.sql'
+      - 'server/db/migrations/012_grant_v3_order_invoice_runtime.sql'
+      - 'scripts/validate-v3-012-neon-transaction.mjs'
+      - '.github/workflows/v3-gate2-012-neon-transaction.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v3-gate2-012-neon-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate 012 on isolated Neon and rollback
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: neon-integration
+    env:
+      NEON_TEST_DATABASE_URL: ${{ secrets.NEON_TEST_DATABASE_URL }}
+      NEON_TEST_MIGRATION_URL: ${{ secrets.NEON_TEST_MIGRATION_URL }}
+
+    steps:
+      - name: Check out isolated V3 branch
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Verify isolated Neon credentials
+        shell: bash
+        run: |
+          if [[ -z "$NEON_TEST_DATABASE_URL" || -z "$NEON_TEST_MIGRATION_URL" ]]; then
+            echo "::error::The isolated Neon integration credentials are not configured."
+            exit 1
+          fi
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Validate migration 012 transactionally
+        run: node scripts/validate-v3-012-neon-transaction.mjs
