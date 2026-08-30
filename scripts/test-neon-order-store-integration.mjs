@@ -42,8 +42,11 @@ async function clearSyntheticRecords() {
     TRUNCATE TABLE
       legend_commerce.withdrawal_acknowledgements,
       legend_commerce.withdrawal_requests,
+      legend_commerce.order_notifications,
       legend_commerce.paypal_webhook_events,
       legend_commerce.stripe_events,
+      legend_commerce.invoices,
+      legend_commerce.document_number_series,
       legend_commerce.orders
   `));
 }
