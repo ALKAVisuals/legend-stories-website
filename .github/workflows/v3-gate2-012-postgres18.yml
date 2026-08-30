@@ -1,0 +1,36 @@
+name: V3 Gate 2 012 PostgreSQL 18 validation
+
+on:
+  push:
+    branches:
+      - v3/gate2-schema-allocator
+    paths:
+      - 'server/db/migrations/001_create_order_store.sql'
+      - 'server/db/migrations/002_grant_order_store_runtime.sql'
+      - 'server/db/migrations/003_add_paypal_reconciliation.sql'
+      - 'server/db/migrations/004_grant_paypal_reconciliation_runtime.sql'
+      - 'server/db/migrations/011_add_v3_order_invoice_architecture.sql'
+      - 'server/db/migrations/012_grant_v3_order_invoice_runtime.sql'
+      - 'server/db/tests/v3-012-postgres18-validation.sh'
+      - '.github/workflows/v3-gate2-012-postgres18.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v3-gate2-012-postgres18-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate migration 012
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out isolated V3 branch
+        uses: actions/checkout@v7
+
+      - name: Validate 012 against PostgreSQL 18
+        run: bash server/db/tests/v3-012-postgres18-validation.sh
