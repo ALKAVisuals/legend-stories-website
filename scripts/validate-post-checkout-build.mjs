@@ -99,7 +99,7 @@ for (const state of ['payment_pending', 'payment_processing', 'payment_failed', 
   requireText(returnRuntime, `${state}: Object.freeze({`,
     `js/order-return.js: ${state} presentation is missing from the production build.`);
 }
-requireText(returnRuntime, "title: 'Your legend is on its way.'",
+requireText(returnRuntime, "title: 'Your legend is officially yours.'",
   'js/order-return.js: verified-paid premium confirmation copy is missing from the production build.');
 requireText(returnRuntime, 'applyVerifiedOrderStatus(status,',
   'js/order-return.js: server-verified order status gate is missing from the production build.');
