@@ -148,11 +148,8 @@ if psql_value "INSERT INTO legend_commerce.document_number_series (document_type
   exit 1
 fi
 
-# No production-format policy belongs in this allocator validation surface.
-if grep -R -E 'LM-ORD-|LM-INV-' \
-  server/commerce/document-number-allocator.mjs \
-  tests/document-number-allocator.test.mjs \
-  server/db/tests/document-number-allocator-postgres18-validation.sh >/dev/null; then
+# No production-format policy belongs in the allocator implementation itself.
+if grep -E 'LM-ORD-|LM-INV-' server/commerce/document-number-allocator.mjs >/dev/null; then
   echo "Allocator prematurely hardcodes a public document number format" >&2
   exit 1
 fi
