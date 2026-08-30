@@ -1,0 +1,51 @@
+name: V3 Gate 2 011 isolated Neon validation
+
+on:
+  push:
+    branches:
+      - v3/gate2-schema-allocator
+    paths:
+      - 'server/db/migrations/011_add_v3_order_invoice_architecture.sql'
+      - 'scripts/validate-v3-011-neon-transaction.mjs'
+      - '.github/workflows/v3-gate2-011-neon-transaction.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v3-gate2-011-neon-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-neon-011:
+    name: Validate 011 on isolated Neon and rollback
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: neon-integration
+    env:
+      NEON_TEST_MIGRATION_URL: ${{ secrets.NEON_TEST_MIGRATION_URL }}
+
+    steps:
+      - name: Check out isolated V3 branch
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Verify isolated Neon credential
+        shell: bash
+        run: |
+          if [[ -z "$NEON_TEST_MIGRATION_URL" ]]; then
+            echo "::error::NEON_TEST_MIGRATION_URL is not configured for the neon-integration environment."
+            exit 1
+          fi
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Validate migration 011 transactionally
+        run: node scripts/validate-v3-011-neon-transaction.mjs
