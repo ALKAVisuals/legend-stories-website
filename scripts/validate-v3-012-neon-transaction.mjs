@@ -57,7 +57,6 @@ if (migrationConfig.pathname !== runtimeConfig.pathname) {
 
 const runtimeRole = normalizeRoleName(runtimeConfig.username);
 const schema = `legend_commerce_v3_012_${Date.now().toString(36)}`;
-const qSchema = quoteIdentifier(schema);
 const client = await createDefaultNeonClient(migrationUrl);
 let transactionOpen = false;
 
@@ -97,36 +96,58 @@ try {
     throw new Error(`Unexpected isolated Neon invoice identity sequence: ${sequenceResult.rows?.[0]?.sequence_name}`);
   }
 
+  // The Neon integration runtime role is Neon-managed and can have broader
+  // effective privileges through ownership/inheritance. Validate the direct
+  // ACL entries written by migrations 002/004/012 instead of treating those
+  // platform-level effective privileges as grants made by 012 itself.
   const privileges = await client.query(`
+    WITH runtime_role AS (
+      SELECT oid
+      FROM pg_roles
+      WHERE rolname = $1
+    ),
+    table_acl AS (
+      SELECT c.relname, acl.privilege_type
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      CROSS JOIN LATERAL aclexplode(c.relacl) acl
+      JOIN runtime_role rr ON rr.oid = acl.grantee
+      WHERE n.nspname = $2
+    ),
+    column_acl AS (
+      SELECT c.relname, a.attname, acl.privilege_type
+      FROM pg_attribute a
+      JOIN pg_class c ON c.oid = a.attrelid
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      CROSS JOIN LATERAL aclexplode(a.attacl) acl
+      JOIN runtime_role rr ON rr.oid = acl.grantee
+      WHERE n.nspname = $2
+        AND a.attnum > 0
+        AND NOT a.attisdropped
+    )
     SELECT
-      has_table_privilege($1, $2, 'SELECT') AS orders_select,
-      has_table_privilege($1, $2, 'INSERT') AS orders_table_insert,
-      has_table_privilege($1, $2, 'UPDATE') AS orders_table_update,
-      has_column_privilege($1, $2, 'document_profile_version', 'INSERT') AS profile_insert,
-      has_column_privilege($1, $2, 'document_profile_version', 'UPDATE') AS profile_update,
-      has_column_privilege($1, $2, 'order_number', 'INSERT') AS order_number_insert,
-      has_column_privilege($1, $2, 'order_number', 'UPDATE') AS order_number_update,
-      has_column_privilege($1, $2, 'invoice_id', 'UPDATE') AS invoice_id_update,
-      has_column_privilege($1, $2, 'customer', 'UPDATE') AS customer_update,
-      has_table_privilege($1, $3, 'SELECT') AS invoices_select,
-      has_table_privilege($1, $3, 'INSERT') AS invoices_insert,
-      has_table_privilege($1, $3, 'UPDATE') AS invoices_update,
-      has_table_privilege($1, $3, 'DELETE') AS invoices_delete,
-      has_table_privilege($1, $4, 'SELECT') AS series_select,
-      has_table_privilege($1, $4, 'INSERT') AS series_insert,
-      has_table_privilege($1, $4, 'UPDATE') AS series_table_update,
-      has_column_privilege($1, $4, 'next_value', 'UPDATE') AS series_next_update,
-      has_column_privilege($1, $4, 'updated_at', 'UPDATE') AS series_time_update,
-      has_column_privilege($1, $4, 'series_key', 'UPDATE') AS series_key_update,
-      has_sequence_privilege($1, $5, 'USAGE') AS sequence_usage,
-      has_sequence_privilege($1, $5, 'UPDATE') AS sequence_update
-  `, [
-    runtimeRole,
-    `${schema}.orders`,
-    `${schema}.invoices`,
-    `${schema}.document_number_series`,
-    `${schema}.invoices_id_seq`,
-  ]);
+      EXISTS (SELECT 1 FROM table_acl WHERE relname = 'orders' AND privilege_type = 'SELECT') AS orders_select,
+      EXISTS (SELECT 1 FROM table_acl WHERE relname = 'orders' AND privilege_type = 'INSERT') AS orders_table_insert,
+      EXISTS (SELECT 1 FROM table_acl WHERE relname = 'orders' AND privilege_type = 'UPDATE') AS orders_table_update,
+      EXISTS (SELECT 1 FROM column_acl WHERE relname = 'orders' AND attname = 'document_profile_version' AND privilege_type = 'INSERT') AS profile_insert,
+      EXISTS (SELECT 1 FROM column_acl WHERE relname = 'orders' AND attname = 'document_profile_version' AND privilege_type = 'UPDATE') AS profile_update,
+      EXISTS (SELECT 1 FROM column_acl WHERE relname = 'orders' AND attname = 'order_number' AND privilege_type = 'INSERT') AS order_number_insert,
+      EXISTS (SELECT 1 FROM column_acl WHERE relname = 'orders' AND attname = 'order_number' AND privilege_type = 'UPDATE') AS order_number_update,
+      EXISTS (SELECT 1 FROM column_acl WHERE relname = 'orders' AND attname = 'invoice_id' AND privilege_type = 'UPDATE') AS invoice_id_update,
+      EXISTS (SELECT 1 FROM column_acl WHERE relname = 'orders' AND attname = 'customer' AND privilege_type = 'UPDATE') AS customer_update,
+      EXISTS (SELECT 1 FROM table_acl WHERE relname = 'invoices' AND privilege_type = 'SELECT') AS invoices_select,
+      EXISTS (SELECT 1 FROM table_acl WHERE relname = 'invoices' AND privilege_type = 'INSERT') AS invoices_insert,
+      EXISTS (SELECT 1 FROM table_acl WHERE relname = 'invoices' AND privilege_type = 'UPDATE') AS invoices_update,
+      EXISTS (SELECT 1 FROM table_acl WHERE relname = 'invoices' AND privilege_type = 'DELETE') AS invoices_delete,
+      EXISTS (SELECT 1 FROM table_acl WHERE relname = 'document_number_series' AND privilege_type = 'SELECT') AS series_select,
+      EXISTS (SELECT 1 FROM table_acl WHERE relname = 'document_number_series' AND privilege_type = 'INSERT') AS series_insert,
+      EXISTS (SELECT 1 FROM table_acl WHERE relname = 'document_number_series' AND privilege_type = 'UPDATE') AS series_table_update,
+      EXISTS (SELECT 1 FROM column_acl WHERE relname = 'document_number_series' AND attname = 'next_value' AND privilege_type = 'UPDATE') AS series_next_update,
+      EXISTS (SELECT 1 FROM column_acl WHERE relname = 'document_number_series' AND attname = 'updated_at' AND privilege_type = 'UPDATE') AS series_time_update,
+      EXISTS (SELECT 1 FROM column_acl WHERE relname = 'document_number_series' AND attname = 'series_key' AND privilege_type = 'UPDATE') AS series_key_update,
+      EXISTS (SELECT 1 FROM table_acl WHERE relname = 'invoices_id_seq' AND privilege_type = 'USAGE') AS sequence_usage,
+      EXISTS (SELECT 1 FROM table_acl WHERE relname = 'invoices_id_seq' AND privilege_type = 'UPDATE') AS sequence_update
+  `, [runtimeRole, schema]);
 
   const p = privileges.rows?.[0] || {};
   const requiredTrue = [
@@ -156,10 +177,20 @@ try {
   ];
 
   for (const key of requiredTrue) {
-    if (p[key] !== true) throw new Error(`Isolated Neon runtime grant missing: ${key}`);
+    if (p[key] !== true) throw new Error(`Isolated Neon direct runtime ACL missing: ${key}`);
   }
   for (const key of requiredFalse) {
-    if (p[key] !== false) throw new Error(`Isolated Neon runtime grant is broader than intended: ${key}`);
+    if (p[key] !== false) throw new Error(`Isolated Neon direct runtime ACL is broader than intended: ${key}`);
+  }
+
+  const effectivePrivilegeWarning = await client.query(`
+    SELECT
+      has_table_privilege($1, $2, 'INSERT') AS broad_insert,
+      has_table_privilege($1, $2, 'UPDATE') AS broad_update
+  `, [runtimeRole, `${schema}.orders`]);
+  if (effectivePrivilegeWarning.rows?.[0]?.broad_insert
+      || effectivePrivilegeWarning.rows?.[0]?.broad_update) {
+    console.warn('::warning::The isolated Neon runtime role has broader platform-level effective privileges than the direct ACL contract. A dedicated least-privilege production runtime role remains required before V3 activation.');
   }
 
   const schemaVisibleInsideTransaction = await client.query(
@@ -181,7 +212,7 @@ try {
     throw new Error('Isolated Neon V3 grant validation schema did not roll back cleanly.');
   }
 
-  console.log('V3 012 isolated Neon grant validation passed and rolled back cleanly.');
+  console.log('V3 012 isolated Neon direct-ACL validation passed and rolled back cleanly.');
 } catch (error) {
   if (transactionOpen) {
     try {
