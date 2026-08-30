@@ -5,12 +5,24 @@ import {
   validateNeonConnectionString,
 } from '../server/adapters/neon-order-store.mjs';
 
+const VALIDATION_SCHEMA = 'legend_v3_011_validation';
+
 function requireMigrationUrl() {
   const value = process.env.NEON_TEST_MIGRATION_URL;
   if (!value) {
     throw new Error('NEON_TEST_MIGRATION_URL is required for isolated V3 Neon validation.');
   }
   return validateNeonConnectionString(value);
+}
+
+async function migrationSql(relativePath) {
+  const fileUrl = new URL(relativePath, import.meta.url);
+  let sql = await readFile(fileUrl, 'utf8');
+  sql = sql
+    .replace(/^\s*BEGIN;\s*/i, '')
+    .replace(/\s*COMMIT;\s*$/i, '')
+    .replaceAll('legend_commerce', VALIDATION_SCHEMA);
+  return sql;
 }
 
 async function expectCheckViolation(client, sql, params, label) {
@@ -30,109 +42,55 @@ async function expectCheckViolation(client, sql, params, label) {
 }
 
 const migrationUrl = requireMigrationUrl();
-const migrationFile = new URL(
-  '../server/db/migrations/011_add_v3_order_invoice_architecture.sql',
-  import.meta.url,
-);
 const refs = Object.freeze({
   legacyPending: '01'.repeat(32),
   legacyPaid: '02'.repeat(32),
   v3Pending: '03'.repeat(32),
   v3Valid: '04'.repeat(32),
 });
-const syntheticRefs = Object.values(refs);
-const seriesKey = 'v3-011-neon-transaction-validation';
 
 const client = await createDefaultNeonClient(migrationUrl);
 let transactionOpen = false;
 try {
   await client.connect();
 
-  const baseline = await client.query(`
-    SELECT
-      to_regclass('legend_commerce.orders') IS NOT NULL AS orders_exists,
-      EXISTS (
-        SELECT 1
-        FROM information_schema.columns
-        WHERE table_schema = 'legend_commerce'
-          AND table_name = 'orders'
-          AND column_name = 'payment_provider'
-      ) AS paypal_schema_exists,
-      EXISTS (
-        SELECT 1
-        FROM information_schema.columns
-        WHERE table_schema = 'legend_commerce'
-          AND table_name = 'orders'
-          AND column_name = 'document_profile_version'
-      ) AS v3_already_present,
-      to_regclass('legend_commerce.document_number_series') IS NOT NULL AS series_table_exists,
-      to_regclass('legend_commerce.invoices') IS NOT NULL AS invoices_table_exists
-  `);
-  const state = baseline.rows?.[0] || {};
-  if (!state.orders_exists || !state.paypal_schema_exists) {
-    throw new Error('Isolated Neon integration database is missing the expected order/PayPal baseline schema.');
-  }
-  if (state.v3_already_present && (!state.series_table_exists || !state.invoices_table_exists)) {
-    throw new Error('Isolated Neon contains a partial V3 schema rather than the expected 011 architecture.');
-  }
-
-  const collision = await client.query(`
-    SELECT
-      (SELECT count(*)::int FROM legend_commerce.orders WHERE reference = ANY($1::text[])) AS synthetic_orders,
-      CASE WHEN to_regclass('legend_commerce.document_number_series') IS NULL THEN 0 ELSE
-        (SELECT count(*)::int FROM legend_commerce.document_number_series WHERE series_key = $2)
-      END AS synthetic_series
-  `, [syntheticRefs, seriesKey]);
-  const collisionState = collision.rows?.[0] || {};
-  if (collisionState.synthetic_orders !== 0 || collisionState.synthetic_series !== 0) {
-    throw new Error('Isolated Neon already contains synthetic V3 validation fixtures; refusing to overwrite them.');
+  const collision = await client.query(
+    'SELECT to_regnamespace($1) IS NOT NULL AS validation_schema_exists',
+    [VALIDATION_SCHEMA],
+  );
+  if (collision.rows?.[0]?.validation_schema_exists) {
+    throw new Error(`Refusing to overwrite existing Neon schema ${VALIDATION_SCHEMA}.`);
   }
 
   await client.query('BEGIN');
   transactionOpen = true;
 
-  if (!state.v3_already_present) {
-    // Seed rows before 011 so this path proves migration compatibility with
-    // already-existing pending and paid orders.
-    await client.query(`
-      INSERT INTO legend_commerce.orders (
-        reference, status, amount_total, currency, mode, payment_session_id,
-        created_at, updated_at, paid_at, customer, items, discount, shipping, totals
-      ) VALUES
-        ($1, 'payment_pending', 1995, 'EUR', 'test', 'V3NEONLEGACY001',
-         1000, 1000, NULL, '{}'::jsonb, '[{"sku":"LEGACY-PENDING"}]'::jsonb,
-         '{}'::jsonb, '{}'::jsonb, '{}'::jsonb),
-        ($2, 'paid', 2995, 'EUR', 'test', 'V3NEONLEGACY002',
-         1000, 1100, 1100, '{}'::jsonb, '[{"sku":"LEGACY-PAID"}]'::jsonb,
-         '{}'::jsonb, '{}'::jsonb, '{}'::jsonb)
-    `, [refs.legacyPending, refs.legacyPaid]);
+  // Rebuild the authoritative pre-V3 order + PayPal baseline in a dedicated
+  // transaction-local schema. This deliberately ignores any unrelated V3
+  // state that may already exist in the shared integration database.
+  await client.query(await migrationSql('../server/db/migrations/001_create_order_store.sql'));
+  await client.query(await migrationSql('../server/db/migrations/003_add_paypal_reconciliation.sql'));
 
-    let migration = await readFile(migrationFile, 'utf8');
-    migration = migration
-      .replace(/^\s*BEGIN;\s*/i, '')
-      .replace(/\s*COMMIT;\s*$/i, '');
-    await client.query(migration);
-  } else {
-    // The shared isolated integration database may already have 011 from an
-    // earlier non-production exercise. In that case, validate its current
-    // V3 semantics without reapplying named constraints.
-    await client.query(`
-      INSERT INTO legend_commerce.orders (
-        reference, status, amount_total, currency, mode, payment_session_id,
-        created_at, updated_at, paid_at, customer, items, discount, shipping, totals
-      ) VALUES
-        ($1, 'payment_pending', 1995, 'EUR', 'test', 'V3NEONLEGACY001',
-         1000, 1000, NULL, '{}'::jsonb, '[{"sku":"LEGACY-PENDING"}]'::jsonb,
-         '{}'::jsonb, '{}'::jsonb, '{}'::jsonb),
-        ($2, 'paid', 2995, 'EUR', 'test', 'V3NEONLEGACY002',
-         1000, 1100, 1100, '{}'::jsonb, '[{"sku":"LEGACY-PAID"}]'::jsonb,
-         '{}'::jsonb, '{}'::jsonb, '{}'::jsonb)
-    `, [refs.legacyPending, refs.legacyPaid]);
-  }
+  // Seed rows before 011 to prove migration compatibility with existing
+  // pending and paid records.
+  await client.query(`
+    INSERT INTO ${VALIDATION_SCHEMA}.orders (
+      reference, status, amount_total, currency, mode, payment_session_id,
+      created_at, updated_at, paid_at, customer, items, discount, shipping, totals
+    ) VALUES
+      ($1, 'payment_pending', 1995, 'EUR', 'test', 'V3NEONLEGACY001',
+       1000, 1000, NULL, '{}'::jsonb, '[{"sku":"LEGACY-PENDING"}]'::jsonb,
+       '{}'::jsonb, '{}'::jsonb, '{}'::jsonb),
+      ($2, 'paid', 2995, 'EUR', 'test', 'V3NEONLEGACY002',
+       1000, 1100, 1100, '{}'::jsonb, '[{"sku":"LEGACY-PAID"}]'::jsonb,
+       '{}'::jsonb, '{}'::jsonb, '{}'::jsonb)
+  `, [refs.legacyPending, refs.legacyPaid]);
+
+  await client.query(await migrationSql('../server/db/migrations/011_add_v3_order_invoice_architecture.sql'));
 
   const legacy = await client.query(`
     SELECT count(*)::int AS count
-    FROM legend_commerce.orders
+    FROM ${VALIDATION_SCHEMA}.orders
     WHERE reference = ANY($1::text[])
       AND document_profile_version = 0
       AND order_number IS NULL
@@ -140,17 +98,33 @@ try {
       AND invoice_id IS NULL
   `, [[refs.legacyPending, refs.legacyPaid]]);
   if (legacy.rows?.[0]?.count !== 2) {
-    throw new Error('V3 schema did not preserve/default synthetic legacy rows to profile 0.');
+    throw new Error('011 did not preserve pre-existing synthetic rows as legacy profile 0.');
   }
 
+  // A pre-V3 pending checkout must remain able to become paid without V3
+  // document identity after the additive migration.
   await client.query(`
-    UPDATE legend_commerce.orders
+    UPDATE ${VALIDATION_SCHEMA}.orders
     SET status = 'paid', paid_at = 1200, updated_at = 1200
     WHERE reference = $1
   `, [refs.legacyPending]);
 
+  const legacyPaid = await client.query(`
+    SELECT status, document_profile_version, order_number, invoice_id
+    FROM ${VALIDATION_SCHEMA}.orders
+    WHERE reference = $1
+  `, [refs.legacyPending]);
+  const legacyPaidRow = legacyPaid.rows?.[0];
+  if (!legacyPaidRow
+    || legacyPaidRow.status !== 'paid'
+    || Number(legacyPaidRow.document_profile_version) !== 0
+    || legacyPaidRow.order_number !== null
+    || legacyPaidRow.invoice_id !== null) {
+    throw new Error('Legacy profile-0 pending -> paid compatibility failed after 011.');
+  }
+
   await client.query(`
-    INSERT INTO legend_commerce.orders (
+    INSERT INTO ${VALIDATION_SCHEMA}.orders (
       reference, status, amount_total, currency, mode, payment_session_id,
       created_at, updated_at, customer, items, discount, shipping, totals,
       document_profile_version
@@ -162,36 +136,37 @@ try {
   `, [refs.v3Pending]);
 
   await expectCheckViolation(client, `
-    UPDATE legend_commerce.orders
+    UPDATE ${VALIDATION_SCHEMA}.orders
     SET status = 'paid', paid_at = 2100, updated_at = 2100
     WHERE reference = $1
   `, [refs.v3Pending], 'incomplete_paid_identity');
 
   await expectCheckViolation(client, `
-    UPDATE legend_commerce.orders
+    UPDATE ${VALIDATION_SCHEMA}.orders
     SET order_number = 'EARLY-ORDER', order_number_assigned_at = 2050
     WHERE reference = $1
   `, [refs.v3Pending], 'prepayment_identity');
 
+  // Same series key must be usable independently for order and invoice.
   await client.query(`
-    INSERT INTO legend_commerce.document_number_series
+    INSERT INTO ${VALIDATION_SCHEMA}.document_number_series
       (document_type, series_key, next_value, updated_at)
     VALUES
-      ('order', $1, 1, 2000),
-      ('invoice', $1, 1, 2000)
-  `, [seriesKey]);
+      ('order', 'validation', 1, 2000),
+      ('invoice', 'validation', 1, 2000)
+  `);
 
   const series = await client.query(`
     SELECT count(*)::int AS count
-    FROM legend_commerce.document_number_series
-    WHERE series_key = $1
-  `, [seriesKey]);
+    FROM ${VALIDATION_SCHEMA}.document_number_series
+    WHERE series_key = 'validation'
+  `);
   if (series.rows?.[0]?.count !== 2) {
     throw new Error('Order and invoice number series are not independent.');
   }
 
   await client.query(`
-    INSERT INTO legend_commerce.orders (
+    INSERT INTO ${VALIDATION_SCHEMA}.orders (
       reference, status, amount_total, currency, mode, payment_session_id,
       created_at, updated_at, customer, items, discount, shipping, totals,
       document_profile_version
@@ -202,8 +177,10 @@ try {
     )
   `, [refs.v3Valid]);
 
+  // Prove the intended deferred circular relationship: insert immutable
+  // invoice first, then attach it while moving the same order to paid.
   const invoice = await client.query(`
-    INSERT INTO legend_commerce.invoices (
+    INSERT INTO ${VALIDATION_SCHEMA}.invoices (
       order_reference, order_number, invoice_number, status, issued_at,
       currency, amount_total, schema_version, snapshot, created_at
     ) VALUES (
@@ -216,7 +193,7 @@ try {
   if (!invoiceId) throw new Error('V3 validation invoice did not receive an identity.');
 
   await client.query(`
-    UPDATE legend_commerce.orders
+    UPDATE ${VALIDATION_SCHEMA}.orders
     SET status = 'paid',
         paid_at = 3100,
         updated_at = 3100,
@@ -231,8 +208,8 @@ try {
   const dossier = await client.query(`
     SELECT o.status, o.document_profile_version, o.order_number,
            i.invoice_number, o.amount_total = i.amount_total AS totals_match
-    FROM legend_commerce.orders o
-    JOIN legend_commerce.invoices i ON i.id = o.invoice_id
+    FROM ${VALIDATION_SCHEMA}.orders o
+    JOIN ${VALIDATION_SCHEMA}.invoices i ON i.id = o.invoice_id
     WHERE o.reference = $1
       AND o.order_number = i.order_number
   `, [refs.v3Valid]);
@@ -248,11 +225,13 @@ try {
 
   const deferred = await client.query(`
     SELECT count(*)::int AS count
-    FROM pg_constraint
-    WHERE conname IN ('invoices_order_identity_fk', 'orders_invoice_same_order_fk')
-      AND condeferrable
-      AND condeferred
-  `);
+    FROM pg_constraint c
+    JOIN pg_namespace n ON n.oid = c.connamespace
+    WHERE n.nspname = $1
+      AND c.conname IN ('invoices_order_identity_fk', 'orders_invoice_same_order_fk')
+      AND c.condeferrable
+      AND c.condeferred
+  `, [VALIDATION_SCHEMA]);
   if (deferred.rows?.[0]?.count !== 2) {
     throw new Error('V3 order/invoice relationship constraints are not deferrable and initially deferred.');
   }
@@ -260,29 +239,15 @@ try {
   await client.query('ROLLBACK');
   transactionOpen = false;
 
-  const rollbackProof = await client.query(`
-    SELECT
-      EXISTS (
-        SELECT 1
-        FROM information_schema.columns
-        WHERE table_schema = 'legend_commerce'
-          AND table_name = 'orders'
-          AND column_name = 'document_profile_version'
-      ) AS v3_column_present,
-      (SELECT count(*)::int FROM legend_commerce.orders WHERE reference = ANY($1::text[])) AS synthetic_rows,
-      CASE WHEN to_regclass('legend_commerce.document_number_series') IS NULL THEN 0 ELSE
-        (SELECT count(*)::int FROM legend_commerce.document_number_series WHERE series_key = $2)
-      END AS synthetic_series
-  `, [syntheticRefs, seriesKey]);
-  const proof = rollbackProof.rows?.[0] || {};
-  if (proof.v3_column_present !== state.v3_already_present
-    || proof.synthetic_rows !== 0
-    || proof.synthetic_series !== 0) {
-    throw new Error('Transactional Neon validation did not restore the original isolated database state.');
+  const rollbackProof = await client.query(
+    'SELECT to_regnamespace($1) IS NOT NULL AS validation_schema_exists',
+    [VALIDATION_SCHEMA],
+  );
+  if (rollbackProof.rows?.[0]?.validation_schema_exists) {
+    throw new Error('Transactional Neon validation schema persisted after rollback.');
   }
 
-  const mode = state.v3_already_present ? 'existing-V3 semantics' : 'pre-V3 migration application';
-  console.log(`V3 011 isolated Neon validation passed (${mode}) and rolled back cleanly.`);
+  console.log('V3 011 isolated Neon validation passed in a transaction-local schema and rolled back cleanly.');
 } catch (error) {
   if (transactionOpen) {
     try {
