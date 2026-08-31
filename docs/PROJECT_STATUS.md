@@ -1,5 +1,7 @@
 # LegendMural projectstatus
 
+> **Actuele operationele pre-deploy status (31 augustus 2026):** lees eerst [`CURRENT_PRODUCTION_STATUS_20260831.md`](CURRENT_PRODUCTION_STATUS_20260831.md). Dit document hieronder blijft de bredere roadmap/launchcontext en bevat op onderdelen oudere statusinformatie.
+
 Laatst inhoudelijk bijgewerkt: 15 augustus 2026.
 
 Dit document is de actuele bron van waarheid voor de launchstatus van `ALKAVisuals/legend-stories-website`. Historische Sprint-, Stripe- en tijdelijke branchdocumenten beschrijven eerdere ontwikkelfasen maar bepalen niet langer de doelarchitectuur.
