@@ -234,3 +234,45 @@
   color: #B5945B;
 }
 
+/* ABOUT PAGE — compiled utility compatibility
+   Scoped to About-specific section hooks so other pages stay unaffected. */
+section[aria-labelledby="about-purpose-heading"] .max-w-lg > .absolute {
+  right: 1rem;
+  bottom: 1rem;
+}
+section[aria-labelledby="about-purpose-heading"] .border-l.border-mint\/30 {
+  padding-left: 1.25rem;
+}
+section[aria-labelledby="about-collections-heading"] a > div > div:last-of-type {
+  left: 0;
+  bottom: 0;
+}
+section[aria-labelledby="about-custom-heading"] .relative.h-96 > div[aria-hidden="true"]:first-child {
+  inset: 2rem;
+}
+section[aria-labelledby="about-final-cta-heading"] > div:nth-child(2) {
+  left: 25%;
+}
+section[aria-labelledby="about-final-cta-heading"] > div:nth-child(3) {
+  right: 25%;
+}
+section[aria-labelledby="about-final-cta-heading"] .section-subheading {
+  margin-bottom: 2.25rem;
+}
+
+@media (min-width: 640px) {
+  section[aria-labelledby="about-product-heading"] .grid > .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  section[aria-labelledby="about-collections-heading"] > .max-w-7xl > .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  section[aria-labelledby="about-hero-heading"] p.text-sm,
+  section[aria-labelledby="about-collections-heading"] > .max-w-7xl > p.text-sm {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+}

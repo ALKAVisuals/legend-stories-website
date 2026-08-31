@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/shared.css">
   <link rel="stylesheet" href="css/order-experience.css">
+  <link rel="stylesheet" href="css/order-paid-experience.css">
 </head>
 <body class="order-page text-text-primary font-body">
   <header class="order-header glass">
@@ -68,12 +69,12 @@
           <div class="order-progress__step">
             <span class="order-progress__dot">02</span>
             <span class="order-progress__label">Production</span>
-            <span class="order-progress__meta">Next step</span>
+            <span id="order-progress-production-meta" class="order-progress__meta">Next step</span>
           </div>
           <div class="order-progress__step">
             <span class="order-progress__dot">03</span>
             <span class="order-progress__label">Shipping</span>
-            <span class="order-progress__meta">Update by email</span>
+            <span id="order-progress-shipping-meta" class="order-progress__meta">Update by email</span>
           </div>
         </div>
       </div>
@@ -104,25 +105,43 @@
           <div class="next-steps">
             <article class="next-step">
               <span class="next-step__number">01</span>
-              <h3>Order received</h3>
-              <p>We securely verify the payment before the order moves forward.</p>
+              <h3 id="order-next-step-1-title">Order received</h3>
+              <p id="order-next-step-1-copy">We securely verify the payment before the order moves forward.</p>
             </article>
             <article class="next-step">
               <span class="next-step__number">02</span>
-              <h3>Prepared with care</h3>
-              <p>Your mural is prepared for the next stage once the order is confirmed.</p>
+              <h3 id="order-next-step-2-title">Prepared with care</h3>
+              <p id="order-next-step-2-copy">Your mural is prepared for the next stage once the order is confirmed.</p>
             </article>
             <article class="next-step">
               <span class="next-step__number">03</span>
-              <h3>Shipping update</h3>
-              <p>Shipping information is sent when your order is ready to leave us.</p>
+              <h3 id="order-next-step-3-title">Shipping update</h3>
+              <p id="order-next-step-3-copy">Shipping information is sent when your order is ready to leave us.</p>
             </article>
           </div>
         </section>
       </div>
 
+      <section id="order-installation-guides" class="order-paid-only order-installation" aria-labelledby="order-installation-title">
+        <div class="order-installation__copy">
+          <p class="order-panel__eyebrow">Before it arrives</p>
+          <h2 id="order-installation-title">Get ready for your wall.</h2>
+          <p>Your LegendMural is made to become part of your space. When it arrives, our official installation guides will walk you through the application process step by step.</p>
+          <a href="https://youtube.com/playlist?list=PL69xq-QQTVxjbY7es-YDCGee06GruiRMW" target="_blank" rel="noopener noreferrer" class="btn-primary">View installation guides →</a>
+        </div>
+        <div class="order-installation__visual" aria-hidden="true">
+          <span>01</span>
+          <strong>PREP</strong>
+          <span>02</span>
+          <strong>APPLY</strong>
+          <span>03</span>
+          <strong>ENJOY</strong>
+        </div>
+      </section>
+
       <div class="order-actions">
         <a id="order-primary-action" href="shop.html" class="btn-primary">Continue shopping</a>
+        <a id="order-paid-shop-action" href="shop.html" class="btn-secondary order-paid-only">Explore more legends</a>
         <a id="order-withdraw-link" href="withdraw.html" class="btn-secondary hidden">Withdraw from purchase</a>
         <a href="index.html#contact" class="btn-secondary">Need help?</a>
       </div>
