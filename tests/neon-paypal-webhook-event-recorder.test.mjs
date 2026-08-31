@@ -52,7 +52,28 @@ test('new webhook event is reserved on the supplied transaction client only', as
   assert.equal(calls.length, 1);
   assert.match(calls[0].sql, /INSERT INTO legend_commerce\.paypal_webhook_events/);
   assert.equal(calls[0].params[0], 'WH-V3-EVENT-1');
+  assert.equal(calls[0].params[4], '3Y662965014333303');
   assert.equal(calls[0].params[7], 1_787_000_010);
+});
+
+test('approved event ledger identity excludes recovery capture ID so duplicate delivery stays stable', async () => {
+  const calls = [];
+  const approvedPayment = payment({
+    providerEventId: 'WH-V3-APPROVED-1',
+    providerEventType: 'CHECKOUT.ORDER.APPROVED',
+  });
+  const client = {
+    async query(sql, params) {
+      calls.push({ sql, params });
+      return { rows: [{ event_id: 'WH-V3-APPROVED-1' }] };
+    },
+  };
+
+  const result = await recordPayPalWebhookEventInTransaction({ client, payment: approvedPayment });
+
+  assert.equal(result.duplicate, false);
+  assert.equal(calls[0].params[4], null);
+  assert.equal(approvedPayment.providerCaptureId, '3Y662965014333303');
 });
 
 test('duplicate event reuses the ledger row only when provider identity matches exactly', async () => {
