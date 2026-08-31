@@ -28,12 +28,7 @@ function fail(code, message, details) {
 }
 
 function parseAllowedOrigins(value = '') {
-  return new Set(
-    String(value)
-      .split(',')
-      .map((origin) => origin.trim())
-      .filter(Boolean),
-  );
+  return new Set(String(value).split(',').map((origin) => origin.trim()).filter(Boolean));
 }
 
 function responseHeaders(origin = '') {
@@ -53,10 +48,7 @@ function responseHeaders(origin = '') {
 }
 
 function jsonResponse(status, body, origin = '') {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: responseHeaders(origin),
-  });
+  return new Response(JSON.stringify(body), { status, headers: responseHeaders(origin) });
 }
 
 function errorResponse(status, code, message, origin = '') {
@@ -78,13 +70,9 @@ async function parseJsonRequest(request) {
     fail('UNSUPPORTED_CONTENT_TYPE', 'Content-Type must be application/json.');
   }
   const declaredLength = Number(request.headers.get('content-length') || 0);
-  if (declaredLength > MAX_REQUEST_BYTES) {
-    fail('REQUEST_TOO_LARGE', 'PayPal capture request is too large.');
-  }
+  if (declaredLength > MAX_REQUEST_BYTES) fail('REQUEST_TOO_LARGE', 'PayPal capture request is too large.');
   const source = await request.text();
-  if (Buffer.byteLength(source, 'utf8') > MAX_REQUEST_BYTES) {
-    fail('REQUEST_TOO_LARGE', 'PayPal capture request is too large.');
-  }
+  if (Buffer.byteLength(source, 'utf8') > MAX_REQUEST_BYTES) fail('REQUEST_TOO_LARGE', 'PayPal capture request is too large.');
   try {
     return JSON.parse(source);
   } catch {
@@ -94,9 +82,7 @@ async function parseJsonRequest(request) {
 
 function normalizeCaptureLookup(payload = {}) {
   const reference = String(payload.reference || '').trim().toLowerCase();
-  if (!REFERENCE_PATTERN.test(reference)) {
-    fail('INVALID_PAYPAL_CAPTURE_LOOKUP', 'Order reference is invalid.');
-  }
+  if (!REFERENCE_PATTERN.test(reference)) fail('INVALID_PAYPAL_CAPTURE_LOOKUP', 'Order reference is invalid.');
   let orderId;
   try {
     orderId = normalizePayPalOrderId(payload.orderId);
@@ -148,9 +134,7 @@ function safeNotificationFailureLog(error, order) {
       code: String(error?.code || 'UNKNOWN').slice(0, 120),
       reference: REFERENCE_PATTERN.test(reference) ? reference : 'unknown',
     });
-  } catch {
-    // Notification logging must never affect payment truth.
-  }
+  } catch {}
 }
 
 async function attemptPaidOrderNotifications(reconcile, order) {
@@ -163,27 +147,16 @@ async function attemptPaidOrderNotifications(reconcile, order) {
 }
 
 function mapError(error, origin) {
-  if (error instanceof PayPalCaptureRequestError) {
-    return errorResponse(400, error.code, error.message, origin);
-  }
-  if (error instanceof OrderStoreContractError) {
-    return errorResponse(503, 'PAYPAL_CAPTURE_STORE_NOT_CONFIGURED', 'PayPal order storage is not configured.', origin);
-  }
-  if (error instanceof PayPalConfigurationError) {
-    return errorResponse(503, error.code, 'PayPal Sandbox capture is not configured.', origin);
-  }
+  if (error instanceof PayPalCaptureRequestError) return errorResponse(400, error.code, error.message, origin);
+  if (error instanceof OrderStoreContractError) return errorResponse(503, 'PAYPAL_CAPTURE_STORE_NOT_CONFIGURED', 'PayPal order storage is not configured.', origin);
+  if (error instanceof PayPalConfigurationError) return errorResponse(503, error.code, 'PayPal Sandbox capture is not configured.', origin);
   if (error instanceof PayPalCaptureError) {
     const status = error.code.includes('MISMATCH') ? 409 : 502;
     return errorResponse(status, error.code, error.message, origin);
   }
-  if (error instanceof PayPalApiError) {
-    return errorResponse(502, error.code, 'PayPal could not capture the approved order.', origin);
-  }
-  if (error?.code === 'ORDER_NOT_FOUND') {
-    return errorResponse(404, 'ORDER_NOT_FOUND', 'No matching PayPal order was found.', origin);
-  }
-  if (error?.code === 'PAYPAL_CAPTURE_ORDER_MISMATCH'
-    || error?.code === 'PAID_ORDER_IDENTITY_MISMATCH') {
+  if (error instanceof PayPalApiError) return errorResponse(502, error.code, 'PayPal could not capture the approved order.', origin);
+  if (error?.code === 'ORDER_NOT_FOUND') return errorResponse(404, 'ORDER_NOT_FOUND', 'No matching PayPal order was found.', origin);
+  if (error?.code === 'PAYPAL_CAPTURE_ORDER_MISMATCH' || error?.code === 'PAID_ORDER_IDENTITY_MISMATCH') {
     return errorResponse(409, error.code, 'PayPal capture does not match the reserved order.', origin);
   }
   if (error?.code === 'V3_PAID_FINALIZER_NOT_CONFIGURED'
@@ -194,11 +167,9 @@ function mapError(error, origin) {
   if (error?.code === 'PAID_DOCUMENT_INVARIANT_BROKEN') {
     return errorResponse(500, error.code, 'The paid order document state is inconsistent.', origin);
   }
-  if (error?.code === 'PAYPAL_CAPTURE_STORE_UNAVAILABLE'
-    || error?.code === 'PAYPAL_CAPTURE_STORE_RETRYABLE') {
+  if (error?.code === 'PAYPAL_CAPTURE_STORE_UNAVAILABLE' || error?.code === 'PAYPAL_CAPTURE_STORE_RETRYABLE') {
     return errorResponse(503, error.code, 'PayPal payment was captured but order confirmation storage is temporarily unavailable.', origin);
   }
-
   console.error('Unexpected PayPal capture error.', {
     name: error?.name || 'Error',
     code: String(error?.code || 'UNKNOWN').slice(0, 120),
@@ -217,34 +188,19 @@ export async function handleCapturePayPalOrder(request, {
   capturedAt = Math.floor(Date.now() / 1000),
 } = {}) {
   const corsOrigin = resolveCorsOrigin(request, allowedOrigins);
-  if (corsOrigin === null) {
-    return errorResponse(403, 'ORIGIN_NOT_ALLOWED', 'Request origin is not allowed.');
-  }
-  if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: responseHeaders(corsOrigin),
-    });
-  }
-  if (request.method !== 'POST') {
-    return errorResponse(405, 'METHOD_NOT_ALLOWED', 'Only POST is allowed.', corsOrigin);
-  }
+  if (corsOrigin === null) return errorResponse(403, 'ORIGIN_NOT_ALLOWED', 'Request origin is not allowed.');
+  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: responseHeaders(corsOrigin) });
+  if (request.method !== 'POST') return errorResponse(405, 'METHOD_NOT_ALLOWED', 'Only POST is allowed.', corsOrigin);
 
   try {
     const store = requirePaypalCaptureStore(orderStore);
     const lookup = normalizeCaptureLookup(await parseJsonRequest(request));
     const reservedOrder = await store.getOrderByReference(lookup.reference);
-    if (!reservedOrder) {
-      return errorResponse(404, 'ORDER_NOT_FOUND', 'No matching PayPal order was found.', corsOrigin);
-    }
-    if (reservedOrder.paymentSessionId !== lookup.orderId) {
+    if (!reservedOrder || reservedOrder.paymentSessionId !== lookup.orderId) {
       return errorResponse(404, 'ORDER_NOT_FOUND', 'No matching PayPal order was found.', corsOrigin);
     }
     if (!['test', 'live'].includes(reservedOrder.mode)) {
-      throw new PayPalCaptureError(
-        'PAYPAL_CAPTURE_MODE_MISMATCH',
-        'Stored PayPal order mode is invalid.',
-      );
+      throw new PayPalCaptureError('PAYPAL_CAPTURE_MODE_MISMATCH', 'Stored PayPal order mode is invalid.');
     }
 
     const profileVersion = documentProfileVersion(reservedOrder);
@@ -253,13 +209,15 @@ export async function handleCapturePayPalOrder(request, {
       error.code = 'DOCUMENT_PROFILE_UNSUPPORTED';
       throw error;
     }
+    const profile1Finalizer = profileVersion === 1
+      ? requireProfile1Finalizer(finalizePaidOrder)
+      : null;
 
     if (reservedOrder.status === 'paid') {
       let paidOrder = reservedOrder;
       let duplicate = true;
-      if (profileVersion === 1) {
-        const finalizer = requireProfile1Finalizer(finalizePaidOrder);
-        const finalized = await finalizer(profile1PaymentEvidence({
+      if (profile1Finalizer) {
+        const finalized = await profile1Finalizer(profile1PaymentEvidence({
           order: reservedOrder,
           source: 'paypal_capture_duplicate_return',
         }));
@@ -271,14 +229,8 @@ export async function handleCapturePayPalOrder(request, {
       }
       await attemptPaidOrderNotifications(reconcilePaidOrderNotifications, paidOrder);
       return jsonResponse(200, {
-        provider: 'paypal',
-        reference: lookup.reference,
-        orderId: lookup.orderId,
-        mode: reservedOrder.mode,
-        status: 'paid',
-        paid: true,
-        duplicate,
-        captureIds: [],
+        provider: 'paypal', reference: lookup.reference, orderId: lookup.orderId,
+        mode: reservedOrder.mode, status: 'paid', paid: true, duplicate, captureIds: [],
       }, corsOrigin);
     }
 
@@ -289,10 +241,7 @@ export async function handleCapturePayPalOrder(request, {
       allowLive: env.PAYPAL_ALLOW_LIVE === 'true',
     });
     if (client.mode !== reservedOrder.mode) {
-      throw new PayPalCaptureError(
-        'PAYPAL_CAPTURE_MODE_MISMATCH',
-        'PayPal environment does not match the reserved order.',
-      );
+      throw new PayPalCaptureError('PAYPAL_CAPTURE_MODE_MISMATCH', 'PayPal environment does not match the reserved order.');
     }
 
     const capturePayload = await client.captureOrder(lookup.orderId, {
@@ -306,20 +255,13 @@ export async function handleCapturePayPalOrder(request, {
       fallbackCapturedAt: capturedAt,
     });
 
-    let persisted;
-    if (profileVersion === 1) {
-      const finalizer = requireProfile1Finalizer(finalizePaidOrder);
-      persisted = await finalizer(profile1PaymentEvidence({
+    const persisted = profile1Finalizer
+      ? await profile1Finalizer(profile1PaymentEvidence({
         order: reservedOrder,
         capture,
         source: 'paypal_capture_return',
-      }));
-    } else {
-      persisted = await store.processPaypalCapture({
-        ...capture,
-        mode: reservedOrder.mode,
-      });
-    }
+      }))
+      : await store.processPaypalCapture({ ...capture, mode: reservedOrder.mode });
 
     if (!persisted?.order || persisted.order.status !== 'paid') {
       throw new Error('PayPal paid-order persistence did not return a paid order.');
@@ -328,14 +270,9 @@ export async function handleCapturePayPalOrder(request, {
     await attemptPaidOrderNotifications(reconcilePaidOrderNotifications, persisted.order);
 
     return jsonResponse(200, {
-      provider: 'paypal',
-      reference: lookup.reference,
-      orderId: lookup.orderId,
-      mode: reservedOrder.mode,
-      status: 'paid',
-      paid: true,
-      duplicate: Boolean(persisted.duplicate),
-      captureIds: capture.captureIds,
+      provider: 'paypal', reference: lookup.reference, orderId: lookup.orderId,
+      mode: reservedOrder.mode, status: 'paid', paid: true,
+      duplicate: Boolean(persisted.duplicate), captureIds: capture.captureIds,
     }, corsOrigin);
   } catch (error) {
     return mapError(error, corsOrigin);
