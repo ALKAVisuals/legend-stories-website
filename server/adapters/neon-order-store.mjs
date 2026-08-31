@@ -154,6 +154,7 @@ function normalizePendingOrder(orderInput) {
     discount: clone(source.discount),
     shipping: clone(source.shipping),
     totals: clone(source.totals),
+    documentProfileVersion: integer(source.documentProfileVersion ?? 0, 'document profile version'),
   };
   if (source.lastStripeEventId) order.lastStripeEventId = String(source.lastStripeEventId);
   if (source.lastStripeEventType) order.lastStripeEventType = String(source.lastStripeEventType);
@@ -181,6 +182,7 @@ function rowToOrder(row) {
     discount: row.discount,
     shipping: row.shipping,
     totals: row.totals,
+    documentProfileVersion: row.document_profile_version ?? 0,
   });
 }
 
