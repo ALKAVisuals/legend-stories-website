@@ -63,13 +63,36 @@ function normalizeVerifiedPayment(input = {}) {
     fail('INVALID_PAID_FINALIZATION', 'Paid order mode is invalid.', { field: 'mode' });
   }
 
+  const providerEventId = optionalText(input.providerEventId, 'providerEventId');
+  const providerEventType = optionalText(input.providerEventType, 'providerEventType');
+  const hasProviderEvent = providerEventId !== null
+    || providerEventType !== null
+    || input.providerEventCreatedAt !== null && input.providerEventCreatedAt !== undefined
+    || input.providerEventProcessedAt !== null && input.providerEventProcessedAt !== undefined;
+
+  if (hasProviderEvent && (!providerEventId || !providerEventType
+    || input.providerEventCreatedAt === null || input.providerEventCreatedAt === undefined
+    || input.providerEventProcessedAt === null || input.providerEventProcessedAt === undefined)) {
+    fail(
+      'INVALID_PAID_FINALIZATION',
+      'Provider webhook event identity must be complete when supplied.',
+      { field: 'providerEventId' },
+    );
+  }
+
   return Object.freeze({
     reference,
     provider: requireText(input.provider, 'provider', { maxLength: 32 }).toLowerCase(),
     providerOrderId: requireText(input.providerOrderId, 'providerOrderId', { maxLength: 256 }),
     providerCaptureId: optionalText(input.providerCaptureId, 'providerCaptureId'),
-    providerEventId: optionalText(input.providerEventId, 'providerEventId'),
-    providerEventType: optionalText(input.providerEventType, 'providerEventType'),
+    providerEventId,
+    providerEventType,
+    providerEventCreatedAt: hasProviderEvent
+      ? nonnegativeInteger(input.providerEventCreatedAt, 'providerEventCreatedAt')
+      : null,
+    providerEventProcessedAt: hasProviderEvent
+      ? nonnegativeInteger(input.providerEventProcessedAt, 'providerEventProcessedAt')
+      : null,
     source: requireText(input.source, 'source', { maxLength: 128 }),
     amountTotal: nonnegativeInteger(input.amountTotal, 'amountTotal'),
     currency,
@@ -285,6 +308,7 @@ export function createNeonPaidOrderFinalizer({
   clientFactory,
   numberingPolicy,
   documentContextProvider,
+  providerEventRecorder = null,
   transactionRunner,
 } = {}) {
   const policy = numberingPolicy ? normalizeNumberingPolicy(numberingPolicy) : null;
@@ -298,6 +322,9 @@ export function createNeonPaidOrderFinalizer({
 
   if (typeof runner?.transact !== 'function') {
     fail('INVALID_PAID_FINALIZER_TRANSACTION_RUNNER', 'A transaction runner is required.');
+  }
+  if (providerEventRecorder !== null && typeof providerEventRecorder !== 'function') {
+    fail('INVALID_PAID_FINALIZER_EVENT_RECORDER', 'Provider event recorder must be a function.');
   }
 
   return Object.freeze({
@@ -315,6 +342,32 @@ export function createNeonPaidOrderFinalizer({
 
         assertSupportedProfile(current);
         assertOrderMatchesVerifiedPayment(current, payment);
+
+        if (payment.providerEventId) {
+          if (typeof providerEventRecorder !== 'function') {
+            fail(
+              'PAYPAL_WEBHOOK_EVENT_RECORDER_NOT_CONFIGURED',
+              'V3 webhook finalization requires transaction-local event recording.',
+            );
+          }
+          const reservation = await providerEventRecorder({
+            client,
+            payment: structuredClone(payment),
+          });
+          if (typeof reservation?.duplicate !== 'boolean') {
+            fail(
+              'PAYPAL_WEBHOOK_EVENT_RECORDER_INVALID',
+              'Webhook event recorder returned an invalid result.',
+            );
+          }
+          if (reservation.duplicate && current.status !== 'paid') {
+            fail(
+              'PAYPAL_WEBHOOK_EVENT_STATE_CONFLICT',
+              'A duplicate PayPal webhook event exists without durable paid order state.',
+              { reference: current.reference, eventId: payment.providerEventId },
+            );
+          }
+        }
 
         if (current.status === 'paid') {
           if (current.documentProfileVersion === 0) {
