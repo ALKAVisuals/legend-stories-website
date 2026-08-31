@@ -1,8 +1,9 @@
 import { createNeonPaidOrderFinalizer } from '../adapters/neon-paid-order-finalizer.mjs';
-import { NetlifyCommerceConfigurationError } from './commerce-runtime.mjs';
 
-function configurationFailure(code, message) {
-  throw new NetlifyCommerceConfigurationError(code, message);
+function hasNumberingPolicy(policy) {
+  return Boolean(policy
+    && typeof policy.resolveSeriesKey === 'function'
+    && typeof policy.format === 'function');
 }
 
 export function createV3PaidFinalizationRuntime({
@@ -10,38 +11,19 @@ export function createV3PaidFinalizationRuntime({
   config = null,
   finalizerFactory = createNeonPaidOrderFinalizer,
 } = {}) {
+  // Production remains explicitly inactive until business/legal configuration is approved.
+  // Returning null is intentional: the capture API then rejects profile-1 before calling PayPal,
+  // while profile-0 continues through the existing legacy capture-store path.
   if (config?.enabled !== true) return null;
 
-  if (!config.numberingPolicy
-    || typeof config.numberingPolicy.resolveSeriesKey !== 'function'
-    || typeof config.numberingPolicy.format !== 'function') {
-    configurationFailure(
-      'V3_DOCUMENT_NUMBER_POLICY_MISSING',
-      'V3 paid finalization requires an explicit server-side document numbering policy.',
-    );
-  }
-
-  if (typeof config.documentContextProvider !== 'function') {
-    configurationFailure(
-      'V3_INVOICE_DOCUMENT_CONTEXT_MISSING',
-      'V3 paid finalization requires explicit server-side invoice document context.',
-    );
-  }
-
-  if (typeof finalizerFactory !== 'function') {
-    configurationFailure(
-      'V3_PAID_FINALIZER_FACTORY_INVALID',
-      'The V3 paid-order finalizer adapter is unavailable.',
-    );
+  if (!hasNumberingPolicy(config.numberingPolicy)
+    || typeof config.documentContextProvider !== 'function'
+    || typeof finalizerFactory !== 'function') {
+    return null;
   }
 
   const connectionString = String(env.NEON_DATABASE_URL || '').trim();
-  if (!connectionString) {
-    configurationFailure(
-      'NEON_DATABASE_URL_MISSING',
-      'The commerce database is not configured.',
-    );
-  }
+  if (!connectionString) return null;
 
   let runtime;
   try {
@@ -50,20 +32,10 @@ export function createV3PaidFinalizationRuntime({
       numberingPolicy: config.numberingPolicy,
       documentContextProvider: config.documentContextProvider,
     });
-  } catch (error) {
-    if (error instanceof NetlifyCommerceConfigurationError) throw error;
-    configurationFailure(
-      'V3_PAID_FINALIZER_CONFIGURATION_INVALID',
-      'The V3 paid-order finalizer configuration is invalid.',
-    );
+  } catch {
+    return null;
   }
 
-  if (typeof runtime?.finalizePaidOrder !== 'function') {
-    configurationFailure(
-      'V3_PAID_FINALIZER_FACTORY_INVALID',
-      'The V3 paid-order finalizer adapter is unavailable.',
-    );
-  }
-
+  if (typeof runtime?.finalizePaidOrder !== 'function') return null;
   return runtime.finalizePaidOrder.bind(runtime);
 }
