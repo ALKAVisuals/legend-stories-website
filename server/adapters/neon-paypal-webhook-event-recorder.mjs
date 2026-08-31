@@ -31,9 +31,13 @@ function normalizePaymentEvent(payment = {}) {
   const eventType = String(payment.providerEventType || '').trim().toUpperCase();
   const reference = String(payment.reference || '').trim().toLowerCase();
   const orderId = String(payment.providerOrderId || '').trim().toUpperCase();
-  const captureId = payment.providerCaptureId == null || String(payment.providerCaptureId).trim() === ''
+  const paymentCaptureId = payment.providerCaptureId == null || String(payment.providerCaptureId).trim() === ''
     ? null
     : String(payment.providerCaptureId).trim().toUpperCase();
+  // The webhook ledger stores identity carried by the webhook event itself. A recovery capture
+  // triggered by CHECKOUT.ORDER.APPROVED is payment evidence, but its capture ID is not part of
+  // the APPROVED event identity. Keeping those separate makes duplicate APPROVED delivery stable.
+  const captureId = eventType.startsWith('PAYMENT.CAPTURE.') ? paymentCaptureId : null;
   const mode = String(payment.mode || '').trim();
 
   if (provider !== 'paypal') {
