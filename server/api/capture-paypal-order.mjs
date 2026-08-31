@@ -106,6 +106,40 @@ function normalizeCaptureLookup(payload = {}) {
   return Object.freeze({ reference, orderId });
 }
 
+function documentProfileVersion(order) {
+  const version = Number(order?.documentProfileVersion ?? 0);
+  return Number.isSafeInteger(version) && version >= 0 ? version : 0;
+}
+
+function requireProfile1Finalizer(finalizePaidOrder) {
+  if (typeof finalizePaidOrder !== 'function') {
+    const error = new Error('V3 profile-1 paid finalization is not configured.');
+    error.code = 'V3_PAID_FINALIZER_NOT_CONFIGURED';
+    throw error;
+  }
+  return finalizePaidOrder;
+}
+
+function profile1PaymentEvidence({ order, capture = null, source }) {
+  const paidAt = capture?.capturedAt ?? order?.paidAt;
+  if (!Number.isSafeInteger(Number(paidAt)) || Number(paidAt) < 0) {
+    const error = new Error('V3 profile-1 paid timestamp is unavailable.');
+    error.code = 'PAID_DOCUMENT_INVARIANT_BROKEN';
+    throw error;
+  }
+  return {
+    reference: order.reference,
+    provider: 'paypal',
+    providerOrderId: order.paymentSessionId,
+    providerCaptureId: capture?.captureIds?.[0] || null,
+    source,
+    amountTotal: order.amountTotal,
+    currency: order.currency,
+    mode: order.mode,
+    paidAt: Number(paidAt),
+  };
+}
+
 function safeNotificationFailureLog(error, order) {
   const reference = String(order?.reference || '').trim().toLowerCase();
   try {
@@ -148,8 +182,17 @@ function mapError(error, origin) {
   if (error?.code === 'ORDER_NOT_FOUND') {
     return errorResponse(404, 'ORDER_NOT_FOUND', 'No matching PayPal order was found.', origin);
   }
-  if (error?.code === 'PAYPAL_CAPTURE_ORDER_MISMATCH') {
+  if (error?.code === 'PAYPAL_CAPTURE_ORDER_MISMATCH'
+    || error?.code === 'PAID_ORDER_IDENTITY_MISMATCH') {
     return errorResponse(409, error.code, 'PayPal capture does not match the reserved order.', origin);
+  }
+  if (error?.code === 'V3_PAID_FINALIZER_NOT_CONFIGURED'
+    || error?.code === 'DOCUMENT_NUMBER_POLICY_NOT_CONFIGURED'
+    || error?.code === 'INVOICE_SNAPSHOT_CONFIG_INCOMPLETE') {
+    return errorResponse(503, error.code, 'V3 paid-order finalization is not configured.', origin);
+  }
+  if (error?.code === 'PAID_DOCUMENT_INVARIANT_BROKEN') {
+    return errorResponse(500, error.code, 'The paid order document state is inconsistent.', origin);
   }
   if (error?.code === 'PAYPAL_CAPTURE_STORE_UNAVAILABLE'
     || error?.code === 'PAYPAL_CAPTURE_STORE_RETRYABLE') {
@@ -168,6 +211,7 @@ export async function handleCapturePayPalOrder(request, {
   orderStore = null,
   paypalClient = null,
   paypalClientFactory = createPayPalApiClient,
+  finalizePaidOrder = null,
   reconcilePaidOrderNotifications = null,
   allowedOrigins = env.CHECKOUT_ALLOWED_ORIGINS || '',
   capturedAt = Math.floor(Date.now() / 1000),
@@ -202,8 +246,30 @@ export async function handleCapturePayPalOrder(request, {
         'Stored PayPal order mode is invalid.',
       );
     }
+
+    const profileVersion = documentProfileVersion(reservedOrder);
+    if (![0, 1].includes(profileVersion)) {
+      const error = new Error('Stored order document profile is unsupported.');
+      error.code = 'DOCUMENT_PROFILE_UNSUPPORTED';
+      throw error;
+    }
+
     if (reservedOrder.status === 'paid') {
-      await attemptPaidOrderNotifications(reconcilePaidOrderNotifications, reservedOrder);
+      let paidOrder = reservedOrder;
+      let duplicate = true;
+      if (profileVersion === 1) {
+        const finalizer = requireProfile1Finalizer(finalizePaidOrder);
+        const finalized = await finalizer(profile1PaymentEvidence({
+          order: reservedOrder,
+          source: 'paypal_capture_duplicate_return',
+        }));
+        if (!finalized?.order || finalized.order.status !== 'paid') {
+          throw new Error('V3 paid finalizer did not return a paid order.');
+        }
+        paidOrder = finalized.order;
+        duplicate = Boolean(finalized.duplicate);
+      }
+      await attemptPaidOrderNotifications(reconcilePaidOrderNotifications, paidOrder);
       return jsonResponse(200, {
         provider: 'paypal',
         reference: lookup.reference,
@@ -211,7 +277,7 @@ export async function handleCapturePayPalOrder(request, {
         mode: reservedOrder.mode,
         status: 'paid',
         paid: true,
-        duplicate: true,
+        duplicate,
         captureIds: [],
       }, corsOrigin);
     }
@@ -240,12 +306,23 @@ export async function handleCapturePayPalOrder(request, {
       fallbackCapturedAt: capturedAt,
     });
 
-    const persisted = await store.processPaypalCapture({
-      ...capture,
-      mode: reservedOrder.mode,
-    });
+    let persisted;
+    if (profileVersion === 1) {
+      const finalizer = requireProfile1Finalizer(finalizePaidOrder);
+      persisted = await finalizer(profile1PaymentEvidence({
+        order: reservedOrder,
+        capture,
+        source: 'paypal_capture_return',
+      }));
+    } else {
+      persisted = await store.processPaypalCapture({
+        ...capture,
+        mode: reservedOrder.mode,
+      });
+    }
+
     if (!persisted?.order || persisted.order.status !== 'paid') {
-      throw new Error('PayPal capture store did not persist a paid order.');
+      throw new Error('PayPal paid-order persistence did not return a paid order.');
     }
 
     await attemptPaidOrderNotifications(reconcilePaidOrderNotifications, persisted.order);
