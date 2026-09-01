@@ -2,6 +2,7 @@ name: Neon order-store integration
 
 on:
   workflow_dispatch:
+  pull_request:
 
 permissions:
   contents: read
@@ -46,6 +47,9 @@ jobs:
 
       - name: Run real Neon store conformance
         run: npm run test:neon:integration
+
+      - name: Run real Neon payment convergence proof
+        run: node scripts/test-neon-payment-convergence.mjs
 
       - name: Re-run credential-free architecture validation
         run: npm run validate:neon-order-store
