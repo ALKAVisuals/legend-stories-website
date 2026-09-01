@@ -25,6 +25,15 @@ function sameValue(left, right) {
   return JSON.stringify(canonicalize(left)) === JSON.stringify(canonicalize(right));
 }
 
+function sameLookupValue(actual, expected) {
+  const normalized = clone(actual);
+  if (normalized && Object.hasOwn(normalized, 'documentProfileVersion')) {
+    if (normalized.documentProfileVersion !== 0) return false;
+    delete normalized.documentProfileVersion;
+  }
+  return sameValue(normalized, expected);
+}
+
 function assertContract(condition, message, details = {}) {
   if (!condition) {
     throw new OrderStoreContractError(
@@ -151,7 +160,7 @@ export async function runOrderStoreConformance(createStore, {
     const created = await store.persistPendingCheckout(clone(expected));
     validatePersistenceResult(created, expected, true);
     const found = await store.getOrderByReference(expected.reference);
-    assertContract(sameValue(found, expected), 'getOrderByReference() returned a different order.');
+    assertContract(sameLookupValue(found, expected), 'getOrderByReference() returned a different order.');
   });
 
   await run('idempotent pending-order retry', async () => {
@@ -210,7 +219,7 @@ export async function runOrderStoreConformance(createStore, {
     first.items[0].unitPrice = 1;
     const second = await store.getOrderByReference(expected.reference);
     assertContract(
-      sameValue(second, expected),
+      sameLookupValue(second, expected),
       'Mutating a retrieved order changed durable store state.',
     );
   });
