@@ -54,6 +54,10 @@ const migrations = [
   new URL('../server/db/migrations/006_grant_withdrawal_runtime.sql', import.meta.url),
   new URL('../server/db/migrations/007_create_withdrawal_acknowledgements.sql', import.meta.url),
   new URL('../server/db/migrations/008_grant_withdrawal_acknowledgement_runtime.sql', import.meta.url),
+  new URL('../server/db/migrations/009_create_order_notifications.sql', import.meta.url),
+  new URL('../server/db/migrations/010_grant_order_notifications_runtime.sql', import.meta.url),
+  new URL('../server/db/migrations/011_add_v3_order_invoice_architecture.sql', import.meta.url),
+  new URL('../server/db/migrations/012_grant_v3_order_invoice_runtime.sql', import.meta.url),
 ];
 
 const client = await createDefaultNeonClient(migrationUrl);

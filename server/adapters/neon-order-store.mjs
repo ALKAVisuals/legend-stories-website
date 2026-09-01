@@ -76,31 +76,14 @@ function validateClient(client) {
 
 export function validateNeonConnectionString(value) {
   const source = String(value || '').trim();
-  if (!source) {
-    fail('DATABASE_URL_NOT_CONFIGURED', 'DATABASE_URL is not configured.');
-  }
-
+  if (!source) fail('DATABASE_URL_NOT_CONFIGURED', 'DATABASE_URL is not configured.');
   let url;
-  try {
-    url = new URL(source);
-  } catch {
-    fail('INVALID_DATABASE_URL', 'DATABASE_URL must be a valid PostgreSQL URL.');
-  }
-
-  if (!['postgres:', 'postgresql:'].includes(url.protocol)) {
-    fail('INVALID_DATABASE_URL', 'DATABASE_URL must use the PostgreSQL protocol.');
-  }
-  if (!url.hostname.endsWith('.neon.tech')) {
-    fail('INVALID_DATABASE_URL', 'DATABASE_URL must target a Neon Postgres host.');
-  }
-  if (!url.username || !url.password || !url.pathname || url.pathname === '/') {
-    fail('INVALID_DATABASE_URL', 'DATABASE_URL is missing database credentials or a database name.');
-  }
+  try { url = new URL(source); } catch { fail('INVALID_DATABASE_URL', 'DATABASE_URL must be a valid PostgreSQL URL.'); }
+  if (!['postgres:', 'postgresql:'].includes(url.protocol)) fail('INVALID_DATABASE_URL', 'DATABASE_URL must use the PostgreSQL protocol.');
+  if (!url.hostname.endsWith('.neon.tech')) fail('INVALID_DATABASE_URL', 'DATABASE_URL must target a Neon Postgres host.');
+  if (!url.username || !url.password || !url.pathname || url.pathname === '/') fail('INVALID_DATABASE_URL', 'DATABASE_URL is missing database credentials or a database name.');
   const sslMode = url.searchParams.get('sslmode');
-  if (!['require', 'verify-full'].includes(sslMode)) {
-    fail('INVALID_DATABASE_URL', 'DATABASE_URL must require TLS.', { sslMode });
-  }
-
+  if (!['require', 'verify-full'].includes(sslMode)) fail('INVALID_DATABASE_URL', 'DATABASE_URL must require TLS.', { sslMode });
   return source;
 }
 
@@ -108,21 +91,12 @@ export async function createDefaultNeonClient(connectionString) {
   let neonModule;
   let websocketModule;
   try {
-    [neonModule, websocketModule] = await Promise.all([
-      import('@neondatabase/serverless'),
-      import('ws'),
-    ]);
+    [neonModule, websocketModule] = await Promise.all([import('@neondatabase/serverless'), import('ws')]);
   } catch {
-    fail(
-      'NEON_DRIVER_NOT_INSTALLED',
-      'The Neon runtime driver is not installed. Install the pinned driver during the activation sprint.',
-    );
+    fail('NEON_DRIVER_NOT_INSTALLED', 'The Neon runtime driver is not installed. Install the pinned driver during the activation sprint.');
   }
-
   const WebSocket = websocketModule.default || websocketModule.WebSocket;
-  if (!neonModule.Client || !neonModule.neonConfig || !WebSocket) {
-    fail('INVALID_NEON_DRIVER', 'The installed Neon driver does not expose the required Client API.');
-  }
+  if (!neonModule.Client || !neonModule.neonConfig || !WebSocket) fail('INVALID_NEON_DRIVER', 'The installed Neon driver does not expose the required Client API.');
   neonModule.neonConfig.webSocketConstructor = WebSocket;
   return new neonModule.Client({ connectionString });
 }
@@ -130,10 +104,7 @@ export async function createDefaultNeonClient(connectionString) {
 function normalizePendingOrder(orderInput) {
   const source = clone(orderInput || {});
   const status = String(source.status || '');
-  if (!ORDER_STATUSES.has(status)) {
-    fail('INVALID_ORDER_STORE_RECORD', 'Pending order status is invalid.', { status });
-  }
-
+  if (!ORDER_STATUSES.has(status)) fail('INVALID_ORDER_STORE_RECORD', 'Pending order status is invalid.', { status });
   const order = {
     reference: validateReference(source.reference),
     status,
@@ -144,10 +115,7 @@ function normalizePendingOrder(orderInput) {
     createdAt: integer(source.createdAt, 'created timestamp'),
     updatedAt: integer(source.updatedAt, 'updated timestamp'),
     paidAt: integer(source.paidAt, 'paid timestamp', { nullable: true }),
-    lastStripeEventCreated: integer(
-      source.lastStripeEventCreated ?? 0,
-      'last Stripe event timestamp',
-    ),
+    lastStripeEventCreated: integer(source.lastStripeEventCreated ?? 0, 'last Stripe event timestamp'),
     version: integer(source.version, 'version'),
     customer: clone(source.customer),
     items: clone(source.items),
@@ -160,9 +128,9 @@ function normalizePendingOrder(orderInput) {
   return order;
 }
 
-function rowToOrder(row) {
+function rowToOrder(row, { includeDocumentProfile = false } = {}) {
   if (!row || typeof row !== 'object') return null;
-  return normalizePendingOrder({
+  const order = normalizePendingOrder({
     reference: row.reference,
     status: row.status,
     amountTotal: row.amount_total,
@@ -182,94 +150,43 @@ function rowToOrder(row) {
     shipping: row.shipping,
     totals: row.totals,
   });
+  if (includeDocumentProfile) {
+    order.documentProfileVersion = integer(row.document_profile_version ?? 0, 'document profile version');
+  }
+  return order;
 }
 
 function pendingOrderValues(order) {
-  return [
-    order.reference,
-    order.status,
-    order.amountTotal,
-    order.currency,
-    order.mode,
-    order.paymentSessionId,
-    order.createdAt,
-    order.updatedAt,
-    order.paidAt,
-    order.lastStripeEventId || null,
-    order.lastStripeEventType || null,
-    order.lastStripeEventCreated,
-    order.version,
-    serializeJsonb(order.customer, 'customer'),
-    serializeJsonb(order.items, 'items'),
-    serializeJsonb(order.discount, 'discount'),
-    serializeJsonb(order.shipping, 'shipping'),
-    serializeJsonb(order.totals, 'totals'),
-  ];
+  return [order.reference, order.status, order.amountTotal, order.currency, order.mode,
+    order.paymentSessionId, order.createdAt, order.updatedAt, order.paidAt,
+    order.lastStripeEventId || null, order.lastStripeEventType || null,
+    order.lastStripeEventCreated, order.version,
+    serializeJsonb(order.customer, 'customer'), serializeJsonb(order.items, 'items'),
+    serializeJsonb(order.discount, 'discount'), serializeJsonb(order.shipping, 'shipping'),
+    serializeJsonb(order.totals, 'totals')];
 }
 
 function assertSamePendingOrder(actual, expected) {
-  if (!sameValue(actual, expected)) {
-    fail(
-      'ORDER_STORE_CONFLICT',
-      'A different order already exists for this checkout reference.',
-      { reference: expected.reference },
-    );
-  }
+  if (!sameValue(actual, expected)) fail('ORDER_STORE_CONFLICT', 'A different order already exists for this checkout reference.', { reference: expected.reference });
 }
 
 function normalizeDatabaseError(error) {
   if (error instanceof NeonOrderStoreError) return error;
   if (error?.code && String(error.code).length !== 5) return error;
-  if (error?.code === '40001' || error?.code === '40P01') {
-    return new NeonOrderStoreError(
-      'ORDER_STORE_RETRYABLE',
-      'The database transaction must be retried.',
-      { sqlState: error.code },
-    );
-  }
-  if (error?.code === '23505') {
-    return new NeonOrderStoreError(
-      'ORDER_STORE_CONFLICT',
-      'A conflicting unique order value already exists.',
-      { constraint: error.constraint || '' },
-    );
-  }
-  return new NeonOrderStoreError(
-    'ORDER_STORE_UNAVAILABLE',
-    'The durable order store is unavailable.',
-    { sqlState: error?.code || '' },
-  );
+  if (error?.code === '40001' || error?.code === '40P01') return new NeonOrderStoreError('ORDER_STORE_RETRYABLE', 'The database transaction must be retried.', { sqlState: error.code });
+  if (error?.code === '23505') return new NeonOrderStoreError('ORDER_STORE_CONFLICT', 'A conflicting unique order value already exists.', { constraint: error.constraint || '' });
+  return new NeonOrderStoreError('ORDER_STORE_UNAVAILABLE', 'The durable order store is unavailable.', { sqlState: error?.code || '' });
 }
 
-async function closeClient(client) {
-  try {
-    await client.end();
-  } catch {
-    // Closing a failed serverless connection must not replace the original error.
-  }
-}
-
+async function closeClient(client) { try { await client.end(); } catch {} }
 const MAX_SERIALIZABLE_ATTEMPTS = 4;
 const SERIALIZABLE_RETRY_BASE_DELAY_MS = 15;
-
-function isRetryableTransactionError(error) {
-  return error instanceof NeonOrderStoreError
-    && error.code === 'ORDER_STORE_RETRYABLE';
-}
-
-function transactionRetryDelay(attempt) {
-  return SERIALIZABLE_RETRY_BASE_DELAY_MS * (2 ** (attempt - 1));
-}
-
-async function waitForTransactionRetry(attempt) {
-  await new Promise((resolve) => {
-    setTimeout(resolve, transactionRetryDelay(attempt));
-  });
-}
+function isRetryableTransactionError(error) { return error instanceof NeonOrderStoreError && error.code === 'ORDER_STORE_RETRYABLE'; }
+function transactionRetryDelay(attempt) { return SERIALIZABLE_RETRY_BASE_DELAY_MS * (2 ** (attempt - 1)); }
+async function waitForTransactionRetry(attempt) { await new Promise((resolve) => setTimeout(resolve, transactionRetryDelay(attempt))); }
 
 async function withSerializableTransaction(clientFactory, connectionString, action) {
   let lastError;
-
   for (let attempt = 1; attempt <= MAX_SERIALIZABLE_ATTEMPTS; attempt += 1) {
     const client = validateClient(await clientFactory(connectionString));
     let transactionStarted = false;
@@ -282,40 +199,21 @@ async function withSerializableTransaction(clientFactory, connectionString, acti
       transactionStarted = false;
       return result;
     } catch (error) {
-      if (transactionStarted) {
-        try {
-          await client.query('ROLLBACK');
-        } catch {
-          // Preserve the original transaction error.
-        }
-      }
-
+      if (transactionStarted) { try { await client.query('ROLLBACK'); } catch {} }
       const normalized = normalizeDatabaseError(error);
       lastError = normalized;
-      if (!isRetryableTransactionError(normalized)
-        || attempt === MAX_SERIALIZABLE_ATTEMPTS) {
-        throw normalized;
-      }
-    } finally {
-      await closeClient(client);
-    }
-
+      if (!isRetryableTransactionError(normalized) || attempt === MAX_SERIALIZABLE_ATTEMPTS) throw normalized;
+    } finally { await closeClient(client); }
     await waitForTransactionRetry(attempt);
   }
-
   throw lastError;
 }
 
 async function withClient(clientFactory, connectionString, action) {
   const client = validateClient(await clientFactory(connectionString));
-  try {
-    await client.connect();
-    return await action(client);
-  } catch (error) {
-    throw normalizeDatabaseError(error);
-  } finally {
-    await closeClient(client);
-  }
+  try { await client.connect(); return await action(client); }
+  catch (error) { throw normalizeDatabaseError(error); }
+  finally { await closeClient(client); }
 }
 
 const INSERT_PENDING_ORDER = `
@@ -333,24 +231,12 @@ const INSERT_PENDING_ORDER = `
   ON CONFLICT (reference) DO NOTHING
   RETURNING *
 `;
-
-const SELECT_ORDER = `
-  SELECT *
-  FROM legend_commerce.orders
-  WHERE reference = $1
-`;
-
+const SELECT_ORDER = `SELECT * FROM legend_commerce.orders WHERE reference = $1`;
 const SELECT_ORDER_FOR_UPDATE = `${SELECT_ORDER} FOR UPDATE`;
 
-export function createNeonOrderStore({
-  connectionString = process.env.DATABASE_URL,
-  clientFactory = createDefaultNeonClient,
-} = {}) {
+export function createNeonOrderStore({ connectionString = process.env.DATABASE_URL, clientFactory = createDefaultNeonClient } = {}) {
   const databaseUrl = validateNeonConnectionString(connectionString);
-  if (typeof clientFactory !== 'function') {
-    fail('INVALID_NEON_CLIENT_FACTORY', 'A Neon client factory is required.');
-  }
-
+  if (typeof clientFactory !== 'function') fail('INVALID_NEON_CLIENT_FACTORY', 'A Neon client factory is required.');
   return Object.freeze({
     async persistPendingCheckout(orderInput) {
       const expected = normalizePendingOrder(orderInput);
@@ -361,25 +247,18 @@ export function createNeonOrderStore({
           assertSamePendingOrder(order, expected);
           return { created: true, order: clone(order) };
         }
-
-        const existingResult = await client.query(
-          SELECT_ORDER_FOR_UPDATE,
-          [expected.reference],
-        );
+        const existingResult = await client.query(SELECT_ORDER_FOR_UPDATE, [expected.reference]);
         const existing = rowToOrder(existingResult.rows?.[0]);
-        if (!existing) {
-          fail('ORDER_STORE_CONFLICT', 'The existing checkout order could not be loaded.');
-        }
+        if (!existing) fail('ORDER_STORE_CONFLICT', 'The existing checkout order could not be loaded.');
         assertSamePendingOrder(existing, expected);
         return { created: false, order: clone(existing) };
       });
     },
-
     async getOrderByReference(referenceInput) {
       const reference = validateReference(referenceInput);
       return withClient(clientFactory, databaseUrl, async (client) => {
         const result = await client.query(SELECT_ORDER, [reference]);
-        const order = rowToOrder(result.rows?.[0]);
+        const order = rowToOrder(result.rows?.[0], { includeDocumentProfile: true });
         return order ? clone(order) : null;
       });
     },

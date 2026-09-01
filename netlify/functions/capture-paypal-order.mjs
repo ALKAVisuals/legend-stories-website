@@ -4,12 +4,17 @@ import {
   getCommerceOrderStore,
   unexpectedCommerceFunctionResponse,
 } from '../../server/netlify/commerce-runtime.mjs';
+import { createNeonPaidOrderFinalizer } from '../../server/adapters/neon-paid-order-finalizer.mjs';
 import { createPaidOrderNotificationRuntime } from '../../server/netlify/paid-order-notification-runtime.mjs';
+import { createV3PaidFinalizationRuntime } from '../../server/netlify/v3-paid-finalization-runtime.mjs';
 
 export function createNetlifyPayPalCaptureHandler({
   env = process.env,
   storeFactory,
   notificationRuntimeFactory = createPaidOrderNotificationRuntime,
+  v3PaidFinalization = null,
+  v3PaidFinalizationRuntimeFactory = createV3PaidFinalizationRuntime,
+  v3PaidFinalizerFactory = createNeonPaidOrderFinalizer,
   handlerOptions = {},
 } = {}) {
   return async function netlifyPayPalCaptureHandler(request) {
@@ -17,10 +22,17 @@ export function createNetlifyPayPalCaptureHandler({
       const orderStore = getCommerceOrderStore({ env, storeFactory });
       const reconcilePaidOrderNotifications = handlerOptions.reconcilePaidOrderNotifications
         || notificationRuntimeFactory({ env });
+      const finalizePaidOrder = handlerOptions.finalizePaidOrder
+        || v3PaidFinalizationRuntimeFactory({
+          env,
+          config: v3PaidFinalization,
+          finalizerFactory: v3PaidFinalizerFactory,
+        });
       return await handleCapturePayPalOrder(request, {
         ...handlerOptions,
         env,
         orderStore,
+        finalizePaidOrder,
         reconcilePaidOrderNotifications,
       });
     } catch (error) {

@@ -1,4 +1,5 @@
 import { handlePayPalWebhook } from '../../server/api/paypal-webhook.mjs';
+import { createNeonPaidOrderFinalizer } from '../../server/adapters/neon-paid-order-finalizer.mjs';
 import {
   PayPalConfigurationError,
   createPayPalApiClient,
@@ -6,6 +7,7 @@ import {
 import { createPayPalWebhookReconciler } from '../../server/payments/paypal-webhook-reconciliation.mjs';
 import { getCommerceOrderStore } from '../../server/netlify/commerce-runtime.mjs';
 import { createPaidOrderNotificationRuntime } from '../../server/netlify/paid-order-notification-runtime.mjs';
+import { createV3PaidFinalizationRuntime } from '../../server/netlify/v3-paid-finalization-runtime.mjs';
 
 function bootstrapErrorResponse(status, code, message) {
   return new Response(JSON.stringify({ error: { code, message } }), {
@@ -35,7 +37,11 @@ export function createNetlifyPayPalWebhookHandler({
   clientFactory = createPayPalApiClient,
   storeFactory,
   notificationRuntimeFactory = createPaidOrderNotificationRuntime,
+  v3PaidFinalization = null,
+  v3PaidFinalizationRuntimeFactory = createV3PaidFinalizationRuntime,
+  v3PaidFinalizerFactory = createNeonPaidOrderFinalizer,
   processVerifiedEvent,
+  reconcilerOptions = {},
 } = {}) {
   return async function netlifyPayPalWebhookHandler(request) {
     let paypalClient;
@@ -55,9 +61,17 @@ export function createNetlifyPayPalWebhookHandler({
         } catch (error) {
           safeNotificationBootstrapLog(error);
         }
+        const finalizePaidOrder = reconcilerOptions.finalizePaidOrder
+          || v3PaidFinalizationRuntimeFactory({
+            env,
+            config: v3PaidFinalization,
+            finalizerFactory: v3PaidFinalizerFactory,
+          });
         processor = createPayPalWebhookReconciler({
+          ...reconcilerOptions,
           orderStore,
           paypalClient,
+          finalizePaidOrder,
           reconcilePaidOrderNotifications,
         });
       }

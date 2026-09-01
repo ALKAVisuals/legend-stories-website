@@ -198,12 +198,27 @@ function assertReservedOrder(order, expected, mode, { requireAmount = true } = {
   }
 }
 
+function isProfile1(order) {
+  return Number(order?.documentProfileVersion || 0) === 1;
+}
+
+function requireV3Finalizer(finalizePaidOrder) {
+  if (typeof finalizePaidOrder !== 'function') {
+    fail(
+      'V3_PAID_FINALIZER_NOT_CONFIGURED',
+      'The V3 paid-order finalizer is not configured.',
+    );
+  }
+}
+
 export function createPayPalWebhookReconciler({
   orderStore,
   paypalClient,
+  finalizePaidOrder = null,
   reconcilePaidOrderNotifications = null,
   logger = console,
   fallbackCapturedAt = () => Math.floor(Date.now() / 1000),
+  webhookProcessedAt = () => Math.floor(Date.now() / 1000),
 } = {}) {
   if (typeof orderStore?.getOrderByReference !== 'function'
     || typeof orderStore?.processPaypalWebhookEvent !== 'function') {
@@ -212,6 +227,9 @@ export function createPayPalWebhookReconciler({
   if (!paypalClient || !['test', 'live'].includes(paypalClient.mode)) {
     fail('PAYPAL_WEBHOOK_CLIENT_NOT_CONFIGURED', 'PayPal webhook API client is not configured.');
   }
+  if (typeof webhookProcessedAt !== 'function') {
+    fail('PAYPAL_WEBHOOK_CLOCK_NOT_CONFIGURED', 'PayPal webhook processing clock is not configured.');
+  }
 
   const persist = (mutation) => persistWebhookEvent({
     orderStore,
@@ -219,6 +237,41 @@ export function createPayPalWebhookReconciler({
     reconcilePaidOrderNotifications,
     logger,
   });
+
+  const finalizeV3 = async ({
+    reserved,
+    parsed,
+    mode,
+    paidAt,
+    captureId,
+    source,
+  }) => {
+    requireV3Finalizer(finalizePaidOrder);
+    const processedAt = Number(webhookProcessedAt());
+    const finalized = await finalizePaidOrder({
+      reference: parsed.reference,
+      provider: 'paypal',
+      providerOrderId: parsed.orderId,
+      providerCaptureId: captureId || null,
+      providerEventId: parsed.eventId,
+      providerEventType: parsed.eventType,
+      providerEventCreatedAt: parsed.createdAt,
+      providerEventProcessedAt: processedAt,
+      source,
+      amountTotal: reserved.amountTotal,
+      currency: reserved.currency,
+      mode,
+      paidAt,
+    });
+    if (finalized?.order?.status === 'paid') {
+      await attemptPaidOrderNotifications(
+        reconcilePaidOrderNotifications,
+        finalized.order,
+        logger,
+      );
+    }
+    return finalized;
+  };
 
   return async function processVerifiedPayPalEvent({ event, mode } = {}) {
     const eventType = String(event?.event_type || '').trim().toUpperCase();
@@ -235,12 +288,27 @@ export function createPayPalWebhookReconciler({
       assertReservedOrder(reserved, parsed, mode);
 
       if (reserved.status === 'paid') {
+        if (isProfile1(reserved)) {
+          return finalizeV3({
+            reserved,
+            parsed,
+            mode,
+            paidAt: reserved.paidAt,
+            captureId: null,
+            source: 'paypal_webhook_checkout_approved_existing_paid',
+          });
+        }
         return persist({
           ...parsed,
           mode,
           targetStatus: 'paid',
           mutationAt: parsed.createdAt,
         });
+      }
+
+      if (isProfile1(reserved)) {
+        // Fail before contacting PayPal when V3 document issuance is inactive/incomplete.
+        requireV3Finalizer(finalizePaidOrder);
       }
 
       if (typeof paypalClient.captureOrder !== 'function') {
@@ -256,6 +324,18 @@ export function createPayPalWebhookReconciler({
         currency: reserved.currency,
         fallbackCapturedAt: fallbackCapturedAt(),
       });
+
+      if (isProfile1(reserved)) {
+        return finalizeV3({
+          reserved,
+          parsed,
+          mode,
+          paidAt: capture.capturedAt,
+          captureId: capture.captureIds[0] || null,
+          source: 'paypal_webhook_checkout_approved_recovery',
+        });
+      }
+
       return persist({
         ...parsed,
         captureId: capture.captureIds[0] || null,
@@ -281,6 +361,18 @@ export function createPayPalWebhookReconciler({
     if (eventType === 'PAYMENT.CAPTURE.COMPLETED') {
       if (parsed.resourceStatus !== 'COMPLETED') {
         fail('INVALID_PAYPAL_WEBHOOK_EVENT', 'Completed capture webhook has a non-completed resource.');
+      }
+      const reserved = await orderStore.getOrderByReference(parsed.reference);
+      assertReservedOrder(reserved, parsed, mode);
+      if (isProfile1(reserved)) {
+        return finalizeV3({
+          reserved,
+          parsed,
+          mode,
+          paidAt: parsed.mutationAt,
+          captureId: parsed.captureId,
+          source: 'paypal_webhook_capture_completed',
+        });
       }
       return persist({ ...parsed, mode, targetStatus: 'paid' });
     }

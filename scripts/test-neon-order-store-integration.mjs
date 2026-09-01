@@ -3,6 +3,8 @@ import {
   createNeonOrderStore,
   validateNeonConnectionString,
 } from '../server/adapters/neon-order-store.mjs';
+import { createNeonDocumentNumberAllocator } from '../server/adapters/neon-document-number-allocator.mjs';
+import { createNeonPaidOrderFinalizer } from '../server/adapters/neon-paid-order-finalizer.mjs';
 import { createNeonPayPalWebhookStore } from '../server/adapters/neon-paypal-webhook-store.mjs';
 import { createNeonWithdrawalStore } from '../server/adapters/neon-withdrawal-store.mjs';
 import { createPendingOrderRecord } from '../server/orders/order-status.mjs';
@@ -26,6 +28,15 @@ const PAYPAL_EVENT_ID = 'WH-SYNTHETIC-PAYPAL-001';
 const PAYPAL_CUSTOMER_EMAIL = 'paypal-integration@example.invalid';
 const WITHDRAWAL_CONSUMER_NAME = 'PayPal Integration';
 const WITHDRAWAL_AT = 1_800_100_020;
+const DOCUMENT_NUMBER_AT = 1_800_100_030;
+const FINALIZER_FIRST_REFERENCE = 'a'.repeat(64);
+const FINALIZER_RACE_REFERENCE = 'b'.repeat(64);
+const FINALIZER_ROLLBACK_REFERENCE = 'c'.repeat(64);
+const FINALIZER_FIRST_ORDER_ID = 'FINALIZERFIRST001';
+const FINALIZER_RACE_ORDER_ID = 'FINALIZERRACE001';
+const FINALIZER_ROLLBACK_ORDER_ID = 'FINALIZERROLLBACK001';
+const FINALIZER_CREATED_AT = 1_800_200_000;
+const FINALIZER_PAID_AT = 1_800_200_100;
 
 async function withClient(connectionString, action) {
   const client = await createDefaultNeonClient(connectionString);
@@ -42,8 +53,11 @@ async function clearSyntheticRecords() {
     TRUNCATE TABLE
       legend_commerce.withdrawal_acknowledgements,
       legend_commerce.withdrawal_requests,
+      legend_commerce.order_notifications,
       legend_commerce.paypal_webhook_events,
       legend_commerce.stripe_events,
+      legend_commerce.invoices,
+      legend_commerce.document_number_series,
       legend_commerce.orders
   `));
 }
@@ -103,6 +117,221 @@ function paypalPendingOrder() {
       grandTotal: 4500,
     },
   };
+}
+
+function finalizerPendingOrder({ reference, orderId, createdAt }) {
+  return {
+    ...createPendingOrderRecord({
+      reference,
+      amountTotal: 2995,
+      currency: 'EUR',
+      mode: 'test',
+      paymentSessionId: orderId,
+      createdAt,
+    }),
+    customer: {
+      firstname: 'Neon',
+      lastname: 'Finalizer',
+      email: 'finalizer-buyer@example.invalid',
+      street: 'Shipping Street 1',
+      line2: '',
+      zip: '1234AB',
+      city: 'Testville',
+      country: 'NL',
+    },
+    items: [{
+      productId: 'LM-2026-00001',
+      slug: 'synthetic-test-product',
+      page: '/synthetic-test-product.html',
+      sku: 'SYNTHETIC-45',
+      name: 'Synthetic Test Product — Standard (45 cm)',
+      image: '/media/synthetic-test-product.png',
+      variantId: 'standard-45',
+      variantLabel: 'Standard',
+      sizeLabel: '45 cm',
+      widthCm: 45,
+      heightCm: 45,
+      longestSideCm: 45,
+      sizeCm: 45,
+      unitPrice: 12.5,
+      quantity: 2,
+      lineTotal: 25,
+    }],
+    discount: {
+      code: 'TEST20',
+      percent: 20,
+      amount: 5,
+    },
+    shipping: {
+      deliveryCountry: 'NL',
+      zoneCode: 'NL',
+      zone: 'Synthetic Netherlands',
+      cost: 9.95,
+      freeFrom: null,
+      qualifiesForFreeShipping: false,
+    },
+    totals: {
+      subtotal: 2500,
+      discount: 500,
+      discountedSubtotal: 2000,
+      shipping: 995,
+      grandTotal: 2995,
+    },
+  };
+}
+
+function finalizerPayment({ reference, orderId, paidAt }) {
+  return {
+    reference,
+    provider: 'paypal',
+    providerOrderId: orderId,
+    providerCaptureId: `CAPTURE-${orderId}`,
+    amountTotal: 2995,
+    currency: 'EUR',
+    mode: 'test',
+    paidAt,
+    source: 'isolated_neon_finalizer_test',
+  };
+}
+
+function finalizerDocumentContext() {
+  return {
+    seller: {
+      legalName: 'Synthetic Seller B.V.',
+      tradingName: 'Synthetic Seller',
+      registrationNumber: 'TEST-REGISTRATION',
+      vatIdentificationNumber: 'TEST-VAT-ID',
+      invoiceEmail: 'invoices@example.invalid',
+      supportEmail: 'support@example.invalid',
+      website: 'https://example.invalid',
+      address: {
+        street: 'Seller Street 1',
+        postalCode: '5678CD',
+        city: 'Seller City',
+        countryCode: 'NL',
+      },
+    },
+    billingAddress: {
+      street: 'Billing Street 9',
+      postalCode: '9999ZZ',
+      city: 'Billing City',
+      countryCode: 'NL',
+    },
+    tax: {
+      treatmentCode: 'synthetic-test-treatment',
+      jurisdictionCode: 'TEST-NL',
+      pricingBasis: 'not_applicable',
+      taxableAmountCents: 0,
+      taxAmountCents: 0,
+      rateBasisPoints: null,
+      legalText: 'Synthetic isolated-Neon test fixture only.',
+    },
+  };
+}
+
+function createFinalizer(seriesPrefix, documentContextProvider = finalizerDocumentContext) {
+  return createNeonPaidOrderFinalizer({
+    connectionString: runtimeUrl,
+    numberingPolicy: {
+      resolveSeriesKey({ documentType }) {
+        return `${seriesPrefix}-${documentType}`;
+      },
+      format({ documentType, value }) {
+        return `TEST-${seriesPrefix.toUpperCase()}-${documentType.toUpperCase()}-${String(value).padStart(6, '0')}`;
+      },
+    },
+    documentContextProvider,
+  });
+}
+
+async function seedProfile1PendingOrder({ reference, orderId, createdAt }) {
+  const orderStore = createNeonOrderStore({ connectionString: runtimeUrl });
+  const persisted = await orderStore.persistPendingCheckout(finalizerPendingOrder({
+    reference,
+    orderId,
+    createdAt,
+  }));
+  if (!persisted.created || persisted.order.status !== 'payment_pending') {
+    throw new Error('Could not persist the synthetic profile-1 finalizer checkout fixture.');
+  }
+
+  await withClient(migrationUrl, async (client) => {
+    const result = await client.query(
+      `UPDATE legend_commerce.orders
+       SET document_profile_version = 1
+       WHERE reference = $1
+         AND status = 'payment_pending'
+         AND document_profile_version = 0
+       RETURNING reference`,
+      [reference],
+    );
+    if (result.rows?.[0]?.reference !== reference) {
+      throw new Error('Could not promote the isolated fixture to document profile 1.');
+    }
+  });
+}
+
+async function readFinalizerState({ reference, seriesPrefix }) {
+  return withClient(migrationUrl, async (client) => {
+    const orderResult = await client.query(
+      `SELECT reference, status, paid_at, order_number, order_number_assigned_at,
+              invoice_id, document_profile_version, version
+       FROM legend_commerce.orders
+       WHERE reference = $1`,
+      [reference],
+    );
+    const invoicesResult = await client.query(
+      `SELECT id, order_reference, order_number, invoice_number, status, issued_at,
+              currency, amount_total, schema_version, snapshot
+       FROM legend_commerce.invoices
+       WHERE order_reference = $1
+       ORDER BY id`,
+      [reference],
+    );
+    const seriesResult = await client.query(
+      `SELECT document_type, series_key, next_value
+       FROM legend_commerce.document_number_series
+       WHERE series_key IN ($1, $2)
+       ORDER BY document_type`,
+      [`${seriesPrefix}-order`, `${seriesPrefix}-invoice`],
+    );
+    return {
+      order: orderResult.rows?.[0] || null,
+      invoices: invoicesResult.rows || [],
+      series: seriesResult.rows || [],
+    };
+  });
+}
+
+function assertSingleDurableFinalizerIdentity(state, { reference, expectedValue = 1 }) {
+  if (!state.order
+    || state.order.reference !== reference
+    || state.order.status !== 'paid'
+    || Number(state.order.document_profile_version) !== 1
+    || !state.order.order_number
+    || !state.order.invoice_id
+    || state.invoices.length !== 1) {
+    throw new Error('Profile-1 finalizer did not persist exactly one durable paid identity.');
+  }
+
+  const invoice = state.invoices[0];
+  if (Number(invoice.id) !== Number(state.order.invoice_id)
+    || invoice.order_reference !== reference
+    || invoice.order_number !== state.order.order_number
+    || invoice.status !== 'issued'
+    || Number(invoice.schema_version) !== 1
+    || invoice.snapshot?.schemaVersion !== 1
+    || invoice.snapshot?.document?.orderNumber !== state.order.order_number
+    || invoice.snapshot?.document?.invoiceNumber !== invoice.invoice_number
+    || invoice.snapshot?.order?.reference !== reference
+    || Number(invoice.snapshot?.totals?.grandTotalCents) !== 2995) {
+    throw new Error('Persisted invoice snapshot/linkage does not match the paid order identity.');
+  }
+
+  if (state.series.length !== 2
+    || state.series.some((row) => Number(row.next_value) !== expectedValue + 1)) {
+    throw new Error('Finalizer document counters did not advance exactly once.');
+  }
 }
 
 async function verifyPaypalProviderCompatibilityAndReconciliation() {
@@ -199,6 +428,188 @@ async function verifyWithdrawalPersistence() {
   }
 }
 
+async function verifyDocumentNumberAllocator() {
+  const allocator = createNeonDocumentNumberAllocator({ connectionString: runtimeUrl });
+  const concurrentKey = 'gate2-concurrent';
+
+  const allocations = await Promise.all([
+    allocator.transact(({ allocate }) => allocate({
+      documentType: 'order',
+      seriesKey: concurrentKey,
+      updatedAt: DOCUMENT_NUMBER_AT,
+    })),
+    allocator.transact(({ allocate }) => allocate({
+      documentType: 'order',
+      seriesKey: concurrentKey,
+      updatedAt: DOCUMENT_NUMBER_AT + 1,
+    })),
+  ]);
+  const allocatedValues = allocations.map(({ value }) => value).sort((a, b) => a - b);
+  if (allocatedValues[0] !== 1 || allocatedValues[1] !== 2) {
+    throw new Error(`Concurrent document allocation returned ${allocatedValues.join(',')} instead of 1,2.`);
+  }
+
+  await withClient(runtimeUrl, async (client) => {
+    const seriesResult = await client.query(
+      `SELECT next_value
+       FROM legend_commerce.document_number_series
+       WHERE document_type = 'order' AND series_key = $1`,
+      [concurrentKey],
+    );
+    if (Number(seriesResult.rows?.[0]?.next_value) !== 3) {
+      throw new Error('Concurrent document allocation did not persist next_value=3.');
+    }
+  });
+
+  const rollbackKey = 'gate2-rollback';
+  try {
+    await allocator.transact(async ({ allocate }) => {
+      const allocation = await allocate({
+        documentType: 'invoice',
+        seriesKey: rollbackKey,
+        updatedAt: DOCUMENT_NUMBER_AT + 2,
+      });
+      if (allocation.value !== 1) {
+        throw new Error('Rollback precondition did not allocate value 1.');
+      }
+      const rollback = new Error('Synthetic rollback after document number allocation.');
+      rollback.code = 'EXPECTED_DOCUMENT_NUMBER_ROLLBACK';
+      throw rollback;
+    });
+    throw new Error('Document number rollback transaction unexpectedly committed.');
+  } catch (error) {
+    if (error?.code !== 'EXPECTED_DOCUMENT_NUMBER_ROLLBACK') throw error;
+  }
+
+  const afterRollback = await allocator.transact(({ allocate }) => allocate({
+    documentType: 'invoice',
+    seriesKey: rollbackKey,
+    updatedAt: DOCUMENT_NUMBER_AT + 3,
+  }));
+  if (afterRollback.value !== 1 || afterRollback.nextValue !== 2) {
+    throw new Error('Rolled-back document number was burned instead of becoming reusable.');
+  }
+}
+
+async function verifyProfile1PaidFinalizerOnRealNeon() {
+  await seedProfile1PendingOrder({
+    reference: FINALIZER_FIRST_REFERENCE,
+    orderId: FINALIZER_FIRST_ORDER_ID,
+    createdAt: FINALIZER_CREATED_AT,
+  });
+  const firstFinalizer = createFinalizer('gate3-first');
+  const firstPayment = finalizerPayment({
+    reference: FINALIZER_FIRST_REFERENCE,
+    orderId: FINALIZER_FIRST_ORDER_ID,
+    paidAt: FINALIZER_PAID_AT,
+  });
+  const first = await firstFinalizer.finalizePaidOrder(firstPayment);
+  if (first.duplicate || first.legacy || first.order.status !== 'paid') {
+    throw new Error('First real-Neon profile-1 finalization did not create a new paid V3 identity.');
+  }
+  const firstState = await readFinalizerState({
+    reference: FINALIZER_FIRST_REFERENCE,
+    seriesPrefix: 'gate3-first',
+  });
+  assertSingleDurableFinalizerIdentity(firstState, {
+    reference: FINALIZER_FIRST_REFERENCE,
+  });
+
+  const duplicate = await firstFinalizer.finalizePaidOrder(firstPayment);
+  if (!duplicate.duplicate
+    || duplicate.order.orderNumber !== first.order.orderNumber
+    || duplicate.invoice.invoiceNumber !== first.invoice.invoiceNumber) {
+    throw new Error('Duplicate real-Neon finalization did not return the existing durable identity.');
+  }
+  const duplicateState = await readFinalizerState({
+    reference: FINALIZER_FIRST_REFERENCE,
+    seriesPrefix: 'gate3-first',
+  });
+  assertSingleDurableFinalizerIdentity(duplicateState, {
+    reference: FINALIZER_FIRST_REFERENCE,
+  });
+
+  await seedProfile1PendingOrder({
+    reference: FINALIZER_RACE_REFERENCE,
+    orderId: FINALIZER_RACE_ORDER_ID,
+    createdAt: FINALIZER_CREATED_AT + 10,
+  });
+  const raceFinalizer = createFinalizer('gate3-race');
+  const racePayment = finalizerPayment({
+    reference: FINALIZER_RACE_REFERENCE,
+    orderId: FINALIZER_RACE_ORDER_ID,
+    paidAt: FINALIZER_PAID_AT + 10,
+  });
+  const raceResults = await Promise.all([
+    raceFinalizer.finalizePaidOrder(racePayment),
+    raceFinalizer.finalizePaidOrder(racePayment),
+  ]);
+  if (raceResults.filter((result) => result.duplicate === false).length !== 1
+    || raceResults.filter((result) => result.duplicate === true).length !== 1
+    || raceResults[0].order.orderNumber !== raceResults[1].order.orderNumber
+    || raceResults[0].invoice.invoiceNumber !== raceResults[1].invoice.invoiceNumber) {
+    throw new Error('Concurrent real-Neon finalizations did not converge on one durable identity.');
+  }
+  const raceState = await readFinalizerState({
+    reference: FINALIZER_RACE_REFERENCE,
+    seriesPrefix: 'gate3-race',
+  });
+  assertSingleDurableFinalizerIdentity(raceState, {
+    reference: FINALIZER_RACE_REFERENCE,
+  });
+
+  await seedProfile1PendingOrder({
+    reference: FINALIZER_ROLLBACK_REFERENCE,
+    orderId: FINALIZER_ROLLBACK_ORDER_ID,
+    createdAt: FINALIZER_CREATED_AT + 20,
+  });
+  const rollbackPayment = finalizerPayment({
+    reference: FINALIZER_ROLLBACK_REFERENCE,
+    orderId: FINALIZER_ROLLBACK_ORDER_ID,
+    paidAt: FINALIZER_PAID_AT + 20,
+  });
+  const failingFinalizer = createFinalizer('gate3-rollback', () => ({
+    ...finalizerDocumentContext(),
+    tax: null,
+  }));
+  let rollbackFailed = false;
+  try {
+    await failingFinalizer.finalizePaidOrder(rollbackPayment);
+  } catch {
+    rollbackFailed = true;
+  }
+  if (!rollbackFailed) {
+    throw new Error('Invalid snapshot context unexpectedly committed the rollback finalizer fixture.');
+  }
+
+  const rolledBackState = await readFinalizerState({
+    reference: FINALIZER_ROLLBACK_REFERENCE,
+    seriesPrefix: 'gate3-rollback',
+  });
+  if (!rolledBackState.order
+    || rolledBackState.order.status !== 'payment_pending'
+    || rolledBackState.order.order_number !== null
+    || rolledBackState.order.invoice_id !== null
+    || rolledBackState.invoices.length !== 0
+    || rolledBackState.series.length !== 0) {
+    throw new Error('Failed real-Neon finalization did not roll back order, invoice, and counters atomically.');
+  }
+
+  const recovered = await createFinalizer('gate3-rollback').finalizePaidOrder(rollbackPayment);
+  if (recovered.duplicate
+    || !recovered.order.orderNumber.endsWith('-000001')
+    || !recovered.invoice.invoiceNumber.endsWith('-000001')) {
+    throw new Error('Post-rollback finalization burned an official document number.');
+  }
+  const recoveredState = await readFinalizerState({
+    reference: FINALIZER_ROLLBACK_REFERENCE,
+    seriesPrefix: 'gate3-rollback',
+  });
+  assertSingleDurableFinalizerIdentity(recoveredState, {
+    reference: FINALIZER_ROLLBACK_REFERENCE,
+  });
+}
+
 async function inspectRuntimePrivilegeBoundary() {
   return withClient(runtimeUrl, async (client) => {
     let leastPrivilegeVerified = true;
@@ -240,6 +651,8 @@ try {
   await clearSyntheticRecords();
   await verifyPaypalProviderCompatibilityAndReconciliation();
   await verifyWithdrawalPersistence();
+  await verifyDocumentNumberAllocator();
+  await verifyProfile1PaidFinalizerOnRealNeon();
   const leastPrivilegeVerified = await inspectRuntimePrivilegeBoundary();
 
   console.log(
@@ -254,6 +667,13 @@ try {
   console.log('- PayPal webhook event ledger accepts immutable runtime reservations');
   console.log('- withdrawal registration persists with a durable acknowledgement snapshot');
   console.log('- acknowledgement delivery metadata is retryable without mutating the withdrawal statement snapshot');
+  console.log('- V3 document number allocator serializes concurrent allocations without duplicates');
+  console.log('- V3 document number allocation rolls back without burning a number');
+  console.log('- V3 profile-1 paid finalizer creates one durable order/invoice identity on real Neon');
+  console.log('- duplicate V3 paid finalization reuses the existing durable identity without reallocating');
+  console.log('- concurrent V3 paid finalizations converge on exactly one durable invoice/order identity');
+  console.log('- failed V3 finalization rolls back order, invoice, and document counters atomically');
+  console.log('- retry after V3 rollback reuses document value 1 without burning an official number');
 
   if (leastPrivilegeVerified) {
     console.log('- least-privilege runtime role');
