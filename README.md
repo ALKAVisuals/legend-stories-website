@@ -1,290 +1,210 @@
 # LegendMural storefront
 
-Premium, mobile-first e-commerce storefront voor LegendMural. De website verkoopt matte vinyl muurstickers rond sport-, muziek-, combat- en wisdom-legendes en is gebouwd met statische HTML, Tailwind CSS, Vanilla JavaScript en Vite.
+Public LegendMural e-commerce storefront for matte vinyl wall stickers. The repository contains the storefront, central product data, generated product pages, server-authoritative commerce, Neon Postgres order persistence and Netlify Functions for the PayPal/order flow.
 
-De repository bevat naast de storefront ook centrale productdata, productpaginageneratie, autoritatieve server-side commerce, een Neon Postgres order-store en Netlify Functions voor de betaal- en orderflow.
+> **New chat / continuation:** read [`docs/READ_ME_FIRST.md`](docs/READ_ME_FIRST.md) first. The current operational handoff is [`docs/CURRENT_PRODUCTION_STATUS_20260901.md`](docs/CURRENT_PRODUCTION_STATUS_20260901.md). GitHub is the source of truth; older chat history and dated handoffs do not override those files.
 
-## Huidige architectuurbeslissingen
+## Current launch state — 1 September 2026
 
 - **Production host:** Netlify.
-- **Payment provider voor launch:** PayPal-only.
-- **Orderdatabase:** Neon Postgres.
-- **Productcatalogus:** 111 producten verdeeld over 6 batches.
-- **Live betalingen:** nog niet geactiveerd.
-- **Stripe:** nog tijdelijk aanwezig als legacy/fallbackcode totdat de volledige PayPal Sandbox + Neon end-to-end flow bewezen is; Stripe is geen doelprovider voor launch.
-- **GitHub Pages:** uitgeschakeld en geen production target.
+- **Canonical intended origin:** `https://legendmural.com`.
+- **Launch payment provider:** PayPal-only.
+- **Order database:** Neon Postgres.
+- **Product catalogue:** 111 products / 6 batches.
+- **Current `main` at the latest documented handoff:** `39345bba9c1196ea68bad9c2a83f3aed5c1b3d8e`.
+- **PR #153:** merged; V3 Gate 2 foundation is present, but profile 1 remains inactive by default and production migrations/live invoice issuance are not activated.
+- **Netlify Production:** final current release not yet intentionally cut over and approved.
+- **PayPal Live:** not yet proven for this final release.
+- **Production order emails:** reserved for the controlled final proof.
+- **Current overall internal launch-readiness estimate:** about **74%**.
 
-## Belangrijkste kenmerken
+The next work is **not** a Production deployment. First close the remaining launch-readiness/legal consistency blockers described in the current status handoff.
 
-- alle 111 productpagina’s worden vanuit één gedeelde template en centrale data gegenereerd;
-- centrale prijs-, kortings- en verzendregels;
-- server-side autoritatieve orderberekening in gehele eurocenten;
-- PayPal create-order en capture flow met sandbox-first/live guardrails;
-- duurzame pending-order- en paid-statusopslag in Neon Postgres;
-- Netlify Functions voor PayPal checkout, PayPal capture en orderstatus;
-- Stripecode blijft uitsluitend tijdelijk aanwezig voor gecontroleerde migratie/rollback totdat PayPal staging volledig bewezen is;
-- geoptimaliseerde video- en productafbeeldingen met objectieve kwaliteitsgrenzen;
-- permanente repository-, media-, commerce-, database-, accessibility- en buildvalidatie;
-- Netlify is de enige beoogde production host.
+## Current readiness summary
 
-## Huidige status
+| Area | Readiness |
+|---|---:|
+| Storefront UI/content core | 95% |
+| Commerce backend / PayPal / Neon pre-production architecture | 95% |
+| Company/legal information pages | 90% |
+| Privacy / AVG | 80% |
+| Cookies / tracking | 90% |
+| Returns / statutory withdrawal | 95% |
+| Checkout / payment-law readiness | 55% |
+| Pricing / shipping / commercial-claim consistency | 35% |
+| GPSR / product-safety presentation | 40% |
+| Netlify Production cutover | 0% |
+| Controlled PayPal Live + email proof | 0% |
 
-| Onderdeel | Status |
-|---|---|
-| Productcatalogus en 111 productpagina’s | Gereed en generator-managed |
-| Winkelwagen, korting en verzending | Centraal gevalideerd |
-| Autoritatieve server-side orderquote | Gereed |
-| Neon Postgres | Echte geïsoleerde integratie en conformance uitgevoerd |
-| PayPal create order | Geïmplementeerd, sandbox-first |
-| PayPal capture | Geïmplementeerd met Neon paid-persistence |
-| PayPal webhook | Nog te implementeren vóór productie |
-| Netlify Functions | Geïmplementeerd; stagingsecrets nog te configureren |
-| PayPal Sandbox E2E | Nog uit te voeren |
-| Stripe | Legacy/fallback; later gecontroleerd verwijderen |
-| GitHub Pages | Geen production target |
-| PayPal Live | Uitgeschakeld |
-| Definitieve productie-release | Nog niet vrijgegeven |
+These are internal project-tracking estimates, not legal certification.
 
-Zie [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) voor de actuele roadmap en blokkades.
+## Exact next step
 
-## Technische stack
+Create a focused storefront branch/PR that fixes only the known inconsistent public pricing, shipping, delivery and returns claims. In particular, make the public storefront consistent with the authoritative launch rules:
 
-- **HTML5** voor de statische multi-page storefront;
-- **Tailwind CSS 3.4** en PostCSS;
-- **Vanilla JavaScript** voor cart, navigatie, productinteracties en browser checkout;
-- **Vite 6** voor de multi-page productiebuild;
-- **Node.js 20** voor de hoofd-quality gate en lokale repositorychecks;
-- **Node.js 22** voor Netlify-builds en Netlify-compatibiliteitscontrole;
-- **Neon Postgres** voor duurzame orderopslag;
-- **PayPal Orders API** als enige beoogde payment provider voor launch;
-- **Netlify** voor hosting en serverless Functions.
+- Compact: €35;
+- Statement: €45;
+- free shipping from €69 after discount;
+- NL shipping €4.95;
+- EU shipping €9.95;
+- US shipping €9.95 tracked;
+- no unsupported fixed 2–4 day delivery promise;
+- no conflicting 30-day return promise against the statutory withdrawal flow.
 
-## Snel starten
+After that: test, review, update the readiness handoff, merge only with owner approval, then continue to privacy/checkout legal finalization and GPSR.
 
-Vereisten:
+## Architecture decisions
 
-- Node.js 20 voor de standaard lokale kwaliteitsketen;
-- npm;
-- FFmpeg en FFprobe voor de volledige media-quality gate.
+- Netlify is the only intended Production host.
+- PayPal is the launch payment provider.
+- Neon Postgres is authoritative order persistence.
+- Browser prices, totals and payment state are never authoritative.
+- Capture/webhook paths are designed to reconcile safely and idempotently.
+- A browser URL/session state cannot manufacture `paid`.
+- Active Stripe checkout/runtime has been removed; historical database/audit compatibility may remain where required.
+- V3 Gate 2 code is merged but its profile-1 runtime is inactive by default.
 
-```bash
-git clone https://github.com/ALKAVisuals/legend-stories-website.git
-cd legend-stories-website
-npm ci
-npm run dev
-```
+## Commerce rules
 
-De ontwikkelserver draait standaard op:
+Current launch catalogue rules:
 
-```text
-http://localhost:3001
-```
+- **Compact:** 30 cm longest side — **€35 incl. VAT**;
+- **Statement:** 45 cm longest side — **€45 incl. VAT**;
+- **LEGEND10:** 10% discount;
+- **Netherlands:** €4.95 shipping;
+- **EU:** €9.95 shipping;
+- **United States:** €9.95 tracked shipping;
+- **free shipping:** from €69 after discount;
+- unsupported destinations are blocked.
 
-`npm run dev` genereert eerst de runtime-productregistratie en start daarna Vite.
+The central/server-side commerce model is authoritative. Public marketing copy must match it exactly.
 
-## Belangrijkste commando’s
-
-```bash
-npm run dev
-npm run build
-npm test
-npm run quality
-```
-
-Veelgebruikte gerichte controles:
-
-```bash
-npm run validate:full-catalog
-npm run validate:managed-product-pages:live
-npm run validate:commerce-runtime
-npm run validate:order-security
-npm run validate:browser-checkout
-npm run validate:order-return
-npm run validate:neon-order-store
-npm run validate:homepage-marketing-webp
-npm run validate:video-delivery
-```
-
-De quality chain bevat nog enkele Stripe-specifieke validators omdat de legacy Stripe-implementatie bewust nog niet is verwijderd. Die validators blijven tijdelijk actief totdat PayPal Sandbox + Neon volledig end-to-end bewezen is en Stripe in een aparte gecontroleerde cleanup-PR wordt verwijderd.
-
-## Projectstructuur
-
-```text
-.
-├── data/
-│   ├── products/                  # Centrale catalogus en batchpresentatie
-│   └── media/                     # Reproduceerbare media-optimalisatiemanifests
-├── docs/                          # Architectuur, status en activatie-instructies
-├── generated/
-│   └── public/                    # Gegenereerde runtime-assets voor Vite
-├── js/                            # Browserruntime en commerce-modules
-├── media/                         # Storefrontmedia en geverifieerde derivatives
-├── netlify/
-│   └── functions/                 # PayPal-, orderstatus- en tijdelijke legacy Stripe-adapters
-├── server/
-│   ├── commerce/                  # Autoritatieve order- en prijslogica
-│   ├── adapters/                  # Neon order-store adapters
-│   ├── orders/                    # Durable order- en providercontracten
-│   └── payments/                  # PayPal en tijdelijke legacy Stripe payment code
-├── scripts/                       # Generators, audits en validators
-├── templates/
-│   └── product-page.html          # Gedeelde productpaginatemplate
-├── tests/                         # Unit- en contracttests
-├── *.html                         # Homepage, collecties, returnpagina’s en producten
-├── netlify.toml
-├── package.json
-└── vite.config.mjs
-```
-
-## Productdata en productpagina’s
-
-`data/products/catalog.json` is de inhoudelijke autoriteit voor onder andere:
-
-- product-ID en slug;
-- naam en beschrijving;
-- prijs en beschikbaarheid;
-- collectie en batch;
-- productafbeelding;
-- pagina-identiteit en productmetadata.
-
-Alle 111 live productpagina’s moeten reproduceerbaar zijn vanuit de gedeelde template en hun presentatiemanifests. Handmatige wijzigingen in gegenereerde product-HTML worden door de quality gate afgekeurd.
-
-Normale workflow:
-
-1. pas centrale catalogus- of presentatiegegevens aan;
-2. genereer previews;
-3. valideer catalogus en templatecompatibiliteit;
-4. genereer de beheerde live pagina’s;
-5. voer `npm run quality` uit.
-
-## Commerce- en betalingsgrenzen
-
-De browser is nooit de autoriteit voor productnamen, prijzen, korting, verzending, totaalbedragen of betaalstatus.
-
-De server-side orderquote:
-
-- zoekt producten opnieuw op in de centrale catalogus;
-- negeert browserprijzen en browsertotalen;
-- valideert aantallen en productidentiteit;
-- past centrale korting en verzending toe;
-- rekent in gehele eurocenten;
-- levert de enige geldige basis voor PayPal en orderopslag.
-
-De beoogde launchflow is:
+## Payment/order flow
 
 ```text
 Browser
   ↓
 Netlify Function
   ↓
-autoritatieve quote
+server-authoritative quote
   ↓
 Neon pending order
   ↓
-PayPal order + approval
+PayPal order / approval
   ↓
-server capture
+capture and/or verified webhook reconciliation
   ↓
-Neon paid
+Neon authoritative paid state
   ↓
-order status / return
+order-status / confirmed return experience
 ```
 
-Voor productie wordt hier nog een **PayPal webhook + reconciliationlaag** aan toegevoegd. De browserreturn mag nooit de enige onafhankelijke bevestiging van betaling zijn.
+Current public API routes include:
 
-## PayPal
+- `/api/paypal/checkout`;
+- `/api/paypal/capture`;
+- `/api/paypal/webhook`;
+- `/api/order-status`.
 
-De huidige repository bevat:
+Current `netlify.toml` build contract:
 
-- sandbox-first PayPal API-client;
-- create-order handler;
-- capture handler;
-- PayPal browser checkout/return ondersteuning;
-- trusted PayPal hostvalidatie;
-- idempotency keys;
-- Neon capture persistence;
-- orderstatuscontrole.
+- build: `npm run build && node scripts/generate-commerce-runtime-config.mjs`;
+- publish: `dist`;
+- functions: `netlify/functions`;
+- Node.js 22 on Netlify.
 
-PayPal Live is fail-closed: live API-toegang vereist expliciete server-side enablement en aparte productiecredentials.
+## What has already been proven
 
-Zie [`docs/PAYPAL_STAGING.md`](docs/PAYPAL_STAGING.md) voor de veilige stagingvolgorde.
+The project has extensive pre-production evidence, including:
 
-## Neon-integratie
+- server-authoritative pricing/order creation;
+- PayPal Sandbox create/approval/capture;
+- isolated Neon order persistence;
+- verified PayPal webhook processing;
+- duplicate/retry idempotency;
+- capture-vs-webhook convergence;
+- browser return to server-authoritative paid confirmation;
+- mobile/WebKit checkout regression coverage;
+- real iPhone Safari mobile navigation confirmation;
+- current Company, Terms, Privacy, Shipping and Returns baselines;
+- an online statutory withdrawal function;
+- relevant release CI and quality gates from earlier release work;
+- V3 Gate 2 isolated finalizer/convergence proof while profile 1 remains off.
 
-De echte geïsoleerde Neon-integratie is uitgevoerd: migraties, order-store conformance en concurrent gedrag zijn gevalideerd. PR #74 heeft daarbij gevonden JSONB-serialisatie- en serializable-retryproblemen opgelost.
+Do not repeat solved investigations without new regression evidence.
 
-Voor productie blijven vereist:
+## Remaining launch gates
 
-- aparte productieomgeving/branch;
-- dedicated least-privilege runtime-rol;
-- backup-/restorebeleid;
-- privacy- en retentiebeleid.
+Before the final Netlify cutover:
 
-## Media en performance
+1. fix conflicting pricing/shipping/delivery/returns copy;
+2. finalize privacy retention wording and actual provider disclosures;
+3. resolve checkout/payment-obligation and Dutch advance-payment compliance;
+4. add centralized GPSR/product-safety/manufacturer information;
+5. owner confirms required commercial IP/portrait/trademark rights outside the repository;
+6. replace remaining GitHub Pages canonical/Open Graph production URLs with `legendmural.com` handling;
+7. run the full relevant quality/CI gates;
+8. freeze a new exact release SHA.
 
-Belangrijke uitgevoerde optimalisaties:
+Then:
 
-- ongebruikte media verwijderd en via audits bewaakt;
-- collectie-video’s geoptimaliseerd met SSIM/PSNR-guardrails;
-- posters en adaptief videoladen toegevoegd;
-- homepage-marketingafbeeldingen gebruiken WebP-first delivery;
-- zware transparante productafbeeldingen hebben browserderivatives;
-- originele product- en printbronnen blijven behouden.
+9. perform exactly one controlled Netlify Production cutover;
+10. run safe Production smoke tests without a real payment first;
+11. only after Production approval, perform exactly one controlled PayPal Live order and verify Neon, webhook/capture, emails, no duplicates and funds received.
 
-## Kwaliteitsketen
+## Development commands
 
-`npm run quality` controleert onder andere:
+```bash
+npm ci
+npm run dev
+npm test
+npm run build
+npm run quality
+```
 
-- repository- en linkintegriteit;
-- metadata en SEO-contracten;
-- dependencies en CSS;
-- media- en videodelivery;
-- alle 111 producten en gegenereerde productpagina’s;
-- runtime-productdata;
-- cart, korting, shipping en orderquotes;
-- browser checkout en verified return;
-- legacy Stripe-contracten zolang die code nog aanwezig is;
-- order-store contracten en Neon-architectuur;
-- unit tests;
-- Vite-build en productie-output.
+Useful targeted validation commands are defined in `package.json` and the current CI workflows. Prefer the repository’s current scripts over commands copied from historical documentation.
 
-Daarnaast bestaan aparte accessibility/purchase-flow- en Node 22 Netlify-compatibiliteitsworkflows.
+## Project structure
 
-## Releasevolgorde
+```text
+.
+├── data/                 # Central product/catalogue data
+├── docs/                 # Current handoff, architecture and historical context
+├── generated/            # Generated public/runtime assets
+├── js/                   # Browser runtime and commerce modules
+├── media/                # Storefront/product media
+├── netlify/functions/    # PayPal, order-status and related serverless entrypoints
+├── server/               # Authoritative commerce/order/payment/runtime logic
+├── scripts/              # Generators, audits and validators
+├── templates/            # Shared generated product-page templates
+├── tests/                # Unit/contract/regression tests
+├── *.html                # Storefront pages and generated product pages
+├── netlify.toml
+├── package.json
+└── vite.config.mjs
+```
 
-De huidige releasevolgorde is:
+## Documentation hierarchy
 
-1. repository/documentatie op PayPal-only architectuur brengen;
-2. PayPal webhook + idempotente reconciliation implementeren;
-3. geïsoleerde Neon staging en PayPal Sandbox rechtstreeks in Netlify configureren;
-4. volledige PayPal testbetaling end-to-end valideren;
-5. retries, refreshes, cancel/failure en duplicate events testen;
-6. daarna legacy Stripe gecontroleerd verwijderen;
-7. branding, SEO, legal/help-content en final-domain cleanup uitvoeren;
-8. productie-Neon en PayPal Live afzonderlijk goedkeuren;
-9. één gecontroleerde echte bestelling uitvoeren;
-10. pas daarna officieel releasen.
+Use this order when continuing work:
 
-## Documentatie
+1. [`docs/READ_ME_FIRST.md`](docs/READ_ME_FIRST.md) — stable entrypoint and working rules;
+2. [`docs/CURRENT_PRODUCTION_STATUS_20260901.md`](docs/CURRENT_PRODUCTION_STATUS_20260901.md) — exact current progress, blockers, percentages and next step;
+3. [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) — broader historical/architectural roadmap context;
+4. architecture/testing documents only as needed for the current step.
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — componenten, datastromen en veiligheidsgrenzen;
-- [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) — actuele status, blokkades en roadmap;
-- [`docs/DEVELOPMENT_AND_RELEASE.md`](docs/DEVELOPMENT_AND_RELEASE.md) — ontwikkel-, review-, staging- en releaseproces;
-- [`docs/PAYPAL_STAGING.md`](docs/PAYPAL_STAGING.md) — PayPal Sandbox + Neon stagingplan;
-- [`docs/NEON_INTEGRATION_ACTIVATION.md`](docs/NEON_INTEGRATION_ACTIVATION.md) — Neon-integratieharness en testveiligheid.
+Older dated release handoffs are historical snapshots unless the current status file explicitly points to them.
 
-Historische Sprint- en Stripe-documenten mogen als ontwikkelgeschiedenis blijven bestaan, maar zijn niet de bron van waarheid voor de huidige launcharchitectuur. Gebruik bij twijfel `README.md`, `docs/ARCHITECTURE.md` en `docs/PROJECT_STATUS.md`.
+## Safety rules
 
-## Veiligheidsregels
+- Never commit or expose secrets, database URLs, PayPal secrets, email-provider API keys or customer payloads.
+- Use a branch for repository mutations; never write directly to `main`.
+- Inspect CI before merge.
+- Do not hand-edit generated product pages when the generator/template is authoritative.
+- Do not activate PayPal Live, Production order emails, V3 profile 1, production migrations or invoice issuance early.
+- Do not update Netlify Production without explicit owner approval for the exact release step.
+- Keep dashboard work out of this repository release track unless the owner explicitly changes scope.
 
-- Commit nooit secrets, database-URL’s, PayPal secrets of webhook secrets.
-- Plak credentials niet in issues, PR’s of chatberichten.
-- Verander gegenereerde productpagina’s niet handmatig.
-- Activeer PayPal Live niet vanuit browsercode of zonder aparte productiegoedkeuring.
-- Verwijder Neon niet: PayPal is payment provider, Neon is de LegendMural orderdatabase.
-- Gebruik GitHub Pages niet als parallel production target.
-- Behoud originele product- en printmedia; gebruik geverifieerde browserderivatives.
+## License
 
-## Licentie
-
-© 2026 LegendMural / ALKAVisuals. Alle rechten voorbehouden.
+© 2026 LegendMural / ALKAVisuals. All rights reserved.
