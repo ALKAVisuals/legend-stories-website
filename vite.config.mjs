@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
+import { launchCommercialCopyPlugin } from './scripts/vite-launch-commercial-copy-plugin.mjs';
 import { productionOriginPlugin } from './scripts/vite-production-origin-plugin.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
@@ -87,6 +88,7 @@ export default defineConfig({
     contactFormScriptPlugin(),
     footerThemeStylesPlugin(),
     premiumNavigationStylesPlugin(),
+    launchCommercialCopyPlugin({ root: ROOT, outDir: 'dist' }),
     productionOriginPlugin({ root: ROOT, outDir: 'dist' }),
   ],
   build: {
