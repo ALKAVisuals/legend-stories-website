@@ -7,6 +7,7 @@ ALTER TABLE legend_commerce.order_notifications
   ADD COLUMN IF NOT EXISTS pdf_sha256 text,
   ADD COLUMN IF NOT EXISTS pdf_byte_length integer,
   ADD COLUMN IF NOT EXISTS attachment_filename text,
+  ADD COLUMN IF NOT EXISTS claim_token text,
   ADD COLUMN IF NOT EXISTS lease_expires_at bigint,
   ADD COLUMN IF NOT EXISTS next_attempt_at bigint;
 
@@ -80,6 +81,7 @@ BEGIN
         AND (renderer_version IS NULL OR renderer_version >= 1)
         AND (pdf_sha256 IS NULL OR pdf_sha256 ~ '^[a-f0-9]{64}$')
         AND (pdf_byte_length IS NULL OR pdf_byte_length >= 0)
+        AND (claim_token IS NULL OR length(claim_token) BETWEEN 1 AND 120)
       );
   END IF;
 END
@@ -116,6 +118,9 @@ COMMENT ON COLUMN legend_commerce.order_notifications.invoice_id IS
 
 COMMENT ON COLUMN legend_commerce.order_notifications.snapshot_schema_version IS
   'Immutable invoice snapshot schema version used by the logical V3 delivery.';
+
+COMMENT ON COLUMN legend_commerce.order_notifications.claim_token IS
+  'Opaque token for the active sending claim; V3 delivery completion must match the current claim.';
 
 COMMENT ON COLUMN legend_commerce.order_notifications.lease_expires_at IS
   'Expiry of the current sending claim. Expired or legacy NULL sending claims may be reclaimed.';
