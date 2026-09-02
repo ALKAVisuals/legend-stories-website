@@ -46,6 +46,16 @@ function paidOrder(overrides = {}) {
   };
 }
 
+function renderedV3Email(overrides = {}) {
+  return {
+    subject: 'Your LegendMural order ORDER-42 is confirmed — invoice INVOICE-77',
+    text: 'Payment received.\nYour PDF invoice is attached.',
+    html: '<!doctype html><html><body><h1>Payment received</h1></body></html>',
+    rendererVersion: 1,
+    ...overrides,
+  };
+}
+
 function acceptedFetch(calls) {
   return async (url, options) => {
     calls.push({ url, options });
@@ -121,6 +131,107 @@ test('customer confirmation contains the PayPal order ID needed for order suppor
   );
 });
 
+test('V3 invoice email sends one Base64 PDF attachment with stable attempt-independent idempotency', async () => {
+  const calls = [];
+  const notifier = createResendPaidOrderNotifier({
+    apiKey: 'resend-test-token',
+    from: 'LegendMural <orders@legendmural.com>',
+    replyTo: 'info@legendmural.com',
+    fetchImpl: acceptedFetch(calls),
+  });
+  const orderReference = 'c'.repeat(64);
+  const pdfBytes = Buffer.from('%PDF-1.4\nsynthetic-v3-invoice\n', 'utf8');
+  const message = {
+    to: 'ada@example.com',
+    orderReference,
+    renderedEmail: renderedV3Email(),
+    attachment: {
+      filename: 'invoice-INVOICE-77.pdf',
+      bytes: pdfBytes,
+    },
+  };
+
+  const first = await notifier.sendV3InvoiceEmail(message);
+  const second = await notifier.sendV3InvoiceEmail(message);
+
+  assert.equal(first.providerMessageId, 'email-1');
+  assert.equal(second.providerMessageId, 'email-2');
+  assert.equal(calls.length, 2);
+  assert.equal(
+    calls[0].options.headers['idempotency-key'],
+    `v3-invoice-${orderReference}-customer_v3_invoice`,
+  );
+  assert.equal(calls[1].options.headers['idempotency-key'], calls[0].options.headers['idempotency-key']);
+  assert.equal(calls[1].options.body, calls[0].options.body);
+
+  const body = JSON.parse(calls[0].options.body);
+  assert.deepEqual(body.to, ['ada@example.com']);
+  assert.equal(body.reply_to, 'info@legendmural.com');
+  assert.equal(body.subject, message.renderedEmail.subject);
+  assert.equal(body.text, message.renderedEmail.text);
+  assert.equal(body.html, message.renderedEmail.html);
+  assert.deepEqual(body.tags, [{ name: 'category', value: 'customer_v3_invoice' }]);
+  assert.deepEqual(body.attachments, [{
+    filename: 'invoice-INVOICE-77.pdf',
+    content: pdfBytes.toString('base64'),
+    content_type: 'application/pdf',
+  }]);
+  assert.equal(body.attachments[0].content.includes('%PDF'), false);
+});
+
+test('V3 invoice email rejects invalid reference, renderer payload or PDF attachment before Resend', async () => {
+  const calls = [];
+  const notifier = createResendPaidOrderNotifier({
+    apiKey: 'resend-test-token',
+    from: 'LegendMural <orders@legendmural.com>',
+    fetchImpl: acceptedFetch(calls),
+  });
+  const base = {
+    to: 'ada@example.com',
+    orderReference: 'c'.repeat(64),
+    renderedEmail: renderedV3Email(),
+    attachment: {
+      filename: 'invoice-INVOICE-77.pdf',
+      bytes: Buffer.from('pdf'),
+    },
+  };
+
+  await assert.rejects(
+    notifier.sendV3InvoiceEmail({ ...base, orderReference: 'not-a-reference' }),
+    (error) => error instanceof ResendPaidOrderNotifierError
+      && error.code === 'RESEND_PAID_ORDER_INVALID_MESSAGE'
+      && error.details.field === 'orderReference',
+  );
+  await assert.rejects(
+    notifier.sendV3InvoiceEmail({
+      ...base,
+      renderedEmail: renderedV3Email({ rendererVersion: 2 }),
+    }),
+    (error) => error instanceof ResendPaidOrderNotifierError
+      && error.code === 'RESEND_PAID_ORDER_INVALID_MESSAGE'
+      && error.details.field === 'renderedEmail.rendererVersion',
+  );
+  await assert.rejects(
+    notifier.sendV3InvoiceEmail({
+      ...base,
+      attachment: { filename: 'invoice-INVOICE-77.pdf', bytes: 'not-a-buffer' },
+    }),
+    (error) => error instanceof ResendPaidOrderNotifierError
+      && error.code === 'RESEND_PAID_ORDER_INVALID_MESSAGE'
+      && error.details.field === 'attachment.bytes',
+  );
+  await assert.rejects(
+    notifier.sendV3InvoiceEmail({
+      ...base,
+      attachment: { filename: '../invoice-INVOICE-77.pdf', bytes: Buffer.from('pdf') },
+    }),
+    (error) => error instanceof ResendPaidOrderNotifierError
+      && error.code === 'RESEND_PAID_ORDER_INVALID_MESSAGE'
+      && error.details.field === 'attachment.filename',
+  );
+  assert.equal(calls.length, 0);
+});
+
 test('notifier rejects non-live or non-paid orders before calling Resend', async () => {
   const calls = [];
   const notifier = createResendPaidOrderNotifier({
@@ -193,5 +304,46 @@ test('Resend rejection returns a delivery error without exposing provider payloa
       && error.code === 'RESEND_PAID_ORDER_DELIVERY_REJECTED'
       && error.details.status === 503
       && !error.message.includes('provider detail'),
+  );
+});
+
+test('V3 Resend rejection is sanitized and does not expose provider payloads or attachment bytes', async () => {
+  const pdfBytes = Buffer.from('sensitive-synthetic-pdf-bytes');
+  const notifier = createResendPaidOrderNotifier({
+    apiKey: 'resend-test-token',
+    from: 'LegendMural <orders@legendmural.com>',
+    fetchImpl: async () => ({
+      ok: false,
+      status: 503,
+      async json() {
+        return { message: 'provider detail that must not propagate' };
+      },
+    }),
+  });
+
+  await assert.rejects(
+    notifier.sendV3InvoiceEmail({
+      to: 'ada@example.com',
+      orderReference: 'c'.repeat(64),
+      renderedEmail: renderedV3Email(),
+      attachment: {
+        filename: 'invoice-INVOICE-77.pdf',
+        bytes: pdfBytes,
+      },
+    }),
+    (error) => {
+      assert.equal(error instanceof ResendPaidOrderNotifierError, true);
+      assert.equal(error.code, 'RESEND_PAID_ORDER_DELIVERY_REJECTED');
+      assert.equal(error.details.status, 503);
+      const serialized = JSON.stringify({
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      });
+      assert.equal(serialized.includes('provider detail'), false);
+      assert.equal(serialized.includes(pdfBytes.toString('utf8')), false);
+      assert.equal(serialized.includes('ada@example.com'), false);
+      return true;
+    },
   );
 });
