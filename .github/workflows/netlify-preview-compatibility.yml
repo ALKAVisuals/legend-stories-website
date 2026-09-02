@@ -11,6 +11,7 @@ on:
       - 'server/netlify/**'
       - 'server/api/**'
       - 'server/adapters/neon-order-store.mjs'
+      - 'server/invoices/v3-invoice-pdf.mjs'
       - 'js/commerce/**'
       - 'js/order-return.js'
       - 'order-success.html'
@@ -20,6 +21,7 @@ on:
       - 'tests/commerce-runtime-config.test.mjs'
       - 'tests/netlify-commerce-runtime.test.mjs'
       - 'tests/netlify-commerce-config.test.mjs'
+      - 'tests/v3-invoice-pdf.test.mjs'
       - 'package.json'
       - 'package-lock.json'
   push:
@@ -32,6 +34,7 @@ on:
       - 'server/netlify/**'
       - 'server/api/**'
       - 'server/adapters/neon-order-store.mjs'
+      - 'server/invoices/v3-invoice-pdf.mjs'
       - 'js/commerce/**'
       - 'js/order-return.js'
       - 'order-success.html'
@@ -41,6 +44,7 @@ on:
       - 'tests/commerce-runtime-config.test.mjs'
       - 'tests/netlify-commerce-runtime.test.mjs'
       - 'tests/netlify-commerce-config.test.mjs'
+      - 'tests/v3-invoice-pdf.test.mjs'
       - 'package.json'
       - 'package-lock.json'
   workflow_dispatch:
@@ -70,6 +74,9 @@ jobs:
 
       - name: Install exact dependencies
         run: npm ci
+
+      - name: Prove V3 invoice PDF packaging under Node 22
+        run: node --test tests/v3-invoice-pdf.test.mjs
 
       - name: Validate checkout boundaries
         run: |
