@@ -215,8 +215,7 @@ function collectPdfBytes(document) {
     });
     document.once('error', reject);
     document.once('end', () => {
-      const buffer = Buffer.concat(chunks, byteLength);
-      resolve(new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength));
+      resolve(Buffer.concat(chunks, byteLength));
     });
   });
 }
@@ -357,6 +356,18 @@ function drawInvoice(doc, snapshot) {
     doc.heightOfString(sellerText, { width: 237, lineGap: 2 }),
   );
   y += addressHeight + 24;
+
+  y = ensureSpace(doc, y, 90);
+  doc.font('Helvetica-Bold').fontSize(9).text('SHIP TO', A4_MARGIN, y, { width: 225 });
+  y += 16;
+  const shippingText = [
+    snapshot.customer.companyName,
+    customerName,
+    formatAddress(snapshot.customer.shippingAddress),
+  ].filter(Boolean).join('\n');
+  doc.font('Helvetica').fontSize(9).text(shippingText, A4_MARGIN, y, { width: 225, lineGap: 2 });
+  y += doc.heightOfString(shippingText, { width: 225, lineGap: 2 }) + 24;
+
   y = ensureSpace(doc, y, 80);
   drawRule(doc, y - 8);
   y = drawLineItems(doc, snapshot, y + 8);
