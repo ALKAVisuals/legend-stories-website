@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -251,28 +250,32 @@ test('does not mutate the immutable invoice snapshot while rendering', async () 
   assert.equal(Object.isFrozen(snapshot.lines), true);
 });
 
-test('bundles, imports and executes the renderer with pinned PDFKit for the Node 22 server target', async () => {
-  const tempDir = await mkdtemp(join(tmpdir(), 'legendmural-v3-pdf-bundle-'));
+test('executes the renderer with PDFKit preserved as a Netlify-style external Node module', async () => {
+  const config = await readFile(new URL('../netlify.toml', import.meta.url), 'utf8');
+  assert.match(config, /node_bundler\s*=\s*"esbuild"/);
+  assert.match(config, /external_node_modules\s*=\s*\["pdfkit"\]/);
+
+  const tempDir = await mkdtemp(join(process.cwd(), '.tmp-v3-pdf-bundle-'));
   const outfile = join(tempDir, 'v3-invoice-pdf.bundle.mjs');
   const entry = fileURLToPath(new URL('../server/invoices/v3-invoice-pdf.mjs', import.meta.url));
 
   try {
-    const result = await build({
+    await build({
       entryPoints: [entry],
       outfile,
       bundle: true,
       platform: 'node',
       format: 'esm',
       target: ['node22'],
+      external: ['pdfkit'],
       sourcemap: false,
       minify: false,
       logLevel: 'silent',
-      metafile: true,
     });
 
-    const output = await readFile(outfile);
-    assert.ok(output.byteLength > 10_000);
-    assert.ok(Object.keys(result.metafile.inputs).some((input) => input.includes('node_modules/pdfkit/')));
+    const output = await readFile(outfile, 'utf8');
+    assert.ok(output.length > 5_000);
+    assert.match(output, /from\s+["']pdfkit["']/);
 
     const bundledRenderer = await import(pathToFileURL(outfile).href);
     const artifact = await bundledRenderer.renderV3InvoicePdf({ snapshot: buildSnapshot() });
