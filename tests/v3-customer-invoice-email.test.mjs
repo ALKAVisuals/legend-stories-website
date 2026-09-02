@@ -18,7 +18,6 @@ function buildSnapshot({ firstName = 'Zoë', itemName = 'Legend One' } = {}) {
     order: {
       reference,
       status: 'paid',
-      amountTotal: 5_395,
       currency: 'EUR',
       mode: 'test',
       paymentSessionId: paypalOrderId,
