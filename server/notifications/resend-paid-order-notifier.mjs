@@ -1,4 +1,6 @@
 const RESEND_EMAIL_ENDPOINT = 'https://api.resend.com/emails';
+const V3_REFERENCE_PATTERN = /^[a-f0-9]{64}$/;
+const SUPPORTED_V3_EMAIL_RENDERER_VERSION = 1;
 
 export class ResendPaidOrderNotifierError extends Error {
   constructor(code, message, details = {}) {
@@ -36,6 +38,64 @@ function optionalText(value, field, maxLength) {
     fail('RESEND_PAID_ORDER_INVALID_CONFIG', `${field} is invalid.`, { field });
   }
   return normalized;
+}
+
+function requiredMessageString(value, field, maxLength) {
+  if (typeof value !== 'string' || value.trim() === '' || value.length > maxLength || value.includes('\u0000')) {
+    fail('RESEND_PAID_ORDER_INVALID_MESSAGE', `${field} is invalid.`, { field });
+  }
+  return value;
+}
+
+function normalizeV3OrderReference(value) {
+  const reference = String(value || '').trim().toLowerCase();
+  if (!V3_REFERENCE_PATTERN.test(reference)) {
+    fail('RESEND_PAID_ORDER_INVALID_MESSAGE', 'orderReference is invalid.', {
+      field: 'orderReference',
+    });
+  }
+  return reference;
+}
+
+function normalizeV3RenderedEmail(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    fail('RESEND_PAID_ORDER_INVALID_MESSAGE', 'renderedEmail is invalid.', {
+      field: 'renderedEmail',
+    });
+  }
+  if (value.rendererVersion !== SUPPORTED_V3_EMAIL_RENDERER_VERSION) {
+    fail('RESEND_PAID_ORDER_INVALID_MESSAGE', 'renderedEmail.rendererVersion is unsupported.', {
+      field: 'renderedEmail.rendererVersion',
+    });
+  }
+  return Object.freeze({
+    subject: requiredMessageString(value.subject, 'renderedEmail.subject', 998),
+    text: requiredMessageString(value.text, 'renderedEmail.text', 200_000),
+    html: requiredMessageString(value.html, 'renderedEmail.html', 500_000),
+    rendererVersion: value.rendererVersion,
+  });
+}
+
+function normalizeV3Attachment(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    fail('RESEND_PAID_ORDER_INVALID_MESSAGE', 'attachment is invalid.', { field: 'attachment' });
+  }
+  const filename = String(value.filename || '').trim();
+  if (!filename
+    || filename.length > 200
+    || /[\u0000-\u001F\u007F]/.test(filename)
+    || /[\\/]/.test(filename)
+    || !filename.toLowerCase().endsWith('.pdf')) {
+    fail('RESEND_PAID_ORDER_INVALID_MESSAGE', 'attachment.filename is invalid.', {
+      field: 'attachment.filename',
+    });
+  }
+  if (!Buffer.isBuffer(value.bytes) || value.bytes.byteLength < 1) {
+    fail('RESEND_PAID_ORDER_INVALID_MESSAGE', 'attachment.bytes must be a non-empty Buffer.', {
+      field: 'attachment.bytes',
+    });
+  }
+  return Object.freeze({ filename, bytes: value.bytes });
 }
 
 function escapeHtml(value) {
@@ -228,6 +288,49 @@ export function createResendPaidOrderNotifier({
         });
       }
       return Object.freeze({ accepted: true, providerMessageId: String(payload.id) });
+    },
+
+    async sendV3InvoiceEmail({ to, orderReference, renderedEmail, attachment } = {}) {
+      const recipient = requiredEmail(to, 'to');
+      const reference = normalizeV3OrderReference(orderReference);
+      const rendered = normalizeV3RenderedEmail(renderedEmail);
+      const pdf = normalizeV3Attachment(attachment);
+
+      const response = await fetchImpl(endpoint, {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${normalizedApiKey}`,
+          'content-type': 'application/json',
+          'idempotency-key': `v3-invoice-${reference}-customer_v3_invoice`,
+        },
+        body: JSON.stringify({
+          from: normalizedFrom,
+          to: [recipient],
+          subject: rendered.subject,
+          text: rendered.text,
+          html: rendered.html,
+          ...(normalizedReplyTo ? { reply_to: normalizedReplyTo } : {}),
+          tags: [{ name: 'category', value: 'customer_v3_invoice' }],
+          attachments: [{
+            filename: pdf.filename,
+            content: pdf.bytes.toString('base64'),
+            content_type: 'application/pdf',
+          }],
+        }),
+      });
+
+      let payload = null;
+      try {
+        payload = await response.json();
+      } catch {
+        payload = null;
+      }
+      if (!response.ok || !payload?.id) {
+        fail('RESEND_PAID_ORDER_DELIVERY_REJECTED', 'Resend did not accept the V3 invoice email.', {
+          status: Number(response.status) || 0,
+        });
+      }
+      return Object.freeze({ providerMessageId: String(payload.id) });
     },
   });
 }
