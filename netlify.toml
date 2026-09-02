@@ -18,6 +18,7 @@
 
 [functions]
   node_bundler = "esbuild"
+  external_node_modules = ["pdfkit"]
   included_files = ["data/products/catalog.json"]
 
 # Keep one authoritative public host. These host-level redirects take effect
