@@ -2,82 +2,112 @@
 
 Public LegendMural e-commerce storefront for matte vinyl wall stickers. The repository contains the storefront, central product data, generated product pages, server-authoritative commerce, Neon Postgres order persistence and Netlify Functions for the PayPal/order flow.
 
-> **New chat / continuation:** read [`docs/READ_ME_FIRST.md`](docs/READ_ME_FIRST.md) first. The current operational handoff is [`docs/CURRENT_PRODUCTION_STATUS_20260901.md`](docs/CURRENT_PRODUCTION_STATUS_20260901.md). GitHub is the source of truth; older chat history and dated handoffs do not override those files.
+> **New website chat / continuation:** read [`docs/READ_ME_FIRST.md`](docs/READ_ME_FIRST.md) first. The current public-website handoff is [`docs/CURRENT_PRODUCTION_STATUS_20260903.md`](docs/CURRENT_PRODUCTION_STATUS_20260903.md). GitHub is the source of truth.
 
-## Current launch state — 1 September 2026
+## Current public website launch state — 3 September 2026
 
 - **Production host:** Netlify.
 - **Canonical intended origin:** `https://legendmural.com`.
 - **Launch payment provider:** PayPal-only.
 - **Order database:** Neon Postgres.
 - **Product catalogue:** 111 products / 6 batches.
-- **Current `main` at the latest documented handoff:** `39345bba9c1196ea68bad9c2a83f3aed5c1b3d8e`.
-- **PR #153:** merged; V3 Gate 2 foundation is present, but profile 1 remains inactive by default and production migrations/live invoice issuance are not activated.
-- **Netlify Production:** final current release not yet intentionally cut over and approved.
-- **PayPal Live:** not yet proven for this final release.
-- **Production order emails:** reserved for the controlled final proof.
-- **Current overall internal launch-readiness estimate:** about **74%**.
+- **Website-track starting `main` checkpoint:** `c6ee0faf357e4943b4ddc0e92335748c20c00c99`.
+- **Netlify Production:** final release not yet intentionally cut over and approved.
+- **PayPal Live / Production email:** not part of the current website step.
+- **Current overall public website launch-readiness estimate:** about **80%**.
 
-The next work is **not** a Production deployment. First close the remaining launch-readiness/legal consistency blockers described in the current status handoff.
+The next website work is **not** a Production deployment. The exact next step is the Privacy/AVG audit defined in the current handoff.
+
+## Parallel V3 workstream
+
+A separate LegendMural V3 chat works in this same repository on Commerce / Orders / Invoices backend and delivery work. This public-website track does not reconstruct or own V3 status.
+
+Without explicit cross-track approval, website work must not modify:
+
+- `server/invoices/**`;
+- `server/notifications/**`;
+- `server/adapters/neon-order-notification-store.mjs`;
+- V3 invoice/notification Neon adapters;
+- paid-order finalizer code;
+- PayPal capture/webhook reconciliation code;
+- Profile-0/Profile-1 routing;
+- V3 invoice snapshot/PDF/Resend/retry code;
+- V3 order/invoice/notification migrations.
+
+See `docs/READ_ME_FIRST.md` for the full working boundary.
 
 ## Current readiness summary
 
 | Area | Readiness |
 |---|---:|
-| Storefront UI/content core | 95% |
-| Commerce backend / PayPal / Neon pre-production architecture | 95% |
+| Storefront UI/content core | 96% |
 | Company/legal information pages | 90% |
 | Privacy / AVG | 80% |
 | Cookies / tracking | 90% |
 | Returns / statutory withdrawal | 95% |
-| Checkout / payment-law readiness | 55% |
-| Pricing / shipping / commercial-claim consistency | 35% |
+| Checkout / payment-law presentation | 55% |
+| Pricing / shipping / commercial-claim consistency | 95% |
 | GPSR / product-safety presentation | 40% |
+| Final-domain metadata / SEO | 50% |
 | Netlify Production cutover | 0% |
-| Controlled PayPal Live + email proof | 0% |
+| Controlled Live proof | 0% |
 
 These are internal project-tracking estimates, not legal certification.
 
-## Exact next step
+## Completed website work
 
-Create a focused storefront branch/PR that fixes only the known inconsistent public pricing, shipping, delivery and returns claims. In particular, make the public storefront consistent with the authoritative launch rules:
+The public website track has already completed or substantially proven:
 
-- Compact: €35;
-- Statement: €45;
-- free shipping from €69 after discount;
-- NL shipping €4.95;
-- EU shipping €9.95;
-- US shipping €9.95 tracked;
-- no unsupported fixed 2–4 day delivery promise;
-- no conflicting 30-day return promise against the statutory withdrawal flow.
+- 111-product catalogue and generated product-page architecture;
+- central public product/variant presentation;
+- mobile navigation fix and real iPhone Safari confirmation;
+- mobile checkout/WebKit regression coverage;
+- About page redesign;
+- Company, Terms, Privacy, Shipping and Returns baselines;
+- statutory 14-day withdrawal information;
+- model withdrawal form;
+- dedicated online withdrawal function;
+- public pricing/shipping/delivery/returns consistency cleanup via PR #159.
 
-After that: test, review, update the readiness handoff, merge only with owner approval, then continue to privacy/checkout legal finalization and GPSR.
+Current public launch rules include:
 
-## Architecture decisions
-
-- Netlify is the only intended Production host.
-- PayPal is the launch payment provider.
-- Neon Postgres is authoritative order persistence.
-- Browser prices, totals and payment state are never authoritative.
-- Capture/webhook paths are designed to reconcile safely and idempotently.
-- A browser URL/session state cannot manufacture `paid`.
-- Active Stripe checkout/runtime has been removed; historical database/audit compatibility may remain where required.
-- V3 Gate 2 code is merged but its profile-1 runtime is inactive by default.
-
-## Commerce rules
-
-Current launch catalogue rules:
-
-- **Compact:** 30 cm longest side — **€35 incl. VAT**;
-- **Statement:** 45 cm longest side — **€45 incl. VAT**;
+- **Compact:** €35 incl. VAT;
+- **Statement:** €45 incl. VAT;
 - **LEGEND10:** 10% discount;
 - **Netherlands:** €4.95 shipping;
 - **EU:** €9.95 shipping;
 - **United States:** €9.95 tracked shipping;
 - **free shipping:** from €69 after discount;
-- unsupported destinations are blocked.
+- no unsupported fixed `2–4 day` marketing delivery promise;
+- no conflicting `30-day return` marketing promise.
 
-The central/server-side commerce model is authoritative. Public marketing copy must match it exactly.
+## Remaining public website launch gates
+
+Before final Production release, the website track still needs to:
+
+1. finalize Privacy/AVG retention and provider wording;
+2. resolve the consumer-facing checkout/payment-obligation and Dutch advance-payment presentation questions without modifying V3-owned backend code;
+3. add centralized GPSR/product-safety/manufacturer information;
+4. obtain the owner’s separate commercial rights/IP confirmation;
+5. replace remaining preview/GitHub Pages canonical/Open Graph references with correct `legendmural.com` handling;
+6. run the final relevant website quality/CI gates and freeze an exact release SHA.
+
+Only after those gates and explicit owner approval may the final Netlify Production cutover proceed.
+
+## Exact next website step
+
+> **Perform a read-only audit of the current Privacy page and actual public storefront/runtime provider usage, then define the smallest required Privacy/AVG wording changes.**
+
+Do not change checkout/payment flow, V3 commerce backend, invoice delivery or Production settings during that step.
+
+## Architecture decisions
+
+- Netlify is the intended Production host.
+- PayPal is the launch payment provider.
+- Neon Postgres is authoritative order persistence.
+- Browser prices, totals and payment state are never authoritative.
+- A browser URL/session state cannot manufacture `paid`.
+- Active Stripe checkout/runtime has been removed; historical compatibility may remain where required.
 
 ## Payment/order flow
 
@@ -113,45 +143,6 @@ Current `netlify.toml` build contract:
 - functions: `netlify/functions`;
 - Node.js 22 on Netlify.
 
-## What has already been proven
-
-The project has extensive pre-production evidence, including:
-
-- server-authoritative pricing/order creation;
-- PayPal Sandbox create/approval/capture;
-- isolated Neon order persistence;
-- verified PayPal webhook processing;
-- duplicate/retry idempotency;
-- capture-vs-webhook convergence;
-- browser return to server-authoritative paid confirmation;
-- mobile/WebKit checkout regression coverage;
-- real iPhone Safari mobile navigation confirmation;
-- current Company, Terms, Privacy, Shipping and Returns baselines;
-- an online statutory withdrawal function;
-- relevant release CI and quality gates from earlier release work;
-- V3 Gate 2 isolated finalizer/convergence proof while profile 1 remains off.
-
-Do not repeat solved investigations without new regression evidence.
-
-## Remaining launch gates
-
-Before the final Netlify cutover:
-
-1. fix conflicting pricing/shipping/delivery/returns copy;
-2. finalize privacy retention wording and actual provider disclosures;
-3. resolve checkout/payment-obligation and Dutch advance-payment compliance;
-4. add centralized GPSR/product-safety/manufacturer information;
-5. owner confirms required commercial IP/portrait/trademark rights outside the repository;
-6. replace remaining GitHub Pages canonical/Open Graph production URLs with `legendmural.com` handling;
-7. run the full relevant quality/CI gates;
-8. freeze a new exact release SHA.
-
-Then:
-
-9. perform exactly one controlled Netlify Production cutover;
-10. run safe Production smoke tests without a real payment first;
-11. only after Production approval, perform exactly one controlled PayPal Live order and verify Neon, webhook/capture, emails, no duplicates and funds received.
-
 ## Development commands
 
 ```bash
@@ -162,18 +153,18 @@ npm run build
 npm run quality
 ```
 
-Useful targeted validation commands are defined in `package.json` and the current CI workflows. Prefer the repository’s current scripts over commands copied from historical documentation.
+Prefer current repository scripts and CI workflows over commands copied from historical handoffs.
 
 ## Project structure
 
 ```text
 .
 ├── data/                 # Central product/catalogue data
-├── docs/                 # Current handoff, architecture and historical context
+├── docs/                 # Current website handoff, architecture and historical context
 ├── generated/            # Generated public/runtime assets
 ├── js/                   # Browser runtime and commerce modules
 ├── media/                # Storefront/product media
-├── netlify/functions/    # PayPal, order-status and related serverless entrypoints
+├── netlify/functions/    # Serverless entrypoints
 ├── server/               # Authoritative commerce/order/payment/runtime logic
 ├── scripts/              # Generators, audits and validators
 ├── templates/            # Shared generated product-page templates
@@ -184,26 +175,24 @@ Useful targeted validation commands are defined in `package.json` and the curren
 └── vite.config.mjs
 ```
 
-## Documentation hierarchy
+## Documentation hierarchy for public website work
 
-Use this order when continuing work:
+1. [`docs/READ_ME_FIRST.md`](docs/READ_ME_FIRST.md) — scope, parallel-work boundary and working rules;
+2. [`docs/CURRENT_PRODUCTION_STATUS_20260903.md`](docs/CURRENT_PRODUCTION_STATUS_20260903.md) — exact website progress, blockers, percentages and next step;
+3. [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) — broader historical architecture context;
+4. architecture/testing documents only as needed for the current website step.
 
-1. [`docs/READ_ME_FIRST.md`](docs/READ_ME_FIRST.md) — stable entrypoint and working rules;
-2. [`docs/CURRENT_PRODUCTION_STATUS_20260901.md`](docs/CURRENT_PRODUCTION_STATUS_20260901.md) — exact current progress, blockers, percentages and next step;
-3. [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) — broader historical/architectural roadmap context;
-4. architecture/testing documents only as needed for the current step.
-
-Older dated release handoffs are historical snapshots unless the current status file explicitly points to them.
+The separate V3 chat maintains its own V3 handoff. Do not use this website README as a V3 source of truth.
 
 ## Safety rules
 
 - Never commit or expose secrets, database URLs, PayPal secrets, email-provider API keys or customer payloads.
-- Use a branch for repository mutations; never write directly to `main`.
-- Inspect CI before merge.
+- Fresh-check `main` before every new website branch and again immediately before merge.
+- Use a website-specific branch; never write directly to `main`.
+- If `main` changed due to parallel V3 work, compare/rebase and rerun relevant CI before merge.
 - Do not hand-edit generated product pages when the generator/template is authoritative.
-- Do not activate PayPal Live, Production order emails, V3 profile 1, production migrations or invoice issuance early.
-- Do not update Netlify Production without explicit owner approval for the exact release step.
-- Keep dashboard work out of this repository release track unless the owner explicitly changes scope.
+- Do not activate PayPal Live, Production order emails, V3 Profile 1, production migrations or invoice issuance from the website track.
+- Do not update Netlify Production without explicit owner approval for that exact release step.
 
 ## License
 
