@@ -3,7 +3,8 @@
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Scope:** public LegendMural webshop / launch-readiness only  
 **Production host:** Netlify  
-**Current operational website status:** [`CURRENT_PRODUCTION_STATUS_20260903.md`](CURRENT_PRODUCTION_STATUS_20260903.md)
+**Current operational website status:** [`CURRENT_PRODUCTION_STATUS_20260903.md`](CURRENT_PRODUCTION_STATUS_20260903.md)  
+**Cross-track coordination:** [`PARALLEL_WORKSTREAM_COORDINATION.md`](PARALLEL_WORKSTREAM_COORDINATION.md)
 
 > **Every new chat working on the public website must start here.**
 
@@ -11,20 +12,21 @@
 
 1. Read this file.
 2. Read [`CURRENT_PRODUCTION_STATUS_20260903.md`](CURRENT_PRODUCTION_STATUS_20260903.md).
-3. Fresh-check the current `main` SHA before making any repository change.
-4. Work one meaningful website step at a time.
-5. Use a website-specific branch for mutations; never write directly to `main`.
-6. Inspect relevant CI before merge.
-7. Immediately before merge, fresh-check `main` again because the separate V3 track may have merged in parallel.
-8. If `main` changed, compare/rebase first and rerun relevant CI.
-9. Do not deploy or publish to Netlify Production without explicit owner approval for that exact release step.
-10. Do not activate PayPal Live, Production email sending, V3 Profile 1, production migrations or V3 invoice issuance from this website track.
+3. Read [`PARALLEL_WORKSTREAM_COORDINATION.md`](PARALLEL_WORKSTREAM_COORDINATION.md).
+4. Fresh-check the current `main` SHA before making any repository change.
+5. Work one meaningful website step at a time.
+6. Use a website-specific branch for mutations; never write directly to `main`.
+7. Inspect relevant CI before merge.
+8. Immediately before merge, fresh-check `main` again because the separate V3 track may have merged in parallel.
+9. If `main` changed, compare/rebase first and rerun relevant CI.
+10. Do not deploy or publish to Netlify Production without explicit owner approval for that exact release step.
+11. Do not activate PayPal Live, Production email sending, V3 Profile 1, production migrations or V3 invoice issuance from this website track.
 
 ## Source-of-truth rule
 
 GitHub is the source of truth. Do not reconstruct current website progress from old chat history.
 
-Older dated website handoffs and sprint notes may contain useful history, but they do **not** override the current status file linked above.
+Older dated website handoffs and sprint notes may contain useful history, but they do **not** override the current status file or the parallel-workstream coordination contract linked above.
 
 The separate LegendMural V3 chat maintains its own V3 handoff and decisions. Do not reconstruct or overwrite V3 status from this website track.
 
@@ -55,6 +57,8 @@ Without explicit cross-track approval, this website track must not modify:
 - Profile-0/Profile-1 routing;
 - V3 invoice snapshot/PDF/Resend/retry code;
 - V3 order/invoice/notification migrations.
+
+The full responsibility-based boundary is mandatory in `docs/PARALLEL_WORKSTREAM_COORDINATION.md`.
 
 If a website task appears to require one of those files or systems, stop and report the exact dependency before changing it.
 
