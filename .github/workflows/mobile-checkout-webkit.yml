@@ -32,16 +32,19 @@ jobs:
       - name: Install project dependencies
         run: npm ci
 
+      - name: Build production storefront output
+        run: npm run build
+
       - name: Install pinned Playwright WebKit for this test only
         run: |
           npm install --no-save --ignore-scripts playwright@1.55.0
           npx playwright install --with-deps webkit
 
-      - name: Start Vite
+      - name: Start production preview
         run: |
           set -euo pipefail
-          npm run dev -- --host 127.0.0.1 > /tmp/legendmural-vite.log 2>&1 &
-          echo $! > /tmp/legendmural-vite.pid
+          npm run preview -- --host 127.0.0.1 --port 3001 > /tmp/legendmural-preview.log 2>&1 &
+          echo $! > /tmp/legendmural-preview.pid
 
       - name: Wait for storefront
         run: |
@@ -55,8 +58,8 @@ jobs:
             sleep 1
           done
           if [ "$READY" -ne 1 ]; then
-            echo "Vite did not become ready."
-            cat /tmp/legendmural-vite.log || true
+            echo "Production preview did not become ready."
+            cat /tmp/legendmural-preview.log || true
             exit 1
           fi
 
@@ -73,14 +76,14 @@ jobs:
         with:
           name: mobile-checkout-webkit-diagnostics
           path: |
-            /tmp/legendmural-vite.log
+            /tmp/legendmural-preview.log
             /tmp/mobile-checkout-webkit.log
           if-no-files-found: warn
           retention-days: 1
 
-      - name: Stop Vite
+      - name: Stop production preview
         if: always()
         run: |
-          if [ -f /tmp/legendmural-vite.pid ]; then
-            kill "$(cat /tmp/legendmural-vite.pid)" 2>/dev/null || true
+          if [ -f /tmp/legendmural-preview.pid ]; then
+            kill "$(cat /tmp/legendmural-preview.pid)" 2>/dev/null || true
           fi
