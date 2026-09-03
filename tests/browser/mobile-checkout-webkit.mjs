@@ -26,6 +26,13 @@ page.on('framenavigated', (frame) => {
   if (frame === page.mainFrame()) navigations.push(frame.url());
 });
 
+async function touchscreenTapCenter(locator, label) {
+  await locator.waitFor({ state: 'visible' });
+  const box = await locator.boundingBox();
+  if (!box) throw new Error(`${label} bounding box was unavailable.`);
+  await page.touchscreen.tap(box.x + (box.width / 2), box.y + (box.height / 2));
+}
+
 await page.addInitScript(() => {
   try {
     localStorage.setItem('legendCartVersion', '4');
@@ -54,17 +61,6 @@ await page.addInitScript(() => {
 
 try {
   await page.goto(`${baseUrl}/shop.html`, { waitUntil: 'domcontentloaded' });
-  await page.addStyleTag({
-    content: `
-      *, *::before, *::after {
-        animation-duration: 0s !important;
-        animation-delay: 0s !important;
-        transition-duration: 0s !important;
-        transition-delay: 0s !important;
-        scroll-behavior: auto !important;
-      }
-    `,
-  });
   await page.waitForFunction(
     () => document.getElementById('cart-count')?.textContent === '1',
     null,
@@ -72,7 +68,8 @@ try {
   );
   navigations.length = 0;
 
-  await page.locator('#cart-btn').tap();
+  await touchscreenTapCenter(page.locator('#cart-btn'), 'Cart button');
+  await page.locator('#cart-drawer[aria-hidden="false"]').waitFor();
   await page.locator('#checkout-btn').tap();
   await page.locator('#checkout-drawer[aria-hidden="false"]').waitFor();
 
@@ -157,6 +154,7 @@ try {
     browser: 'webkit',
     device: 'iPhone 13',
     appStartupTimeoutMs,
+    cartInteraction: 'touchscreen.tap',
     streetFontSize,
     streetPositionDeltaPx: Number(positionDelta.toFixed(2)),
     followingFieldDeltaPx: Number(followingFieldDelta.toFixed(2)),
