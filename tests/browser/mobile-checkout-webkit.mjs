@@ -1,6 +1,7 @@
 import { webkit, devices } from 'playwright';
 
 const baseUrl = process.env.TEST_BASE_URL || 'http://127.0.0.1:3001';
+const appStartupTimeoutMs = 45_000;
 const productPagePattern = /\/(?:combat|music|sport|wisdom)-[^/]+\.html(?:[?#].*)?$/i;
 
 const browser = await webkit.launch({ headless: true });
@@ -16,6 +17,8 @@ await context.route('https://fonts.googleapis.com/**', (route) => route.abort())
 await context.route('https://fonts.gstatic.com/**', (route) => route.abort());
 
 const page = await context.newPage();
+// User interactions stay strict; only the one-time cold app bootstrap below
+// gets a wider window for Vite transforms + LegendMural module initialization.
 page.setDefaultTimeout(15_000);
 const navigations = [];
 
@@ -62,7 +65,11 @@ try {
       }
     `,
   });
-  await page.waitForFunction(() => document.getElementById('cart-count')?.textContent === '1');
+  await page.waitForFunction(
+    () => document.getElementById('cart-count')?.textContent === '1',
+    null,
+    { timeout: appStartupTimeoutMs },
+  );
   navigations.length = 0;
 
   await page.locator('#cart-btn').tap();
@@ -149,6 +156,7 @@ try {
     result: 'passed',
     browser: 'webkit',
     device: 'iPhone 13',
+    appStartupTimeoutMs,
     streetFontSize,
     streetPositionDeltaPx: Number(positionDelta.toFixed(2)),
     followingFieldDeltaPx: Number(followingFieldDelta.toFixed(2)),
