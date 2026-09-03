@@ -15,11 +15,11 @@ test('privacy notice describes the current online withdrawal data flow', () => {
   assert.doesNotMatch(privacy, /we use the Order ID and order email to locate the order\. The withdrawal record stores/i);
 });
 
-test('privacy notice identifies Resend and keeps production sending disabled until readiness gates pass', () => {
+test('privacy notice identifies Resend and international-transfer safeguards without launch placeholders', () => {
   assert.match(privacy, /Resend \(Plus Five Five, Inc\.\)/i);
-  assert.match(privacy, /primary processing operations and customer data storage are in the United States/i);
+  assert.match(privacy, /primary processing operations and customer[- ]data storage are in the United States/i);
   assert.match(privacy, /EU Standard Contractual Clauses/i);
-  assert.match(privacy, /Production sending remains disabled until a LegendMural sending domain, approved from identity and server-side API key are configured and a controlled delivery test has passed/i);
+  assert.doesNotMatch(privacy, /Production sending remains disabled until a LegendMural sending domain/i);
 });
 
 test('retention policy separates immutable withdrawal evidence from acknowledgement delivery evidence', () => {

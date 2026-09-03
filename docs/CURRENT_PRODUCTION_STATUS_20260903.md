@@ -26,26 +26,24 @@ If a website task appears to require a protected V3 file or responsibility, stop
 
 ## 2. Current repository checkpoint
 
-Fresh-checked `main` before creating this documentation refresh:
+The Privacy implementation branch was created from fresh `main`:
 
-`09f472cb74f6a7dbc0c38f06b62174002688ae2c`
+`32f5ae8b63440891272de32da10510e7f96874a9`
 
-Commit:
+Branch:
 
-`Merge PR #172: production-preview WebKit regression`
+`privacy/avg-finalization-20260903`
 
-PR #172 changed only:
+Operational note: immediately before this branch was created, an accidental temporary file named `noop-privacy-temp` was created directly on `main` and then immediately removed. The cleanup commit above restores the repository tree to the exact project-content state from the preceding handoff merge. No storefront, V3/backend or Production file was changed by that incident. Do not recreate the temporary file.
 
-- `.github/workflows/mobile-checkout-webkit.yml`;
-- `tests/browser/mobile-checkout-webkit.mjs`.
+The preceding substantive website merges were:
 
-It moved the iPhone/WebKit checkout regression from the Vite dev server to built `dist` output served through Vite Preview, reduced irrelevant media/font loading only inside the test, preserved real checkout JS/CSS and touchscreen interaction, and added browser crash/disconnect diagnostics. Quality checks and Accessibility/purchase-flow passed, and the WebKit job passed **three consecutive runs on the exact same PR head** before merge.
+- PR #172 — production-preview WebKit regression hardening;
+- PR #173 — current Privacy-audit handoff.
 
-This documentation branch was created directly from that exact `main` SHA:
+PR #172 changed only `.github/workflows/mobile-checkout-webkit.yml` and `tests/browser/mobile-checkout-webkit.mjs`. It moved the iPhone/WebKit checkout regression to built `dist` output served through Vite Preview and passed three consecutive WebKit runs on the same PR head before merge.
 
-`docs/privacy-audit-handoff-20260903-v3`
-
-This SHA is a checkpoint only. Before every new website branch and immediately before every merge, fresh-check `main` because the V3 workstream may merge in parallel.
+Before every new website branch and immediately before every merge, fresh-check `main` because the V3 workstream may merge in parallel.
 
 No Netlify Production deployment, PayPal Live activation, Production email activation, V3 Profile 1 activation or Production migration is authorized by this handoff.
 
@@ -58,18 +56,18 @@ These percentages are internal project-tracking estimates, not legal certificati
 | Area | Readiness | Current assessment |
 |---|---:|---|
 | Storefront UI/content core | **96%** | Main shopping experience built and broadly tested |
-| Company/legal information pages | **90%** | Strong baseline; final compliance consistency remains |
-| Privacy / AVG | **80%** | Audit complete; public wording implementation still required |
-| Cookies / tracking | **90%** | No advertising pixels/behavioural analytics found in tracked storefront baseline |
+| Company/legal information pages | **92%** | Strong baseline; later final consistency review remains |
+| Privacy / AVG | **95%** | Audit and public wording implementation complete; final launch audit still applies |
+| Cookies / tracking | **90%** | Functional storage documented; no advertising pixels/behavioural analytics found in tracked baseline |
 | Returns / statutory withdrawal | **95%** | 14-day right, model form and online withdrawal function exist |
-| Checkout / payment-law presentation | **55%** | Consumer-facing payment-obligation/advance-payment review remains |
+| Checkout / payment-law presentation | **55%** | This is now the next website blocker |
 | Pricing / shipping / commercial-claim consistency | **95%** | Blocker A closed via PR #159 |
 | GPSR / product-safety presentation | **40%** | Manufacturer/contact/identification/safety presentation incomplete |
 | Final-domain metadata / SEO | **50%** | Old preview/GitHub Pages metadata still needs cleanup |
 | Netlify Production cutover | **0%** | Not authorized yet |
 | Controlled Live proof | **0%** | Only after all launch gates and explicit owner approval |
 
-**Overall public website launch-readiness estimate: ~80%.**
+**Overall public website launch-readiness estimate: ~83%.**
 
 The unresolved launch gates matter more than the average percentage.
 
@@ -81,28 +79,24 @@ The unresolved launch gates matter more than the average percentage.
 
 - 111-product catalogue and generated product-page architecture;
 - central public product/variant presentation;
-- mobile navigation fix;
-- real iPhone Safari hamburger confirmation;
+- mobile navigation fix and real iPhone Safari confirmation;
 - mobile checkout/WebKit regression coverage;
-- initial WebKit regression stabilization via PR #169 without storefront-runtime or V3/backend changes;
-- production-preview WebKit regression hardening via PR #172, with three consecutive successful WebKit runs on the exact PR head;
+- initial WebKit stabilization via PR #169;
+- production-preview WebKit hardening via PR #172;
 - About page redesign;
-- current Company, Terms, Privacy, Shipping and Returns page baselines.
+- Company, Terms, Privacy, Shipping and Returns page baselines.
 
 ### Legal / consumer baseline
 
 - Company Information page;
 - Terms page;
-- Privacy page baseline;
 - Shipping page baseline;
 - Returns page;
 - statutory 14-day withdrawal information;
 - model withdrawal form;
 - dedicated `withdraw.html` online withdrawal function.
 
-### Blocker A — COMPLETE via PR #159
-
-Public pricing, shipping, delivery-time and returns-copy inconsistencies were corrected.
+### Blocker A — pricing/shipping/commercial consistency — COMPLETE via PR #159
 
 Authoritative public launch rules remain:
 
@@ -113,67 +107,49 @@ Authoritative public launch rules remain:
 - EU shipping: **€9.95**;
 - United States: **€9.95 tracked**;
 - free shipping from **€69 after discount**;
-- no fixed marketing promise such as `2–4 days`;
+- no fixed marketing delivery estimate such as `2–4 days`;
 - no conflicting `30-day return` marketing promise.
 
 Owner policy: do **not** publish a concrete expected delivery time in general storefront marketing copy. The Shipping page may state the legal fallback that, unless otherwise agreed, consumer goods are delivered without undue delay and no later than 30 days. This is not an expected delivery estimate.
 
-### Blocker B, part 1 — Privacy/AVG read-only audit — COMPLETE
+### Blocker B — Privacy / AVG — COMPLETE in the current Privacy implementation
 
-The current Privacy page and relevant public storefront/browser runtime were audited without changing V3/backend code.
+The read-only audit established the actual public data/provider baseline, and the owner approved the ordinary contact/support retention policy of **12 months after the request is resolved** on 3 September 2026.
 
-Confirmed findings:
+The Privacy implementation now:
 
-1. **Google Places/address wording is stale.** The current checkout uses manual editable address fields and local validation through `js/checkout-address-entry.mjs`; no active Google Places integration was found in the checkout path.
-2. **Functional browser storage is used.** The storefront uses `localStorage` for cart/version, shipping country and discount-code state. Temporary checkout/order verification data is stored in `sessionStorage` and cleared in the verified-paid flow where appropriate.
-3. **A retention policy already exists in the repository.** `docs/DATA_RETENTION_POLICY.md` defines a 7-year statutory commerce baseline, a conditional 10-year class where an applicable OSS/IOSS regime requires it, and a 5-year target class for non-fiscal contractual/consumer-right evidence, subject to legal/tax/dispute holds. Destructive enforcement is not yet enabled and the public notice must not claim otherwise.
-4. **The homepage contact form processes personal data.** It collects name, email, subject and free-text message through the public contact flow. The Privacy notice must cover this processing and its retention rule.
-5. **Google Fonts is loaded externally** from Google domains. This is separate from the stale Google Places reference and remains part of the privacy/provider assessment.
-6. **Swiper is loaded from jsDelivr** on the homepage, creating an external browser request that remains part of the provider/privacy assessment.
-7. **Resend wording should be public-facing rather than implementation-facing.** The Privacy page may accurately disclose relevant transactional-email processing, but should not expose internal activation/API-key/test-gate details. V3 invoice/email delivery decisions remain owned by the V3 track.
-8. No advertising pixels or behavioural analytics trackers were found in the audited storefront baseline.
+- removes the stale Google Places/address-assistance statement;
+- documents manual/local checkout-address processing accurately;
+- covers the homepage contact form and ordinary support correspondence;
+- documents functional `localStorage` and temporary `sessionStorage` use;
+- documents PayPal, Netlify, Neon, Resend, Google Fonts and jsDelivr at a public-facing level;
+- removes internal Resend launch/API-key/test-gate wording from the public notice;
+- states the 7-year statutory administration baseline;
+- states the conditional 10-year OSS/IOSS rule where applicable;
+- states the approved 12-month ordinary contact/support period;
+- uses an up-to-5-year policy for non-fiscal consumer-right/contractual claim evidence where needed, subject to shorter sufficiency and applicable holds;
+- explicitly avoids claiming that automated deletion is already enforced for every category;
+- updates the public last-updated date to 3 September 2026;
+- adds `tests/privacy-page-contract.test.mjs` so stale provider/placeholder wording and the approved retention contract are covered by `npm test` / Quality CI.
 
-No V3-reserved code was modified during this audit.
+The Privacy implementation changes only public website/privacy/handoff/test content. No V3-reserved code is required.
 
 ---
 
 ## 5. Remaining public website launch blockers
 
-### Blocker B — Privacy / AVG finalization — CURRENT
+### Blocker C — checkout/payment-law presentation — EXACT NEXT AREA
 
-The audit is complete. The remaining work is implementation of the smallest accurate public Privacy changes.
+Before Dutch consumer launch, perform a read-only mapping of the current hosted PayPal checkout journey and determine:
 
-Required public changes:
+- the exact customer-facing point where the consumer becomes legally bound to pay;
+- whether the decisive consumer-facing control has legally sufficient payment-obligation wording;
+- whether the launch payment structure satisfies the applicable Dutch rules concerning advance payment for consumer goods;
+- the smallest public website/checkout presentation changes, if any, that are actually required.
 
-- remove the stale Google Places/address-assistance statement;
-- replace the placeholder future-retention paragraph with the actual retention periods/criteria that apply;
-- explain functional `localStorage` / temporary `sessionStorage` use in plain language;
-- cover the homepage contact form and its retention rule;
-- keep provider disclosure aligned with actual public runtime, including relevant hosting/payment/email/external-resource providers;
-- simplify implementation-specific Resend wording so the public notice explains processing rather than internal launch configuration;
-- update the Privacy page last-updated date;
-- add/adjust targeted validation so stale Privacy placeholder/provider claims do not silently return.
+**Do not modify checkout or payment code during the first audit step.**
 
-### One owner policy decision still required
-
-Before the final Privacy wording can be frozen, define the retention period for **ordinary contact/support messages that are not part of an order, active complaint, legal claim or other statutory record**.
-
-Recommended website policy: **12 months after the ordinary contact/support request is resolved**, unless the correspondence becomes part of an order, complaint, dispute, legal claim or statutory administration record. In that case the applicable longer category controls.
-
-This is deliberately separate from the 7/10-year statutory commerce retention and the 5-year consumer-right/claim-evidence class.
-
-Once this period is accepted or changed by the owner, Blocker B can be implemented without touching V3-owned backend code.
-
-### Blocker C — checkout/payment-law presentation
-
-After Privacy is complete:
-
-- map the consumer-facing point at which the customer becomes legally bound to pay in the hosted PayPal journey;
-- verify legally sufficient payment-obligation wording where required;
-- review the Dutch advance-payment/payment-method issue;
-- implement only public checkout presentation changes proven necessary.
-
-If the necessary solution would modify protected PayPal reconciliation, paid-order finalization, Profile routing or other V3-owned backend behavior, stop and coordinate first.
+If a required solution would modify protected PayPal capture/webhook reconciliation, paid-order finalization, Profile routing or other V3-owned backend behavior, stop and coordinate with the V3 workstream before changing anything.
 
 ### Blocker D — GPSR / product-safety presentation
 
@@ -191,12 +167,11 @@ Replace remaining preview/GitHub Pages canonical/Open Graph references with corr
 
 ## 6. Exact website release order from here
 
-1. **Blocker B implementation:** confirm the ordinary contact/support retention policy, then finalize and test `privacy.html`.
-2. **Blocker C:** checkout/payment-law presentation review and any website-only corrections.
-3. **Blocker D:** centralized GPSR/product-safety presentation.
-4. **Blocker F:** `legendmural.com` canonical/Open Graph/SEO cleanup.
-5. **Final website audit:** confirm legal/content/UI gates, owner IP gate and relevant CI; coordinate with V3 track and freeze an exact release SHA.
-6. **Production only after explicit approval:** controlled Netlify Production cutover and later live proof at the correct shared release gate.
+1. **Blocker C:** read-only checkout/payment-law audit, then any proven website-only corrections.
+2. **Blocker D:** centralized GPSR/product-safety presentation.
+3. **Blocker F:** `legendmural.com` canonical/Open Graph/SEO cleanup.
+4. **Final website audit:** confirm legal/content/UI gates, owner IP gate and relevant CI; coordinate with V3 track and freeze an exact release SHA.
+5. **Production only after explicit approval:** controlled Netlify Production cutover and later live proof at the correct shared release gate.
 
 ---
 
@@ -204,11 +179,11 @@ Replace remaining preview/GitHub Pages canonical/Open Graph references with corr
 
 **Do not deploy Netlify Production yet.**
 
-The next public-website step is exactly:
+After the current Privacy branch has passed CI and merged, the next public-website step is exactly:
 
-> **Confirm the 12-month-after-resolution retention policy for ordinary contact/support messages (or replace it with another owner-approved period), then create a website-only branch that updates `privacy.html` and targeted validation to implement the completed Privacy/AVG audit findings.**
+> **Blocker C, part 1: perform a read-only audit of the current hosted PayPal customer journey and public checkout presentation to map the legally binding payment point, payment-obligation wording and Dutch advance-payment issue. Define the smallest website-only change set before mutating checkout code.**
 
-Expected implementation scope is public website/privacy content and targeted validation only. Do not modify checkout payment internals, invoice code, V3 notification/delivery code or Production settings.
+Do not change V3 capture/webhook/finalizer/Profile routing/invoice/delivery code during that audit.
 
 ---
 

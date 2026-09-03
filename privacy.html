@@ -44,7 +44,7 @@
       <div class="max-w-4xl mx-auto px-5 sm:px-6 lg:px-8">
         <p class="text-mint text-xs font-semibold uppercase tracking-widest mb-3">Legal information</p>
         <h1 id="page-heading" class="section-heading mb-4">Privacy</h1>
-        <p class="section-subheading max-w-2xl">How ALKA Group, trading through LegendMural, handles personal data when you use the storefront, place an order or exercise consumer rights.</p>
+        <p class="section-subheading max-w-2xl">How ALKA Group, trading through LegendMural, handles personal data when you use the storefront, place an order, contact us or exercise consumer rights.</p>
       </div>
     </section>
 
@@ -64,6 +64,7 @@
           <div class="text-text-secondary leading-relaxed space-y-3">
             <p>For checkout and fulfilment we process the information you provide for your order: first name, last name, email address, street, optional address line 2, postal code, city and delivery country.</p>
             <p>We also process order information such as selected products and variants, quantities, discounts, shipping zone and cost, order totals, currency, internal order reference, PayPal Order ID, payment state and timestamps needed to reconcile the order safely.</p>
+            <p>If you contact us through the homepage contact form or by email, we process the name, email address, subject, message and follow-up correspondence you provide so we can answer your request and provide customer support.</p>
             <p>If you use the online withdrawal function, we collect the name you enter, the Order ID and the order email address. The Order ID and order email are used to locate the purchase. Your name and confirmation email are used to create and send the statutory acknowledgement of your withdrawal. The immutable withdrawal record stores the link to the order, the server-side withdrawal timestamp and a confirmation code. A separate acknowledgement record stores the minimum statement snapshot and delivery information needed to provide, evidence and if necessary retry that acknowledgement: your name, confirmation email, Order ID/order reference, withdrawal declaration, confirmation code, receipt timestamp, delivery status, attempt timestamps, provider message identifier where available and a limited technical error code if delivery fails. The form does not ask you to provide a reason for withdrawal.</p>
           </div>
         </section>
@@ -72,9 +73,10 @@
           <h2 class="font-display text-xl md:text-2xl font-bold mb-3">Why we process this data</h2>
           <div class="text-text-secondary leading-relaxed space-y-3">
             <p>We use order and contact data to create and perform the sales contract, calculate authoritative prices and shipping, process payment, deliver your order, provide order support and handle returns or withdrawal requests.</p>
+            <p>Contact and support messages are used to answer your request, take requested pre-contractual steps where relevant and maintain ordinary customer service. Depending on the request, this is based on steps connected with a contract or our legitimate interest in responding to customers and operating the storefront.</p>
             <p>For the online withdrawal function, we process the statement data needed to register the withdrawal and provide and evidence the acknowledgement required for that consumer-right process. Limited delivery metadata is used to determine whether an acknowledgement succeeded and to support a controlled resend when delivery fails. This processing is based on our legal obligations relating to statutory withdrawal and, where relevant, the performance and administration of the sales contract.</p>
             <p>We also retain limited order and payment-reconciliation data where necessary to meet legal obligations, maintain financial records, prevent duplicate financial processing, resolve disputes and protect the integrity of the payment flow.</p>
-            <p>The main legal bases are performance of a contract, compliance with legal obligations and, where applicable, our legitimate interests in secure payment reconciliation, fraud/error prevention and establishing or defending legal claims.</p>
+            <p>The main legal bases are performance of a contract or requested pre-contractual steps, compliance with legal obligations and, where applicable, our legitimate interests in customer support, secure payment reconciliation, fraud/error prevention and establishing or defending legal claims.</p>
           </div>
         </section>
 
@@ -83,18 +85,30 @@
           <div class="text-text-secondary leading-relaxed space-y-3">
             <p><strong class="text-text-primary">PayPal</strong> is used to provide the hosted payment experience and payment status. PayPal processes information under its own privacy terms when you use its service.</p>
             <p><strong class="text-text-primary">Netlify</strong> is used to host and run the storefront and server functions. <strong class="text-text-primary">Neon</strong> is used for durable order, payment-reconciliation, withdrawal and acknowledgement-delivery records.</p>
-            <p>The checkout interface can use Google address/place functionality to assist with address entry. When that functionality is loaded or used, Google may receive technical information under Google's own terms.</p>
-            <p><strong class="text-text-primary">Resend (Plus Five Five, Inc.)</strong> is the chosen transactional email provider for statutory withdrawal acknowledgements. When activated, Resend will receive the minimum message data required to deliver the acknowledgement, including the confirmation address and the withdrawal statement details included in the message. Resend states that its primary processing operations and customer data storage are in the United States. Its Data Processing Addendum incorporates the EU Standard Contractual Clauses for applicable EEA-to-US transfers. Production sending remains disabled until a LegendMural sending domain, approved from identity and server-side API key are configured and a controlled delivery test has passed.</p>
+            <p>Where LegendMural sends transactional email through <strong class="text-text-primary">Resend (Plus Five Five, Inc.)</strong>, Resend receives the recipient email address, message content and technical delivery metadata needed to deliver and troubleshoot the message. Resend's primary processing operations and customer-data storage are in the United States. Its Data Processing Addendum includes safeguards for applicable international transfers, including the EU Standard Contractual Clauses.</p>
+            <p>The storefront loads <strong class="text-text-primary">Google Fonts</strong> from Google domains. Your browser may send technical request information such as your IP address and browser/request metadata when requesting those font files.</p>
+            <p>The homepage loads the Swiper interface library through <strong class="text-text-primary">jsDelivr</strong>. That CDN request can include technical information such as IP address, browser details, requested URL, referrer-domain information and request time.</p>
             <p>We do not currently operate advertising pixels or behavioural analytics trackers in the tracked LegendMural storefront code.</p>
+          </div>
+        </section>
+
+        <section class="rounded-2xl border border-surface-border/30 bg-surface/30 p-6 md:p-8">
+          <h2 class="font-display text-xl md:text-2xl font-bold mb-3">Functional browser storage</h2>
+          <div class="text-text-secondary leading-relaxed space-y-3">
+            <p>The storefront uses functional browser storage to make the shopping and checkout experience work. <code>localStorage</code> is used for shopping-cart/version state, delivery-country selection and discount-code state. This information is stored in your browser and can remain there until it is replaced, cleared by the storefront or removed through your browser settings.</p>
+            <p>Temporary checkout and order-verification state can use <code>sessionStorage</code>. Session storage is designed for the browser session, and verified-paid checkout state is cleared where appropriate after the confirmed order flow completes.</p>
+            <p>This functional browser storage is not used by LegendMural for behavioural advertising or cross-site tracking.</p>
           </div>
         </section>
 
         <section class="rounded-2xl border border-surface-border/30 bg-surface/30 p-6 md:p-8">
           <h2 class="font-display text-xl md:text-2xl font-bold mb-3">How long we keep data</h2>
           <div class="text-text-secondary leading-relaxed space-y-3">
-            <p>We keep personal data only for as long as needed for the purposes described above and for applicable legal, accounting, tax, warranty, dispute and record-keeping requirements.</p>
-            <p>Withdrawal and acknowledgement evidence, including limited delivery metadata, is retained only for the period reasonably necessary to administer and prove the consumer-right process and to handle related disputes or legal claims, subject to any applicable hold. The linked sales/accounting record can have a different statutory retention period.</p>
-            <p>The definitive production retention schedule is part of the production-readiness work and will be documented before public launch. We will not use an indefinite retention period by default.</p>
+            <p>We apply different retention periods to different categories of data instead of keeping all personal data for one blanket period.</p>
+            <p>Sales, invoice and accounting information that forms part of our statutory business administration is normally retained for <strong class="text-text-primary">7 years</strong> in line with Dutch tax record-keeping requirements. Where a transaction falls under an applicable One Stop Shop or Import One Stop Shop (OSS/IOSS) regime, the relevant records are retained for <strong class="text-text-primary">10 years after the end of the year in which the supply took place</strong>.</p>
+            <p>Ordinary contact or support correspondence that is not part of an order, complaint, dispute, legal claim or statutory record is retained for up to <strong class="text-text-primary">12 months after the request is resolved</strong>.</p>
+            <p>Withdrawal, complaint and other non-fiscal consumer-right or contractual evidence is kept only for as long as reasonably needed to administer the matter and establish, exercise or defend legal claims. Our retention limit for that evidence is generally up to <strong class="text-text-primary">5 years</strong> where that period is needed, unless a shorter period is sufficient.</p>
+            <p>Specific information can be kept longer where a tax, legal, chargeback, fraud, security, warranty, dispute or regulatory hold requires it. A longer statutory record-keeping requirement also takes priority where it applies. These periods describe our retention policy; they do not imply that every category is currently subject to an automated deletion process.</p>
           </div>
         </section>
 
@@ -110,12 +124,12 @@
         <section class="rounded-2xl border border-surface-border/30 bg-surface/30 p-6 md:p-8">
           <h2 class="font-display text-xl md:text-2xl font-bold mb-3">Security and changes</h2>
           <div class="text-text-secondary leading-relaxed space-y-3">
-            <p>LegendMural uses server-side authoritative pricing, server-side payment verification, restricted payment-provider URLs and durable payment reconciliation to reduce the risk of payment or order manipulation. Access to production data will be limited according to operational need.</p>
+            <p>LegendMural uses server-side authoritative pricing, server-side payment verification, restricted payment-provider URLs and durable payment reconciliation to reduce the risk of payment or order manipulation. Access to personal data is limited according to operational need and appropriate access controls.</p>
             <p>We may update this notice when the storefront, providers or legal requirements change. Material changes will be reflected on this page.</p>
           </div>
         </section>
 
-        <p class="text-xs text-text-muted">Last updated: 18 August 2026.</p>
+        <p class="text-xs text-text-muted">Last updated: 3 September 2026.</p>
       </div>
     </section>
   </main>
