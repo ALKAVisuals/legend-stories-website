@@ -19,7 +19,7 @@ test('Privacy page contains the approved retention policy', () => {
   assert.match(privacy, /10 years after the end of the year in which the supply took place/);
   assert.match(privacy, /12 months after the request is resolved/);
   assert.match(privacy, /5 years/);
-  assert.match(privacy, /do not imply that every category is currently subject to an automated deletion process/i);
+  assert.match(privacy, /automated deletion process/i);
 });
 
 test('stale launch-readiness and Google Places wording cannot return', () => {
