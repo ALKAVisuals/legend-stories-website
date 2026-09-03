@@ -11,16 +11,38 @@ const context = await browser.newContext({
   reducedMotion: 'reduce',
 });
 
-// Keep this regression test isolated from third-party network latency. The
-// assertions cover local cart/checkout behavior and do not depend on webfonts.
-await context.route('https://fonts.googleapis.com/**', (route) => route.abort());
-await context.route('https://fonts.gstatic.com/**', (route) => route.abort());
+// This regression covers cart/checkout interaction, field stability and local
+// validation. Product artwork, video and webfonts are not part of those
+// assertions, so avoid loading them in WebKit CI to keep the page lightweight.
+await context.route('**/*', (route) => {
+  const request = route.request();
+  const resourceType = request.resourceType();
+  const url = request.url();
+  if (
+    resourceType === 'font'
+    || resourceType === 'media'
+    || url.includes('/media/stikkers/')
+    || url.startsWith('https://fonts.googleapis.com/')
+    || url.startsWith('https://fonts.gstatic.com/')
+  ) {
+    return route.abort();
+  }
+  return route.continue();
+});
 
 const page = await context.newPage();
-// User interactions stay strict; only the one-time cold app bootstrap below
-// gets a wider window for Vite transforms + LegendMural module initialization.
 page.setDefaultTimeout(15_000);
 const navigations = [];
+
+browser.on('disconnected', () => {
+  console.error('WebKit browser disconnected unexpectedly.');
+});
+page.on('crash', () => {
+  console.error('WebKit page crashed unexpectedly.');
+});
+page.on('pageerror', (error) => {
+  console.error(`WebKit page error: ${error?.message || error}`);
+});
 
 page.on('framenavigated', (frame) => {
   if (frame === page.mainFrame()) navigations.push(frame.url());
@@ -153,6 +175,7 @@ try {
     result: 'passed',
     browser: 'webkit',
     device: 'iPhone 13',
+    server: 'production-preview',
     appStartupTimeoutMs,
     cartInteraction: 'touchscreen.tap',
     streetFontSize,
