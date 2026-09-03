@@ -7,6 +7,7 @@ const browser = await webkit.launch({ headless: true });
 const context = await browser.newContext({
   ...devices['iPhone 13'],
   locale: 'en-NL',
+  reducedMotion: 'reduce',
 });
 
 // Keep this regression test isolated from third-party network latency. The
@@ -50,6 +51,17 @@ await page.addInitScript(() => {
 
 try {
   await page.goto(`${baseUrl}/shop.html`, { waitUntil: 'domcontentloaded' });
+  await page.addStyleTag({
+    content: `
+      *, *::before, *::after {
+        animation-duration: 0s !important;
+        animation-delay: 0s !important;
+        transition-duration: 0s !important;
+        transition-delay: 0s !important;
+        scroll-behavior: auto !important;
+      }
+    `,
+  });
   await page.waitForFunction(() => document.getElementById('cart-count')?.textContent === '1');
   navigations.length = 0;
 
