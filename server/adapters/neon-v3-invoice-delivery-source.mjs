@@ -39,6 +39,12 @@ function positiveInteger(value, field) {
 }
 
 function nonnegativeInteger(value, field, mismatchCode) {
+  if (value === null
+    || value === undefined
+    || (typeof value === 'string' && value.trim() === '')) {
+    fail(mismatchCode, `${field} is invalid.`, { field });
+  }
+
   const normalized = Number(value);
   if (!Number.isSafeInteger(normalized) || normalized < 0) {
     fail(mismatchCode, `${field} is invalid.`, { field });
