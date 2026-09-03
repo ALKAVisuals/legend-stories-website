@@ -6,63 +6,41 @@
 **Production host:** Netlify  
 **Canonical intended public origin:** `https://legendmural.com`
 
-> **START HERE AFTER `docs/READ_ME_FIRST.md`.** This is the operational handoff for the public website track only. The separate LegendMural V3 chat owns V3 Commerce / Orders / Invoices backend and delivery work in the same repository.
+> **START HERE AFTER `docs/READ_ME_FIRST.md`.** Also read `docs/PARALLEL_WORKSTREAM_COORDINATION.md` before changing the repository.
 
-This document contains no passwords, API keys, database connection strings or customer payloads.
-
----
-
-## 1. Responsibility boundary
-
-This track may work on:
-
-- storefront UI/UX, homepage, shop and product presentation;
-- responsive/mobile improvements;
-- general public content;
-- Privacy, Terms, Shipping and Returns;
-- AVG/privacy launch-readiness;
-- GPSR/product-safety presentation;
-- SEO, canonical/Open Graph metadata and `legendmural.com` metadata;
-- general visual website improvements;
-- launch-readiness blockers that do not modify the V3 commerce backend.
-
-The separate V3 chat owns V3 invoice delivery, immutable invoice snapshots, V3 Neon invoice reads, claim-token security, PDF artifacts, V3 notification persistence/delivery/retries, Profile-0/Profile-1 commerce routing and any later V3 production cutover.
-
-### Protected V3/backend surface — do not change in this website track
-
-Without explicit cross-track approval, do not modify:
-
-- `server/invoices/**`;
-- `server/notifications/**`;
-- `server/adapters/neon-order-notification-store.mjs`;
-- V3 invoice/notification Neon adapters;
-- paid-order finalizer code;
-- PayPal capture/webhook reconciliation code;
-- Profile-0/Profile-1 routing;
-- V3 invoice snapshot/PDF/Resend/retry code;
-- V3 order/invoice/notification migrations.
-
-If a website task appears to require one of those surfaces, stop and report the exact file/dependency before changing it.
+GitHub is the source of truth. Do not reconstruct current website progress from old chats.
 
 ---
 
-## 2. Fresh repository checkpoint
+## 1. Workstream boundary
 
-Fresh-checked `main` before creating the current website documentation branch:
+This track owns the public website and launch-readiness: UI/UX, homepage/shop/product presentation, responsive/mobile, Privacy/AVG, Terms/Shipping/Returns, GPSR/product-safety presentation, SEO and canonical/Open Graph/final-domain metadata.
 
-`c6ee0faf357e4943b4ddc0e92335748c20c00c99`
+The separate V3 chat owns Commerce / Orders / Invoices backend and delivery work.
 
-The website documentation branch was created directly from that exact SHA:
+Without explicit cross-track approval, this website track must not modify the V3-reserved files or responsibilities listed in `docs/PARALLEL_WORKSTREAM_COORDINATION.md`, including invoice/notification code, paid-order finalization, PayPal capture/webhook reconciliation, Profile-0/Profile-1 routing, V3 migrations, invoice snapshots, PDF delivery and V3 retry/delivery behavior.
 
-`docs/current-launch-status-20260903`
-
-This SHA is a checkpoint only. Before every new website branch and immediately before every merge, fresh-check `main` again because the V3 track may merge unrelated work in parallel.
-
-Do not reconstruct V3 progress in this file. V3 status belongs to the separate V3 handoff maintained by that track.
+If a website task appears to require a protected V3 file or responsibility, stop and report the exact dependency before changing anything.
 
 ---
 
-## 3. Current website launch-readiness
+## 2. Current repository checkpoint
+
+Fresh-checked `main` immediately before the Privacy/AVG audit and this documentation update:
+
+`01dd8c417f7554374f815bc5462883f4d22b1b80`
+
+Commit:
+
+`Merge PR #167: canonical website/V3 coordination contract`
+
+This SHA is a checkpoint only. Before every new website branch and immediately before every merge, fresh-check `main` because the V3 workstream may merge in parallel.
+
+No Netlify Production deployment, PayPal Live activation, Production email activation, V3 Profile 1 activation or Production migration is authorized by this handoff.
+
+---
+
+## 3. Current public website readiness
 
 These percentages are internal project-tracking estimates, not legal certification.
 
@@ -70,19 +48,19 @@ These percentages are internal project-tracking estimates, not legal certificati
 |---|---:|---|
 | Storefront UI/content core | **96%** | Main shopping experience built and broadly tested |
 | Company/legal information pages | **90%** | Strong baseline; final compliance consistency remains |
-| Privacy / AVG | **80%** | Retention/provider wording still needs finalization |
-| Cookies / tracking | **90%** | No advertising pixels/behavioural analytics found in the tracked storefront baseline; reassess if trackers are added |
+| Privacy / AVG | **80%** | Audit complete; public wording implementation still required |
+| Cookies / tracking | **90%** | No advertising pixels/behavioural analytics found in tracked storefront baseline |
 | Returns / statutory withdrawal | **95%** | 14-day right, model form and online withdrawal function exist |
-| Checkout / payment-law presentation | **55%** | Consumer-facing commitment/payment-obligation and advance-payment compliance still require review |
-| Pricing / shipping / commercial-claim consistency | **95%** | Blocker A closed by PR #159 and protected by validation |
+| Checkout / payment-law presentation | **55%** | Consumer-facing payment-obligation/advance-payment review remains |
+| Pricing / shipping / commercial-claim consistency | **95%** | Blocker A closed via PR #159 |
 | GPSR / product-safety presentation | **40%** | Manufacturer/contact/identification/safety presentation incomplete |
-| Final-domain metadata / SEO | **50%** | Intended domain known; old preview/GitHub Pages metadata still needs cleanup |
-| Netlify Production cutover | **0%** | Not part of the current website step |
+| Final-domain metadata / SEO | **50%** | Old preview/GitHub Pages metadata still needs cleanup |
+| Netlify Production cutover | **0%** | Not authorized yet |
 | Controlled Live proof | **0%** | Only after all launch gates and explicit owner approval |
 
 **Overall public website launch-readiness estimate: ~80%.**
 
-The launch gates matter more than the percentage.
+The unresolved launch gates matter more than the average percentage.
 
 ---
 
@@ -113,7 +91,7 @@ The launch gates matter more than the percentage.
 
 Public pricing, shipping, delivery-time and returns-copy inconsistencies were corrected.
 
-Authoritative public launch rules are:
+Authoritative public launch rules remain:
 
 - Compact: **€35 incl. VAT**;
 - Statement: **€45 incl. VAT**;
@@ -122,121 +100,112 @@ Authoritative public launch rules are:
 - EU shipping: **€9.95**;
 - United States: **€9.95 tracked**;
 - free shipping from **€69 after discount**;
-- no unsupported fixed `2–4 day` marketing delivery promise;
-- no conflicting `30-day return` marketing promise against the statutory withdrawal flow.
+- no fixed marketing promise such as `2–4 days`;
+- no conflicting `30-day return` marketing promise.
 
-Owner policy remains: do not publish a concrete expected delivery time in general storefront marketing copy. The Shipping page may state the legal fallback that, unless otherwise agreed, consumer goods are delivered without undue delay and no later than 30 days.
+Owner policy: do **not** publish a concrete expected delivery time in general storefront marketing copy. The Shipping page may state the legal fallback that, unless otherwise agreed, consumer goods are delivered without undue delay and no later than 30 days. This is not an expected delivery estimate.
+
+### Blocker B, part 1 — Privacy/AVG read-only audit — COMPLETE
+
+The current Privacy page and relevant public storefront/browser runtime were audited without changing V3/backend code.
+
+Confirmed findings:
+
+1. **Google Places/address wording is stale.** The current checkout uses manual editable address fields and local validation through `js/checkout-address-entry.mjs`; no active Google Places integration was found in the checkout path.
+2. **Functional browser storage is used.** The storefront uses `localStorage` for cart/version, shipping country and discount-code state. Temporary checkout/order verification data is stored in `sessionStorage` and cleared in the verified-paid flow where appropriate.
+3. **A retention policy already exists in the repository.** `docs/DATA_RETENTION_POLICY.md` defines a 7-year statutory commerce baseline, a conditional 10-year class where an applicable OSS/IOSS regime requires it, and a 5-year target class for non-fiscal contractual/consumer-right evidence, subject to legal/tax/dispute holds. Destructive enforcement is not yet enabled.
+4. **The homepage contact form processes personal data.** It collects name, email, subject and free-text message and submits through the Netlify Forms flow. The public Privacy notice must cover this processing and its retention rule.
+5. **Google Fonts is loaded externally** from Google domains. This is separate from the stale Google Places reference and must remain part of the privacy/provider assessment.
+6. **Swiper is loaded from jsDelivr** on the homepage, creating an external browser request that should remain part of the provider/privacy assessment.
+7. **Resend wording should be public-facing rather than implementation-facing.** The Privacy page may accurately disclose transactional email processing where relevant, but should not expose internal activation/API-key/test-gate details. Any V3 invoice/email delivery decisions remain owned by the V3 track and are not changed by the website Privacy work.
+8. No advertising pixels or behavioural analytics trackers were found in the audited storefront baseline.
+
+No V3-reserved code was modified during this audit.
 
 ---
 
 ## 5. Remaining public website launch blockers
 
-### Blocker B — Privacy / AVG finalization — EXACT NEXT STEP
+### Blocker B — Privacy / AVG finalization — CURRENT
 
-The Privacy page still needs a final launch audit focused on:
+The audit is complete. The remaining work is implementation of the smallest accurate public Privacy changes.
 
-1. replacing future/placeholder retention wording with accurate concrete periods or sufficiently concrete criteria;
-2. reconciling the listed third-party/provider wording with the actual Production-target website/runtime;
-3. removing stale provider references where the public website no longer uses the referenced functionality;
-4. ensuring the public notice matches the website data actually collected and used.
+Required public changes:
 
-This step is website/privacy work only. Do not change payment, invoice, notification or V3 backend code while doing it.
+- remove the stale Google Places/address-assistance statement;
+- replace the placeholder future-retention paragraph with the actual retention periods/criteria that apply;
+- explain functional `localStorage` / temporary `sessionStorage` use in plain language;
+- cover the homepage contact form and its retention rule;
+- keep provider disclosure aligned with actual public runtime, including relevant hosting/payment/email/external-resource providers;
+- simplify implementation-specific Resend wording so the public notice explains processing rather than internal launch configuration;
+- update the Privacy page last-updated date;
+- add/adjust validation so stale Privacy placeholder/provider claims do not silently return.
+
+### One owner policy decision still required
+
+Before the final Privacy wording can be frozen, define the retention period for **ordinary contact/support messages that are not part of an order, active complaint, legal claim or other statutory record**.
+
+This is deliberately separate from the 7/10-year statutory commerce retention and the 5-year consumer-right/claim-evidence class.
+
+Once that period is decided, the website track can implement Blocker B without touching V3-owned backend code.
 
 ### Blocker C — checkout/payment-law presentation
 
-Before Dutch consumer launch:
+After Privacy is complete:
 
-- map where the consumer becomes legally bound to pay in the current hosted PayPal journey;
-- verify that the decisive consumer-facing control has legally sufficient payment-obligation wording where required;
-- verify the launch payment structure against Dutch rules concerning advance payment for goods;
-- make only public website/checkout presentation changes that are proven necessary.
+- map the consumer-facing point at which the customer becomes legally bound to pay in the hosted PayPal journey;
+- verify legally sufficient payment-obligation wording where required;
+- review the Dutch advance-payment/payment-method issue;
+- implement only public checkout presentation changes proven necessary.
 
-If the required solution would modify protected PayPal reconciliation, paid-order finalizer, Profile routing or other V3-owned backend code, stop and coordinate first.
+If the necessary solution would modify protected PayPal reconciliation, paid-order finalization, Profile routing or other V3-owned backend behavior, stop and coordinate first.
 
 ### Blocker D — GPSR / product-safety presentation
 
-Before EU launch, add/confirm centralized public product-safety information covering the applicable manufacturer/trader identity, postal/electronic contact, sufficient product identification and relevant warnings/use/safety information.
-
-This should be template/data-driven, not 111 manual product-page edits.
+Add/confirm centralized public manufacturer/trader identity, postal/electronic contact, sufficient product identification and applicable use/safety information. Implement centrally/template-driven rather than manually editing 111 pages.
 
 ### Blocker E — commercial rights/IP owner gate
 
-Before commercial launch, the owner must separately confirm the required commercial rights/permissions for designs, portraits, names, trademarks and other protected material. This cannot be proven from repository code.
+Before commercial launch, the owner must separately confirm required commercial rights/permissions for designs, portraits, names, trademarks and other protected material. This cannot be proven from repository code.
 
 ### Blocker F — final-domain metadata / SEO
 
-Replace remaining preview/GitHub Pages canonical/Open Graph references with correct `https://legendmural.com` handling and verify the Production-domain metadata output.
+Replace remaining preview/GitHub Pages canonical/Open Graph references with correct `https://legendmural.com` handling and verify generated/public metadata.
 
 ---
 
-## 6. Public website release order
+## 6. Exact website release order from here
 
-### Phase L2 — privacy first
-
-1. complete Blocker B Privacy/AVG audit;
-2. implement only the required public privacy/content changes;
-3. run targeted validation and relevant CI;
-4. update this handoff;
-5. then continue to Blocker C checkout/payment-law presentation.
-
-### Phase L3 — GPSR + metadata
-
-1. complete centralized GPSR/product-safety presentation;
-2. complete canonical/OG/SEO Production-domain cleanup;
-3. run product-generation/parity and relevant quality checks;
-4. update this handoff.
-
-### Phase L4 — final public pre-Production audit
-
-1. fresh-check `main`;
-2. confirm all website/legal blockers are closed;
-3. confirm the owner IP/rights gate;
-4. confirm relevant CI green;
-5. coordinate with the V3 track so no parallel backend change is accidentally omitted from release review;
-6. freeze an exact approved release SHA.
-
-### Production
-
-No Netlify Production cutover, PayPal Live activation, production email activation, V3 Profile 1 activation or V3 production migration is authorized by this document. Those actions require their own explicit owner approval at the correct gate.
+1. **Blocker B implementation:** finalize and test `privacy.html` after the ordinary contact/support retention period is decided.
+2. **Blocker C:** checkout/payment-law presentation review and any website-only corrections.
+3. **Blocker D:** centralized GPSR/product-safety presentation.
+4. **Blocker F:** `legendmural.com` canonical/Open Graph/SEO cleanup.
+5. **Final website audit:** confirm legal/content/UI gates, owner IP gate and relevant CI; coordinate with V3 track and freeze an exact release SHA.
+6. **Production only after explicit approval:** controlled Netlify Production cutover and later live proof at the correct shared release gate.
 
 ---
 
-## 7. Parallel GitHub working rules
-
-1. Read `docs/READ_ME_FIRST.md` and this file before website work.
-2. Fresh-check `main` before every new website branch.
-3. Use a website-specific feature branch; never write directly to `main`.
-4. Keep PRs limited to public website/launch-readiness scope.
-5. Immediately before merge, fresh-check `main` again.
-6. If `main` changed due to V3 work, compare/rebase first and rerun relevant CI.
-7. Never merge an old V3 branch or V3 PR as part of website work.
-8. Never modify the protected V3/backend surface merely to make a website PR convenient.
-9. Do not deploy/publish without explicit owner permission for that exact Production step.
-10. Never commit secrets or customer payloads.
-
----
-
-## 8. Required report after every website step
-
-Every completed website step must report:
-
-- what was changed;
-- exact files changed;
-- whether all V3-owned/protected files remained untouched;
-- branch and PR;
-- exact `main` SHA used as the starting point;
-- whether `main` changed during the work;
-- tests/CI result;
-- updated readiness and exact next step.
-
----
-
-## 9. Exact next step
+## 7. Exact next step
 
 **Do not deploy Netlify Production yet.**
 
-The next implementation step for this website track is exactly:
+The next public-website step is exactly:
 
-> **Blocker B, part 1: perform a read-only audit of the current Privacy page and the actual public storefront/runtime provider usage, then define the smallest required Privacy/AVG wording changes.**
+> **Decide the retention period for ordinary contact/support messages, then create a website-only branch that updates `privacy.html` to implement the completed Privacy/AVG audit findings.**
 
-Do not change checkout/payment flow, V3 commerce backend, invoice delivery or Production settings in this step.
+Expected implementation scope is public website/privacy content and targeted validation only. Do not modify checkout payment internals, invoice code, V3 notification/delivery code or Production settings.
+
+---
+
+## 8. Rules for every next website chat
+
+1. Read `docs/READ_ME_FIRST.md`.
+2. Read this file.
+3. Read `docs/PARALLEL_WORKSTREAM_COORDINATION.md`.
+4. Fresh-check current `main` before creating a branch.
+5. Use GitHub as source of truth, not old chat history.
+6. Work one meaningful website step at a time.
+7. Never modify V3-reserved files/responsibilities without explicit coordination.
+8. Immediately before merge, re-check whether `main` moved; if so compare/rebase and rerun relevant CI.
+9. Never deploy/publish without explicit owner permission for that exact Production step.
+10. After each completed website step report: changed files, V3 untouched status, branch + PR, starting `main`, whether `main` moved, tests/CI, updated readiness and exact next step.
