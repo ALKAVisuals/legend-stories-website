@@ -2,7 +2,7 @@
 
 Public LegendMural e-commerce storefront for matte vinyl wall stickers. The repository contains the storefront, central product data, generated product pages, server-authoritative commerce, Neon Postgres order persistence and Netlify Functions for the PayPal/order flow.
 
-> **New website chat / continuation:** read [`docs/READ_ME_FIRST.md`](docs/READ_ME_FIRST.md) first. The current public-website handoff is [`docs/CURRENT_PRODUCTION_STATUS_20260903.md`](docs/CURRENT_PRODUCTION_STATUS_20260903.md). GitHub is the source of truth.
+> **New website chat / continuation:** read [`docs/READ_ME_FIRST.md`](docs/READ_ME_FIRST.md) first, then [`docs/CURRENT_PRODUCTION_STATUS_20260903.md`](docs/CURRENT_PRODUCTION_STATUS_20260903.md), then [`docs/PARALLEL_WORKSTREAM_COORDINATION.md`](docs/PARALLEL_WORKSTREAM_COORDINATION.md). GitHub is the source of truth.
 
 ## Current public website launch state — 3 September 2026
 
@@ -11,12 +11,12 @@ Public LegendMural e-commerce storefront for matte vinyl wall stickers. The repo
 - **Launch payment provider:** PayPal-only.
 - **Order database:** Neon Postgres.
 - **Product catalogue:** 111 products / 6 batches.
-- **Website-track starting `main` checkpoint:** `c6ee0faf357e4943b4ddc0e92335748c20c00c99`.
+- **Latest website-owned `main` checkpoint before this handoff refresh:** `09f472cb74f6a7dbc0c38f06b62174002688ae2c` (PR #172 production-preview WebKit regression stabilization).
 - **Netlify Production:** final release not yet intentionally cut over and approved.
 - **PayPal Live / Production email:** not part of the current website step.
 - **Current overall public website launch-readiness estimate:** about **80%**.
 
-The next website work is **not** a Production deployment. The exact next step is the Privacy/AVG audit defined in the current handoff.
+The read-only Privacy/AVG audit is complete. The next website work is **not** a Production deployment: confirm the ordinary contact/support retention period, then implement the audited Privacy changes in `privacy.html`.
 
 ## Parallel V3 workstream
 
@@ -34,7 +34,7 @@ Without explicit cross-track approval, website work must not modify:
 - V3 invoice snapshot/PDF/Resend/retry code;
 - V3 order/invoice/notification migrations.
 
-See `docs/READ_ME_FIRST.md` for the full working boundary.
+See `docs/PARALLEL_WORKSTREAM_COORDINATION.md` for the canonical full boundary.
 
 ## Current readiness summary
 
@@ -62,12 +62,15 @@ The public website track has already completed or substantially proven:
 - central public product/variant presentation;
 - mobile navigation fix and real iPhone Safari confirmation;
 - mobile checkout/WebKit regression coverage;
+- WebKit regression stabilization via PR #169 without storefront-runtime or V3/backend changes;
+- production-preview WebKit regression hardening via PR #172, with three consecutive green WebKit runs on the exact PR head and no storefront-runtime or V3/backend changes;
 - About page redesign;
 - Company, Terms, Privacy, Shipping and Returns baselines;
 - statutory 14-day withdrawal information;
 - model withdrawal form;
 - dedicated online withdrawal function;
-- public pricing/shipping/delivery/returns consistency cleanup via PR #159.
+- public pricing/shipping/delivery/returns consistency cleanup via PR #159;
+- read-only Privacy/AVG audit of the current Privacy page, manual checkout address flow, functional browser storage, contact form, provider references and existing retention policy.
 
 Current public launch rules include:
 
@@ -81,11 +84,26 @@ Current public launch rules include:
 - no unsupported fixed `2–4 day` marketing delivery promise;
 - no conflicting `30-day return` marketing promise.
 
+## Privacy audit result
+
+The completed audit established that:
+
+- checkout uses manual editable address fields and local validation, so the Privacy reference to Google Places/address assistance is stale;
+- functional `localStorage` is used for cart/version, shipping country and discount-code state;
+- temporary checkout/order verification state uses `sessionStorage` and is cleared in the verified-paid flow where appropriate;
+- the homepage contact form collects name, email, subject and free-text message and requires a clear Privacy retention rule;
+- `docs/DATA_RETENTION_POLICY.md` already defines 7-year statutory commerce retention, conditional 10-year OSS/IOSS retention where applicable and a 5-year target for non-fiscal contractual/consumer-right evidence, subject to holds;
+- Google Fonts and jsDelivr remain external browser resources in the provider/privacy assessment;
+- public Resend wording should describe relevant transactional-email processing without exposing internal activation/API-key/test-gate details;
+- no advertising pixels or behavioural analytics trackers were found in the audited storefront baseline.
+
+Recommended ordinary contact/support policy: **retain for 12 months after the request is resolved**, unless the correspondence becomes part of an order, complaint, dispute, legal claim or statutory record. The owner may approve or replace this period before Privacy wording is frozen.
+
 ## Remaining public website launch gates
 
 Before final Production release, the website track still needs to:
 
-1. finalize Privacy/AVG retention and provider wording;
+1. implement the completed Privacy/AVG audit findings after the ordinary contact/support retention period is confirmed;
 2. resolve the consumer-facing checkout/payment-obligation and Dutch advance-payment presentation questions without modifying V3-owned backend code;
 3. add centralized GPSR/product-safety/manufacturer information;
 4. obtain the owner’s separate commercial rights/IP confirmation;
@@ -96,9 +114,9 @@ Only after those gates and explicit owner approval may the final Netlify Product
 
 ## Exact next website step
 
-> **Perform a read-only audit of the current Privacy page and actual public storefront/runtime provider usage, then define the smallest required Privacy/AVG wording changes.**
+> **Confirm the 12-month-after-resolution retention policy for ordinary contact/support messages (or replace it with another owner-approved period), then create a website-only branch that updates `privacy.html` and targeted validation to implement the completed Privacy/AVG audit findings.**
 
-Do not change checkout/payment flow, V3 commerce backend, invoice delivery or Production settings during that step.
+Do not change checkout payment internals, V3 commerce backend, invoice delivery, V3 notification/retry logic or Production settings during that step.
 
 ## Architecture decisions
 
@@ -155,32 +173,13 @@ npm run quality
 
 Prefer current repository scripts and CI workflows over commands copied from historical handoffs.
 
-## Project structure
-
-```text
-.
-├── data/                 # Central product/catalogue data
-├── docs/                 # Current website handoff, architecture and historical context
-├── generated/            # Generated public/runtime assets
-├── js/                   # Browser runtime and commerce modules
-├── media/                # Storefront/product media
-├── netlify/functions/    # Serverless entrypoints
-├── server/               # Authoritative commerce/order/payment/runtime logic
-├── scripts/              # Generators, audits and validators
-├── templates/            # Shared generated product-page templates
-├── tests/                # Unit/contract/regression tests
-├── *.html                # Storefront pages and generated product pages
-├── netlify.toml
-├── package.json
-└── vite.config.mjs
-```
-
 ## Documentation hierarchy for public website work
 
-1. [`docs/READ_ME_FIRST.md`](docs/READ_ME_FIRST.md) — scope, parallel-work boundary and working rules;
+1. [`docs/READ_ME_FIRST.md`](docs/READ_ME_FIRST.md) — scope and working rules;
 2. [`docs/CURRENT_PRODUCTION_STATUS_20260903.md`](docs/CURRENT_PRODUCTION_STATUS_20260903.md) — exact website progress, blockers, percentages and next step;
-3. [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) — broader historical architecture context;
-4. architecture/testing documents only as needed for the current website step.
+3. [`docs/PARALLEL_WORKSTREAM_COORDINATION.md`](docs/PARALLEL_WORKSTREAM_COORDINATION.md) — canonical shared-repository website/V3 boundary;
+4. [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) — broader historical architecture context;
+5. architecture/testing documents only as needed for the current website step.
 
 The separate V3 chat maintains its own V3 handoff. Do not use this website README as a V3 source of truth.
 
