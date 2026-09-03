@@ -311,3 +311,31 @@ test('migration 013 adds V3 invoice binding, claim lease and retry scheduling wi
   assert.match(migration, /order_notifications_v3_invoice_binding_required/);
   assert.match(migration, /order_notifications_delivery_due_idx/);
 });
+
+test('migration 014 makes V3 PDF artifact identity all-null or complete and safe', async () => {
+  const migration = await readFile(
+    new URL('../server/db/migrations/014_harden_v3_invoice_artifact_identity.sql', import.meta.url),
+    'utf8',
+  );
+  const migrationRunner = await readFile(
+    new URL('../scripts/run-neon-test-migrations.mjs', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(migration, /order_notifications_v3_artifact_identity_complete/);
+  assert.match(
+    migration,
+    /renderer_version IS NULL[\s\S]*pdf_sha256 IS NULL[\s\S]*pdf_byte_length IS NULL[\s\S]*attachment_filename IS NULL/,
+  );
+  assert.match(migration, /notification_type = 'customer_v3_invoice'/);
+  assert.match(migration, /renderer_version >= 1/);
+  assert.match(migration, /pdf_sha256 ~ '\^\[a-f0-9\]\{64\}\$'/);
+  assert.match(migration, /pdf_byte_length > 0/);
+  assert.match(migration, /length\(attachment_filename\) BETWEEN 1 AND 200/);
+  assert.match(migration, /attachment_filename = btrim\(attachment_filename\)/);
+  assert.ok(migration.includes("attachment_filename !~ '[[:cntrl:]]'"));
+  assert.match(migration, /position\('\/' in attachment_filename\) = 0/);
+  assert.match(migration, /position\(chr\(92\) in attachment_filename\) = 0/);
+  assert.match(migration, /lower\(attachment_filename\) LIKE '%\.pdf'/);
+  assert.match(migrationRunner, /014_harden_v3_invoice_artifact_identity\.sql/);
+});
