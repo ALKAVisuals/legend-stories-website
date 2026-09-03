@@ -1,21 +1,37 @@
 import { webkit, devices } from 'playwright';
 
 const baseUrl = process.env.TEST_BASE_URL || 'http://127.0.0.1:3001';
+const appStartupTimeoutMs = 45_000;
 const productPagePattern = /\/(?:combat|music|sport|wisdom)-[^/]+\.html(?:[?#].*)?$/i;
 
 const browser = await webkit.launch({ headless: true });
 const context = await browser.newContext({
   ...devices['iPhone 13'],
   locale: 'en-NL',
+  reducedMotion: 'reduce',
 });
 
+// Keep this regression test isolated from third-party network latency. The
+// assertions cover local cart/checkout behavior and do not depend on webfonts.
+await context.route('https://fonts.googleapis.com/**', (route) => route.abort());
+await context.route('https://fonts.gstatic.com/**', (route) => route.abort());
+
 const page = await context.newPage();
+// User interactions stay strict; only the one-time cold app bootstrap below
+// gets a wider window for Vite transforms + LegendMural module initialization.
 page.setDefaultTimeout(15_000);
 const navigations = [];
 
 page.on('framenavigated', (frame) => {
   if (frame === page.mainFrame()) navigations.push(frame.url());
 });
+
+async function touchscreenTapCenter(locator, label) {
+  await locator.waitFor({ state: 'visible' });
+  const box = await locator.boundingBox();
+  if (!box) throw new Error(`${label} bounding box was unavailable.`);
+  await page.touchscreen.tap(box.x + (box.width / 2), box.y + (box.height / 2));
+}
 
 await page.addInitScript(() => {
   try {
@@ -45,10 +61,15 @@ await page.addInitScript(() => {
 
 try {
   await page.goto(`${baseUrl}/shop.html`, { waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(() => document.getElementById('cart-count')?.textContent === '1');
+  await page.waitForFunction(
+    () => document.getElementById('cart-count')?.textContent === '1',
+    null,
+    { timeout: appStartupTimeoutMs },
+  );
   navigations.length = 0;
 
-  await page.locator('#cart-btn').tap();
+  await touchscreenTapCenter(page.locator('#cart-btn'), 'Cart button');
+  await page.locator('#cart-drawer[aria-hidden="false"]').waitFor();
   await page.locator('#checkout-btn').tap();
   await page.locator('#checkout-drawer[aria-hidden="false"]').waitFor();
 
@@ -132,6 +153,8 @@ try {
     result: 'passed',
     browser: 'webkit',
     device: 'iPhone 13',
+    appStartupTimeoutMs,
+    cartInteraction: 'touchscreen.tap',
     streetFontSize,
     streetPositionDeltaPx: Number(positionDelta.toFixed(2)),
     followingFieldDeltaPx: Number(followingFieldDelta.toFixed(2)),
