@@ -9,6 +9,11 @@ const context = await browser.newContext({
   locale: 'en-NL',
 });
 
+// Keep this regression test isolated from third-party network latency. The
+// assertions cover local cart/checkout behavior and do not depend on webfonts.
+await context.route('https://fonts.googleapis.com/**', (route) => route.abort());
+await context.route('https://fonts.gstatic.com/**', (route) => route.abort());
+
 const page = await context.newPage();
 page.setDefaultTimeout(15_000);
 const navigations = [];
