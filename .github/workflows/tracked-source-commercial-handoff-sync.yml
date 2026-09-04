@@ -1,0 +1,106 @@
+name: Tracked-source commercial handoff sync
+
+on:
+  push:
+    branches:
+      - website/tracked-source-commercial-cleanup-20260904
+
+permissions:
+  contents: write
+
+jobs:
+  update-handoff:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Record completed source cleanup
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          function replaceRequired(source, from, to, label) {
+            if (!source.includes(from)) throw new Error(`${label}: expected marker not found`);
+            return source.replace(from, to);
+          }
+
+          // READ_ME_FIRST
+          {
+            const path = 'docs/READ_ME_FIRST.md';
+            let s = fs.readFileSync(path, 'utf8');
+            s = replaceRequired(
+              s,
+              'The final website pre-release audit/checklist was completed and merged through **PR #192**. At that checkpoint, the website track had not deployed Netlify Production and had not changed PayPal/V3 behavior.\n\n**Exact next executable website step:**\n\n> **Tracked-source commercial cleanup:** normalize `index.html` and `shop.html` so the repository source itself uses the authoritative €35/€45 pricing context, the €69-after-discount free-shipping rule, no fixed delivery-time marketing promise, the 14-day statutory withdrawal summary and canonical 30/45-cm homepage variant data. Keep the legacy 50-cm variant aliases only in the commerce runtime for backwards compatibility. Add/extend source-level regression coverage, rerun normal website CI, and do not deploy Production.\n\nDo **not** skip directly to Netlify Production. Blocker C (Dutch 100%-upfront consumer payment legal gate), Blocker D part 2B (production/material facts) and Blocker E (commercial rights/IP owner confirmation) remain open/parked exactly as recorded in the current status and final pre-release checklist.',
+              'The final website pre-release audit/checklist was merged through **PR #192**, the continuation handoff through **PR #193**, and the tracked-source commercial cleanup is implemented in **PR #194**. The website track still has not deployed Netlify Production and has not changed PayPal/V3 behavior.\n\n**Current continuation state:**\n\n> `index.html` and `shop.html` now express the authoritative €35/€45 price context, €69-after-discount free-shipping rule, no fixed delivery-time marketing promise, 14-day statutory withdrawal summary and canonical 30/45-cm source variant identity directly in tracked source. `tests/tracked-source-commercial-contract.test.mjs` protects that contract and proves the production rewrite no longer has to repair those pages. Legacy 50-cm variant aliases remain only in the commerce runtime for backwards compatibility.\n\nThere is **no further independently executable storefront source-cleanup step currently identified**. Do **not** skip directly to Netlify Production. Blocker C (Dutch 100%-upfront consumer payment legal gate), Blocker D part 2B (production/material facts) and Blocker E (commercial rights/IP owner confirmation) remain open/parked exactly as recorded in the current status and final pre-release checklist. The next checkpoint is an owner/legal/product launch-gate review, not another invented code workaround.',
+              'READ_ME_FIRST continuation checkpoint',
+            );
+            fs.writeFileSync(path, s);
+          }
+
+          // CURRENT_PRODUCTION_STATUS
+          {
+            const path = 'docs/CURRENT_PRODUCTION_STATUS_20260903.md';
+            let s = fs.readFileSync(path, 'utf8');
+            s = replaceRequired(
+              s,
+              'Final website pre-release audit/checklist started from fresh storefront `main`:\n\n`735cbf8641f0808836dc4d14115cb159011d8b71`\n\nBranch:\n\n`docs/final-pre-release-checklist-20260904`',
+              'Tracked-source commercial cleanup started from fresh storefront `main`:\n\n`844f48ab772705caa0dddff65c0279d5e92236bf`\n\nBranch:\n\n`website/tracked-source-commercial-cleanup-20260904`\n\nPR: **#194**',
+              'current checkpoint',
+            );
+            s = replaceRequired(
+              s,
+              '- PR #191 — switched tracked final-domain metadata to `legendmural.com` and deferred GPSR part 2B at owner request.',
+              '- PR #191 — switched tracked final-domain metadata to `legendmural.com` and deferred GPSR part 2B at owner request;\n- PR #192 — added the final pre-release audit/checklist;\n- PR #193 — made the next-chat continuation handoff explicit;\n- PR #194 — normalizes tracked homepage/shop commercial source and adds source-level regression coverage.',
+              'recent website PRs',
+            );
+            s = s.replace('| Storefront UI/content core | **96%** | Main shopping experience built/tested; final audit found non-blocking tracked-source legacy copy/variant attributes that still need normalization |', '| Storefront UI/content core | **97%** | Main shopping experience built/tested; tracked homepage/shop commercial source is normalized and protected by source-level regression coverage |');
+            s = s.replace('| Pricing / shipping / commercial-claim consistency | **95%** | Blocker A closed via PR #159 |', '| Pricing / shipping / commercial-claim consistency | **100%** | Authoritative rules are now consistent in tracked source, runtime and production build; live proof remains part of the later Production smoke test |');
+            s = s.replace('**Overall public website launch-readiness estimate: ~87%.**', '**Overall public website launch-readiness estimate: ~88%.**');
+
+            const auditOld = 'The audit separates already-proven pre-release evidence, parked owner/legal/product gates and live-only post-cutover checks. It also found one remaining executable source-cleanup item: tracked `index.html` and `shop.html` still contain legacy commercial copy that the Vite production build currently rewrites, and homepage product-card source still carries legacy 50-cm variant attributes. The build/runtime is protected by `vite-launch-commercial-copy-plugin.mjs`, canonical 30/45-cm variant resolution and green CI, so this is not currently evidence of a broken production checkout. However, the tracked source should be normalized before final Production so source and built output express the same commercial truth without relying on rewrite debt.';
+            const auditNew = 'The audit separates already-proven pre-release evidence, parked owner/legal/product gates and live-only post-cutover checks. Its remaining tracked-source cleanup item is now **complete via PR #194**: `index.html` and `shop.html` directly contain the authoritative commercial wording and canonical 30/45-cm source variant data. `tests/tracked-source-commercial-contract.test.mjs` rejects the old €49/€49,95 copy, fixed 2–4-day promise, €50 free-shipping threshold, 30-day return promise and legacy 50-cm source identities, and proves the production commercial-copy rewrite no longer changes these tracked pages. Runtime legacy variant aliases remain intentionally for backwards compatibility.';
+            s = replaceRequired(s, auditOld, auditNew, 'audit cleanup status');
+
+            const releaseOld = '## 6. Exact website release order from here\n\n1. **Tracked-source cleanup:** normalize legacy price/shipping/returns/delivery copy in `index.html` and `shop.html`, plus legacy homepage 50-cm variant data attributes, while retaining runtime aliases only for backwards compatibility.\n2. **Blocker C remains an explicit launch gate:** unchanged 100% upfront PayPal-only model requires external Dutch legal confirmation before Dutch consumer Production launch.\n3. **Blocker D:** part 2A is complete. Part 2B is intentionally deferred until real vinyl/ink/laminate/packaging facts exist; it remains a pre-commercial-release gate.\n4. **Blocker E:** owner separately confirms required commercial rights/permissions for the designs and protected material.\n5. **Blocker F:** tracked-source `legendmural.com` cleanup is complete; live-domain proof waits for the authorized Production release gate.\n6. **Production only after explicit approval:** controlled Netlify Production cutover, followed by the live-only checks in `FINAL_PRE_RELEASE_CHECKLIST_20260904.md`. Real payment/invoice/email proof remains separately gated and coordinated with V3.';
+            const releaseNew = '## 6. Exact website release order from here\n\n1. **Tracked-source commercial cleanup — COMPLETE via PR #194.** No further independent source cleanup is currently identified.\n2. **Blocker C remains an explicit launch gate:** unchanged 100% upfront PayPal-only model requires external Dutch legal confirmation before Dutch consumer Production launch.\n3. **Blocker D:** part 2A is complete. Part 2B is intentionally deferred until real vinyl/ink/laminate/packaging facts exist; it remains a pre-commercial-release gate.\n4. **Blocker E:** owner separately confirms required commercial rights/permissions for the designs and protected material.\n5. **Blocker F:** tracked-source `legendmural.com` cleanup is complete; live-domain proof waits for the authorized Production release gate.\n6. **Production only after the unresolved gates and explicit approval:** controlled Netlify Production cutover, followed by the live-only checks in `FINAL_PRE_RELEASE_CHECKLIST_20260904.md`. Real payment/invoice/email proof remains separately gated and coordinated with V3.';
+            s = replaceRequired(s, releaseOld, releaseNew, 'release order');
+
+            const nextOld = '## 7. Exact next step\n\n**Do not deploy Netlify Production. Do not change PayPal/V3 behavior. Do not invent material warnings.**\n\nThe final pre-release audit/checklist is complete and lives in `docs/FINAL_PRE_RELEASE_CHECKLIST_20260904.md`. Blocker C, deferred GPSR part 2B and the owner IP gate remain open/parked exactly as documented.\n\nThe exact next executable website step is:\n\n> **Tracked-source commercial cleanup:** update `index.html` and `shop.html` so the repository source itself uses the authoritative €35/€45 pricing context, €69-after-discount free-shipping rule, no fixed delivery promise, 14-day statutory withdrawal summary and canonical 30/45-cm homepage variant data. Keep legacy variant aliases in the commerce runtime only for backwards compatibility. Add or extend source-level regression coverage and rerun the normal website CI. Do not deploy Production.\n\nNo Production deployment is authorized by this handoff.';
+            const nextNew = '## 7. Exact next step\n\n**Do not deploy Netlify Production. Do not change PayPal/V3 behavior. Do not invent material warnings.**\n\nThe final pre-release audit/checklist is complete and the tracked-source commercial cleanup is complete via PR #194. No further independently executable storefront source-cleanup item is currently identified.\n\nThe next website checkpoint is:\n\n> **Owner/legal/product launch-gate review:** Blocker C still requires a specific Dutch consumer-law basis/opinion for the unchanged mandatory 100%-upfront PayPal model; Blocker D part 2B remains intentionally deferred until real production/material/packaging facts exist; and Blocker E requires owner confirmation of the commercial rights/permissions for the designs and protected material. Do not invent a technical workaround for these gates. Only after the required gates are resolved and the owner explicitly authorizes Production may the Netlify cutover and live-only checklist begin.\n\nNo Production deployment is authorized by this handoff.';
+            s = replaceRequired(s, nextOld, nextNew, 'exact next step');
+            fs.writeFileSync(path, s);
+          }
+
+          // FINAL_PRE_RELEASE_CHECKLIST
+          {
+            const path = 'docs/FINAL_PRE_RELEASE_CHECKLIST_20260904.md';
+            let s = fs.readFileSync(path, 'utf8');
+            s = s.replace('## 2. Pre-release source cleanup still open', '## 2. Pre-release source cleanup — COMPLETE via PR #194');
+            s = replaceRequired(
+              s,
+              '**Assessment:** this is not currently evidence of a broken production checkout, but it is unnecessary source divergence and build-time patch debt. The tracked source should be normalized before the final Production release so the repository itself reflects the same commercial truth as the built site. Keep the legacy variant aliases for backward compatibility, but do not keep publishing legacy data attributes in homepage source.\n\nStatus: **OPEN — next executable website cleanup.**',
+              '**Resolution via PR #194:** tracked `index.html` and `shop.html` now contain the same authoritative commercial wording that the production build previously had to repair. Homepage and shop add-to-cart source attributes use canonical `statement-45` / `45 cm` identity. `tests/tracked-source-commercial-contract.test.mjs` rejects the old commercial copy and 50-cm source identities and asserts that `rewriteLaunchCommercialCopy(...)` leaves both normalized tracked pages unchanged. Legacy aliases remain only in the commerce runtime for backwards compatibility.\n\nStatus: **COMPLETE.**',
+              'checklist cleanup resolution',
+            );
+            s = s.replace('| Storefront/build | Strong / green | Normalize tracked legacy source copy/attributes |', '| Storefront/build | Strong / green | Tracked commercial source normalized; live smoke test only after authorized cutover |');
+            s = s.replace('| Catalogue/pricing/shipping | Strong / green build+runtime evidence | Live smoke test after cutover |', '| Catalogue/pricing/shipping | Strong / green source+build+runtime evidence | Live smoke test after cutover |');
+            const exactOld = '## 6. Exact next website step\n\n> **Normalize the tracked `index.html` and `shop.html` source so it no longer depends on build-time rewrites for obsolete price/shipping/returns/delivery copy, and replace legacy homepage 50-cm variant data attributes with the canonical 30/45-cm variant identity. Keep the runtime legacy aliases only for backwards compatibility. Add/extend source-level regression coverage, rerun the normal website CI, and do not deploy Production.**\n\nAfter that cleanup, return to this checklist. If no further source-level issues are found, remaining steps are owner/legal/product gates followed by an explicitly authorized Production cutover and the live-only checks above.';
+            const exactNew = '## 6. Exact next website step\n\nThe tracked-source commercial cleanup is complete via PR #194. No further independently executable source-level storefront cleanup is currently identified.\n\n> **Next checkpoint: owner/legal/product launch-gate review.** Resolve or explicitly revisit Blocker C, resume Blocker D part 2B when the real production facts exist, and obtain the owner confirmation required for Blocker E. Do not deploy Production while those required gates remain unresolved. After the required gates are closed and the owner explicitly authorizes the release, perform the controlled Netlify Production cutover and then execute the live-only checks in section 4.';
+            s = replaceRequired(s, exactOld, exactNew, 'checklist exact next step');
+            fs.writeFileSync(path, s);
+          }
+          NODE
+
+      - name: Commit handoff updates
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/READ_ME_FIRST.md docs/CURRENT_PRODUCTION_STATUS_20260903.md docs/FINAL_PRE_RELEASE_CHECKLIST_20260904.md
+          git diff --cached --check
+          git commit -m "Docs: record tracked-source cleanup [skip ci]"
+          git push
