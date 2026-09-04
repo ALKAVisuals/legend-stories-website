@@ -1,0 +1,98 @@
+name: Blocker D handoff sync
+
+on:
+  push:
+    branches:
+      - website/blocker-d-gpsr-identity-20260904
+
+permissions:
+  contents: write
+
+jobs:
+  update-handoff:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Record Blocker D part 2A completion
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          const statusPath = 'docs/CURRENT_PRODUCTION_STATUS_20260903.md';
+          let status = fs.readFileSync(statusPath, 'utf8');
+
+          const replacements = [
+            [
+              'This Blocker-D documentation step starts from fresh storefront `main`:\n\n`e11abd5bcacc923fdaa085facd01a3f347bc490f`\n\nBranch:\n\n`docs/blocker-d-gpsr-audit-plan-20260904`',
+              'Blocker D part 2A implementation started from fresh storefront `main`:\n\n`8c11c6f5ce4e8bc50cc6e64e37fd66a79df9095b`\n\nBranch:\n\n`website/blocker-d-gpsr-identity-20260904`'
+            ],
+            [
+              '| GPSR / product-safety presentation | **50%** | Read-only audit + centralized plan complete; material confirmation and implementation remain |',
+              '| GPSR / product-safety presentation | **65%** | Central Product ID + manufacturer/contact implementation complete; material/warning validation and physical marking remain |'
+            ],
+            [
+              '**Overall public website launch-readiness estimate: ~84%.**',
+              '**Overall public website launch-readiness estimate: ~85%.**'
+            ],
+            [
+              '### Blocker D — GPSR / product-safety presentation — AUDIT + CENTRAL PLAN COMPLETE',
+              '### Blocker D — GPSR / product-safety presentation — PART 2A IDENTITY IMPLEMENTED; MATERIAL VALIDATION OPEN'
+            ],
+            [
+              '#### Central implementation direction\n\nThe public online-offer implementation should be template-driven and ultimately expose:\n\n- authoritative product ID;\n- manufacturer identity;\n- manufacturer postal/electronic contact;\n- applicable intended-use information;\n- only warnings/safety information supported by the actual material/product risk assessment.\n\nThe relevant technical surface is expected to be limited to the existing product catalogue/template/generator and focused tests. This belongs to the public website track and must not touch V3.',
+              '#### Part 2A implementation complete\n\nThe managed product-page system now centrally exposes on all 111 product pages:\n\n- the authoritative `LM-2026-xxxxx` Product ID;\n- manufacturer identity: Alka Group, trading through LegendMural;\n- manufacturer postal address;\n- manufacturer electronic contact;\n- the same product/manufacturer identity in Product JSON-LD.\n\nThe implementation is generated from `templates/product-page.html` and `scripts/product-page-generation.mjs`; the six presentation manifests were updated to the new approved template hash and all 111 tracked live product pages were regenerated. `tests/gpsr-product-identity-contract.test.mjs` verifies the identity contract across the full catalogue. No V3-reserved file or behavior was changed.\n\nNo new safety warnings or stronger material/application claims were introduced in part 2A.'
+            ],
+            [
+              '2. **Blocker D:** complete the minimal GPSR implementation. Manufacturer/product identity can be implemented centrally without changing V3; final warnings/use claims wait for real material facts.',
+              '2. **Blocker D:** part 2A online-offer identity is complete. Finish part 2B only after the owner provides the exact vinyl, ink, laminate/coating and packaging facts; validate real material documentation, supported use/warnings and physical marking.'
+            ],
+            [
+              'Blocker D part 1 is complete: audit and centralized implementation plan are documented.\n\nThe next website step has two parts in order:\n\n> **Blocker D part 2A:** implement only the already-established GPSR online-offer identity fields centrally: visible `LM-2026-xxxxx` product ID plus Alka Group / LegendMural manufacturer postal/electronic contact on managed product pages, with generated-page contract coverage. This does not depend on unverified material claims and must not touch V3.\n\nThen:\n\n> **Blocker D part 2B:** once the owner provides the exact vinyl, ink, laminate/coating and packaging facts, validate the real supplier documentation and finalize intended-use wording, any genuinely required warnings, and the physical label/insert specification.',
+              'Blocker D part 1 and part 2A are complete. The centralized online-offer Product ID and manufacturer/contact identity are implemented across all 111 managed product pages.\n\nThe exact next website step is:\n\n> **Blocker D part 2B:** obtain the owner-confirmed exact vinyl/media, ink family, laminate/coating status and final consumer packaging. Validate the real supplier documentation, decide which existing claims are supported, add only genuinely required use/safety wording, and define the lightweight physical product/packaging label or insert. Do not invent warnings while those material facts remain unknown.'
+            ]
+          ];
+
+          for (const [from, to] of replacements) {
+            if (!status.includes(from)) throw new Error(`Status handoff marker not found: ${from.slice(0, 80)}`);
+            status = status.replace(from, to);
+          }
+          fs.writeFileSync(statusPath, status);
+
+          const planPath = 'docs/GPSR_PRODUCT_SAFETY_PLAN.md';
+          let plan = fs.readFileSync(planPath, 'utf8');
+          plan = plan.replace(
+            '**Status:** Blocker D read-only audit complete; material confirmation still required before safety claims/warnings are finalized.',
+            '**Status:** Blocker D part 1 audit and part 2A online-offer identity implementation complete; material confirmation, supported warning/use wording and physical marking remain.'
+          );
+          plan = plan.replace(
+            'After the material facts below are confirmed, implement product-safety information once in the managed product-page system rather than editing live product pages one by one.',
+            'Part 2A is implemented in the managed product-page system: all 111 product pages now expose the authoritative Product ID plus manufacturer postal/electronic identity centrally. Material-dependent use/safety wording remains deferred until the facts below are confirmed.'
+          );
+          plan = plan.replace(
+            'Planned public product information:',
+            'Public product-information status:'
+          );
+          plan = plan.replace(
+            '1. visible product identifier using the authoritative `LM-2026-xxxxx` product ID;\n2. manufacturer identity: Alka Group / LegendMural;\n3. manufacturer postal address and electronic contact;\n4. concise intended-use / application information supported by the actual vinyl manufacturer\'s documentation;\n5. only safety warnings that are actually supported by the product/material risk assessment;\n6. preserve existing size/variant identification and catalogue traceability.',
+            '1. **Implemented:** visible product identifier using the authoritative `LM-2026-xxxxx` product ID;\n2. **Implemented:** manufacturer identity: Alka Group / LegendMural;\n3. **Implemented:** manufacturer postal address and electronic contact;\n4. **Pending material confirmation:** concise intended-use / application information supported by the actual vinyl manufacturer\'s documentation;\n5. **Pending risk assessment:** only safety warnings that are actually supported by the product/material risk assessment;\n6. **Implemented/preserved:** existing size/variant identification and catalogue traceability.'
+          );
+          if (!plan.includes('**Status:** Blocker D part 1 audit and part 2A online-offer identity implementation complete')) {
+            throw new Error('GPSR plan status update failed.');
+          }
+          fs.writeFileSync(planPath, plan);
+          NODE
+
+      - name: Commit handoff update
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/CURRENT_PRODUCTION_STATUS_20260903.md docs/GPSR_PRODUCT_SAFETY_PLAN.md
+          git diff --cached --check
+          git commit -m "Docs: record Blocker D part 2A completion [skip ci]"
+          git push
