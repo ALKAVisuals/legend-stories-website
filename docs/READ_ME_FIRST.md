@@ -4,23 +4,37 @@
 **Scope:** public LegendMural webshop / launch-readiness only  
 **Production host:** Netlify  
 **Current operational website status:** [`CURRENT_PRODUCTION_STATUS_20260903.md`](CURRENT_PRODUCTION_STATUS_20260903.md)  
+**Final pre-release checklist:** [`FINAL_PRE_RELEASE_CHECKLIST_20260904.md`](FINAL_PRE_RELEASE_CHECKLIST_20260904.md)  
 **Cross-track coordination:** [`PARALLEL_WORKSTREAM_COORDINATION.md`](PARALLEL_WORKSTREAM_COORDINATION.md)
 
 > **Every new chat working on the public website must start here.**
+
+## Current continuation checkpoint — 4 September 2026
+
+The final website pre-release audit/checklist was completed and merged through **PR #192**. At that checkpoint, the website track had not deployed Netlify Production and had not changed PayPal/V3 behavior.
+
+**Exact next executable website step:**
+
+> **Tracked-source commercial cleanup:** normalize `index.html` and `shop.html` so the repository source itself uses the authoritative €35/€45 pricing context, the €69-after-discount free-shipping rule, no fixed delivery-time marketing promise, the 14-day statutory withdrawal summary and canonical 30/45-cm homepage variant data. Keep the legacy 50-cm variant aliases only in the commerce runtime for backwards compatibility. Add/extend source-level regression coverage, rerun normal website CI, and do not deploy Production.
+
+Do **not** skip directly to Netlify Production. Blocker C (Dutch 100%-upfront consumer payment legal gate), Blocker D part 2B (production/material facts) and Blocker E (commercial rights/IP owner confirmation) remain open/parked exactly as recorded in the current status and final pre-release checklist.
+
+Always fresh-check `main` before starting because the separate V3 workstream may have merged since this checkpoint. Newer GitHub state overrides the checkpoint SHA/history.
 
 ## Required startup order
 
 1. Read this file.
 2. Read [`CURRENT_PRODUCTION_STATUS_20260903.md`](CURRENT_PRODUCTION_STATUS_20260903.md).
-3. Read [`PARALLEL_WORKSTREAM_COORDINATION.md`](PARALLEL_WORKSTREAM_COORDINATION.md).
-4. Fresh-check the current `main` SHA before making any repository change.
-5. Work one meaningful website step at a time.
-6. Use a website-specific branch for mutations; never write directly to `main`.
-7. Inspect relevant CI before merge.
-8. Immediately before merge, fresh-check `main` again because the separate V3 track may have merged in parallel.
-9. If `main` changed, compare/rebase first and rerun relevant CI.
-10. Do not deploy or publish to Netlify Production without explicit owner approval for that exact release step.
-11. Do not activate PayPal Live, Production email sending, V3 Profile 1, production migrations or V3 invoice issuance from this website track.
+3. Read [`FINAL_PRE_RELEASE_CHECKLIST_20260904.md`](FINAL_PRE_RELEASE_CHECKLIST_20260904.md).
+4. Read [`PARALLEL_WORKSTREAM_COORDINATION.md`](PARALLEL_WORKSTREAM_COORDINATION.md).
+5. Fresh-check the current `main` SHA before making any repository change.
+6. Work one meaningful website step at a time.
+7. Use a website-specific branch for mutations; never write directly to `main`.
+8. Inspect relevant CI before merge.
+9. Immediately before merge, fresh-check `main` again because the separate V3 track may have merged in parallel.
+10. If `main` changed, compare/rebase first and rerun relevant CI.
+11. Do not deploy or publish to Netlify Production without explicit owner approval for that exact release step.
+12. Do not activate PayPal Live, Production email sending, V3 Profile 1, production migrations or V3 invoice issuance from this website track.
 
 ## Source-of-truth rule
 
@@ -66,7 +80,7 @@ If a website task appears to require one of those files or systems, stop and rep
 
 The public website is technically far advanced, but the final Netlify cutover remains paused until the remaining website/legal launch-readiness blockers are closed.
 
-The next website step is **not** a Production deploy. Follow **Exact next step** in `CURRENT_PRODUCTION_STATUS_20260903.md`.
+The next website step is **not** a Production deploy. Follow **Exact next step** in `CURRENT_PRODUCTION_STATUS_20260903.md` and the final pre-release checklist.
 
 ## Separate workstreams
 
