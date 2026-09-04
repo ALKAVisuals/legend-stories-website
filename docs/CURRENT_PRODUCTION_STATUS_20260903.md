@@ -26,15 +26,15 @@ If a website task appears to require a protected V3 file or responsibility, stop
 
 ## 2. Current repository checkpoint
 
-The Blocker-C legal-verification handoff branch was created from fresh `main`:
+This Blocker-D documentation step starts from fresh storefront `main`:
 
-`990b2b77b136d20fb350f8bc376a4669611e22d4`
+`e11abd5bcacc923fdaa085facd01a3f347bc490f`
 
 Branch:
 
-`docs/blocker-c-100-upfront-legal-verification-20260904`
+`docs/blocker-d-gpsr-audit-plan-20260904`
 
-Canonical owner payment decision remains:
+Canonical owner payment decision remains unchanged:
 
 > **LegendMural is PayPal-only for now. A customer places an order, pays 100% immediately through PayPal, and only after verified full payment does LegendMural process/produce and later deliver the order.**
 
@@ -50,7 +50,8 @@ Recent substantive website merges include:
 - PR #183 — Blocker C payment-method research handoff;
 - PR #184 — canonical PayPal-only owner direction;
 - PR #185 — historical PayPal feasibility research;
-- PR #186 — removed the split-payment direction and made 100% upfront PayPal-only canonical.
+- PR #186 — removed the split-payment direction and made 100% upfront PayPal-only canonical;
+- PR #187 — recorded the targeted Dutch legal verification and parked Blocker C as an unresolved launch gate.
 
 Before every new website branch and immediately before every merge, fresh-check `main` because the V3 workstream may merge in parallel.
 
@@ -71,7 +72,7 @@ These percentages are internal project-tracking estimates, not legal certificati
 | Returns / statutory withdrawal | **95%** | 14-day right, model form and online withdrawal function exist |
 | Checkout / payment-law presentation | **68%** | Legal verification complete; mandatory 100% upfront remains an unresolved Dutch consumer launch conflict |
 | Pricing / shipping / commercial-claim consistency | **95%** | Blocker A closed via PR #159 |
-| GPSR / product-safety presentation | **40%** | Manufacturer/contact/identification/safety presentation incomplete |
+| GPSR / product-safety presentation | **50%** | Read-only audit + centralized plan complete; material confirmation and implementation remain |
 | Final-domain metadata / SEO | **50%** | Old preview/GitHub Pages metadata still needs cleanup |
 | Netlify Production cutover | **0%** | Not authorized yet |
 | Controlled Live proof | **0%** | Only after all launch gates and explicit owner approval |
@@ -122,22 +123,7 @@ Owner policy: do **not** publish a concrete expected delivery time in general st
 
 ### Blocker B — Privacy / AVG — COMPLETE via PR #174
 
-The Privacy audit established the actual public data/provider baseline, and the owner approved the ordinary contact/support retention policy of **12 months after the request is resolved**.
-
-The merged Privacy implementation:
-
-- removes the stale Google Places/address-assistance statement;
-- documents manual/local checkout-address processing accurately;
-- covers the homepage contact form and ordinary support correspondence;
-- documents functional `localStorage` and temporary `sessionStorage` use;
-- documents PayPal, Netlify, Neon, Resend, Google Fonts and jsDelivr at a public-facing level;
-- removes internal Resend launch/API-key/test-gate wording from the public notice;
-- states the 7-year statutory administration baseline;
-- states the conditional 10-year OSS/IOSS rule where applicable;
-- states the approved 12-month ordinary contact/support period;
-- uses an up-to-5-year policy for non-fiscal consumer-right/contractual claim evidence where needed, subject to shorter sufficiency and applicable holds;
-- explicitly avoids claiming that automated deletion is already enforced for every category;
-- includes Privacy contract-test coverage in Quality CI.
+The Privacy audit and public wording implementation are complete. Ordinary contact/support retention is **12 months after the request is resolved**. Functional browser storage and relevant providers are documented. Final launch review still applies.
 
 ---
 
@@ -145,77 +131,66 @@ The merged Privacy implementation:
 
 ### Blocker C — checkout/payment-law presentation — LEGAL VERIFICATION COMPLETE, OWNER/LEGAL GATE OPEN
 
-#### Current checkout mapping
+The current LegendMural checkout remains full-payment-only:
 
-The current LegendMural storefront uses a two-stage hosted PayPal journey:
+1. LegendMural shows totals and **`Continue to payment`**;
+2. customer is redirected to hosted PayPal;
+3. PayPal order uses `intent: CAPTURE` and `user_action: PAY_NOW`;
+4. customer approves full payment;
+5. server-side capture/status verification is required before the order becomes paid.
 
-1. the public checkout drawer shows totals and the button **`Continue to payment`**;
-2. that button validates customer/address details, creates a hosted PayPal checkout and redirects to PayPal;
-3. the PayPal order is created with `intent: CAPTURE` and `user_action: PAY_NOW`;
-4. the customer approves the full payment on PayPal;
-5. after return, server-side capture/status logic verifies full payment before the order is treated as paid.
+Canonical owner payment model remains fixed:
 
-Working conclusion remains: LegendMural's **`Continue to payment`** button is a transition to the payment provider, not the final payment-obligation control. Do not rename it to wording that falsely suggests payment already occurs on LegendMural. A controlled PayPal Sandbox proof is still required later to visually confirm the final PayPal control and final-order-total presentation before launch.
+- PayPal only;
+- 100% paid when the order is placed;
+- production/processing only after verified full payment;
+- delivery later;
+- no split payments, deposit, later balance or additional provider.
 
-#### Canonical owner payment model — fixed
+Targeted Dutch legal verification on 4 September 2026 found that current authoritative ACM/ConsuWijzer guidance and Article 7:26 BW do not provide a basis for closing the Dutch consumer launch gate while 100% advance payment is mandatory and no after-delivery route exists. Made-after-order production and the personalised-goods withdrawal exception do not establish an advance-payment exception for the standard catalogue.
 
-- PayPal is the only payment provider for now;
-- customer pays **100% of the order total when placing the order**;
-- processing/production starts only after verified full payment;
-- delivery happens later;
-- no split payment, deposit or later balance;
-- no Mollie, Riverty, Klarna or another payment provider merely to solve Blocker C;
-- do not redesign V3 for split-payment states.
+Blocker C is therefore **parked but not closed**. Do not change payment/V3 code or revive 50/50/provider alternatives from this website track. If the owner intends to launch the unchanged 100%-only model to Dutch consumers, obtain a specific Dutch consumer-law opinion before Production.
 
-The current technical payment architecture already matches this owner intent.
+### Blocker D — GPSR / product-safety presentation — AUDIT + CENTRAL PLAN COMPLETE
 
-#### Targeted Dutch legal verification — 4 September 2026
+The read-only audit is complete. Detailed plan: [`GPSR_PRODUCT_SAFETY_PLAN.md`](GPSR_PRODUCT_SAFETY_PLAN.md).
 
-The read-only legal verification used current ACM/ConsuWijzer guidance and the relevant Civil Code provisions.
+#### Already established
 
-Authoritative/current sources used:
+- Owner confirms LegendMural controls its own production in the Netherlands and sells the products under the LegendMural brand.
+- Working manufacturer identity: **Alka Group, trading through LegendMural**.
+- Public Company Information already contains legal business name, Dutch postal address, email and phone.
+- Full catalogue contains **111** physical wall-sticker products.
+- Every product has a unique `LM-2026-xxxxx` product ID, a catalogue batch and predefined Compact/Statement variants.
+- Product pages already show product image/name, size, `Matte vinyl`, `Removable` and `Made in Netherlands`.
+- Product pages are centrally generated from `templates/product-page.html`; do not edit 111 product pages manually.
 
-- ACM, **Betaalmogelijkheden aanbieden**: `https://www.acm.nl/nl/verkoop-aan-consumenten/de-koop-sluiten/betaalmogelijkheden-aanbieden`
-- ACM ConsuWijzer, **Wat zijn mijn rechten bij een aanbetaling?**: `https://consument.acm.nl/rekeningen-en-incassoprocedures/wat-zijn-mijn-rechten-bij-een-aanbetaling`
-- Burgerlijk Wetboek Boek 7, Article 26: `https://wetten.overheid.nl/BWBR0005290/`
-- Burgerlijk Wetboek Boek 7, Articles 5 and 6: `https://wetten.overheid.nl/BWBR0005290/`
-- Burgerlijk Wetboek Boek 6, Article 230p: `https://wetten.overheid.nl/BWBR0005289/`
+#### Central implementation direction
 
-Findings:
+The public online-offer implementation should be template-driven and ultimately expose:
 
-1. **The current LegendMural catalogue is a consumer-goods sale.** The tracked catalogue contains 111 physical wall stickers with two predefined variants, Compact (30 cm longest side) and Statement (45 cm longest side). A consumer chooses from predefined catalogue designs and predefined sizes.
-2. **Article 7:26(2) BW is directly relevant.** It states that payment is due at delivery and that, in a consumer sale, the buyer can be required to prepay at most half of the purchase price.
-3. **Current ACM business guidance is explicit for webshops.** A seller may offer payment of the whole amount in advance, but must also give the customer a real possibility to pay at least 50% after delivery. A standard checkout in which 100% prepayment is the only route does not satisfy that ACM guidance.
-4. **An individual consumer may voluntarily agree to more than 50% in a genuinely agreed individual arrangement.** ConsuWijzer notes that this can be agreed where the consumer voluntarily accepts it. Article 7:6(2) BW also treats standard-terms clauses that deviate from Article 26 to the consumer's disadvantage as unreasonably onerous. This does not provide a safe basis for treating LegendMural's standard non-negotiated 100%-only webshop checkout as compliant.
-5. **Producing the sticker only after payment does not remove the consumer-sale classification.** Article 7:5 BW expressly covers relevant consumer transactions where the movable item still has to be made. “Made after ordering” therefore does not itself create an advance-payment exception.
-6. **The ordinary catalogue products are not made-to-specification merely because the customer chooses Compact or Statement.** The sizes and designs are predefined by LegendMural. The repository already distinguishes standard catalogue products from truly custom/personalised work.
-7. **The personalised-goods rule does not solve the advance-payment issue.** Article 6:230p BW contains an exception from the statutory distance-selling withdrawal right for genuinely personalised / made-to-consumer-specification goods. That exception concerns withdrawal. No corresponding personalised-goods exception was found in Article 7:26 for mandatory advance payment.
-8. **Even a truly personalised future LegendMural order should not automatically be treated as exempt from the 50% advance-payment rule.** Such an order may have a different withdrawal-right position and may be separately negotiated, but personalization itself is not a statutory Article-7:26 exemption.
+- authoritative product ID;
+- manufacturer identity;
+- manufacturer postal/electronic contact;
+- applicable intended-use information;
+- only warnings/safety information supported by the actual material/product risk assessment.
 
-#### Legal conclusion for the fixed business model
+The relevant technical surface is expected to be limited to the existing product catalogue/template/generator and focused tests. This belongs to the public website track and must not touch V3.
 
-For **standard Dutch consumer orders through the current LegendMural catalogue**, the available authoritative sources do **not** support closing Blocker C while 100% advance payment through PayPal is mandatory and no after-delivery payment route exists.
+#### Four production facts still required before final safety wording
 
-This is a launch-readiness conclusion, not a court judgment or formal legal opinion. Because the owner has fixed the business model at 100% upfront PayPal-only and explicitly rejected split payments/additional providers, the website track must **not invent a technical workaround**.
+1. exact self-adhesive vinyl/media — brand + product name/code, ideally datasheet or supplier page;
+2. exact ink family/cartridge used with the Roland VersaSTUDIO BN-20A;
+3. laminate/coating — confirm none, or exact brand/type;
+4. final consumer packaging — how the sticker is packed and where a small manufacturer/product-ID label or insert can be placed.
 
-Blocker C is therefore explicitly **parked but not closed**. Before a Dutch consumer Production launch under the unchanged model, obtain a specific Dutch consumer-law opinion if the owner wants to rely on a legal interpretation that permits the 100%-only checkout. If that external opinion does not establish a lawful basis, the commercial payment model itself remains the launch conflict.
+Do not invent warnings while these facts are unknown.
 
-Do not change checkout, PayPal or V3 code merely to hide or word around this conflict. Copy cannot override the payment rule.
+Existing claims that specifically need material-document verification include **`residue-free`** and broad **`for every room`** wording.
 
-#### Superseded directions — do not revive
+#### Physical traceability
 
-The following are not part of the current LegendMural roadmap:
-
-- 50/50 payments;
-- deposit + later balance;
-- second PayPal payment after delivery;
-- PayPal Facturering/Invoicing for a later balance;
-- V3 split-payment states;
-- Mollie, Riverty, Klarna or another provider as an automatic Blocker-C fix.
-
-### Blocker D — GPSR / product-safety presentation
-
-Add/confirm centralized public manufacturer/trader identity, postal/electronic contact, sufficient product identification and applicable use/safety information. Implement centrally/template-driven rather than manually editing 111 pages.
+Before commercial release, also define a lightweight physical marking or included-document approach carrying the manufacturer identity/contact and a product or batch reference. Preferred implementation can be a standardized backing-sheet label, packaging label or included card; exact format depends on the owner-confirmed packaging method.
 
 ### Blocker E — commercial rights/IP owner gate
 
@@ -229,8 +204,8 @@ Replace remaining preview/GitHub Pages canonical/Open Graph references with corr
 
 ## 6. Exact website release order from here
 
-1. **Blocker C remains an explicit launch gate:** 100% upfront PayPal-only is the fixed owner model, but the current Dutch legal verification does not establish that a mandatory 100%-only checkout is compliant for standard Dutch consumer orders. Park this gate pending a specific Dutch consumer-law opinion or an explicit future owner change in commercial model. Do not introduce split payments or another provider from this track.
-2. **Blocker D:** continue website work with centralized GPSR/product-safety presentation while Blocker C is parked; this does not mean Blocker C is closed.
+1. **Blocker C remains an explicit launch gate:** unchanged 100% upfront PayPal-only model requires external Dutch legal confirmation before Dutch consumer Production launch.
+2. **Blocker D:** complete the minimal GPSR implementation. Manufacturer/product identity can be implemented centrally without changing V3; final warnings/use claims wait for real material facts.
 3. **Blocker F:** `legendmural.com` canonical/Open Graph/SEO cleanup.
 4. **Final website audit:** confirm legal/content/UI gates, owner IP gate and relevant CI; Blocker C must still be resolved before Dutch consumer Production launch.
 5. **Production only after explicit approval:** controlled Netlify Production cutover and later live proof at the correct shared release gate.
@@ -239,13 +214,17 @@ Replace remaining preview/GitHub Pages canonical/Open Graph references with corr
 
 ## 7. Exact next step
 
-**Do not deploy Netlify Production. Do not change the fixed PayPal-only/full-prepayment flow. Do not implement split payments. Do not modify V3 payment/finalization code.**
+**Do not deploy Netlify Production. Do not change PayPal/V3 behavior. Do not invent material warnings.**
 
-Blocker C's targeted legal verification is complete and the unresolved conflict is now documented. It is explicitly parked pending external Dutch legal confirmation or a future owner business decision.
+Blocker D part 1 is complete: audit and centralized implementation plan are documented.
 
-The exact next website step is:
+The next website step has two parts in order:
 
-> **Blocker D, part 1: perform a read-only GPSR/product-safety audit of the actual LegendMural wall-sticker catalogue and current public product presentation. Determine the correct manufacturer/economic-operator identity, product-identification information and only those safety/use warnings that are supported by the actual product/material/production facts. Do not invent warnings and do not edit 111 pages manually. Produce a centralized/template-driven implementation plan before changing product pages.**
+> **Blocker D part 2A:** implement only the already-established GPSR online-offer identity fields centrally: visible `LM-2026-xxxxx` product ID plus Alka Group / LegendMural manufacturer postal/electronic contact on managed product pages, with generated-page contract coverage. This does not depend on unverified material claims and must not touch V3.
+
+Then:
+
+> **Blocker D part 2B:** once the owner provides the exact vinyl, ink, laminate/coating and packaging facts, validate the real supplier documentation and finalize intended-use wording, any genuinely required warnings, and the physical label/insert specification.
 
 No Production deployment is authorized by this handoff.
 
