@@ -3,6 +3,10 @@ const NOTIFICATION_TARGETS = Object.freeze([
   Object.freeze({ type: 'customer_paid_order', recipient: 'customer' }),
 ]);
 
+const MERCHANT_NOTIFICATION_TARGETS = Object.freeze([
+  NOTIFICATION_TARGETS[0],
+]);
+
 function enabled(value) {
   return String(value || '').trim().toLowerCase() === 'true';
 }
@@ -30,14 +34,15 @@ function assertNotifier(notifier) {
   }
 }
 
-export async function deliverPaidOrderNotifications({
+async function deliverNotificationTargets({
   order,
   notificationStore,
   notifier,
-  emailsEnabled = process.env.ORDER_EMAILS_ENABLED,
-  merchantTo = process.env.ORDER_NOTIFICATION_TO,
-  now = () => Math.floor(Date.now() / 1000),
-} = {}) {
+  emailsEnabled,
+  merchantTo,
+  now,
+  targets,
+}) {
   if (!enabled(emailsEnabled)) {
     return Object.freeze({ skipped: true, reason: 'disabled', deliveries: [] });
   }
@@ -52,7 +57,7 @@ export async function deliverPaidOrderNotifications({
     merchant: requiredEmail(merchantTo),
     customer: requiredEmail(order.customer?.email),
   });
-  if (!recipients.merchant && !recipients.customer) {
+  if (!targets.some((target) => recipients[target.recipient])) {
     return Object.freeze({ skipped: true, reason: 'recipients_missing', deliveries: [] });
   }
 
@@ -60,7 +65,7 @@ export async function deliverPaidOrderNotifications({
   assertNotifier(notifier);
 
   const deliveries = [];
-  for (const target of NOTIFICATION_TARGETS) {
+  for (const target of targets) {
     const recipient = recipients[target.recipient];
     if (!recipient) {
       deliveries.push(Object.freeze({
@@ -137,4 +142,42 @@ export async function deliverPaidOrderNotifications({
   return Object.freeze({ skipped: false, reason: null, deliveries: Object.freeze(deliveries) });
 }
 
-export { NOTIFICATION_TARGETS };
+export async function deliverPaidOrderNotifications({
+  order,
+  notificationStore,
+  notifier,
+  emailsEnabled = process.env.ORDER_EMAILS_ENABLED,
+  merchantTo = process.env.ORDER_NOTIFICATION_TO,
+  now = () => Math.floor(Date.now() / 1000),
+} = {}) {
+  return deliverNotificationTargets({
+    order,
+    notificationStore,
+    notifier,
+    emailsEnabled,
+    merchantTo,
+    now,
+    targets: NOTIFICATION_TARGETS,
+  });
+}
+
+export async function deliverMerchantPaidOrderNotification({
+  order,
+  notificationStore,
+  notifier,
+  emailsEnabled = process.env.ORDER_EMAILS_ENABLED,
+  merchantTo = process.env.ORDER_NOTIFICATION_TO,
+  now = () => Math.floor(Date.now() / 1000),
+} = {}) {
+  return deliverNotificationTargets({
+    order,
+    notificationStore,
+    notifier,
+    emailsEnabled,
+    merchantTo,
+    now,
+    targets: MERCHANT_NOTIFICATION_TARGETS,
+  });
+}
+
+export { NOTIFICATION_TARGETS, MERCHANT_NOTIFICATION_TARGETS };
