@@ -115,6 +115,12 @@ function orderMatches(order, lookup) {
     && (!lookup.mode || order.mode === lookup.mode);
 }
 
+function assertIdentitySource(source) {
+  if (typeof source?.loadInvoiceIdentityForDownload !== 'function') {
+    throw new TypeError('Invoice download identity source is missing loadInvoiceIdentityForDownload().');
+  }
+}
+
 function assertArtifactStore(store) {
   if (typeof store?.loadArtifactState !== 'function') {
     throw new TypeError('Invoice artifact store is missing loadArtifactState().');
@@ -135,7 +141,9 @@ function mapError(error, origin) {
     return errorResponse(400, error.code, error.message, origin);
   }
   const code = String(error?.code || '');
-  if (code === 'V3_INVOICE_ARTIFACT_NOT_FOUND') {
+  if (code === 'V3_INVOICE_ARTIFACT_NOT_FOUND'
+    || code === 'V3_INVOICE_DOWNLOAD_ORDER_NOT_FOUND'
+    || code === 'V3_INVOICE_DOWNLOAD_IDENTITY_MISMATCH') {
     return errorResponse(404, 'INVOICE_NOT_AVAILABLE', 'Invoice PDF is not available.', origin);
   }
   if (code.startsWith('V3_INVOICE_STORAGE_') || code.startsWith('V3_INVOICE_ARTIFACT_')) {
@@ -150,6 +158,7 @@ function mapError(error, origin) {
 
 export async function handleInvoiceDownload(request, {
   orderStore = null,
+  identitySource = null,
   artifactStore = null,
   pdfStore = null,
   storageEnabled = process.env.V3_INVOICE_STORAGE_ENABLED,
@@ -171,6 +180,7 @@ export async function handleInvoiceDownload(request, {
 
   try {
     const store = requireOrderLookupStore(orderStore);
+    assertIdentitySource(identitySource);
     assertArtifactStore(artifactStore);
     assertPdfStore(pdfStore);
     const lookup = normalizeLookup(await parseJsonRequest(request));
@@ -181,9 +191,12 @@ export async function handleInvoiceDownload(request, {
       return errorResponse(404, 'INVOICE_NOT_AVAILABLE', 'Invoice PDF is not available.', corsOrigin);
     }
 
+    const identity = await identitySource.loadInvoiceIdentityForDownload({
+      orderReference: lookup.reference,
+    });
     const artifact = await artifactStore.loadArtifactState({
       orderReference: lookup.reference,
-      invoiceId: order.invoiceId,
+      invoiceId: identity.invoiceId,
     });
     if (!artifact.storageBound) {
       return errorResponse(404, 'INVOICE_NOT_AVAILABLE', 'Invoice PDF is not available.', corsOrigin);
