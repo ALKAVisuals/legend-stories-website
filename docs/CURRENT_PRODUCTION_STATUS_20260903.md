@@ -26,21 +26,24 @@ If a website task appears to require a protected V3 file or responsibility, stop
 
 ## 2. Current repository checkpoint
 
-The Blocker C payment-method research handoff branch was created from fresh `main`:
+The PayPal-only correction branch was created from fresh `main`:
 
-`75899afc5a02baba4f591da7d6549f49eeae01a4`
+`1b3b42e3e348d6720157e675a1b7cbb379aaf661`
 
 Branch:
 
-`docs/blocker-c-payment-method-research-20260904`
+`docs/blocker-c-paypal-only-20260904`
 
-At this checkpoint, storefront `main` already includes the separate V3 PR #182 (`add V3 invoice reconciliation worker`). That V3 merge is outside this website track; do not reconstruct or modify its implementation from this handoff.
+PR #183 previously recorded external after-delivery provider research. That research remains useful background, but its recommendation to pursue Riverty/Mollie is **superseded by the owner's explicit business decision on 4 September 2026: LegendMural remains PayPal-only for now.** Do not treat Mollie, Riverty, Klarna or another payment provider as an approved implementation direction.
 
-The most recent substantive website merges remain:
+At this checkpoint, storefront `main` also contains separate V3 work including PR #182. That V3 work is outside this website track; do not reconstruct or modify its implementation from this handoff.
+
+Recent substantive website merges include:
 
 - PR #172 — production-preview WebKit regression hardening;
-- PR #173 — current Privacy-audit handoff;
-- PR #174 — Privacy/AVG launch wording and contract tests.
+- PR #173 — Privacy-audit handoff;
+- PR #174 — Privacy/AVG launch wording and contract tests;
+- PR #183 — Blocker C read-only checkout/payment-method research handoff, now partially superseded on provider direction by the PayPal-only owner decision above.
 
 Before every new website branch and immediately before every merge, fresh-check `main` because the V3 workstream may merge in parallel.
 
@@ -59,7 +62,7 @@ These percentages are internal project-tracking estimates, not legal certificati
 | Privacy / AVG | **95%** | Audit and public wording implementation complete; final launch audit still applies |
 | Cookies / tracking | **90%** | Functional storage documented; no advertising pixels/behavioural analytics found in tracked baseline |
 | Returns / statutory withdrawal | **95%** | 14-day right, model form and online withdrawal function exist |
-| Checkout / payment-law presentation | **65%** | Read-only audit and provider research complete; Dutch advance-payment solution not implemented yet |
+| Checkout / payment-law presentation | **65%** | Read-only audit complete; PayPal-only Dutch advance-payment solution still unresolved |
 | Pricing / shipping / commercial-claim consistency | **95%** | Blocker A closed via PR #159 |
 | GPSR / product-safety presentation | **40%** | Manufacturer/contact/identification/safety presentation incomplete |
 | Final-domain metadata / SEO | **50%** | Old preview/GitHub Pages metadata still needs cleanup |
@@ -134,7 +137,7 @@ The merged Privacy implementation:
 
 ## 5. Remaining public website launch blockers
 
-### Blocker C — checkout/payment-law presentation — AUDIT + PROVIDER RESEARCH COMPLETE, IMPLEMENTATION OPEN
+### Blocker C — checkout/payment-law presentation — AUDIT COMPLETE, PAYPAL-ONLY SOLUTION OPEN
 
 #### Current checkout mapping
 
@@ -158,67 +161,31 @@ The existing PayPal-only launch structure captures the full order amount and the
 
 This cannot be solved with checkout copy alone.
 
-#### Payment-method research — 4 September 2026
+#### Canonical owner decision — PayPal only
 
-Current official/provider research supports the following working ranking for the Dutch launch:
+On 4 September 2026 the owner explicitly confirmed:
 
-**1. Recommended fit: Riverty via Mollie**
+> **For now LegendMural focuses only on PayPal.**
 
-- Riverty's 14/30-day invoice product is available in the Netherlands and is explicitly positioned as no upfront consumer payment / payment after delivery;
-- accepted transactions carry a guaranteed merchant payout model, with Riverty handling consumer non-payment risk;
-- Mollie currently offers Riverty for NL at **2.99% + €0.35** per successful transaction;
-- through Mollie's Payments API, Riverty requires manual capture: checkout produces an `authorized` payment and the merchant captures when fulfillment/shipment is ready;
-- this `authorized -> capture -> paid` lifecycle is materially different from the current PayPal-only paid-order path.
+Therefore:
 
-Sources:
+- do not implement Mollie;
+- do not implement Riverty;
+- do not implement Klarna;
+- do not introduce another payment provider merely to solve Blocker C;
+- previous external-provider research is background only and is not the approved business direction.
 
-- `https://www.riverty.com/nl-nl/bedrijven/producten/bnpl-betaalmethoden/achteraf-betalen/`
-- `https://www.mollie.com/nl/payments/riverty`
-- `https://docs.mollie.com/docs/place-a-hold-for-a-payment`
+The next investigation must stay inside PayPal and determine whether an official PayPal-native flow available to Dutch buyers can satisfy the Dutch advance-payment requirement.
 
-**2. Strong alternative: Klarna Pay Later via Mollie**
+#### Known PayPal limitation requiring fresh research
 
-- available for Dutch consumers;
-- Klarna Pay Later lets consumers receive first and pay later, commonly within 30 days;
-- Mollie currently lists NL Klarna at **2.99% + €0.45**;
-- the merchant receives the order value through Mollie while Klarna carries consumer non-payment risk;
-- for physical goods, Mollie recommends authorizing first and capturing on fulfillment/shipment, so this also introduces an `authorized/capture` lifecycle that must be coordinated with V3.
+Prior official PayPal developer research did not list the Netherlands as a Pay Later buyer market. That means PayPal Pay Later cannot currently be assumed to solve the Dutch requirement. This must be fresh-checked against current PayPal documentation before any conclusion or implementation.
 
-Sources:
+If no PayPal-native after-delivery option exists for Dutch buyers, the remaining PayPal-only architecture may require a partial-payment structure, for example no more than 50% at order time with a later PayPal balance payment. That would materially affect payment status, paid-order finalization, invoice timing, reconciliation and potentially the canonical order lifecycle.
 
-- `https://www.mollie.com/nl/payments/klarna`
-- `https://help.mollie.com/hc/nl/articles/360009978893-Hoe-activeer-ik-Klarna-als-betaalmethode`
-- `https://docs.mollie.com/docs/klarna`
+Such a solution belongs partly or wholly to the V3 Commerce / Orders / Invoices workstream. The website track must stop before modifying any protected PayPal capture/webhook/finalizer/Profile/invoice/delivery behavior.
 
-**Not suitable as the primary Dutch compliance solution: PayPal Pay Later**
-
-PayPal's current developer payment-method table lists Pay Later buyer availability for AU, FR, DE, IT, ES, GB and US, not NL. PayPal's Dutch business marketing page also warns that Pay Later is not available in all markets. Do not rely on PayPal Pay Later for the Dutch launch unless PayPal's official NL eligibility changes and is proven for the actual merchant account/integration.
-
-Sources:
-
-- `https://developer.paypal.com/docs/checkout/apm/`
-- `https://www.paypal.com/nl/business/accept-payments/payment-methods`
-
-**Not preferred as the compliance anchor: in3 / generic pay-in-3**
-
-in3 requires the first one-third payment at purchase and schedules the later instalments 30 and 60 days after purchase. Because its schedule is purchase-date based rather than explicitly delivery-based, it is a less direct fit for the specific ACM requirement that at least 50% can be paid after delivery. It may remain a future convenience option, but it should not be the primary legal-compliance anchor without separate legal confirmation.
-
-Source: `https://www.mollie.com/nl/payments/in3`
-
-#### Architecture boundary discovered by the research
-
-Adding Riverty or Klarna through Mollie is **not a website-copy-only change**. It introduces at minimum a second payment provider plus an authorization/capture lifecycle and provider webhooks/statuses. That can affect the V3-owned concepts of paid-order finalization, invoice timing, retry/reconciliation and order status.
-
-Therefore the public website track must **not independently implement Mollie/Riverty/Klarna payment code**.
-
-Before implementation:
-
-1. owner chooses the desired business/provider direction;
-2. the exact provider lifecycle is coordinated with the V3 workstream;
-3. V3 determines how `authorized`, `captured/paid`, invoice issuance and retry/reconciliation fit the canonical order lifecycle;
-4. only then should a coordinated implementation plan be created.
-
-A small later website-only improvement remains likely regardless of provider: the checkout should clearly present the actually available payment methods before the consumer leaves LegendMural. Do not implement this until the provider set is decided.
+A small later website-only improvement remains likely after the payment structure is decided: clearly present the actual PayPal payment arrangement before the consumer leaves LegendMural. Do not implement that wording until the payment structure is proven.
 
 ### Blocker D — GPSR / product-safety presentation
 
@@ -236,7 +203,7 @@ Replace remaining preview/GitHub Pages canonical/Open Graph references with corr
 
 ## 6. Exact website release order from here
 
-1. **Blocker C:** owner payment-provider decision + V3 coordination; then implement only the agreed payment-law solution and public checkout presentation.
+1. **Blocker C:** read-only PayPal-only feasibility research; if a PayPal-native Dutch solution exists, define the smallest coordinated implementation. If not, stop and coordinate any partial-payment architecture with V3 before code changes.
 2. **Blocker D:** centralized GPSR/product-safety presentation.
 3. **Blocker F:** `legendmural.com` canonical/Open Graph/SEO cleanup.
 4. **Final website audit:** confirm legal/content/UI gates, owner IP gate and relevant CI; coordinate with V3 track and freeze an exact release SHA.
@@ -246,13 +213,13 @@ Replace remaining preview/GitHub Pages canonical/Open Graph references with corr
 
 ## 7. Exact next step
 
-**Do not deploy Netlify Production yet. Do not independently add a second payment provider from the website track.**
+**Do not deploy Netlify Production yet. Do not add Mollie, Riverty, Klarna or another payment provider.**
 
-The read-only Blocker C checkout audit and provider research are complete. The exact next step is now:
+The exact next website step is:
 
-> **Owner decision: choose whether LegendMural should pursue the recommended Riverty-via-Mollie after-delivery route (preferred), Klarna Pay Later via Mollie as the alternative, or another explicitly reviewed solution. After that decision, stop and coordinate the provider's `authorized -> capture -> paid` lifecycle with the V3 workstream before any payment-code implementation.**
+> **Blocker C, PayPal-only part 2: perform a fresh read-only audit of official PayPal capabilities for Dutch buyers. Determine whether PayPal itself offers a compliant after-delivery or delayed-payment route for the Netherlands. If not, determine at architecture level whether a PayPal-only maximum-50%-at-order + later-balance flow is feasible, and identify the exact V3-owned dependencies before any code change.**
 
-No V3 capture/webhook/finalizer/Profile routing/invoice/delivery code may be changed by this website track without that coordination.
+Do not change checkout/payment/V3 code during this research step.
 
 ---
 
