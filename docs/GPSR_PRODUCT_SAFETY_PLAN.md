@@ -3,7 +3,7 @@
 **Updated:** 4 September 2026  
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Scope:** public LegendMural wall-sticker catalogue / launch-readiness  
-**Status:** Blocker D part 1 audit and part 2A online-offer identity implementation complete; material confirmation, supported warning/use wording and physical marking remain.
+**Status:** Blocker D part 1 audit and part 2A online-offer identity implementation complete; part 2B is intentionally deferred until exact production facts become available. Material validation, supported warning/use wording and physical marking remain pre-commercial-release requirements.
 
 ## Purpose
 
@@ -33,7 +33,7 @@ Before final publication, keep this aligned with the actual production/legal set
 
 ## Minimal centralized website implementation
 
-Part 2A is implemented in the managed product-page system: all 111 product pages now expose the authoritative Product ID plus manufacturer postal/electronic identity centrally. Material-dependent use/safety wording remains deferred until the facts below are confirmed.
+Part 2A is implemented in the managed product-page system: all 111 product pages now expose the authoritative Product ID plus manufacturer postal/electronic identity centrally. Material-dependent use/safety wording remains deferred until the facts below are confirmed. The owner currently does not have those exact production facts, so part 2B is parked for now rather than guessed or fabricated.
 
 Public product-information status:
 
@@ -163,4 +163,4 @@ Blocker D can move from audit to implementation-complete when:
 
 ## Exact next step
 
-> Obtain the four owner production inputs above. Until they are known, do not publish new safety warnings and do not strengthen performance/application claims. Once received, validate the exact material documentation and produce the final centralized website + physical-label implementation specification.
+> **Deferred at owner request for now:** resume this step when the exact vinyl/media, ink family, laminate/coating status and packaging method become available. Until then, do not publish invented safety warnings, do not strengthen performance/application claims, and do not treat Blocker D as fully closed.

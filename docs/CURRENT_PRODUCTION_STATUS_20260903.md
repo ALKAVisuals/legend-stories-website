@@ -26,13 +26,13 @@ If a website task appears to require a protected V3 file or responsibility, stop
 
 ## 2. Current repository checkpoint
 
-Blocker D part 2A implementation started from fresh storefront `main`:
+Blocker F final-domain source cleanup started from fresh storefront `main`:
 
-`8c11c6f5ce4e8bc50cc6e64e37fd66a79df9095b`
+`7e923a810c503fba5134c293b21de98ac8235ef0`
 
 Branch:
 
-`website/blocker-d-gpsr-identity-20260904`
+`website/blocker-f-final-domain-20260904`
 
 Canonical owner payment decision remains unchanged:
 
@@ -72,12 +72,12 @@ These percentages are internal project-tracking estimates, not legal certificati
 | Returns / statutory withdrawal | **95%** | 14-day right, model form and online withdrawal function exist |
 | Checkout / payment-law presentation | **68%** | Legal verification complete; mandatory 100% upfront remains an unresolved Dutch consumer launch conflict |
 | Pricing / shipping / commercial-claim consistency | **95%** | Blocker A closed via PR #159 |
-| GPSR / product-safety presentation | **65%** | Central Product ID + manufacturer/contact implementation complete; material/warning validation and physical marking remain |
-| Final-domain metadata / SEO | **50%** | Old preview/GitHub Pages metadata still needs cleanup |
+| GPSR / product-safety presentation | **65%** | Part 2A identity complete; part 2B intentionally deferred until exact production/material/packaging facts become available |
+| Final-domain metadata / SEO | **90%** | Tracked public source + production build use `legendmural.com`; only live-domain/Production verification remains |
 | Netlify Production cutover | **0%** | Not authorized yet |
 | Controlled Live proof | **0%** | Only after all launch gates and explicit owner approval |
 
-**Overall public website launch-readiness estimate: ~85%.**
+**Overall public website launch-readiness estimate: ~87%.**
 
 The unresolved launch gates matter more than the average percentage.
 
@@ -151,7 +151,7 @@ Targeted Dutch legal verification on 4 September 2026 found that current authori
 
 Blocker C is therefore **parked but not closed**. Do not change payment/V3 code or revive 50/50/provider alternatives from this website track. If the owner intends to launch the unchanged 100%-only model to Dutch consumers, obtain a specific Dutch consumer-law opinion before Production.
 
-### Blocker D — GPSR / product-safety presentation — PART 2A IDENTITY IMPLEMENTED; MATERIAL VALIDATION OPEN
+### Blocker D — GPSR / product-safety presentation — PART 2A COMPLETE; PART 2B DEFERRED UNTIL PRODUCTION FACTS EXIST
 
 The read-only audit is complete. Detailed plan: [`GPSR_PRODUCT_SAFETY_PLAN.md`](GPSR_PRODUCT_SAFETY_PLAN.md).
 
@@ -179,6 +179,8 @@ The implementation is generated from `templates/product-page.html` and `scripts/
 
 No new safety warnings or stronger material/application claims were introduced in part 2A.
 
+Owner decision on 4 September 2026: the exact vinyl/media, ink family, laminate/coating status and final packaging details are not currently available. **Blocker D part 2B is therefore intentionally deferred for now.** This does not close the GPSR gate and must not be interpreted as proof of full product-safety compliance; it remains a pre-commercial-release item to resume when the real production facts exist. Website work may proceed to later non-dependent blockers.
+
 #### Four production facts still required before final safety wording
 
 1. exact self-adhesive vinyl/media — brand + product name/code, ideally datasheet or supplier page;
@@ -198,17 +200,30 @@ Before commercial release, also define a lightweight physical marking or include
 
 Before commercial launch, the owner must separately confirm required commercial rights/permissions for designs, portraits, names, trademarks and other protected material. This cannot be proven from repository code.
 
-### Blocker F — final-domain metadata / SEO
+### Blocker F — final-domain metadata / SEO — TRACKED SOURCE CLEANUP COMPLETE; LIVE-DOMAIN PROOF PENDING
 
-Replace remaining preview/GitHub Pages canonical/Open Graph references with correct `https://legendmural.com` handling and verify generated/public metadata.
+Tracked public metadata has been normalized from the historical GitHub Pages origin to the canonical production origin `https://legendmural.com`.
+
+Completed in the website track:
+
+- root public HTML canonical/Open Graph/absolute social metadata now uses `https://legendmural.com`;
+- all 111 central product catalog canonicals use `https://legendmural.com/<product-page>`;
+- all managed product pages were regenerated from the updated central catalog;
+- the homepage canonical/Open Graph URL is the HTTPS apex `https://legendmural.com/`, not `/index.html`;
+- `sitemap.xml` uses the final origin and apex homepage URL;
+- `robots.txt` points to `https://legendmural.com/sitemap.xml`;
+- `tests/final-domain-metadata-contract.test.mjs` protects the tracked-source contract;
+- the existing Vite production-origin plugin remains defense-in-depth and production-build validation passed.
+
+No Netlify Production deployment or live-domain verification was performed. Blocker F therefore needs only final live proof at the authorized Production release gate.
 
 ---
 
 ## 6. Exact website release order from here
 
 1. **Blocker C remains an explicit launch gate:** unchanged 100% upfront PayPal-only model requires external Dutch legal confirmation before Dutch consumer Production launch.
-2. **Blocker D:** part 2A online-offer identity is complete. Finish part 2B only after the owner provides the exact vinyl, ink, laminate/coating and packaging facts; validate real material documentation, supported use/warnings and physical marking.
-3. **Blocker F:** `legendmural.com` canonical/Open Graph/SEO cleanup.
+2. **Blocker D:** part 2A is complete. Part 2B is intentionally deferred until real vinyl/ink/laminate/packaging facts exist; it remains a pre-commercial-release gate.
+3. **Blocker F:** tracked-source `legendmural.com` canonical/Open Graph/sitemap/robots cleanup is complete; live-domain proof waits for the authorized Production release gate.
 4. **Final website audit:** confirm legal/content/UI gates, owner IP gate and relevant CI; Blocker C must still be resolved before Dutch consumer Production launch.
 5. **Production only after explicit approval:** controlled Netlify Production cutover and later live proof at the correct shared release gate.
 
@@ -218,11 +233,11 @@ Replace remaining preview/GitHub Pages canonical/Open Graph references with corr
 
 **Do not deploy Netlify Production. Do not change PayPal/V3 behavior. Do not invent material warnings.**
 
-Blocker D part 1 and part 2A are complete. The centralized online-offer Product ID and manufacturer/contact identity are implemented across all 111 managed product pages.
+Blocker D part 2B is intentionally deferred because the owner does not currently have the exact production/material/packaging facts. Blocker F tracked-source cleanup is complete.
 
 The exact next website step is:
 
-> **Blocker D part 2B:** obtain the owner-confirmed exact vinyl/media, ink family, laminate/coating status and final consumer packaging. Validate the real supplier documentation, decide which existing claims are supported, add only genuinely required use/safety wording, and define the lightweight physical product/packaging label or insert. Do not invent warnings while those material facts remain unknown.
+> **Final website pre-release audit/checklist:** audit the current tracked storefront and built output for remaining launch-readiness issues that can be proven before Netlify Production. Separate (a) already-proven pre-release items, (b) parked owner/legal gates such as Blocker C, deferred GPSR part 2B and the IP gate, and (c) checks that can only be performed after the eventual authorized Netlify Production cutover. Do not deploy during this audit.
 
 No Production deployment is authorized by this handoff.
 
