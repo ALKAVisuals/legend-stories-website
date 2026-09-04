@@ -82,7 +82,7 @@ function isRetriableProviderStatus(status) {
     || (status >= 200 && status <= 299);
 }
 
-function isProviderTransportFailure(error) {
+function isTransportFailure(error) {
   const name = String(error?.name || '');
   if (name === 'AbortError' || name === 'TimeoutError' || name === 'TypeError') return true;
   const codes = [error?.code, error?.cause?.code]
@@ -96,17 +96,22 @@ function retryDueAt({ stage, error, deliveryAttempts, failedAt }) {
   if (!Number.isSafeInteger(attempts) || attempts < 1 || attempts >= MAX_V3_AUTOMATIC_CLAIMS) {
     return null;
   }
-  if (stage !== 'provider_send') return null;
 
   let retryable = false;
-  if (String(error?.code || '') === 'RESEND_PAID_ORDER_DELIVERY_REJECTED') {
-    const status = providerStatus(error);
-    retryable = status !== null && isRetriableProviderStatus(status);
-  } else {
-    retryable = isProviderTransportFailure(error);
+  if (stage === 'provider_send') {
+    if (String(error?.code || '') === 'RESEND_PAID_ORDER_DELIVERY_REJECTED') {
+      const status = providerStatus(error);
+      retryable = status !== null && isRetriableProviderStatus(status);
+    } else {
+      retryable = isTransportFailure(error);
+    }
+  } else if (stage === 'storage_persist' || stage === 'storage_load') {
+    retryable = String(error?.code || '') === 'V3_INVOICE_STORAGE_UNAVAILABLE';
+  } else if (stage === 'artifact_bind') {
+    retryable = isTransportFailure(error);
   }
-  if (!retryable) return null;
 
+  if (!retryable) return null;
   const delaySeconds = RETRY_BACKOFF_SECONDS[attempts];
   if (!Number.isSafeInteger(delaySeconds) || delaySeconds <= 0) return null;
   const dueAt = failedAt + delaySeconds;
@@ -120,14 +125,25 @@ function assertInvoiceSource(source) {
 }
 
 function assertNotificationStore(store) {
-  for (const method of [
-    'ensureNotification',
-    'claimNotification',
-    'prepareV3InvoiceArtifact',
-    'recordDelivery',
-  ]) {
+  for (const method of ['ensureNotification', 'claimNotification', 'recordDelivery']) {
     if (typeof store?.[method] !== 'function') {
       throw new TypeError(`V3 invoice notification store is missing ${method}().`);
+    }
+  }
+}
+
+function assertArtifactStore(store) {
+  for (const method of ['loadArtifactState', 'bindStoredArtifact']) {
+    if (typeof store?.[method] !== 'function') {
+      throw new TypeError(`V3 invoice artifact store is missing ${method}().`);
+    }
+  }
+}
+
+function assertPdfStore(store) {
+  for (const method of ['persistVerifiedArtifact', 'loadVerifiedArtifact']) {
+    if (typeof store?.[method] !== 'function') {
+      throw new TypeError(`V3 invoice PDF store is missing ${method}().`);
     }
   }
 }
@@ -139,9 +155,7 @@ function assertNotifier(notifier) {
 }
 
 function assertRenderer(renderer, name) {
-  if (typeof renderer !== 'function') {
-    throw new TypeError(`${name} must be a function.`);
-  }
+  if (typeof renderer !== 'function') throw new TypeError(`${name} must be a function.`);
 }
 
 function normalizeProfile1Order(order) {
@@ -152,11 +166,30 @@ function normalizeProfile1Order(order) {
       { documentProfileVersion: order?.documentProfileVersion ?? null },
     );
   }
-
   return Object.freeze({
     reference: normalizeReference(order?.reference),
     invoiceId: positiveInteger(order?.invoiceId, 'invoiceId'),
   });
+}
+
+function artifactIdentity(artifact, durable) {
+  return Object.freeze({
+    invoiceId: durable.invoiceId,
+    orderReference: durable.orderReference,
+    snapshotSchemaVersion: durable.snapshotSchemaVersion,
+    rendererVersion: positiveInteger(artifact?.rendererVersion, 'rendererVersion'),
+    pdfSha256: String(artifact?.sha256 || '').trim().toLowerCase(),
+    pdfByteLength: positiveInteger(artifact?.byteLength, 'pdfByteLength'),
+    attachmentFilename: String(artifact?.filename || '').trim(),
+  });
+}
+
+function stateArtifactMatches(state, identity) {
+  if (state.rendererVersion === null) return true;
+  return state.rendererVersion === identity.rendererVersion
+    && state.pdfSha256 === identity.pdfSha256
+    && state.pdfByteLength === identity.pdfByteLength
+    && state.attachmentFilename === identity.attachmentFilename;
 }
 
 function deliveryResult({
@@ -183,15 +216,20 @@ function deliveryResult({
 export function createV3CustomerInvoiceDeliveryOrchestrator({
   invoiceSource,
   notificationStore,
+  artifactStore,
+  pdfStore,
   notifier,
   pdfRenderer = renderV3InvoicePdf,
   emailRenderer = renderV3CustomerInvoiceEmail,
   emailsEnabled = process.env.ORDER_EMAILS_ENABLED,
+  storageEnabled = process.env.V3_INVOICE_STORAGE_ENABLED,
   now = () => Math.floor(Date.now() / 1000),
   leaseSeconds,
 } = {}) {
   assertInvoiceSource(invoiceSource);
   assertNotificationStore(notificationStore);
+  assertArtifactStore(artifactStore);
+  assertPdfStore(pdfStore);
   assertNotifier(notifier);
   assertRenderer(pdfRenderer, 'V3 invoice PDF renderer');
   assertRenderer(emailRenderer, 'V3 customer invoice email renderer');
@@ -229,11 +267,20 @@ export function createV3CustomerInvoiceDeliveryOrchestrator({
     }
 
     const profile1Order = normalizeProfile1Order(order);
+    if (!enabled(storageEnabled)) {
+      return deliveryResult({
+        orderReference: profile1Order.reference,
+        invoiceId: profile1Order.invoiceId,
+        status: 'skipped',
+        skipped: true,
+        reason: 'storage_disabled',
+      });
+    }
+
     const durable = await invoiceSource.loadIssuedInvoiceForDelivery({
       orderReference: profile1Order.reference,
       invoiceId: profile1Order.invoiceId,
     });
-
     const createdAt = timestamp(durable?.snapshot?.order?.paidAt);
     await notificationStore.ensureNotification({
       orderReference: durable.orderReference,
@@ -244,13 +291,12 @@ export function createV3CustomerInvoiceDeliveryOrchestrator({
     });
 
     const attemptedAt = timestamp(now());
-    const claimArgs = {
+    const claim = await notificationStore.claimNotification({
       orderReference: durable.orderReference,
       notificationType: NOTIFICATION_TYPE,
       attemptedAt,
       ...(leaseSeconds === undefined ? {} : { leaseSeconds }),
-    };
-    const claim = await notificationStore.claimNotification(claimArgs);
+    });
     if (!claim?.claimed) {
       return deliveryResult({
         orderReference: durable.orderReference,
@@ -265,26 +311,64 @@ export function createV3CustomerInvoiceDeliveryOrchestrator({
     let stage = 'claim_validation';
     try {
       if (!claimToken) {
-        fail(
-          'V3_INVOICE_DELIVERY_CLAIM_INVALID',
-          'Claimed V3 invoice notification has no claim token.',
-        );
+        fail('V3_INVOICE_DELIVERY_CLAIM_INVALID', 'Claimed V3 invoice notification has no claim token.');
       }
 
-      stage = 'pdf_render';
-      const artifact = await pdfRenderer({ snapshot: durable.snapshot });
-      const preparedAt = timestamp(now());
-      stage = 'artifact_prepare';
-      await notificationStore.prepareV3InvoiceArtifact({
+      stage = 'artifact_state_load';
+      const state = await artifactStore.loadArtifactState({
         orderReference: durable.orderReference,
         invoiceId: durable.invoiceId,
-        claimToken,
-        rendererVersion: artifact.rendererVersion,
-        pdfSha256: artifact.sha256,
-        pdfByteLength: artifact.byteLength,
-        attachmentFilename: artifact.filename,
-        updatedAt: preparedAt,
       });
+
+      let attachment;
+      if (state.storageBound) {
+        stage = 'storage_load';
+        const persisted = await pdfStore.loadVerifiedArtifact({
+          invoiceId: durable.invoiceId,
+          orderReference: durable.orderReference,
+          snapshotSchemaVersion: durable.snapshotSchemaVersion,
+          rendererVersion: state.rendererVersion,
+          pdfSha256: state.pdfSha256,
+          pdfByteLength: state.pdfByteLength,
+          attachmentFilename: state.attachmentFilename,
+          storageBackend: state.storageBackend,
+          storageKey: state.storageKey,
+        });
+        attachment = Object.freeze({
+          filename: state.attachmentFilename,
+          bytes: persisted.bytes,
+        });
+      } else {
+        stage = 'pdf_render';
+        const artifact = await pdfRenderer({ snapshot: durable.snapshot });
+        const identity = artifactIdentity(artifact, durable);
+        if (!stateArtifactMatches(state, identity)) {
+          fail(
+            'V3_INVOICE_ARTIFACT_IDENTITY_MISMATCH',
+            'Previously prepared V3 invoice artifact identity differs from the deterministic render.',
+          );
+        }
+
+        stage = 'storage_persist';
+        const persisted = await pdfStore.persistVerifiedArtifact({
+          ...identity,
+          bytes: artifact.bytes,
+        });
+
+        const storedAt = timestamp(now());
+        stage = 'artifact_bind';
+        const bound = await artifactStore.bindStoredArtifact({
+          ...identity,
+          claimToken,
+          storageBackend: persisted.storageBackend,
+          storageKey: persisted.storageKey,
+          storedAt,
+        });
+        attachment = Object.freeze({
+          filename: bound.attachmentFilename,
+          bytes: persisted.bytes,
+        });
+      }
 
       stage = 'email_render';
       const renderedEmail = await emailRenderer({ snapshot: durable.snapshot });
@@ -293,10 +377,7 @@ export function createV3CustomerInvoiceDeliveryOrchestrator({
         to: durable.snapshot.customer?.email,
         orderReference: durable.orderReference,
         renderedEmail,
-        attachment: {
-          filename: artifact.filename,
-          bytes: artifact.bytes,
-        },
+        attachment,
       });
 
       const completedAt = timestamp(now());
@@ -318,17 +399,8 @@ export function createV3CustomerInvoiceDeliveryOrchestrator({
     } catch (error) {
       const failureCode = errorCode(error);
       let failedAt = attemptedAt;
-      try {
-        failedAt = timestamp(now());
-      } catch {
-        // Preserve the original delivery failure if the injected clock also fails.
-      }
-      const nextAttemptAt = retryDueAt({
-        stage,
-        error,
-        deliveryAttempts,
-        failedAt,
-      });
+      try { failedAt = timestamp(now()); } catch {}
+      const nextAttemptAt = retryDueAt({ stage, error, deliveryAttempts, failedAt });
       try {
         await notificationStore.recordDelivery({
           orderReference: durable.orderReference,
@@ -340,9 +412,8 @@ export function createV3CustomerInvoiceDeliveryOrchestrator({
           ...(nextAttemptAt === null ? {} : { nextAttemptAt }),
         });
       } catch {
-        // Delivery-state recording failure must never change already-committed payment truth.
+        // Delivery-state recording failure must never change committed payment truth.
       }
-
       return deliveryResult({
         orderReference: durable.orderReference,
         invoiceId: durable.invoiceId,
