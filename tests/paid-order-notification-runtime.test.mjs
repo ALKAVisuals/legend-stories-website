@@ -38,15 +38,19 @@ function runtimeEnv(overrides = {}) {
 
 function createMemoryNotificationStore() {
   const records = new Map();
+  const calls = [];
   const keyFor = ({ orderReference, notificationType }) => `${orderReference}:${notificationType}`;
   return {
+    calls,
     async ensureNotification(args) {
+      calls.push({ method: 'ensure', ...args });
       const key = keyFor(args);
       const created = !records.has(key);
       if (created) records.set(key, { deliveryStatus: 'pending' });
       return { created, notification: { ...records.get(key) } };
     },
     async claimNotification(args) {
+      calls.push({ method: 'claim', ...args });
       const key = keyFor(args);
       const record = records.get(key);
       if (!record) throw new Error('notification missing');
@@ -57,6 +61,7 @@ function createMemoryNotificationStore() {
       return { claimed: false, notification: { ...record } };
     },
     async recordDelivery(args) {
+      calls.push({ method: 'record', ...args });
       const key = keyFor(args);
       const record = records.get(key);
       if (!record) throw new Error('notification missing');
@@ -111,12 +116,14 @@ test('non-paid and non-live orders skip before dependency initialization', async
   assert.equal(notifierFactoryCalls, 0);
 });
 
-test('enabled live paid order composes configured dependencies and delivers both notifications', async () => {
+test('Profile 0 preserves exact legacy merchant and customer delivery without initializing V3 dependencies', async () => {
   const env = runtimeEnv();
   const store = createMemoryNotificationStore();
   const sent = [];
   let storeFactoryCalls = 0;
   let notifierFactoryCalls = 0;
+  let invoiceSourceFactoryCalls = 0;
+  let v3DeliveryFactoryCalls = 0;
 
   const reconcile = createPaidOrderNotificationRuntime({
     env,
@@ -124,6 +131,10 @@ test('enabled live paid order composes configured dependencies and delivers both
       storeFactoryCalls += 1;
       assert.equal(options.connectionString, env.NEON_DATABASE_URL);
       return store;
+    },
+    invoiceDeliverySourceFactory() {
+      invoiceSourceFactoryCalls += 1;
+      throw new Error('Profile 0 must not initialize the V3 invoice source');
     },
     notifierFactory(options) {
       notifierFactoryCalls += 1;
@@ -139,6 +150,10 @@ test('enabled live paid order composes configured dependencies and delivers both
         },
       };
     },
+    v3CustomerInvoiceDeliveryFactory() {
+      v3DeliveryFactoryCalls += 1;
+      throw new Error('Profile 0 must not build the V3 delivery orchestrator');
+    },
   });
 
   const result = await reconcile(livePaidOrder());
@@ -150,6 +165,167 @@ test('enabled live paid order composes configured dependencies and delivers both
   ]);
   assert.equal(storeFactoryCalls, 1);
   assert.equal(notifierFactoryCalls, 1);
+  assert.equal(invoiceSourceFactoryCalls, 0);
+  assert.equal(v3DeliveryFactoryCalls, 0);
+});
+
+test('Profile 1 routes merchant delivery separately and delegates customer delivery to the V3 boundary only', async () => {
+  const env = runtimeEnv();
+  const store = createMemoryNotificationStore();
+  const sent = [];
+  const invoiceLoads = [];
+  let invoiceSourceFactoryCalls = 0;
+  let v3DeliveryFactoryCalls = 0;
+
+  const reconcile = createPaidOrderNotificationRuntime({
+    env,
+    notificationStoreFactory() {
+      return store;
+    },
+    invoiceDeliverySourceFactory(options) {
+      invoiceSourceFactoryCalls += 1;
+      assert.equal(options.connectionString, env.NEON_DATABASE_URL);
+      return {
+        async loadIssuedInvoiceForDelivery(args) {
+          invoiceLoads.push(args);
+          return { loaded: true };
+        },
+      };
+    },
+    notifierFactory() {
+      return {
+        async sendPaidOrderEmail(message) {
+          sent.push({ notificationType: message.notificationType, to: message.to });
+          return { providerMessageId: `message-${message.notificationType}` };
+        },
+      };
+    },
+    v3CustomerInvoiceDeliveryFactory({ invoiceSource }) {
+      v3DeliveryFactoryCalls += 1;
+      return async function deliverV3CustomerInvoice(order) {
+        await invoiceSource.loadIssuedInvoiceForDelivery({
+          orderReference: order.reference,
+          invoiceId: order.invoiceId,
+        });
+        return Object.freeze({
+          notificationType: 'customer_v3_invoice',
+          status: 'sent',
+          duplicate: false,
+        });
+      };
+    },
+  });
+
+  const result = await reconcile(livePaidOrder({
+    documentProfileVersion: 1,
+    invoiceId: 88,
+  }));
+
+  assert.equal(result.documentProfileVersion, 1);
+  assert.equal(result.failed, false);
+  assert.deepEqual(
+    result.merchant.deliveries.map((delivery) => [delivery.notificationType, delivery.status]),
+    [['merchant_paid_order', 'sent']],
+  );
+  assert.equal(result.customer.notificationType, 'customer_v3_invoice');
+  assert.equal(result.customer.status, 'sent');
+  assert.deepEqual(sent, [
+    { notificationType: 'merchant_paid_order', to: 'merchant@example.test' },
+  ]);
+  assert.deepEqual(invoiceLoads, [{ orderReference: reference, invoiceId: 88 }]);
+  assert.equal(invoiceSourceFactoryCalls, 1);
+  assert.equal(v3DeliveryFactoryCalls, 1);
+  assert.equal(
+    store.calls.some((call) => call.notificationType === 'customer_paid_order'),
+    false,
+  );
+});
+
+test('Profile 1 fails closed when the V3 invoice source is unavailable and never falls back to legacy customer delivery', async () => {
+  const store = createMemoryNotificationStore();
+  const sent = [];
+  const reconcile = createPaidOrderNotificationRuntime({
+    env: runtimeEnv(),
+    notificationStoreFactory() {
+      return store;
+    },
+    invoiceDeliverySourceFactory() {
+      const error = new Error('V3 invoice source unavailable');
+      error.code = 'TEST_V3_SOURCE_UNAVAILABLE';
+      throw error;
+    },
+    notifierFactory() {
+      return {
+        async sendPaidOrderEmail(message) {
+          sent.push({ notificationType: message.notificationType, to: message.to });
+          return { providerMessageId: `message-${message.notificationType}` };
+        },
+        async sendV3InvoiceEmail() {
+          throw new Error('V3 provider must not run when durable invoice loading fails');
+        },
+      };
+    },
+  });
+
+  const result = await reconcile(livePaidOrder({
+    documentProfileVersion: 1,
+    invoiceId: 88,
+  }));
+
+  assert.equal(result.documentProfileVersion, 1);
+  assert.equal(result.failed, true);
+  assert.equal(result.merchant.deliveries[0].notificationType, 'merchant_paid_order');
+  assert.equal(result.merchant.deliveries[0].status, 'sent');
+  assert.deepEqual(result.customer, {
+    failed: true,
+    errorCode: 'TEST_V3_SOURCE_UNAVAILABLE',
+  });
+  assert.deepEqual(sent, [
+    { notificationType: 'merchant_paid_order', to: 'merchant@example.test' },
+  ]);
+  assert.equal(
+    store.calls.some((call) => call.notificationType === 'customer_paid_order'),
+    false,
+  );
+});
+
+test('unsupported document profiles fail closed before notification dependencies initialize', async () => {
+  const logged = [];
+  let storeFactoryCalls = 0;
+  let notifierFactoryCalls = 0;
+  let invoiceSourceFactoryCalls = 0;
+  const reconcile = createPaidOrderNotificationRuntime({
+    env: runtimeEnv(),
+    notificationStoreFactory() {
+      storeFactoryCalls += 1;
+      throw new Error('unsupported profile must not initialize store');
+    },
+    invoiceDeliverySourceFactory() {
+      invoiceSourceFactoryCalls += 1;
+      throw new Error('unsupported profile must not initialize V3 source');
+    },
+    notifierFactory() {
+      notifierFactoryCalls += 1;
+      throw new Error('unsupported profile must not initialize notifier');
+    },
+    logger: {
+      error(message, metadata) {
+        logged.push({ message, metadata });
+      },
+    },
+  });
+
+  const result = await reconcile(livePaidOrder({ documentProfileVersion: 2 }));
+
+  assert.equal(result.failed, true);
+  assert.equal(result.reason, 'runtime_error');
+  assert.deepEqual(result.deliveries, []);
+  assert.equal(storeFactoryCalls, 0);
+  assert.equal(notifierFactoryCalls, 0);
+  assert.equal(invoiceSourceFactoryCalls, 0);
+  assert.equal(logged.length, 1);
+  assert.equal(logged[0].metadata.code, 'DOCUMENT_PROFILE_UNSUPPORTED');
+  assert.equal(logged[0].metadata.reference, reference);
 });
 
 test('repeated reconciliation uses durable notification claims to suppress duplicate delivery', async () => {
