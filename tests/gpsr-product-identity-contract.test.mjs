@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import test from 'node:test';
 
+// Part 2A contract: every managed public product offer must expose the same authoritative identity fields.
 const ROOT = process.cwd();
 const catalog = JSON.parse(
   await readFile(join(ROOT, 'data', 'products', 'catalog.json'), 'utf8'),
