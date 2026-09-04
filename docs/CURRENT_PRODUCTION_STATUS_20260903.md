@@ -1,6 +1,6 @@
 # LegendMural current production status — public website launch-readiness
 
-**Updated:** 3 September 2026  
+**Updated:** 4 September 2026  
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Scope:** public LegendMural storefront / launch-readiness only  
 **Production host:** Netlify  
@@ -26,22 +26,21 @@ If a website task appears to require a protected V3 file or responsibility, stop
 
 ## 2. Current repository checkpoint
 
-The Privacy implementation branch was created from fresh `main`:
+The Blocker C payment-method research handoff branch was created from fresh `main`:
 
-`32f5ae8b63440891272de32da10510e7f96874a9`
+`75899afc5a02baba4f591da7d6549f49eeae01a4`
 
 Branch:
 
-`privacy/avg-finalization-20260903`
+`docs/blocker-c-payment-method-research-20260904`
 
-Operational note: immediately before this branch was created, an accidental temporary file named `noop-privacy-temp` was created directly on `main` and then immediately removed. The cleanup commit above restores the repository tree to the exact project-content state from the preceding handoff merge. No storefront, V3/backend or Production file was changed by that incident. Do not recreate the temporary file.
+At this checkpoint, storefront `main` already includes the separate V3 PR #182 (`add V3 invoice reconciliation worker`). That V3 merge is outside this website track; do not reconstruct or modify its implementation from this handoff.
 
-The preceding substantive website merges were:
+The most recent substantive website merges remain:
 
 - PR #172 — production-preview WebKit regression hardening;
-- PR #173 — current Privacy-audit handoff.
-
-PR #172 changed only `.github/workflows/mobile-checkout-webkit.yml` and `tests/browser/mobile-checkout-webkit.mjs`. It moved the iPhone/WebKit checkout regression to built `dist` output served through Vite Preview and passed three consecutive WebKit runs on the same PR head before merge.
+- PR #173 — current Privacy-audit handoff;
+- PR #174 — Privacy/AVG launch wording and contract tests.
 
 Before every new website branch and immediately before every merge, fresh-check `main` because the V3 workstream may merge in parallel.
 
@@ -60,14 +59,14 @@ These percentages are internal project-tracking estimates, not legal certificati
 | Privacy / AVG | **95%** | Audit and public wording implementation complete; final launch audit still applies |
 | Cookies / tracking | **90%** | Functional storage documented; no advertising pixels/behavioural analytics found in tracked baseline |
 | Returns / statutory withdrawal | **95%** | 14-day right, model form and online withdrawal function exist |
-| Checkout / payment-law presentation | **55%** | This is now the next website blocker |
+| Checkout / payment-law presentation | **65%** | Read-only audit and provider research complete; Dutch advance-payment solution not implemented yet |
 | Pricing / shipping / commercial-claim consistency | **95%** | Blocker A closed via PR #159 |
 | GPSR / product-safety presentation | **40%** | Manufacturer/contact/identification/safety presentation incomplete |
 | Final-domain metadata / SEO | **50%** | Old preview/GitHub Pages metadata still needs cleanup |
 | Netlify Production cutover | **0%** | Not authorized yet |
 | Controlled Live proof | **0%** | Only after all launch gates and explicit owner approval |
 
-**Overall public website launch-readiness estimate: ~83%.**
+**Overall public website launch-readiness estimate: ~84%.**
 
 The unresolved launch gates matter more than the average percentage.
 
@@ -112,11 +111,11 @@ Authoritative public launch rules remain:
 
 Owner policy: do **not** publish a concrete expected delivery time in general storefront marketing copy. The Shipping page may state the legal fallback that, unless otherwise agreed, consumer goods are delivered without undue delay and no later than 30 days. This is not an expected delivery estimate.
 
-### Blocker B — Privacy / AVG — COMPLETE in the current Privacy implementation
+### Blocker B — Privacy / AVG — COMPLETE via PR #174
 
-The read-only audit established the actual public data/provider baseline, and the owner approved the ordinary contact/support retention policy of **12 months after the request is resolved** on 3 September 2026.
+The Privacy audit established the actual public data/provider baseline, and the owner approved the ordinary contact/support retention policy of **12 months after the request is resolved**.
 
-The Privacy implementation now:
+The merged Privacy implementation:
 
 - removes the stale Google Places/address-assistance statement;
 - documents manual/local checkout-address processing accurately;
@@ -129,27 +128,97 @@ The Privacy implementation now:
 - states the approved 12-month ordinary contact/support period;
 - uses an up-to-5-year policy for non-fiscal consumer-right/contractual claim evidence where needed, subject to shorter sufficiency and applicable holds;
 - explicitly avoids claiming that automated deletion is already enforced for every category;
-- updates the public last-updated date to 3 September 2026;
-- adds `tests/privacy-page-contract.test.mjs` so stale provider/placeholder wording and the approved retention contract are covered by `npm test` / Quality CI.
-
-The Privacy implementation changes only public website/privacy/handoff/test content. No V3-reserved code is required.
+- includes Privacy contract-test coverage in Quality CI.
 
 ---
 
 ## 5. Remaining public website launch blockers
 
-### Blocker C — checkout/payment-law presentation — EXACT NEXT AREA
+### Blocker C — checkout/payment-law presentation — AUDIT + PROVIDER RESEARCH COMPLETE, IMPLEMENTATION OPEN
 
-Before Dutch consumer launch, perform a read-only mapping of the current hosted PayPal checkout journey and determine:
+#### Current checkout mapping
 
-- the exact customer-facing point where the consumer becomes legally bound to pay;
-- whether the decisive consumer-facing control has legally sufficient payment-obligation wording;
-- whether the launch payment structure satisfies the applicable Dutch rules concerning advance payment for consumer goods;
-- the smallest public website/checkout presentation changes, if any, that are actually required.
+The current LegendMural storefront uses a two-stage hosted PayPal journey:
 
-**Do not modify checkout or payment code during the first audit step.**
+1. the public checkout drawer shows totals and the button **`Continue to payment`**;
+2. that button validates the customer/address, creates a hosted PayPal checkout and redirects to PayPal;
+3. the PayPal order is created with `intent: CAPTURE` and `user_action: PAY_NOW`;
+4. the customer approves the payment on PayPal;
+5. after return, the server capture/status flow verifies payment before the order is treated as paid.
 
-If a required solution would modify protected PayPal capture/webhook reconciliation, paid-order finalization, Profile routing or other V3-owned backend behavior, stop and coordinate with the V3 workstream before changing anything.
+Working conclusion: the LegendMural **`Continue to payment`** button is a transition to the payment provider, not the final payment-obligation control. Do not rename it to wording that falsely suggests the consumer is already paying on LegendMural. A controlled PayPal Sandbox proof is still required later to visually confirm the final PayPal control and order-total presentation before launch.
+
+#### Dutch advance-payment blocker
+
+Authoritative ACM guidance currently states that for consumer goods not yet delivered a seller may require at most 50% advance payment, while full advance payment may still be offered voluntarily if the consumer also has a real option to pay at least 50% after delivery.
+
+Source: `https://www.acm.nl/nl/verkoop-aan-consumenten/de-koop-sluiten/betaalmogelijkheden-aanbieden`
+
+The existing PayPal-only launch structure captures the full order amount and therefore does **not** by itself provide the required Dutch after-delivery alternative.
+
+This cannot be solved with checkout copy alone.
+
+#### Payment-method research — 4 September 2026
+
+Current official/provider research supports the following working ranking for the Dutch launch:
+
+**1. Recommended fit: Riverty via Mollie**
+
+- Riverty's 14/30-day invoice product is available in the Netherlands and is explicitly positioned as no upfront consumer payment / payment after delivery;
+- accepted transactions carry a guaranteed merchant payout model, with Riverty handling consumer non-payment risk;
+- Mollie currently offers Riverty for NL at **2.99% + €0.35** per successful transaction;
+- through Mollie's Payments API, Riverty requires manual capture: checkout produces an `authorized` payment and the merchant captures when fulfillment/shipment is ready;
+- this `authorized -> capture -> paid` lifecycle is materially different from the current PayPal-only paid-order path.
+
+Sources:
+
+- `https://www.riverty.com/nl-nl/bedrijven/producten/bnpl-betaalmethoden/achteraf-betalen/`
+- `https://www.mollie.com/nl/payments/riverty`
+- `https://docs.mollie.com/docs/place-a-hold-for-a-payment`
+
+**2. Strong alternative: Klarna Pay Later via Mollie**
+
+- available for Dutch consumers;
+- Klarna Pay Later lets consumers receive first and pay later, commonly within 30 days;
+- Mollie currently lists NL Klarna at **2.99% + €0.45**;
+- the merchant receives the order value through Mollie while Klarna carries consumer non-payment risk;
+- for physical goods, Mollie recommends authorizing first and capturing on fulfillment/shipment, so this also introduces an `authorized/capture` lifecycle that must be coordinated with V3.
+
+Sources:
+
+- `https://www.mollie.com/nl/payments/klarna`
+- `https://help.mollie.com/hc/nl/articles/360009978893-Hoe-activeer-ik-Klarna-als-betaalmethode`
+- `https://docs.mollie.com/docs/klarna`
+
+**Not suitable as the primary Dutch compliance solution: PayPal Pay Later**
+
+PayPal's current developer payment-method table lists Pay Later buyer availability for AU, FR, DE, IT, ES, GB and US, not NL. PayPal's Dutch business marketing page also warns that Pay Later is not available in all markets. Do not rely on PayPal Pay Later for the Dutch launch unless PayPal's official NL eligibility changes and is proven for the actual merchant account/integration.
+
+Sources:
+
+- `https://developer.paypal.com/docs/checkout/apm/`
+- `https://www.paypal.com/nl/business/accept-payments/payment-methods`
+
+**Not preferred as the compliance anchor: in3 / generic pay-in-3**
+
+in3 requires the first one-third payment at purchase and schedules the later instalments 30 and 60 days after purchase. Because its schedule is purchase-date based rather than explicitly delivery-based, it is a less direct fit for the specific ACM requirement that at least 50% can be paid after delivery. It may remain a future convenience option, but it should not be the primary legal-compliance anchor without separate legal confirmation.
+
+Source: `https://www.mollie.com/nl/payments/in3`
+
+#### Architecture boundary discovered by the research
+
+Adding Riverty or Klarna through Mollie is **not a website-copy-only change**. It introduces at minimum a second payment provider plus an authorization/capture lifecycle and provider webhooks/statuses. That can affect the V3-owned concepts of paid-order finalization, invoice timing, retry/reconciliation and order status.
+
+Therefore the public website track must **not independently implement Mollie/Riverty/Klarna payment code**.
+
+Before implementation:
+
+1. owner chooses the desired business/provider direction;
+2. the exact provider lifecycle is coordinated with the V3 workstream;
+3. V3 determines how `authorized`, `captured/paid`, invoice issuance and retry/reconciliation fit the canonical order lifecycle;
+4. only then should a coordinated implementation plan be created.
+
+A small later website-only improvement remains likely regardless of provider: the checkout should clearly present the actually available payment methods before the consumer leaves LegendMural. Do not implement this until the provider set is decided.
 
 ### Blocker D — GPSR / product-safety presentation
 
@@ -167,7 +236,7 @@ Replace remaining preview/GitHub Pages canonical/Open Graph references with corr
 
 ## 6. Exact website release order from here
 
-1. **Blocker C:** read-only checkout/payment-law audit, then any proven website-only corrections.
+1. **Blocker C:** owner payment-provider decision + V3 coordination; then implement only the agreed payment-law solution and public checkout presentation.
 2. **Blocker D:** centralized GPSR/product-safety presentation.
 3. **Blocker F:** `legendmural.com` canonical/Open Graph/SEO cleanup.
 4. **Final website audit:** confirm legal/content/UI gates, owner IP gate and relevant CI; coordinate with V3 track and freeze an exact release SHA.
@@ -177,13 +246,13 @@ Replace remaining preview/GitHub Pages canonical/Open Graph references with corr
 
 ## 7. Exact next step
 
-**Do not deploy Netlify Production yet.**
+**Do not deploy Netlify Production yet. Do not independently add a second payment provider from the website track.**
 
-After the current Privacy branch has passed CI and merged, the next public-website step is exactly:
+The read-only Blocker C checkout audit and provider research are complete. The exact next step is now:
 
-> **Blocker C, part 1: perform a read-only audit of the current hosted PayPal customer journey and public checkout presentation to map the legally binding payment point, payment-obligation wording and Dutch advance-payment issue. Define the smallest website-only change set before mutating checkout code.**
+> **Owner decision: choose whether LegendMural should pursue the recommended Riverty-via-Mollie after-delivery route (preferred), Klarna Pay Later via Mollie as the alternative, or another explicitly reviewed solution. After that decision, stop and coordinate the provider's `authorized -> capture -> paid` lifecycle with the V3 workstream before any payment-code implementation.**
 
-Do not change V3 capture/webhook/finalizer/Profile routing/invoice/delivery code during that audit.
+No V3 capture/webhook/finalizer/Profile routing/invoice/delivery code may be changed by this website track without that coordination.
 
 ---
 
