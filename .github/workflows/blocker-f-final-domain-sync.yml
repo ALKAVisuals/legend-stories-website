@@ -1,0 +1,96 @@
+name: Blocker F final-domain sync
+
+on:
+  push:
+    branches:
+      - website/blocker-f-final-domain-20260904
+
+permissions:
+  contents: write
+
+jobs:
+  sync-final-domain:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Rewrite tracked public metadata to legendmural.com
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+
+          const OLD = 'https://alkavisuals.github.io/legend-stories-website';
+          const NEW = 'https://legendmural.com';
+          const root = process.cwd();
+          const targets = fs.readdirSync(root)
+            .filter((name) => name.endsWith('.html'))
+            .map((name) => path.join(root, name));
+          targets.push(
+            path.join(root, 'sitemap.xml'),
+            path.join(root, 'robots.txt'),
+            path.join(root, 'data', 'products', 'catalog.json'),
+          );
+
+          let changed = 0;
+          for (const file of targets) {
+            const source = fs.readFileSync(file, 'utf8');
+            let output = source.replaceAll(OLD, NEW);
+            if (path.basename(file) === 'index.html') {
+              output = output
+                .replace(`<meta property="og:url" content="${NEW}/index.html">`, `<meta property="og:url" content="${NEW}/">`)
+                .replace(`<link rel="canonical" href="${NEW}/index.html">`, `<link rel="canonical" href="${NEW}/">`);
+            }
+            if (path.basename(file) === 'sitemap.xml') {
+              output = output.replace(`<loc>${NEW}/index.html</loc>`, `<loc>${NEW}/</loc>`);
+            }
+            if (output !== source) {
+              fs.writeFileSync(file, output);
+              changed += 1;
+            }
+          }
+          if (!changed) throw new Error('No final-domain source changes were produced.');
+          console.log(`Updated final-domain metadata in ${changed} tracked public source files.`);
+          NODE
+
+      - name: Regenerate managed product pages from updated catalog canonicals
+        run: node scripts/generate-managed-product-pages.mjs --write-live
+
+      - name: Validate managed product pages
+        run: node scripts/validate-managed-product-pages.mjs --live
+
+      - name: Validate final-domain metadata contract
+        run: node --test tests/final-domain-metadata-contract.test.mjs
+
+      - name: Build production output and run production-origin validation
+        run: npm run build
+
+      - name: Check patch whitespace
+        run: git diff --check
+
+      - name: Commit final-domain source cleanup
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add '*.html' sitemap.xml robots.txt data/products/catalog.json
+          if git diff --cached --quiet; then
+            echo "No source cleanup changes found."
+            exit 1
+          fi
+          git commit -m "Website: switch tracked metadata to legendmural.com [skip ci]"
+          git push
