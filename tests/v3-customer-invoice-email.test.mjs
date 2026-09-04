@@ -122,14 +122,14 @@ function buildSnapshot({ firstName = 'Zoë', itemName = 'Legend One' } = {}) {
   });
 }
 
-test('renders deterministic transactional text and HTML from the immutable schema-v1 snapshot', () => {
+test('renders deterministic approved V4 transactional text and HTML from the immutable schema-v1 snapshot', () => {
   const snapshot = buildSnapshot();
   const first = renderV3CustomerInvoiceEmail({ snapshot });
   const second = renderV3CustomerInvoiceEmail({ snapshot });
 
   assert.deepEqual(first, second);
   assert.equal(first.rendererVersion, V3_CUSTOMER_INVOICE_EMAIL_RENDERER_VERSION);
-  assert.equal(first.rendererVersion, 1);
+  assert.equal(first.rendererVersion, 2);
   assert.match(first.subject, /ORDER-FORMAT-NOT-LOCKED-000042/);
   assert.match(first.subject, /INVOICE-FORMAT-NOT-LOCKED-000077/);
   assert.match(first.text, /Order number: ORDER-FORMAT-NOT-LOCKED-000042/);
@@ -142,8 +142,30 @@ test('renders deterministic transactional text and HTML from the immutable schem
   assert.match(first.text, /Tax amount: EUR 9\.35/);
   assert.match(first.text, /Total paid: EUR 53\.90/);
   assert.match(first.text, /Keizersgracht 1/);
-  assert.match(first.html, /<h1>Payment received<\/h1>/);
-  assert.match(first.html, /Your PDF invoice is attached to this email\./);
+
+  assert.match(first.html, /#0A0A0A/);
+  assert.match(first.html, /#1A1A1A/);
+  assert.match(first.html, /#2A8A4A/);
+  assert.match(first.html, /#3DA86A/);
+  assert.match(first.html, /https:\/\/legendmural\.com\/media\/LOGO\/lm-logo-transparant\.png/);
+  assert.match(first.html, /alt="LegendMural"/);
+  assert.match(first.html, /PAYMENT RECEIVED/);
+  assert.match(first.html, /Your order is<br><span style="color:#2A8A4A;">confirmed\.<\/span>/);
+  assert.match(first.html, /OFFICIAL ORDER NUMBER/);
+  assert.match(first.html, /ORDER-FORMAT-NOT-LOCKED-000042/);
+  assert.match(first.html, /Legend One/);
+  assert.match(first.html, /Statement · 70 × 70 cm/);
+  assert.match(first.html, /€49,95/);
+  assert.match(first.html, /Payment summary/);
+  assert.match(first.html, /TOTAL PAID/);
+  assert.match(first.html, /€53,90/);
+  assert.match(first.html, /YOUR INVOICE/);
+  assert.match(first.html, /INVOICE-FORMAT-NOT-LOCKED-000077/);
+  assert.match(first.html, /PDF INVOICE ATTACHED/);
+  assert.match(first.html, /PRODUCTION/);
+  assert.match(first.html, /SHIPPING/);
+  assert.equal(first.html.includes('media/stikkers/legend-one.png'), false);
+  assert.equal(first.html.includes('View invoice'), false);
 });
 
 test('never exposes the internal order reference or PayPal provider identity as customer-facing identifiers', () => {
@@ -155,7 +177,7 @@ test('never exposes the internal order reference or PayPal provider identity as 
   assert.equal(output.includes(paypalOrderId), false);
 });
 
-test('escapes snapshot text in HTML while preserving the immutable input', () => {
+test('escapes snapshot text in V4 HTML while preserving the immutable input', () => {
   const snapshot = buildSnapshot({
     firstName: '<Zoë & Co>',
     itemName: 'Legend <One> & Friends',
@@ -165,7 +187,7 @@ test('escapes snapshot text in HTML while preserving the immutable input', () =>
   const rendered = renderV3CustomerInvoiceEmail({ snapshot });
 
   assert.match(rendered.text, /Hi <Zoë & Co>,/);
-  assert.match(rendered.html, /Hi &lt;Zoë &amp; Co&gt;,/);
+  assert.match(rendered.html, /Thank you, &lt;Zoë &amp; Co&gt;\./);
   assert.match(rendered.html, /Legend &lt;One&gt; &amp; Friends/);
   assert.doesNotMatch(rendered.html, /<Zoë & Co>/);
   assert.equal(JSON.stringify(snapshot), before);
@@ -181,8 +203,10 @@ test('displays stored tax truth without recalculating it from totals or rate', (
   const rendered = renderV3CustomerInvoiceEmail({ snapshot });
 
   assert.match(rendered.text, /Tax amount: EUR 12\.34/);
-  assert.match(rendered.html, /Tax amount<\/td><td>EUR 12\.34/);
+  assert.match(rendered.html, /VAT \/ tax/);
+  assert.match(rendered.html, /€12,34/);
   assert.match(rendered.text, /Total paid: EUR 53\.90/);
+  assert.match(rendered.html, /€53,90/);
 });
 
 test('rejects missing and malformed persisted snapshot input', () => {
