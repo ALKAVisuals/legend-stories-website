@@ -205,7 +205,7 @@ test('V3 invoice email rejects invalid reference, renderer payload or PDF attach
   await assert.rejects(
     notifier.sendV3InvoiceEmail({
       ...base,
-      renderedEmail: renderedV3Email({ rendererVersion: 2 }),
+      renderedEmail: renderedV3Email({ rendererVersion: 3 }),
     }),
     (error) => error instanceof ResendPaidOrderNotifierError
       && error.code === 'RESEND_PAID_ORDER_INVALID_MESSAGE'
