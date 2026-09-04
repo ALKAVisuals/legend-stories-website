@@ -2,11 +2,38 @@ import { createHash } from 'node:crypto';
 
 import PDFDocument from 'pdfkit';
 
-export const V3_INVOICE_PDF_RENDERER_VERSION = 1;
+export const V3_INVOICE_PDF_RENDERER_VERSION = 2;
 const SUPPORTED_SNAPSHOT_SCHEMA_VERSION = 1;
 const SUPPORTED_CURRENCY = 'EUR';
-const A4_MARGIN = 48;
-const PAGE_BOTTOM = 794;
+
+const PAGE_WIDTH = 595.28;
+const PAGE_HEIGHT = 841.89;
+const MARGIN = 42;
+const CONTENT_RIGHT = 553;
+const CONTENT_WIDTH = CONTENT_RIGHT - MARGIN;
+const CONTENT_BOTTOM = 720;
+const FOOTER_Y = 742;
+
+const COLORS = Object.freeze({
+  paper: '#fbfcf9',
+  ink: '#111412',
+  black: '#020202',
+  muted: '#6f746f',
+  soft: '#8e948f',
+  green: '#2a8a4a',
+  rule: '#dfe5df',
+  table: '#f0f5f1',
+  card: '#f7f9f6',
+  cardStroke: '#e0e5e0',
+  paidFill: '#edf7f0',
+  paidStroke: '#b9dcc4',
+  footer: '#0f1711',
+  footerMuted: '#9aa39b',
+  white: '#f5f5f5',
+});
+
+// Exact official LegendMural logo vector used by the owner-approved A4 V1 mock-up.
+const OFFICIAL_LEGENDMURAL_LOGO_PATH = 'M384 63L384 65L386 68L393 68L396 65L396 60L387 60ZM170 40L170 76L181 76L181 55L182 54L182 53L184 51L185 51L186 50L191 50L192 51L193 51L195 54L195 76L206 76L206 49L205 48L204 45L200 41L199 41L198 40L188 40L187 41L186 41L184 43L183 43L183 44L182 45L181 44L181 40ZM143 40L142 41L141 41L140 42L137 43L134 46L134 47L132 49L132 51L131 52L131 55L130 56L130 61L131 62L131 65L132 66L133 69L137 73L138 73L140 75L142 75L143 76L156 76L157 75L158 75L159 74L162 73L164 71L164 69L160 65L158 65L153 68L148 68L147 67L146 67L142 63L142 62L143 61L167 61L167 54L166 53L166 51L165 50L165 48L161 43L160 43L157 41L155 41L154 40ZM142 52L146 48L152 48L156 52L156 54L155 55L143 55L142 54ZM55 52L55 64L56 65L56 67L58 69L58 70L61 73L62 73L67 76L80 76L81 75L83 75L85 73L86 73L89 70L84 65L82 65L80 67L78 67L77 68L72 68L71 67L70 67L67 64L67 63L66 62L67 61L91 61L92 62L92 64L93 65L94 68L98 72L99 72L100 73L102 73L103 74L110 74L111 73L113 73L116 70L117 71L117 75L116 76L116 77L114 79L113 79L112 80L110 80L109 81L107 81L106 80L102 80L97 77L96 78L96 79L93 84L93 85L94 85L96 87L98 87L99 88L101 88L102 89L115 89L116 88L118 88L119 87L120 87L122 85L123 85L125 83L125 82L128 77L128 40L117 40L117 43L116 44L113 41L112 41L111 40L101 40L100 41L99 41L97 43L96 43L96 44L93 47L93 48L92 49L92 51L91 52L90 51L90 50L89 49L88 46L85 43L84 43L82 41L80 41L79 40L68 40L67 41L65 41L64 42L63 42L61 44L60 44L59 45L59 46L57 48L57 49ZM108 48L110 48L111 49L113 49L116 52L116 53L117 54L117 60L116 61L116 62L113 65L112 65L111 66L108 66L107 65L104 64L102 61L102 58L101 57L102 56L102 53L103 52L103 51L105 49L107 49ZM66 53L67 52L67 51L69 49L70 49L71 48L76 48L77 49L78 49L80 52L80 54L79 55L67 55L66 54ZM40 27L40 75L41 76L51 76L51 68L52 67L52 56L51 55L51 38L52 37L52 28L51 27ZM208 63L209 64L209 66L210 67L211 70L215 74L216 74L219 76L228 76L229 77L228 78L228 80L227 81L227 83L228 84L229 87L232 89L430 89L431 88L433 88L434 87L435 87L436 86L439 85L443 81L443 80L445 78L446 75L448 73L449 70L451 68L452 65L454 63L455 60L457 58L457 57L458 56L459 53L461 51L462 48L464 46L465 43L467 41L468 38L470 36L471 33L473 31L473 30L474 29L475 26L477 24L477 23L479 20L479 18L480 17L479 16L479 14L478 13L478 12L475 10L276 10L275 11L273 11L272 12L271 12L269 14L268 14L263 19L262 22L260 24L259 27L257 29L256 32L254 34L254 35L252 38L252 40L256 40L257 41L257 45L261 41L262 41L263 40L265 40L266 39L271 39L272 40L274 40L275 41L276 41L280 45L280 46L281 47L281 46L286 41L287 41L288 40L290 40L291 39L296 39L297 40L299 40L300 41L301 41L305 45L305 46L306 47L306 50L307 51L307 74L305 76L296 76L295 75L295 54L294 53L294 52L292 50L290 50L289 49L288 49L287 50L284 51L284 52L282 55L282 75L281 76L271 76L270 75L270 54L269 53L269 52L267 50L266 50L265 49L264 49L263 50L261 50L258 53L258 55L257 56L257 75L256 76L246 76L245 75L245 41L247 39L247 27L236 27L236 43L235 44L233 42L232 42L229 40L219 40L218 41L215 42L211 46L211 47L209 50L209 52L208 53ZM432 65L434 65L435 66L437 66L439 69L439 73L436 76L431 76L428 73L428 68L430 66L431 66ZM224 49L230 49L231 50L232 50L234 52L234 53L235 54L235 57L236 58L235 59L235 63L231 67L224 67L220 63L220 62L219 61L219 56L220 55L220 53ZM310 41L311 40L321 40L322 41L322 63L325 66L329 66L330 65L331 65L333 63L333 62L334 61L334 41L335 40L345 40L346 41L346 75L345 76L335 76L334 75L334 70L334 71L331 74L330 74L327 76L319 76L318 75L316 75L311 70L311 69L310 68ZM378 42L379 42L380 41L383 41L384 40L387 40L388 39L395 39L396 40L399 40L400 41L403 42L407 46L407 48L408 49L408 75L407 76L398 76L396 74L396 72L393 75L391 75L390 76L381 76L380 75L379 75L374 70L374 69L373 68L373 62L374 61L374 60L378 56L379 56L380 55L382 55L383 54L396 54L396 51L393 48L385 48L384 49L382 49L381 50L379 50L377 48L377 47L376 46L376 44ZM374 39L375 40L375 48L373 50L368 50L364 54L364 55L363 56L363 75L362 76L352 76L351 75L351 41L352 40L362 40L363 41L363 45L367 41L368 41L369 40L371 40L372 39ZM414 26L423 26L424 27L424 75L423 76L414 76L412 74L412 28Z';
 
 export class V3InvoicePdfError extends Error {
   constructor(code, message, details = {}) {
@@ -57,6 +84,16 @@ function requirePositiveInteger(value, field) {
   return value;
 }
 
+function requireAddress(addressInput, field) {
+  const address = requireObject(addressInput, field);
+  requireString(address.street, `${field}.street`);
+  optionalString(address.line2, `${field}.line2`);
+  requireString(address.postalCode, `${field}.postalCode`);
+  requireString(address.city, `${field}.city`);
+  requireString(address.countryCode, `${field}.countryCode`);
+  return address;
+}
+
 function requireSnapshot(snapshotInput) {
   const snapshot = requireObject(snapshotInput, 'snapshot');
   if (snapshot.schemaVersion !== SUPPORTED_SNAPSHOT_SCHEMA_VERSION) {
@@ -72,7 +109,7 @@ function requireSnapshot(snapshotInput) {
   requireString(document.invoiceNumber, 'snapshot.document.invoiceNumber');
   requireNonnegativeInteger(document.issuedAt, 'snapshot.document.issuedAt');
   if (document.currency !== SUPPORTED_CURRENCY) {
-    fail('UNSUPPORTED_V3_INVOICE_CURRENCY', 'Renderer v1 supports EUR invoices only.', {
+    fail('UNSUPPORTED_V3_INVOICE_CURRENCY', 'Renderer v2 supports EUR invoices only.', {
       currency: document.currency,
     });
   }
@@ -134,10 +171,7 @@ function requireSnapshot(snapshotInput) {
   const totals = requireObject(snapshot.totals, 'snapshot.totals');
   requireNonnegativeInteger(totals.subtotalCents, 'snapshot.totals.subtotalCents');
   requireNonnegativeInteger(totals.discountCents, 'snapshot.totals.discountCents');
-  requireNonnegativeInteger(
-    totals.discountedSubtotalCents,
-    'snapshot.totals.discountedSubtotalCents',
-  );
+  requireNonnegativeInteger(totals.discountedSubtotalCents, 'snapshot.totals.discountedSubtotalCents');
   requireNonnegativeInteger(totals.shippingCents, 'snapshot.totals.shippingCents');
   requireNonnegativeInteger(totals.grandTotalCents, 'snapshot.totals.grandTotalCents');
 
@@ -150,16 +184,6 @@ function requireSnapshot(snapshotInput) {
   optionalString(tax.legalText, 'snapshot.tax.legalText');
 
   return snapshot;
-}
-
-function requireAddress(addressInput, field) {
-  const address = requireObject(addressInput, field);
-  requireString(address.street, `${field}.street`);
-  optionalString(address.line2, `${field}.line2`);
-  requireString(address.postalCode, `${field}.postalCode`);
-  requireString(address.city, `${field}.city`);
-  requireString(address.countryCode, `${field}.countryCode`);
-  return address;
 }
 
 function dateFromEpochSeconds(value) {
@@ -179,16 +203,14 @@ function formatUtcDate(epochSeconds) {
 function formatMoney(cents) {
   const euros = Math.floor(cents / 100);
   const remainder = String(cents % 100).padStart(2, '0');
-  return `EUR ${euros}.${remainder}`;
+  return `€${euros}.${remainder}`;
 }
 
-function formatAddress(address) {
+function formatAddressLines(address) {
   return [
-    address.street,
-    address.line2 || null,
-    `${address.postalCode} ${address.city}`,
-    address.countryCode,
-  ].filter(Boolean).join('\n');
+    [address.street, address.line2].filter(Boolean).join(' · '),
+    `${address.postalCode} ${address.city} · ${address.countryCode}`,
+  ].filter(Boolean);
 }
 
 function filenameForInvoice(invoiceNumber) {
@@ -199,7 +221,6 @@ function filenameForInvoice(invoiceNumber) {
     .replace(/-+/g, '-')
     .replace(/^[-.]+|[-.]+$/g, '')
     .slice(0, 100);
-
   const fallback = createHash('sha256').update(invoiceNumber, 'utf8').digest('hex').slice(0, 16);
   return `invoice-${normalized || fallback}.pdf`;
 }
@@ -208,206 +229,321 @@ function collectPdfBytes(document) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let byteLength = 0;
-
     document.on('data', (chunk) => {
       chunks.push(Buffer.from(chunk));
       byteLength += chunk.byteLength;
     });
     document.once('error', reject);
-    document.once('end', () => {
-      resolve(Buffer.concat(chunks, byteLength));
-    });
+    document.once('end', () => resolve(Buffer.concat(chunks, byteLength)));
   });
 }
 
-function drawRule(doc, y) {
-  doc.save().lineWidth(0.6).moveTo(A4_MARGIN, y).lineTo(547, y).stroke().restore();
+function drawRule(doc, y, { green = false, x = MARGIN, right = CONTENT_RIGHT, width = null } = {}) {
+  doc.save()
+    .strokeColor(green ? COLORS.green : COLORS.rule)
+    .lineWidth(width ?? (green ? 1.4 : 0.8))
+    .moveTo(x, y)
+    .lineTo(right, y)
+    .stroke()
+    .restore();
 }
 
-function drawLabelValue(doc, label, value, x, y, width) {
-  doc.font('Helvetica-Bold').fontSize(8).text(label, x, y, { width, lineBreak: false });
-  doc.font('Helvetica').fontSize(9).text(value, x, y + 12, { width });
+function drawOfficialLogo(doc) {
+  doc.save()
+    .translate(MARGIN, 36)
+    .scale(0.30)
+    .path(OFFICIAL_LEGENDMURAL_LOGO_PATH)
+    .fill(COLORS.black, 'even-odd')
+    .restore();
 }
 
-function addContinuationPage(doc) {
+function drawLegalFooterBase(doc, snapshot) {
+  doc.save().roundedRect(MARGIN, FOOTER_Y, CONTENT_WIDTH, 48, 5).fill(COLORS.footer);
+  doc.rect(MARGIN, FOOTER_Y, 5, 48).fill(COLORS.green);
+  doc.restore();
+
+  const sellerAddress = formatAddressLines(snapshot.seller.address).join(' · ');
+  const legalLine = [
+    snapshot.seller.legalName,
+    `Registration: ${snapshot.seller.registrationNumber}`,
+    `VAT: ${snapshot.seller.vatIdentificationNumber}`,
+  ].join(' · ');
+  const contactLine = [sellerAddress, snapshot.seller.invoiceEmail, snapshot.seller.website].join(' · ');
+
+  doc.fillColor(COLORS.footerMuted).font('Helvetica-Bold').fontSize(6.4)
+    .text('LEGAL / SELLER', MARGIN + 18, FOOTER_Y + 10, { width: CONTENT_WIDTH - 34 });
+  doc.fillColor(COLORS.white).font('Helvetica').fontSize(6.5)
+    .text(legalLine, MARGIN + 18, FOOTER_Y + 22, { width: CONTENT_WIDTH - 34, lineBreak: false, ellipsis: true });
+  doc.fillColor(COLORS.footerMuted).font('Helvetica').fontSize(5.8)
+    .text(contactLine, MARGIN + 18, FOOTER_Y + 34, { width: CONTENT_WIDTH - 34, lineBreak: false, ellipsis: true });
+}
+
+function preparePage(doc, snapshot) {
+  doc.save().rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT).fill(COLORS.paper).restore();
+  drawLegalFooterBase(doc, snapshot);
+}
+
+function drawPageNumber(doc, pageNumber, pageCount) {
+  doc.fillColor(COLORS.soft).font('Helvetica').fontSize(6.2)
+    .text('LegendMural V3 · Invoice', MARGIN, 812, { width: 180, lineBreak: false });
+  doc.text(`Page ${pageNumber} / ${pageCount}`, 430, 812, {
+    width: CONTENT_RIGHT - 430,
+    align: 'right',
+    lineBreak: false,
+  });
+}
+
+function drawHeader(doc, snapshot) {
+  drawOfficialLogo(doc);
+  doc.fillColor(COLORS.ink).font('Helvetica-Bold').fontSize(27)
+    .text('INVOICE', 360, 37, { width: 193, align: 'right', lineBreak: false });
+  doc.fillColor(COLORS.green).font('Helvetica-Bold').fontSize(10.5)
+    .text(snapshot.document.invoiceNumber, 330, 70, { width: 223, align: 'right', lineBreak: false });
+  doc.fillColor(COLORS.muted).font('Helvetica').fontSize(7.2)
+    .text(`Issued ${formatUtcDate(snapshot.document.issuedAt)}`, 360, 87, {
+      width: 193,
+      align: 'right',
+      lineBreak: false,
+    });
+  drawRule(doc, 111, { green: true });
+}
+
+function drawMeta(doc, snapshot) {
+  const label = (text, x, width) => {
+    doc.fillColor(COLORS.muted).font('Helvetica-Bold').fontSize(7.2)
+      .text(text, x, 128, { width, characterSpacing: 0.7, lineBreak: false });
+  };
+  const value = (text, x, width) => {
+    doc.fillColor(COLORS.ink).font('Helvetica').fontSize(8.7)
+      .text(text, x, 145, { width, lineBreak: false, ellipsis: true });
+  };
+
+  label('OFFICIAL ORDER', MARGIN, 150);
+  value(snapshot.document.orderNumber, MARGIN, 150);
+  label('PAID', 217, 85);
+  value(formatUtcDate(snapshot.order.paidAt), 217, 85);
+  label('CURRENCY', 337, 70);
+  value(snapshot.document.currency, 337, 70);
+
+  doc.save()
+    .roundedRect(445, 127, 108, 29, 14)
+    .fillAndStroke(COLORS.paidFill, COLORS.paidStroke)
+    .circle(461, 141.5, 4)
+    .fill(COLORS.green)
+    .restore();
+  doc.fillColor(COLORS.green).font('Helvetica-Bold').fontSize(5.8)
+    .text('PAYMENT RECEIVED', 472, 138, { width: 72, lineBreak: false });
+  drawRule(doc, 174);
+}
+
+function drawLines(doc, lines, x, y, width, { fontSize = 7.5, boldFirst = false } = {}) {
+  let currentY = y;
+  lines.forEach((line, index) => {
+    doc.fillColor(index === 0 ? COLORS.ink : COLORS.muted)
+      .font(index === 0 && boldFirst ? 'Helvetica-Bold' : 'Helvetica')
+      .fontSize(index === 0 ? 8.7 : fontSize);
+    const height = doc.heightOfString(line, { width, lineGap: 1 });
+    doc.text(line, x, currentY, { width, lineGap: 1 });
+    currentY += height + 3;
+  });
+  return currentY;
+}
+
+function drawParties(doc, snapshot) {
+  const customerName = [snapshot.customer.firstName, snapshot.customer.lastName].join(' ');
+  const billLines = [
+    snapshot.customer.companyName,
+    customerName,
+    snapshot.customer.email,
+    ...formatAddressLines(snapshot.customer.billingAddress),
+  ].filter(Boolean);
+  const shipLines = [
+    snapshot.customer.companyName,
+    customerName,
+    ...formatAddressLines(snapshot.customer.shippingAddress),
+  ].filter(Boolean);
+  const sellerDisplay = snapshot.seller.tradingName || snapshot.seller.legalName;
+  const sellerLines = [
+    sellerDisplay,
+    snapshot.seller.tradingName && snapshot.seller.tradingName !== snapshot.seller.legalName
+      ? snapshot.seller.legalName
+      : null,
+    ...formatAddressLines(snapshot.seller.address),
+    `Registration: ${snapshot.seller.registrationNumber}`,
+    `VAT: ${snapshot.seller.vatIdentificationNumber}`,
+    snapshot.seller.invoiceEmail,
+  ].filter(Boolean);
+
+  const columns = [
+    { title: 'BILL TO', x: MARGIN, width: 168, lines: billLines },
+    { title: 'SHIP TO', x: 233, width: 150, lines: shipLines },
+    { title: 'SELLER', x: 405, width: 148, lines: sellerLines },
+  ];
+  let bottom = 198;
+  for (const column of columns) {
+    doc.fillColor(COLORS.ink).font('Helvetica-Bold').fontSize(9.2)
+      .text(column.title, column.x, 194, { width: column.width, lineBreak: false });
+    const end = drawLines(doc, column.lines, column.x, 213, column.width, { fontSize: 6.8, boldFirst: true });
+    bottom = Math.max(bottom, end);
+  }
+  return Math.max(289, bottom + 18);
+}
+
+function drawContinuationHeader(doc, snapshot) {
+  drawOfficialLogo(doc);
+  doc.fillColor(COLORS.ink).font('Helvetica-Bold').fontSize(15)
+    .text('INVOICE — CONTINUED', 300, 41, { width: 253, align: 'right', lineBreak: false });
+  doc.fillColor(COLORS.green).font('Helvetica-Bold').fontSize(8.5)
+    .text(snapshot.document.invoiceNumber, 330, 63, { width: 223, align: 'right', lineBreak: false });
+  drawRule(doc, 86, { green: true });
+  return 103;
+}
+
+function addContinuationPage(doc, snapshot) {
   doc.addPage();
-  doc.font('Helvetica-Bold').fontSize(11).text('INVOICE — CONTINUED', A4_MARGIN, A4_MARGIN);
-  drawRule(doc, 70);
-  return 86;
+  preparePage(doc, snapshot);
+  return drawContinuationHeader(doc, snapshot);
 }
 
-function ensureSpace(doc, y, requiredHeight) {
-  return y + requiredHeight <= PAGE_BOTTOM ? y : addContinuationPage(doc);
+function ensureSpace(doc, snapshot, y, requiredHeight) {
+  return y + requiredHeight <= CONTENT_BOTTOM ? y : addContinuationPage(doc, snapshot);
 }
 
 function drawTableHeader(doc, y) {
-  doc.font('Helvetica-Bold').fontSize(8);
-  doc.text('ITEM', A4_MARGIN, y, { width: 260 });
-  doc.text('QTY', 318, y, { width: 36, align: 'right' });
-  doc.text('UNIT', 366, y, { width: 76, align: 'right' });
-  doc.text('TOTAL', 454, y, { width: 93, align: 'right' });
-  drawRule(doc, y + 13);
-  return y + 21;
+  doc.save().roundedRect(MARGIN, y, CONTENT_WIDTH, 28, 4).fill(COLORS.table).restore();
+  doc.fillColor(COLORS.muted).font('Helvetica-Bold').fontSize(7.2);
+  doc.text('ITEM', 54, y + 10, { width: 260, characterSpacing: 0.6, lineBreak: false });
+  doc.text('QTY', 330, y + 10, { width: 30, align: 'right', lineBreak: false });
+  doc.text('UNIT', 374, y + 10, { width: 72, align: 'right', lineBreak: false });
+  doc.text('TOTAL', 458, y + 10, { width: 83, align: 'right', lineBreak: false });
+  return y + 39;
 }
 
 function drawLineItems(doc, snapshot, startY) {
   let y = drawTableHeader(doc, startY);
-
   for (const line of snapshot.lines) {
-    doc.font('Helvetica').fontSize(9);
-    const itemText = `${line.name}\n${line.sku} · ${line.variantLabel} · ${line.sizeLabel}`;
-    const itemHeight = doc.heightOfString(itemText, { width: 252, lineGap: 1 });
-    const rowHeight = Math.max(34, itemHeight + 8);
+    const descriptor = `${line.sku} · ${line.variantLabel} · ${line.sizeLabel}`;
+    doc.font('Helvetica-Bold').fontSize(8.7);
+    const nameHeight = doc.heightOfString(line.name, { width: 265 });
+    doc.font('Helvetica').fontSize(7.2);
+    const detailHeight = doc.heightOfString(descriptor, { width: 265 });
+    const rowHeight = Math.max(48, nameHeight + detailHeight + 17);
 
-    const nextY = ensureSpace(doc, y, rowHeight + 22);
-    if (nextY !== y) {
-      y = drawTableHeader(doc, nextY);
-    }
+    const nextY = ensureSpace(doc, snapshot, y, rowHeight + 10);
+    if (nextY !== y) y = drawTableHeader(doc, nextY);
 
-    doc.font('Helvetica').fontSize(9).text(itemText, A4_MARGIN, y, {
-      width: 252,
-      lineGap: 1,
-    });
-    doc.text(String(line.quantity), 318, y, { width: 36, align: 'right' });
-    doc.text(formatMoney(line.unitPriceCents), 366, y, { width: 76, align: 'right' });
-    doc.text(formatMoney(line.lineTotalCents), 454, y, { width: 93, align: 'right' });
+    doc.fillColor(COLORS.ink).font('Helvetica-Bold').fontSize(8.7)
+      .text(line.name, 54, y, { width: 265 });
+    doc.fillColor(COLORS.muted).font('Helvetica').fontSize(7.2)
+      .text(descriptor, 54, y + nameHeight + 3, { width: 265 });
+    doc.fillColor(COLORS.ink).font('Helvetica').fontSize(8.7)
+      .text(String(line.quantity), 330, y + 6, { width: 30, align: 'right', lineBreak: false });
+    doc.text(formatMoney(line.unitPriceCents), 374, y + 6, { width: 72, align: 'right', lineBreak: false });
+    doc.text(formatMoney(line.lineTotalCents), 458, y + 6, { width: 83, align: 'right', lineBreak: false });
+    drawRule(doc, y + rowHeight - 5, { x: 54, right: 541 });
     y += rowHeight;
-    drawRule(doc, y - 5);
   }
-
-  return y + 12;
+  return y + 14;
 }
 
-function drawTotals(doc, snapshot, startY) {
-  let y = ensureSpace(doc, startY, 150);
-  const labelX = 330;
-  const valueX = 438;
-  const labelWidth = 100;
-  const valueWidth = 109;
+function drawTaxAndTotals(doc, snapshot, startY) {
+  const legalText = snapshot.tax.legalText || '';
+  doc.font('Helvetica').fontSize(6.5);
+  const legalHeight = legalText ? doc.heightOfString(legalText, { width: 238, lineGap: 1 }) : 0;
+  const cardHeight = Math.max(124, 95 + legalHeight);
+  const y = ensureSpace(doc, snapshot, startY, Math.max(cardHeight, 132) + 8);
 
-  const row = (label, cents, { bold = false } = {}) => {
-    doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(bold ? 10 : 9);
-    doc.text(label, labelX, y, { width: labelWidth });
-    doc.text(formatMoney(cents), valueX, y, { width: valueWidth, align: 'right' });
-    y += bold ? 19 : 16;
+  doc.save().roundedRect(MARGIN, y, 270, cardHeight, 5)
+    .fillAndStroke(COLORS.card, COLORS.cardStroke).restore();
+  doc.fillColor(COLORS.ink).font('Helvetica-Bold').fontSize(9.2)
+    .text('TAX RECORD', 56, y + 17, { width: 230, lineBreak: false });
+  doc.fillColor(COLORS.muted).font('Helvetica').fontSize(6.5)
+    .text('Stored authoritative values only', 56, y + 35, { width: 230, lineBreak: false });
+  doc.fillColor(COLORS.ink).font('Helvetica').fontSize(7.3)
+    .text(`Treatment: ${snapshot.tax.treatmentCode}`, 56, y + 53, { width: 238 });
+  doc.text(`Jurisdiction: ${snapshot.tax.jurisdictionCode}`, 56, y + 68, { width: 238 });
+  doc.text(`Pricing basis: ${snapshot.tax.pricingBasis}`, 56, y + 83, { width: 238 });
+  doc.fillColor(COLORS.muted).font('Helvetica').fontSize(6.3)
+    .text(
+      `Taxable: ${formatMoney(snapshot.tax.taxableAmountCents)} · Stored tax: ${formatMoney(snapshot.tax.taxAmountCents)}`,
+      56,
+      y + 99,
+      { width: 238 },
+    );
+  if (legalText) doc.text(legalText, 56, y + 114, { width: 238, lineGap: 1 });
+
+  let totalsY = y + 10;
+  const labelX = 382;
+  const valueX = 465;
+  const valueWidth = 76;
+  const row = (label, cents, { negative = false } = {}) => {
+    doc.fillColor(COLORS.muted).font('Helvetica').fontSize(8.2)
+      .text(label, labelX, totalsY, { width: 79 });
+    doc.fillColor(COLORS.ink).font('Helvetica').fontSize(8.7)
+      .text(`${negative ? '-' : ''}${formatMoney(cents)}`, valueX, totalsY, {
+        width: valueWidth,
+        align: 'right',
+        lineBreak: false,
+      });
+    totalsY += 23;
   };
 
   row('Subtotal', snapshot.totals.subtotalCents);
   if (snapshot.totals.discountCents > 0) {
-    row(`Discount${snapshot.discount.code ? ` (${snapshot.discount.code})` : ''}`, snapshot.totals.discountCents);
+    row(`Discount${snapshot.discount.code ? ` (${snapshot.discount.code})` : ''}`, snapshot.totals.discountCents, {
+      negative: true,
+    });
   }
   row('Shipping', snapshot.totals.shippingCents);
   row('Tax (stored)', snapshot.tax.taxAmountCents);
-  drawRule(doc, y - 3);
-  y += 6;
-  row('Total paid', snapshot.totals.grandTotalCents, { bold: true });
-  return y + 12;
+  drawRule(doc, totalsY - 7, { green: true, x: labelX, right: 541 });
+  doc.fillColor(COLORS.ink).font('Helvetica-Bold').fontSize(9.2)
+    .text('TOTAL PAID', labelX, totalsY + 5, { width: 90, lineBreak: false });
+  doc.fontSize(15).text(formatMoney(snapshot.totals.grandTotalCents), 457, totalsY + 2, {
+    width: 84,
+    align: 'right',
+    lineBreak: false,
+  });
+  return y + Math.max(cardHeight, totalsY - y + 35) + 16;
+}
+
+function drawPaymentEvidence(doc, snapshot, startY) {
+  let y = ensureSpace(doc, snapshot, startY, 88);
+  drawRule(doc, y);
+  y += 21;
+  doc.fillColor(COLORS.ink).font('Helvetica-Bold').fontSize(9.2)
+    .text('PAYMENT EVIDENCE', MARGIN, y, { width: 180, lineBreak: false });
+  y += 19;
+  const fields = [
+    ['Provider', snapshot.payment.provider, MARGIN, 68],
+    ['Provider order', snapshot.payment.providerOrderId, 119, 194],
+    ['Capture', snapshot.payment.providerCaptureId || '—', 330, 223],
+  ];
+  for (const [label, value, x, width] of fields) {
+    doc.fillColor(COLORS.muted).font('Helvetica').fontSize(6.5)
+      .text(label, x, y, { width, lineBreak: false });
+    doc.fillColor(COLORS.ink).font('Helvetica').fontSize(7.3)
+      .text(value, x, y + 14, { width, lineBreak: false, ellipsis: true });
+  }
+  return y + 40;
 }
 
 function drawInvoice(doc, snapshot) {
-  const contentWidth = 499;
-  const sellerName = snapshot.seller.tradingName || snapshot.seller.legalName;
+  preparePage(doc, snapshot);
+  drawHeader(doc, snapshot);
+  drawMeta(doc, snapshot);
+  let y = drawParties(doc, snapshot);
+  y = drawLineItems(doc, snapshot, y);
+  y = drawTaxAndTotals(doc, snapshot, y);
+  drawPaymentEvidence(doc, snapshot, y);
+}
 
-  doc.font('Helvetica-Bold').fontSize(25).text('INVOICE', A4_MARGIN, A4_MARGIN, {
-    width: 220,
-    lineBreak: false,
-  });
-  doc.font('Helvetica-Bold').fontSize(11).text(sellerName, 330, 51, {
-    width: 217,
-    align: 'right',
-  });
-
-  let y = 91;
-  drawRule(doc, 78);
-  drawLabelValue(doc, 'INVOICE NUMBER', snapshot.document.invoiceNumber, A4_MARGIN, y, 235);
-  drawLabelValue(doc, 'ORDER NUMBER', snapshot.document.orderNumber, 310, y, 237);
-  y += 48;
-  drawLabelValue(doc, 'ISSUED', formatUtcDate(snapshot.document.issuedAt), A4_MARGIN, y, 160);
-  drawLabelValue(doc, 'PAID', formatUtcDate(snapshot.order.paidAt), 210, y, 160);
-  drawLabelValue(doc, 'CURRENCY', snapshot.document.currency, 430, y, 117);
-  y += 50;
-  drawRule(doc, y);
-  y += 18;
-
-  doc.font('Helvetica-Bold').fontSize(9).text('BILL TO', A4_MARGIN, y, { width: 225 });
-  doc.font('Helvetica-Bold').fontSize(9).text('SELLER', 310, y, { width: 237 });
-  y += 16;
-
-  const customerName = [snapshot.customer.firstName, snapshot.customer.lastName].join(' ');
-  const customerText = [
-    snapshot.customer.companyName,
-    customerName,
-    snapshot.customer.email,
-    formatAddress(snapshot.customer.billingAddress),
-  ].filter(Boolean).join('\n');
-  const sellerText = [
-    snapshot.seller.legalName,
-    formatAddress(snapshot.seller.address),
-    `Registration: ${snapshot.seller.registrationNumber}`,
-    `VAT ID: ${snapshot.seller.vatIdentificationNumber}`,
-    snapshot.seller.invoiceEmail,
-    snapshot.seller.website,
-  ].join('\n');
-
-  doc.font('Helvetica').fontSize(9).text(customerText, A4_MARGIN, y, { width: 225, lineGap: 2 });
-  doc.font('Helvetica').fontSize(9).text(sellerText, 310, y, { width: 237, lineGap: 2 });
-  const addressHeight = Math.max(
-    doc.heightOfString(customerText, { width: 225, lineGap: 2 }),
-    doc.heightOfString(sellerText, { width: 237, lineGap: 2 }),
-  );
-  y += addressHeight + 24;
-
-  y = ensureSpace(doc, y, 90);
-  doc.font('Helvetica-Bold').fontSize(9).text('SHIP TO', A4_MARGIN, y, { width: 225 });
-  y += 16;
-  const shippingText = [
-    snapshot.customer.companyName,
-    customerName,
-    formatAddress(snapshot.customer.shippingAddress),
-  ].filter(Boolean).join('\n');
-  doc.font('Helvetica').fontSize(9).text(shippingText, A4_MARGIN, y, { width: 225, lineGap: 2 });
-  y += doc.heightOfString(shippingText, { width: 225, lineGap: 2 }) + 24;
-
-  y = ensureSpace(doc, y, 80);
-  drawRule(doc, y - 8);
-  y = drawLineItems(doc, snapshot, y + 8);
-  y = drawTotals(doc, snapshot, y);
-
-  y = ensureSpace(doc, y, 145);
-  drawRule(doc, y);
-  y += 15;
-  doc.font('Helvetica-Bold').fontSize(9).text('TAX RECORD', A4_MARGIN, y, { width: contentWidth });
-  y += 14;
-  doc.font('Helvetica').fontSize(8).text(
-    `${snapshot.tax.treatmentCode} · ${snapshot.tax.jurisdictionCode} · ${snapshot.tax.pricingBasis}\n`
-      + `Taxable amount: ${formatMoney(snapshot.tax.taxableAmountCents)} · Stored tax: ${formatMoney(snapshot.tax.taxAmountCents)}`,
-    A4_MARGIN,
-    y,
-    { width: contentWidth, lineGap: 2 },
-  );
-  y += 34;
-  if (snapshot.tax.legalText) {
-    doc.font('Helvetica').fontSize(8).text(snapshot.tax.legalText, A4_MARGIN, y, {
-      width: contentWidth,
-      lineGap: 2,
-    });
-    y += doc.heightOfString(snapshot.tax.legalText, { width: contentWidth, lineGap: 2 }) + 12;
+function addPageNumbers(doc) {
+  const range = doc.bufferedPageRange();
+  for (let index = 0; index < range.count; index += 1) {
+    doc.switchToPage(range.start + index);
+    drawPageNumber(doc, index + 1, range.count);
   }
-
-  y = ensureSpace(doc, y, 82);
-  drawRule(doc, y);
-  y += 14;
-  doc.font('Helvetica-Bold').fontSize(8).text('PAYMENT EVIDENCE', A4_MARGIN, y, { width: contentWidth });
-  y += 13;
-  doc.font('Helvetica').fontSize(7.5).text(
-    `Provider: ${snapshot.payment.provider}\n`
-      + `Provider order: ${snapshot.payment.providerOrderId}\n`
-      + `${snapshot.payment.providerCaptureId ? `Capture: ${snapshot.payment.providerCaptureId}\n` : ''}`
-      + `Internal reference: ${snapshot.order.reference}`,
-    A4_MARGIN,
-    y,
-    { width: contentWidth, lineGap: 1 },
-  );
 }
 
 export async function renderV3InvoicePdf({ snapshot: snapshotInput } = {}) {
@@ -415,15 +551,11 @@ export async function renderV3InvoicePdf({ snapshot: snapshotInput } = {}) {
   const issuedDate = dateFromEpochSeconds(snapshot.document.issuedAt);
   const document = new PDFDocument({
     size: 'A4',
-    margins: {
-      top: A4_MARGIN,
-      right: A4_MARGIN,
-      bottom: A4_MARGIN,
-      left: A4_MARGIN,
-    },
+    margins: { top: MARGIN, right: MARGIN, bottom: MARGIN, left: MARGIN },
     pdfVersion: '1.4',
     compress: false,
     autoFirstPage: true,
+    bufferPages: true,
     info: {
       Title: `Invoice ${snapshot.document.invoiceNumber}`,
       Author: snapshot.seller.legalName,
@@ -437,6 +569,7 @@ export async function renderV3InvoicePdf({ snapshot: snapshotInput } = {}) {
   const bytesPromise = collectPdfBytes(document);
   try {
     drawInvoice(document, snapshot);
+    addPageNumbers(document);
     document.end();
   } catch (error) {
     document.destroy(error);
@@ -446,7 +579,6 @@ export async function renderV3InvoicePdf({ snapshot: snapshotInput } = {}) {
 
   const bytes = await bytesPromise;
   const sha256 = createHash('sha256').update(bytes).digest('hex');
-
   return Object.freeze({
     bytes,
     filename: filenameForInvoice(snapshot.document.invoiceNumber),
