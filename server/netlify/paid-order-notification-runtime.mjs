@@ -1,6 +1,10 @@
 import { createNeonOrderNotificationStore } from '../adapters/neon-order-notification-store.mjs';
+import { createNeonV3InvoiceDeliverySource } from '../adapters/neon-v3-invoice-delivery-source.mjs';
+import { createPaidOrderDeliveryRouter } from '../notifications/paid-order-delivery-router.mjs';
 import { deliverPaidOrderNotifications } from '../notifications/paid-order-notifications.mjs';
+import { createProfile1PaidOrderDeliveryComposition } from '../notifications/profile1-paid-order-delivery-composition.mjs';
 import { createResendPaidOrderNotifier } from '../notifications/resend-paid-order-notifier.mjs';
+import { createV3CustomerInvoiceDeliveryOrchestrator } from '../notifications/v3-customer-invoice-delivery-orchestrator.mjs';
 
 const REFERENCE_PATTERN = /^[a-f0-9]{64}$/;
 
@@ -40,8 +44,26 @@ function lazyNotificationStore(factory, env) {
     claimNotification(args) {
       return resolve().claimNotification(args);
     },
+    prepareV3InvoiceArtifact(args) {
+      return resolve().prepareV3InvoiceArtifact(args);
+    },
     recordDelivery(args) {
       return resolve().recordDelivery(args);
+    },
+  });
+}
+
+function lazyInvoiceDeliverySource(factory, env) {
+  let source = null;
+  function resolve() {
+    if (!source) {
+      source = factory({ connectionString: env.NEON_DATABASE_URL });
+    }
+    return source;
+  }
+  return Object.freeze({
+    loadIssuedInvoiceForDelivery(args) {
+      return resolve().loadIssuedInvoiceForDelivery(args);
     },
   });
 }
@@ -62,25 +84,68 @@ function lazyNotifier(factory, env) {
     sendPaidOrderEmail(args) {
       return resolve().sendPaidOrderEmail(args);
     },
+    sendV3InvoiceEmail(args) {
+      return resolve().sendV3InvoiceEmail(args);
+    },
   });
 }
 
 export function createPaidOrderNotificationRuntime({
   env = process.env,
   notificationStoreFactory = createNeonOrderNotificationStore,
+  invoiceDeliverySourceFactory = createNeonV3InvoiceDeliverySource,
   notifierFactory = createResendPaidOrderNotifier,
   deliver = deliverPaidOrderNotifications,
+  deliverLegacyPaidOrder = deliver,
+  deliveryRouterFactory = createPaidOrderDeliveryRouter,
+  profile1CompositionFactory = createProfile1PaidOrderDeliveryComposition,
+  v3CustomerInvoiceDeliveryFactory = createV3CustomerInvoiceDeliveryOrchestrator,
   logger = console,
 } = {}) {
-  return async function reconcilePaidOrderNotifications(order) {
-    try {
-      return await deliver({
-        order,
-        notificationStore: lazyNotificationStore(notificationStoreFactory, env),
-        notifier: lazyNotifier(notifierFactory, env),
+  const notificationStore = lazyNotificationStore(notificationStoreFactory, env);
+  const notifier = lazyNotifier(notifierFactory, env);
+  let profile1Delivery = null;
+
+  function deliverLegacy(order) {
+    return deliverLegacyPaidOrder({
+      order,
+      notificationStore,
+      notifier,
+      emailsEnabled: env.ORDER_EMAILS_ENABLED,
+      merchantTo: env.ORDER_NOTIFICATION_TO,
+    });
+  }
+
+  function resolveProfile1Delivery() {
+    if (!profile1Delivery) {
+      const invoiceSource = lazyInvoiceDeliverySource(invoiceDeliverySourceFactory, env);
+      const deliverV3CustomerInvoice = v3CustomerInvoiceDeliveryFactory({
+        invoiceSource,
+        notificationStore,
+        notifier,
+        emailsEnabled: env.ORDER_EMAILS_ENABLED,
+      });
+      profile1Delivery = profile1CompositionFactory({
+        notificationStore,
+        notifier,
+        deliverV3CustomerInvoice,
         emailsEnabled: env.ORDER_EMAILS_ENABLED,
         merchantTo: env.ORDER_NOTIFICATION_TO,
       });
+    }
+    return profile1Delivery;
+  }
+
+  const routePaidOrderDelivery = deliveryRouterFactory({
+    deliverLegacyPaidOrder: deliverLegacy,
+    deliverV3CustomerInvoice(order) {
+      return resolveProfile1Delivery()(order);
+    },
+  });
+
+  return async function reconcilePaidOrderNotifications(order) {
+    try {
+      return await routePaidOrderDelivery(order);
     } catch (error) {
       safeLog(
         logger,
