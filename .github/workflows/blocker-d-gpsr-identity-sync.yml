@@ -1,0 +1,47 @@
+name: Blocker D GPSR identity sync
+
+on:
+  push:
+    branches:
+      - website/blocker-d-gpsr-identity-20260904
+
+permissions:
+  contents: write
+
+jobs:
+  sync-managed-product-pages:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply centralized GPSR identity source changes
+        run: node scripts/apply-gpsr-product-identity.mjs
+
+      - name: Regenerate all managed live product pages
+        run: node scripts/generate-managed-product-pages.mjs --write-live
+
+      - name: Validate managed live product pages
+        run: node scripts/validate-managed-product-pages.mjs --live
+
+      - name: Run focused GPSR identity contract
+        run: node --test tests/gpsr-product-identity-contract.test.mjs
+
+      - name: Check patch whitespace
+        run: git diff --check
+
+      - name: Commit generated managed-page update
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No generated changes found."
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add templates/product-page.html scripts/product-page-generation.mjs data/products/*-presentation.json '*.html'
+          git commit -m "Website: add centralized GPSR product identity [skip ci]"
+          git push
