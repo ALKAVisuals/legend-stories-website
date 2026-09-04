@@ -1,6 +1,6 @@
 const RESEND_EMAIL_ENDPOINT = 'https://api.resend.com/emails';
 const V3_REFERENCE_PATTERN = /^[a-f0-9]{64}$/;
-const SUPPORTED_V3_EMAIL_RENDERER_VERSION = 1;
+const SUPPORTED_V3_EMAIL_RENDERER_VERSIONS = new Set([1, 2]);
 
 export class ResendPaidOrderNotifierError extends Error {
   constructor(code, message, details = {}) {
@@ -63,7 +63,7 @@ function normalizeV3RenderedEmail(value) {
       field: 'renderedEmail',
     });
   }
-  if (value.rendererVersion !== SUPPORTED_V3_EMAIL_RENDERER_VERSION) {
+  if (!SUPPORTED_V3_EMAIL_RENDERER_VERSIONS.has(value.rendererVersion)) {
     fail('RESEND_PAID_ORDER_INVALID_MESSAGE', 'renderedEmail.rendererVersion is unsupported.', {
       field: 'renderedEmail.rendererVersion',
     });
