@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 import {
+  MAX_V3_AUTOMATIC_CLAIMS,
   NeonOrderNotificationStoreError,
   createNeonOrderNotificationStore,
 } from '../server/adapters/neon-order-notification-store.mjs';
@@ -212,14 +213,23 @@ test('duplicate V3 ensure refuses a different invoice identity', async () => {
   );
 });
 
-test('claimNotification supports pending, due failed and expired sending recovery with a lease', async () => {
+test('claimNotification preserves legacy retry behavior while hardening V3 retry eligibility and attempt limits', async () => {
   const store = createStore((statement, values) => {
     assert.match(statement, /delivery_status = 'pending'/);
-    assert.match(statement, /delivery_status = 'failed'/);
-    assert.match(statement, /next_attempt_at IS NULL OR next_attempt_at <= \$3/);
+    assert.match(statement, /notification_type <> 'customer_v3_invoice'[\s\S]*delivery_attempts < \$7/);
+    assert.match(statement, /notification_type = 'customer_v3_invoice'[\s\S]*next_attempt_at IS NOT NULL[\s\S]*next_attempt_at <= \$3/);
+    assert.match(statement, /notification_type <> 'customer_v3_invoice'[\s\S]*next_attempt_at IS NULL OR next_attempt_at <= \$3/);
     assert.match(statement, /delivery_status = 'sending'/);
     assert.match(statement, /COALESCE\(lease_expires_at, claimed_at \+ \$6\) <= \$3/);
-    assert.deepEqual(values, [REFERENCE, 'customer_paid_order', 200, CLAIM_TOKEN, 500, 300]);
+    assert.deepEqual(values, [
+      REFERENCE,
+      'customer_paid_order',
+      200,
+      CLAIM_TOKEN,
+      500,
+      300,
+      MAX_V3_AUTOMATIC_CLAIMS,
+    ]);
     return {
       rows: [row({
         notification_type: 'customer_paid_order',
@@ -243,6 +253,59 @@ test('claimNotification supports pending, due failed and expired sending recover
   assert.equal(result.claimed, true);
   assert.equal(result.notification.claimToken, CLAIM_TOKEN);
   assert.equal(result.notification.leaseExpiresAt, 500);
+});
+
+test('customer_v3_invoice terminal NULL schedule and exhausted claims remain unclaimed', async (t) => {
+  const cases = [
+    ['terminal failed row', row({
+      notification_type: 'customer_v3_invoice',
+      delivery_status: 'failed',
+      delivery_attempts: 1,
+      invoice_id: 42,
+      snapshot_schema_version: 1,
+      last_error_code: 'RESEND_PAID_ORDER_INVALID_MESSAGE',
+      next_attempt_at: null,
+    })],
+    ['exhausted stale row', row({
+      notification_type: 'customer_v3_invoice',
+      delivery_status: 'sending',
+      delivery_attempts: MAX_V3_AUTOMATIC_CLAIMS,
+      claimed_at: 100,
+      last_attempt_at: 100,
+      invoice_id: 42,
+      snapshot_schema_version: 1,
+      claim_token: 'old-claim',
+      lease_expires_at: 150,
+    })],
+  ];
+
+  for (const [name, currentRow] of cases) {
+    await t.test(name, async () => {
+      let call = 0;
+      const store = createStore((statement, values) => {
+        call += 1;
+        if (call === 1) {
+          assert.match(statement, /delivery_attempts < \$7/);
+          assert.match(statement, /next_attempt_at IS NOT NULL/);
+          assert.equal(values[6], MAX_V3_AUTOMATIC_CLAIMS);
+          return { rows: [] };
+        }
+        assert.match(statement, /SELECT/);
+        assert.deepEqual(values, [REFERENCE, 'customer_v3_invoice']);
+        return { rows: [currentRow] };
+      });
+
+      const result = await store.claimNotification({
+        orderReference: REFERENCE,
+        notificationType: 'customer_v3_invoice',
+        attemptedAt: 200,
+      });
+
+      assert.equal(result.claimed, false);
+      assert.equal(result.notification.deliveryAttempts, currentRow.delivery_attempts);
+      assert.equal(result.notification.nextAttemptAt, currentRow.next_attempt_at ?? null);
+    });
+  }
 });
 
 test('prepareV3InvoiceArtifact atomically persists metadata only for an active V3 claim', async () => {

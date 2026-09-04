@@ -43,8 +43,17 @@ function durableInvoice() {
   });
 }
 
+function providerRejection(status) {
+  return Object.assign(new Error(`synthetic provider rejection ${status}`), {
+    code: 'RESEND_PAID_ORDER_DELIVERY_REJECTED',
+    details: { status },
+  });
+}
+
 function createHarness({
   claim = null,
+  deliveryAttempts = 1,
+  pdfError = null,
   prepareError = null,
   sendError = null,
   sourceError = null,
@@ -94,6 +103,7 @@ function createHarness({
         claimed: true,
         notification: {
           deliveryStatus: 'sending',
+          deliveryAttempts,
           claimToken: 'claim-token-77',
         },
       };
@@ -111,6 +121,7 @@ function createHarness({
 
   const pdfRenderer = async (args) => {
     calls.push(['pdf', args]);
+    if (pdfError) throw pdfError;
     return artifact;
   };
   const emailRenderer = (args) => {
@@ -232,11 +243,8 @@ test('does not render or send when the durable notification is already claimed o
   assert.deepEqual(harness.calls.map(([name]) => name), ['source', 'ensure', 'claim']);
 });
 
-test('persists artifact identity before provider send and records provider rejection as failed', async () => {
-  const providerError = Object.assign(new Error('synthetic provider rejection'), {
-    code: 'RESEND_PAID_ORDER_DELIVERY_REJECTED',
-  });
-  const harness = createHarness({ sendError: providerError });
+test('persists artifact identity before provider send and schedules a retryable provider rejection', async () => {
+  const harness = createHarness({ sendError: providerRejection(503) });
 
   const result = await harness.deliver(profile1Order());
 
@@ -257,15 +265,66 @@ test('persists artifact identity before provider send and records provider rejec
       < harness.calls.findIndex(([name]) => name === 'send'),
   );
 
-  const failed = callsNamed(harness.calls, 'record')[0];
-  assert.deepEqual(failed, {
+  assert.deepEqual(callsNamed(harness.calls, 'record')[0], {
     orderReference: reference,
     notificationType: 'customer_v3_invoice',
     status: 'failed',
     attemptedAt: 1_800_400_102,
     errorCode: 'RESEND_PAID_ORDER_DELIVERY_REJECTED',
     claimToken: 'claim-token-77',
+    nextAttemptAt: 1_800_400_402,
   });
+});
+
+test('applies the locked provider retry allow-list and bounded backoff schedule', async (t) => {
+  const failedAt = 1_800_401_002;
+  const cases = [
+    ['408 attempt 1', providerRejection(408), 1, 300],
+    ['429 attempt 2', providerRejection(429), 2, 1_800],
+    ['503 attempt 3', providerRejection(503), 3, 7_200],
+    ['ambiguous 2xx attempt 4', providerRejection(200), 4, 43_200],
+    ['fetch TypeError attempt 1', new TypeError('synthetic fetch failure'), 1, 300],
+    ['terminal 400', providerRejection(400), 1, null],
+    ['terminal config error', Object.assign(new Error('bad config'), {
+      code: 'RESEND_PAID_ORDER_INVALID_CONFIG',
+    }), 1, null],
+    ['unknown provider error', new Error('unknown'), 1, null],
+    ['attempt 5 exhausted', providerRejection(503), 5, null],
+  ];
+
+  for (const [name, sendError, deliveryAttempts, expectedDelay] of cases) {
+    await t.test(name, async () => {
+      const harness = createHarness({
+        sendError,
+        deliveryAttempts,
+        clockValues: [1_800_401_000, 1_800_401_001, failedAt],
+      });
+
+      const result = await harness.deliver(profile1Order());
+      assert.equal(result.status, 'failed');
+      const failed = callsNamed(harness.calls, 'record')[0];
+      assert.equal(failed.attemptedAt, failedAt);
+      if (expectedDelay === null) {
+        assert.equal(Object.hasOwn(failed, 'nextAttemptAt'), false);
+      } else {
+        assert.equal(failed.nextAttemptAt, failedAt + expectedDelay);
+      }
+    });
+  }
+});
+
+test('treats renderer TypeError as terminal even though provider-stage TypeError is retryable', async () => {
+  const harness = createHarness({
+    pdfError: new TypeError('synthetic renderer defect'),
+    deliveryAttempts: 1,
+  });
+
+  const result = await harness.deliver(profile1Order());
+
+  assert.equal(result.status, 'failed');
+  assert.equal(result.errorCode, 'TypeError');
+  assert.equal(callsNamed(harness.calls, 'send').length, 0);
+  const failed = callsNamed(harness.calls, 'record')[0];
   assert.equal(Object.hasOwn(failed, 'nextAttemptAt'), false);
 });
 

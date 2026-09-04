@@ -3,6 +3,26 @@ import { renderV3CustomerInvoiceEmail } from './v3-customer-invoice-email.mjs';
 
 const REFERENCE_PATTERN = /^[a-f0-9]{64}$/;
 const NOTIFICATION_TYPE = 'customer_v3_invoice';
+const MAX_V3_AUTOMATIC_CLAIMS = 5;
+const RETRY_BACKOFF_SECONDS = Object.freeze({
+  1: 5 * 60,
+  2: 30 * 60,
+  3: 2 * 60 * 60,
+  4: 12 * 60 * 60,
+});
+const RETRIABLE_PROVIDER_STATUSES = new Set([408, 425, 429]);
+const RETRIABLE_TRANSPORT_CODES = new Set([
+  'ETIMEDOUT',
+  'ECONNRESET',
+  'ECONNREFUSED',
+  'EHOSTUNREACH',
+  'ENETUNREACH',
+  'EAI_AGAIN',
+  'ENOTFOUND',
+  'UND_ERR_CONNECT_TIMEOUT',
+  'UND_ERR_HEADERS_TIMEOUT',
+  'UND_ERR_BODY_TIMEOUT',
+]);
 
 export class V3CustomerInvoiceDeliveryError extends Error {
   constructor(code, message, details = {}) {
@@ -49,6 +69,48 @@ function timestamp(value) {
 
 function errorCode(error) {
   return String(error?.code || error?.name || 'UNKNOWN').slice(0, 120);
+}
+
+function providerStatus(error) {
+  const status = Number(error?.details?.status);
+  return Number.isInteger(status) && status >= 0 ? status : null;
+}
+
+function isRetriableProviderStatus(status) {
+  return RETRIABLE_PROVIDER_STATUSES.has(status)
+    || (status >= 500 && status <= 599)
+    || (status >= 200 && status <= 299);
+}
+
+function isProviderTransportFailure(error) {
+  const name = String(error?.name || '');
+  if (name === 'AbortError' || name === 'TimeoutError' || name === 'TypeError') return true;
+  const codes = [error?.code, error?.cause?.code]
+    .map((value) => String(value || '').trim().toUpperCase())
+    .filter(Boolean);
+  return codes.some((code) => RETRIABLE_TRANSPORT_CODES.has(code));
+}
+
+function retryDueAt({ stage, error, deliveryAttempts, failedAt }) {
+  const attempts = Number(deliveryAttempts);
+  if (!Number.isSafeInteger(attempts) || attempts < 1 || attempts >= MAX_V3_AUTOMATIC_CLAIMS) {
+    return null;
+  }
+  if (stage !== 'provider_send') return null;
+
+  let retryable = false;
+  if (String(error?.code || '') === 'RESEND_PAID_ORDER_DELIVERY_REJECTED') {
+    const status = providerStatus(error);
+    retryable = status !== null && isRetriableProviderStatus(status);
+  } else {
+    retryable = isProviderTransportFailure(error);
+  }
+  if (!retryable) return null;
+
+  const delaySeconds = RETRY_BACKOFF_SECONDS[attempts];
+  if (!Number.isSafeInteger(delaySeconds) || delaySeconds <= 0) return null;
+  const dueAt = failedAt + delaySeconds;
+  return Number.isSafeInteger(dueAt) ? dueAt : null;
 }
 
 function assertInvoiceSource(source) {
@@ -199,6 +261,8 @@ export function createV3CustomerInvoiceDeliveryOrchestrator({
     }
 
     const claimToken = String(claim.notification?.claimToken || '').trim();
+    const deliveryAttempts = Number(claim.notification?.deliveryAttempts);
+    let stage = 'claim_validation';
     try {
       if (!claimToken) {
         fail(
@@ -207,8 +271,10 @@ export function createV3CustomerInvoiceDeliveryOrchestrator({
         );
       }
 
+      stage = 'pdf_render';
       const artifact = await pdfRenderer({ snapshot: durable.snapshot });
       const preparedAt = timestamp(now());
+      stage = 'artifact_prepare';
       await notificationStore.prepareV3InvoiceArtifact({
         orderReference: durable.orderReference,
         invoiceId: durable.invoiceId,
@@ -220,7 +286,9 @@ export function createV3CustomerInvoiceDeliveryOrchestrator({
         updatedAt: preparedAt,
       });
 
+      stage = 'email_render';
       const renderedEmail = await emailRenderer({ snapshot: durable.snapshot });
+      stage = 'provider_send';
       const providerDelivery = await notifier.sendV3InvoiceEmail({
         to: durable.snapshot.customer?.email,
         orderReference: durable.orderReference,
@@ -232,6 +300,7 @@ export function createV3CustomerInvoiceDeliveryOrchestrator({
       });
 
       const completedAt = timestamp(now());
+      stage = 'record_sent';
       await notificationStore.recordDelivery({
         orderReference: durable.orderReference,
         notificationType: NOTIFICATION_TYPE,
@@ -254,6 +323,12 @@ export function createV3CustomerInvoiceDeliveryOrchestrator({
       } catch {
         // Preserve the original delivery failure if the injected clock also fails.
       }
+      const nextAttemptAt = retryDueAt({
+        stage,
+        error,
+        deliveryAttempts,
+        failedAt,
+      });
       try {
         await notificationStore.recordDelivery({
           orderReference: durable.orderReference,
@@ -262,6 +337,7 @@ export function createV3CustomerInvoiceDeliveryOrchestrator({
           attemptedAt: failedAt,
           errorCode: failureCode,
           claimToken: claimToken || null,
+          ...(nextAttemptAt === null ? {} : { nextAttemptAt }),
         });
       } catch {
         // Delivery-state recording failure must never change already-committed payment truth.
@@ -277,4 +353,7 @@ export function createV3CustomerInvoiceDeliveryOrchestrator({
   };
 }
 
-export { NOTIFICATION_TYPE as V3_CUSTOMER_INVOICE_NOTIFICATION_TYPE };
+export {
+  MAX_V3_AUTOMATIC_CLAIMS,
+  NOTIFICATION_TYPE as V3_CUSTOMER_INVOICE_NOTIFICATION_TYPE,
+};
