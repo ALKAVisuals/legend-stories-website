@@ -14,6 +14,7 @@ const NOTIFICATION_TYPES = new Set([
 ]);
 const DELIVERY_STATUSES = new Set(['pending', 'sending', 'sent', 'failed']);
 const DEFAULT_LEASE_SECONDS = 300;
+const MAX_V3_AUTOMATIC_CLAIMS = 5;
 
 export class NeonOrderNotificationStoreError extends Error {
   constructor(code, message, details = {}) {
@@ -241,10 +242,24 @@ const CLAIM_NOTIFICATION = `
   WHERE order_reference = $1
     AND notification_type = $2
     AND (
+      notification_type <> 'customer_v3_invoice'
+      OR delivery_attempts < $7
+    )
+    AND (
       delivery_status = 'pending'
       OR (
         delivery_status = 'failed'
-        AND (next_attempt_at IS NULL OR next_attempt_at <= $3)
+        AND (
+          (
+            notification_type = 'customer_v3_invoice'
+            AND next_attempt_at IS NOT NULL
+            AND next_attempt_at <= $3
+          )
+          OR (
+            notification_type <> 'customer_v3_invoice'
+            AND (next_attempt_at IS NULL OR next_attempt_at <= $3)
+          )
+        )
       )
       OR (
         delivery_status = 'sending'
@@ -419,6 +434,7 @@ export function createNeonOrderNotificationStore({
           claimToken,
           leaseExpiresAt,
           lease,
+          MAX_V3_AUTOMATIC_CLAIMS,
         ]);
         const notification = rowToNotification(claimed.rows?.[0]);
         if (notification) return Object.freeze({ claimed: true, notification });
@@ -561,4 +577,8 @@ export function createNeonOrderNotificationStore({
   });
 }
 
-export { DEFAULT_LEASE_SECONDS, NOTIFICATION_TYPES };
+export {
+  DEFAULT_LEASE_SECONDS,
+  MAX_V3_AUTOMATIC_CLAIMS,
+  NOTIFICATION_TYPES,
+};
