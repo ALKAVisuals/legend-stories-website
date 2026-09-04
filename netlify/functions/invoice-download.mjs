@@ -1,7 +1,7 @@
 import { handleInvoiceDownload } from '../../server/api/invoice-download.mjs';
 import { createNetlifyV3InvoicePdfStore } from '../../server/adapters/netlify-v3-invoice-pdf-store.mjs';
 import { createNeonV3InvoiceArtifactStore } from '../../server/adapters/neon-v3-invoice-artifact-store.mjs';
-import { createNeonV3InvoiceDeliverySource } from '../../server/adapters/neon-v3-invoice-delivery-source.mjs';
+import { createNeonV3InvoiceDownloadSource } from '../../server/adapters/neon-v3-invoice-download-source.mjs';
 import {
   commerceBootstrapErrorResponse,
   getCommerceOrderStore,
@@ -16,7 +16,7 @@ export function createNetlifyInvoiceDownloadHandler({
   env = process.env,
   orderStoreFactory,
   artifactStoreFactory = createNeonV3InvoiceArtifactStore,
-  invoiceSourceFactory = createNeonV3InvoiceDeliverySource,
+  identitySourceFactory = createNeonV3InvoiceDownloadSource,
   pdfStoreFactory = createNetlifyV3InvoicePdfStore,
   handlerOptions = {},
 } = {}) {
@@ -32,13 +32,13 @@ export function createNetlifyInvoiceDownloadHandler({
     try {
       const orderStore = getCommerceOrderStore({ env, storeFactory: orderStoreFactory });
       const artifactStore = artifactStoreFactory({ connectionString: env.NEON_DATABASE_URL });
-      const invoiceSource = invoiceSourceFactory({ connectionString: env.NEON_DATABASE_URL });
+      const identitySource = identitySourceFactory({ connectionString: env.NEON_DATABASE_URL });
       const pdfStore = pdfStoreFactory({ env });
       return await handleInvoiceDownload(request, {
         ...handlerOptions,
         orderStore,
+        identitySource,
         artifactStore,
-        invoiceSource,
         pdfStore,
         storageEnabled: env.V3_INVOICE_STORAGE_ENABLED,
         allowedOrigins: env.CHECKOUT_ALLOWED_ORIGINS || '',
