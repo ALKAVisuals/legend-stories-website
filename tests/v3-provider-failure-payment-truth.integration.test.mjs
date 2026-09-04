@@ -394,7 +394,11 @@ test('post-commit V3 provider rejection changes only delivery state and leaves p
   assert.equal(v3Notification.invoiceId, finalized.invoice.id);
   assert.equal(v3Notification.snapshotSchemaVersion, 1);
   assert.equal(v3Notification.lastErrorCode, 'RESEND_PAID_ORDER_DELIVERY_REJECTED');
-  assert.equal(v3Notification.nextAttemptAt, null, 'no retry cadence is invented by this slice');
+  assert.equal(
+    Number.isSafeInteger(v3Notification.nextAttemptAt) && v3Notification.nextAttemptAt > 0,
+    true,
+    'retryable provider 503 receives a durable due time under the locked retry policy',
+  );
   assert.equal(typeof v3Notification.pdfSha256, 'string');
   assert.equal(v3Notification.pdfSha256.length, 64);
   assert.equal(v3Notification.pdfByteLength > 0, true);
