@@ -83,7 +83,7 @@ No Netlify Production deployment, PayPal Live activation, Production email activ
 
 ---
 
-## 2. Pre-release source cleanup still open
+## 2. Pre-release source cleanup — COMPLETE via PR #194
 
 ### Tracked-source commercial-copy debt
 
@@ -107,9 +107,9 @@ Current runtime/build safety:
 - `js/commerce/product-variants.mjs` preserves explicit legacy aliases so `statement-50x50` canonicalizes to `statement-45` and `compact-50x30` canonicalizes to `compact-30` before a cart line is created;
 - the existing Quality/commerce/browser tests were green on the final-domain PR baseline.
 
-**Assessment:** this is not currently evidence of a broken production checkout, but it is unnecessary source divergence and build-time patch debt. The tracked source should be normalized before the final Production release so the repository itself reflects the same commercial truth as the built site. Keep the legacy variant aliases for backward compatibility, but do not keep publishing legacy data attributes in homepage source.
+**Resolution via PR #194:** tracked `index.html` and `shop.html` now contain the same authoritative commercial wording that the production build previously had to repair. Homepage and shop add-to-cart source attributes use canonical `statement-45` / `45 cm` identity. `tests/tracked-source-commercial-contract.test.mjs` rejects the old commercial copy and 50-cm source identities and asserts that `rewriteLaunchCommercialCopy(...)` leaves both normalized tracked pages unchanged. Legacy aliases remain only in the commerce runtime for backwards compatibility.
 
-Status: **OPEN — next executable website cleanup.**
+Status: **COMPLETE.**
 
 ---
 
@@ -196,8 +196,8 @@ Do **not** execute these merely because the site is deployed. They require the a
 
 | Area | Before Production evidence | Remaining action |
 |---|---|---|
-| Storefront/build | Strong / green | Normalize tracked legacy source copy/attributes |
-| Catalogue/pricing/shipping | Strong / green build+runtime evidence | Live smoke test after cutover |
+| Storefront/build | Strong / green | Tracked commercial source normalized; live smoke test only after authorized cutover |
+| Catalogue/pricing/shipping | Strong / green source+build+runtime evidence | Live smoke test after cutover |
 | Legal information pages | Strong baseline | Blocker C external legal gate remains |
 | Privacy/AVG | Strong baseline | Final live route/content check |
 | Returns/withdrawal | Strong baseline | Final live route/function check |
@@ -211,6 +211,6 @@ Do **not** execute these merely because the site is deployed. They require the a
 
 ## 6. Exact next website step
 
-> **Normalize the tracked `index.html` and `shop.html` source so it no longer depends on build-time rewrites for obsolete price/shipping/returns/delivery copy, and replace legacy homepage 50-cm variant data attributes with the canonical 30/45-cm variant identity. Keep the runtime legacy aliases only for backwards compatibility. Add/extend source-level regression coverage, rerun the normal website CI, and do not deploy Production.**
+The tracked-source commercial cleanup is complete via PR #194. No further independently executable source-level storefront cleanup is currently identified.
 
-After that cleanup, return to this checklist. If no further source-level issues are found, remaining steps are owner/legal/product gates followed by an explicitly authorized Production cutover and the live-only checks above.
+> **Next checkpoint: owner/legal/product launch-gate review.** Resolve or explicitly revisit Blocker C, resume Blocker D part 2B when the real production facts exist, and obtain the owner confirmation required for Blocker E. Do not deploy Production while those required gates remain unresolved. After the required gates are closed and the owner explicitly authorizes the release, perform the controlled Netlify Production cutover and then execute the live-only checks in section 4.

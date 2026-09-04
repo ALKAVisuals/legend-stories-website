@@ -11,13 +11,13 @@
 
 ## Current continuation checkpoint — 4 September 2026
 
-The final website pre-release audit/checklist was completed and merged through **PR #192**. At that checkpoint, the website track had not deployed Netlify Production and had not changed PayPal/V3 behavior.
+The final website pre-release audit/checklist was merged through **PR #192**, the continuation handoff through **PR #193**, and the tracked-source commercial cleanup is implemented in **PR #194**. The website track still has not deployed Netlify Production and has not changed PayPal/V3 behavior.
 
-**Exact next executable website step:**
+**Current continuation state:**
 
-> **Tracked-source commercial cleanup:** normalize `index.html` and `shop.html` so the repository source itself uses the authoritative €35/€45 pricing context, the €69-after-discount free-shipping rule, no fixed delivery-time marketing promise, the 14-day statutory withdrawal summary and canonical 30/45-cm homepage variant data. Keep the legacy 50-cm variant aliases only in the commerce runtime for backwards compatibility. Add/extend source-level regression coverage, rerun normal website CI, and do not deploy Production.
+> `index.html` and `shop.html` now express the authoritative €35/€45 price context, €69-after-discount free-shipping rule, no fixed delivery-time marketing promise, 14-day statutory withdrawal summary and canonical 30/45-cm source variant identity directly in tracked source. `tests/tracked-source-commercial-contract.test.mjs` protects that contract and proves the production rewrite no longer has to repair those pages. Legacy 50-cm variant aliases remain only in the commerce runtime for backwards compatibility.
 
-Do **not** skip directly to Netlify Production. Blocker C (Dutch 100%-upfront consumer payment legal gate), Blocker D part 2B (production/material facts) and Blocker E (commercial rights/IP owner confirmation) remain open/parked exactly as recorded in the current status and final pre-release checklist.
+There is **no further independently executable storefront source-cleanup step currently identified**. Do **not** skip directly to Netlify Production. Blocker C (Dutch 100%-upfront consumer payment legal gate), Blocker D part 2B (production/material facts) and Blocker E (commercial rights/IP owner confirmation) remain open/parked exactly as recorded in the current status and final pre-release checklist. The next checkpoint is an owner/legal/product launch-gate review, not another invented code workaround.
 
 Always fresh-check `main` before starting because the separate V3 workstream may have merged since this checkpoint. Newer GitHub state overrides the checkpoint SHA/history.
 
