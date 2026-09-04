@@ -42,10 +42,8 @@ export function createV3InvoiceReconciliationRuntime({
     if (!enabled(env.ORDER_EMAILS_ENABLED)) {
       return skipped('emails_disabled');
     }
-    if (!enabled(env.V3_INVOICE_STORAGE_ENABLED)) {
-      return skipped('storage_disabled');
-    }
 
+    const usePermanentStorage = enabled(env.V3_INVOICE_STORAGE_ENABLED);
     const source = reconciliationSourceFactory({
       connectionString: env.NEON_DATABASE_URL,
     });
@@ -55,10 +53,12 @@ export function createV3InvoiceReconciliationRuntime({
     const invoiceSource = invoiceDeliverySourceFactory({
       connectionString: env.NEON_DATABASE_URL,
     });
-    const artifactStore = invoiceArtifactStoreFactory({
-      connectionString: env.NEON_DATABASE_URL,
-    });
-    const pdfStore = invoicePdfStoreFactory({ env });
+    const artifactStore = usePermanentStorage
+      ? invoiceArtifactStoreFactory({ connectionString: env.NEON_DATABASE_URL })
+      : null;
+    const pdfStore = usePermanentStorage
+      ? invoicePdfStoreFactory({ env })
+      : null;
     const notifier = notifierFactory({
       apiKey: env.RESEND_API_KEY,
       from: env.RESEND_FROM,
