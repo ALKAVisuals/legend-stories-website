@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: quality-${{ github.workflow }}-${{ github.ref }}
@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -34,6 +36,33 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Capture failing unit-test output once on the owned storage branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feature/v3-pdf-storage-download-20260904'
+        run: |
+          if [ -f diagnostics/v3-storage-unit-test-output.txt ]; then
+            echo "Diagnostic output already captured."
+            exit 0
+          fi
+          set +e
+          npm test > /tmp/v3-storage-unit-tests.log 2>&1
+          test_code=$?
+          set -e
+          if [ "$test_code" -eq 0 ]; then
+            echo "Unit tests passed during diagnostic capture."
+            exit 0
+          fi
+          mkdir -p diagnostics
+          {
+            echo "npm test exit code: $test_code"
+            echo
+            tail -n 1000 /tmp/v3-storage-unit-tests.log
+          } > diagnostics/v3-storage-unit-test-output.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add diagnostics/v3-storage-unit-test-output.txt
+          git commit -m "Temporary: capture V3 storage unit-test failure"
+          git push origin "HEAD:${GITHUB_HEAD_REF}"
 
       - name: Install media inspection tools
         run: |
