@@ -156,6 +156,10 @@ function independentSha256(bytes) {
   return createHash('sha256').update(bytes).digest('hex');
 }
 
+function pageCountFromPdf(bytes) {
+  return (bytes.toString('latin1').match(/\/Type\s*\/Page\b/g) || []).length;
+}
+
 test('renders the same immutable snapshot byte-for-byte deterministically', async () => {
   const snapshot = buildSnapshot();
 
@@ -163,7 +167,7 @@ test('renders the same immutable snapshot byte-for-byte deterministically', asyn
   const second = await renderV3InvoicePdf({ snapshot });
 
   assert.equal(first.rendererVersion, V3_INVOICE_PDF_RENDERER_VERSION);
-  assert.equal(first.rendererVersion, 1);
+  assert.equal(first.rendererVersion, 2);
   assert.equal(first.filename, 'invoice-INVOICE-FORMAT-NOT-LOCKED-000001.pdf');
   assert.equal(first.sha256, second.sha256);
   assert.equal(first.byteLength, second.byteLength);
@@ -182,6 +186,40 @@ test('returns a Buffer with exact artifact metadata and a functional A4 PDF 1.4 
   assert.equal(artifact.sha256, independentSha256(bytes));
   assert.match(artifact.sha256, /^[a-f0-9]{64}$/);
   assert.ok(artifact.byteLength > 1_000);
+});
+
+test('locks the owner-approved A4 V1 visual contract in renderer v2 source', async () => {
+  const source = await readFile(new URL('../server/invoices/v3-invoice-pdf.mjs', import.meta.url), 'utf8');
+
+  assert.match(source, /V3_INVOICE_PDF_RENDERER_VERSION = 2/);
+  assert.match(source, /#fbfcf9/);
+  assert.match(source, /#2a8a4a/);
+  assert.match(source, /OFFICIAL_LEGENDMURAL_LOGO_PATH/);
+  assert.match(source, /PAYMENT RECEIVED/);
+  assert.match(source, /BILL TO/);
+  assert.match(source, /SHIP TO/);
+  assert.match(source, /TAX RECORD/);
+  assert.match(source, /TOTAL PAID/);
+  assert.match(source, /PAYMENT EVIDENCE/);
+  assert.match(source, /LEGAL \/ SELLER/);
+});
+
+test('keeps long invoices deterministic across continuation pages', async () => {
+  const snapshot = structuredClone(buildSnapshot());
+  const originals = snapshot.lines.map((line) => structuredClone(line));
+  snapshot.lines = Array.from({ length: 24 }, (_, index) => ({
+    ...structuredClone(originals[index % originals.length]),
+    sku: `${originals[index % originals.length].sku}-${String(index + 1).padStart(2, '0')}`,
+    name: `${originals[index % originals.length].name} · continuation proof ${index + 1}`,
+  }));
+
+  const first = await renderV3InvoicePdf({ snapshot });
+  const second = await renderV3InvoicePdf({ snapshot });
+
+  assert.ok(pageCountFromPdf(first.bytes) > 1);
+  assert.equal(pageCountFromPdf(first.bytes), pageCountFromPdf(second.bytes));
+  assert.equal(first.sha256, second.sha256);
+  assert.deepEqual(first.bytes, second.bytes);
 });
 
 test('uses persisted invoice identity in deterministic filename and artifact bytes', async () => {
@@ -280,7 +318,7 @@ test('executes the renderer with PDFKit preserved as a Netlify-style external No
     const bundledRenderer = await import(pathToFileURL(outfile).href);
     const artifact = await bundledRenderer.renderV3InvoicePdf({ snapshot: buildSnapshot() });
     assert.equal(Buffer.isBuffer(artifact.bytes), true);
-    assert.equal(artifact.rendererVersion, 1);
+    assert.equal(artifact.rendererVersion, 2);
     assert.equal(artifact.sha256, independentSha256(artifact.bytes));
     assert.ok(artifact.byteLength > 1_000);
   } finally {
