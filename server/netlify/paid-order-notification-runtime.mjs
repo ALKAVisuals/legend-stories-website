@@ -1,4 +1,6 @@
+import { createNetlifyV3InvoicePdfStore } from '../adapters/netlify-v3-invoice-pdf-store.mjs';
 import { createNeonOrderNotificationStore } from '../adapters/neon-order-notification-store.mjs';
+import { createNeonV3InvoiceArtifactStore } from '../adapters/neon-v3-invoice-artifact-store.mjs';
 import { createNeonV3InvoiceDeliverySource } from '../adapters/neon-v3-invoice-delivery-source.mjs';
 import { createPaidOrderDeliveryRouter } from '../notifications/paid-order-delivery-router.mjs';
 import { deliverPaidOrderNotifications } from '../notifications/paid-order-notifications.mjs';
@@ -22,49 +24,55 @@ function safeErrorMetadata(error, order) {
 }
 
 function safeLog(logger, message, metadata) {
-  try {
-    logger?.error?.(message, metadata);
-  } catch {
-    // Logging must never make paid-order notification reconciliation fatal.
-  }
+  try { logger?.error?.(message, metadata); } catch {}
 }
 
 function lazyNotificationStore(factory, env) {
   let store = null;
   function resolve() {
-    if (!store) {
-      store = factory({ connectionString: env.NEON_DATABASE_URL });
-    }
+    if (!store) store = factory({ connectionString: env.NEON_DATABASE_URL });
     return store;
   }
   return Object.freeze({
-    ensureNotification(args) {
-      return resolve().ensureNotification(args);
-    },
-    claimNotification(args) {
-      return resolve().claimNotification(args);
-    },
-    prepareV3InvoiceArtifact(args) {
-      return resolve().prepareV3InvoiceArtifact(args);
-    },
-    recordDelivery(args) {
-      return resolve().recordDelivery(args);
-    },
+    ensureNotification(args) { return resolve().ensureNotification(args); },
+    claimNotification(args) { return resolve().claimNotification(args); },
+    prepareV3InvoiceArtifact(args) { return resolve().prepareV3InvoiceArtifact(args); },
+    recordDelivery(args) { return resolve().recordDelivery(args); },
   });
 }
 
 function lazyInvoiceDeliverySource(factory, env) {
   let source = null;
   function resolve() {
-    if (!source) {
-      source = factory({ connectionString: env.NEON_DATABASE_URL });
-    }
+    if (!source) source = factory({ connectionString: env.NEON_DATABASE_URL });
     return source;
   }
   return Object.freeze({
-    loadIssuedInvoiceForDelivery(args) {
-      return resolve().loadIssuedInvoiceForDelivery(args);
-    },
+    loadIssuedInvoiceForDelivery(args) { return resolve().loadIssuedInvoiceForDelivery(args); },
+  });
+}
+
+function lazyArtifactStore(factory, env) {
+  let store = null;
+  function resolve() {
+    if (!store) store = factory({ connectionString: env.NEON_DATABASE_URL });
+    return store;
+  }
+  return Object.freeze({
+    loadArtifactState(args) { return resolve().loadArtifactState(args); },
+    bindStoredArtifact(args) { return resolve().bindStoredArtifact(args); },
+  });
+}
+
+function lazyPdfStore(factory, env) {
+  let store = null;
+  function resolve() {
+    if (!store) store = factory({ env });
+    return store;
+  }
+  return Object.freeze({
+    persistVerifiedArtifact(args) { return resolve().persistVerifiedArtifact(args); },
+    loadVerifiedArtifact(args) { return resolve().loadVerifiedArtifact(args); },
   });
 }
 
@@ -81,12 +89,8 @@ function lazyNotifier(factory, env) {
     return notifier;
   }
   return Object.freeze({
-    sendPaidOrderEmail(args) {
-      return resolve().sendPaidOrderEmail(args);
-    },
-    sendV3InvoiceEmail(args) {
-      return resolve().sendV3InvoiceEmail(args);
-    },
+    sendPaidOrderEmail(args) { return resolve().sendPaidOrderEmail(args); },
+    sendV3InvoiceEmail(args) { return resolve().sendV3InvoiceEmail(args); },
   });
 }
 
@@ -94,6 +98,8 @@ export function createPaidOrderNotificationRuntime({
   env = process.env,
   notificationStoreFactory = createNeonOrderNotificationStore,
   invoiceDeliverySourceFactory = createNeonV3InvoiceDeliverySource,
+  invoiceArtifactStoreFactory = createNeonV3InvoiceArtifactStore,
+  invoicePdfStoreFactory = createNetlifyV3InvoicePdfStore,
   notifierFactory = createResendPaidOrderNotifier,
   deliver = deliverPaidOrderNotifications,
   deliverLegacyPaidOrder = deliver,
@@ -119,11 +125,16 @@ export function createPaidOrderNotificationRuntime({
   function resolveProfile1Delivery() {
     if (!profile1Delivery) {
       const invoiceSource = lazyInvoiceDeliverySource(invoiceDeliverySourceFactory, env);
+      const artifactStore = lazyArtifactStore(invoiceArtifactStoreFactory, env);
+      const pdfStore = lazyPdfStore(invoicePdfStoreFactory, env);
       const deliverV3CustomerInvoice = v3CustomerInvoiceDeliveryFactory({
         invoiceSource,
         notificationStore,
+        artifactStore,
+        pdfStore,
         notifier,
         emailsEnabled: env.ORDER_EMAILS_ENABLED,
+        storageEnabled: env.V3_INVOICE_STORAGE_ENABLED,
       });
       profile1Delivery = profile1CompositionFactory({
         notificationStore,
