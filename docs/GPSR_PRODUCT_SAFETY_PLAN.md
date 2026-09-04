@@ -3,7 +3,7 @@
 **Updated:** 4 September 2026  
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Scope:** public LegendMural wall-sticker catalogue / launch-readiness  
-**Status:** Blocker D read-only audit complete; material confirmation still required before safety claims/warnings are finalized.
+**Status:** Blocker D part 1 audit and part 2A online-offer identity implementation complete; material confirmation, supported warning/use wording and physical marking remain.
 
 ## Purpose
 
@@ -33,16 +33,16 @@ Before final publication, keep this aligned with the actual production/legal set
 
 ## Minimal centralized website implementation
 
-After the material facts below are confirmed, implement product-safety information once in the managed product-page system rather than editing live product pages one by one.
+Part 2A is implemented in the managed product-page system: all 111 product pages now expose the authoritative Product ID plus manufacturer postal/electronic identity centrally. Material-dependent use/safety wording remains deferred until the facts below are confirmed.
 
-Planned public product information:
+Public product-information status:
 
-1. visible product identifier using the authoritative `LM-2026-xxxxx` product ID;
-2. manufacturer identity: Alka Group / LegendMural;
-3. manufacturer postal address and electronic contact;
-4. concise intended-use / application information supported by the actual vinyl manufacturer's documentation;
-5. only safety warnings that are actually supported by the product/material risk assessment;
-6. preserve existing size/variant identification and catalogue traceability.
+1. **Implemented:** visible product identifier using the authoritative `LM-2026-xxxxx` product ID;
+2. **Implemented:** manufacturer identity: Alka Group / LegendMural;
+3. **Implemented:** manufacturer postal address and electronic contact;
+4. **Pending material confirmation:** concise intended-use / application information supported by the actual vinyl manufacturer's documentation;
+5. **Pending risk assessment:** only safety warnings that are actually supported by the product/material risk assessment;
+6. **Implemented/preserved:** existing size/variant identification and catalogue traceability.
 
 Likely implementation surface:
 

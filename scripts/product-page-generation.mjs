@@ -78,6 +78,20 @@ function structuredData(product) {
     image: absoluteImageUrl(product),
     description: product.description,
     brand: { '@type': 'Brand', name: 'LegendMural' },
+    productID: product.productId,
+    manufacturer: {
+      '@type': 'Organization',
+      name: 'Alka Group',
+      alternateName: 'LegendMural',
+      email: 'info@alkavisuals.nl',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: 'Schutkolk 4 d 1',
+        postalCode: '6582 DB',
+        addressLocality: 'Heumen',
+        addressCountry: 'NL',
+      },
+    },
     offers: orderedVariants.map((variant) => ({
       '@type': 'Offer',
       name: variant.id === 'legacy' ? product.name : `${product.name} — ${variant.label} (${variant.sizeLabel})`,
@@ -178,6 +192,12 @@ export function templatizeProductPage(input) {
   );
   html = replaceRequired(
     html,
+    /(<dd class="text-text-secondary font-medium" data-product-id>)[^<]+(<\/dd>)/,
+    '$1{{PRODUCT_ID}}$2',
+    'product identity ID',
+  );
+  html = replaceRequired(
+    html,
     /<button class="([^"]*\badd-to-cart-btn\b[^"]*)" data-name="[^"]*" data-price="45" data-variant-id="statement-45" data-size-label="45 cm" data-width-cm="45" data-height-cm="45" data-longest-side-cm="45" data-variant-label="Statement" data-img="[^"]*">[\s\S]*?<\/button>/,
     '<button class="$1" data-name="{{NAME}}" data-price="45" data-variant-id="statement-45" data-size-label="45 cm" data-width-cm="45" data-height-cm="45" data-longest-side-cm="45" data-variant-label="Statement" data-img="{{IMAGE}}">\n              Add to cart — €45\n            </button>',
     'add-to-cart button',
@@ -228,6 +248,7 @@ export function renderProductPage(template, product, presentation) {
     IMAGE_ALT: escapeHtml(presentation.imageAlt),
     COLLECTION: escapeHtml(product.collection),
     NAME: escapeHtml(product.name),
+    PRODUCT_ID: escapeHtml(product.productId),
     STORY: escapeHtml(presentation.story),
   };
 

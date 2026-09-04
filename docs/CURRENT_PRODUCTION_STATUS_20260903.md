@@ -26,13 +26,13 @@ If a website task appears to require a protected V3 file or responsibility, stop
 
 ## 2. Current repository checkpoint
 
-This Blocker-D documentation step starts from fresh storefront `main`:
+Blocker D part 2A implementation started from fresh storefront `main`:
 
-`e11abd5bcacc923fdaa085facd01a3f347bc490f`
+`8c11c6f5ce4e8bc50cc6e64e37fd66a79df9095b`
 
 Branch:
 
-`docs/blocker-d-gpsr-audit-plan-20260904`
+`website/blocker-d-gpsr-identity-20260904`
 
 Canonical owner payment decision remains unchanged:
 
@@ -72,12 +72,12 @@ These percentages are internal project-tracking estimates, not legal certificati
 | Returns / statutory withdrawal | **95%** | 14-day right, model form and online withdrawal function exist |
 | Checkout / payment-law presentation | **68%** | Legal verification complete; mandatory 100% upfront remains an unresolved Dutch consumer launch conflict |
 | Pricing / shipping / commercial-claim consistency | **95%** | Blocker A closed via PR #159 |
-| GPSR / product-safety presentation | **50%** | Read-only audit + centralized plan complete; material confirmation and implementation remain |
+| GPSR / product-safety presentation | **65%** | Central Product ID + manufacturer/contact implementation complete; material/warning validation and physical marking remain |
 | Final-domain metadata / SEO | **50%** | Old preview/GitHub Pages metadata still needs cleanup |
 | Netlify Production cutover | **0%** | Not authorized yet |
 | Controlled Live proof | **0%** | Only after all launch gates and explicit owner approval |
 
-**Overall public website launch-readiness estimate: ~84%.**
+**Overall public website launch-readiness estimate: ~85%.**
 
 The unresolved launch gates matter more than the average percentage.
 
@@ -151,7 +151,7 @@ Targeted Dutch legal verification on 4 September 2026 found that current authori
 
 Blocker C is therefore **parked but not closed**. Do not change payment/V3 code or revive 50/50/provider alternatives from this website track. If the owner intends to launch the unchanged 100%-only model to Dutch consumers, obtain a specific Dutch consumer-law opinion before Production.
 
-### Blocker D — GPSR / product-safety presentation — AUDIT + CENTRAL PLAN COMPLETE
+### Blocker D — GPSR / product-safety presentation — PART 2A IDENTITY IMPLEMENTED; MATERIAL VALIDATION OPEN
 
 The read-only audit is complete. Detailed plan: [`GPSR_PRODUCT_SAFETY_PLAN.md`](GPSR_PRODUCT_SAFETY_PLAN.md).
 
@@ -165,17 +165,19 @@ The read-only audit is complete. Detailed plan: [`GPSR_PRODUCT_SAFETY_PLAN.md`](
 - Product pages already show product image/name, size, `Matte vinyl`, `Removable` and `Made in Netherlands`.
 - Product pages are centrally generated from `templates/product-page.html`; do not edit 111 product pages manually.
 
-#### Central implementation direction
+#### Part 2A implementation complete
 
-The public online-offer implementation should be template-driven and ultimately expose:
+The managed product-page system now centrally exposes on all 111 product pages:
 
-- authoritative product ID;
-- manufacturer identity;
-- manufacturer postal/electronic contact;
-- applicable intended-use information;
-- only warnings/safety information supported by the actual material/product risk assessment.
+- the authoritative `LM-2026-xxxxx` Product ID;
+- manufacturer identity: Alka Group, trading through LegendMural;
+- manufacturer postal address;
+- manufacturer electronic contact;
+- the same product/manufacturer identity in Product JSON-LD.
 
-The relevant technical surface is expected to be limited to the existing product catalogue/template/generator and focused tests. This belongs to the public website track and must not touch V3.
+The implementation is generated from `templates/product-page.html` and `scripts/product-page-generation.mjs`; the six presentation manifests were updated to the new approved template hash and all 111 tracked live product pages were regenerated. `tests/gpsr-product-identity-contract.test.mjs` verifies the identity contract across the full catalogue. No V3-reserved file or behavior was changed.
+
+No new safety warnings or stronger material/application claims were introduced in part 2A.
 
 #### Four production facts still required before final safety wording
 
@@ -205,7 +207,7 @@ Replace remaining preview/GitHub Pages canonical/Open Graph references with corr
 ## 6. Exact website release order from here
 
 1. **Blocker C remains an explicit launch gate:** unchanged 100% upfront PayPal-only model requires external Dutch legal confirmation before Dutch consumer Production launch.
-2. **Blocker D:** complete the minimal GPSR implementation. Manufacturer/product identity can be implemented centrally without changing V3; final warnings/use claims wait for real material facts.
+2. **Blocker D:** part 2A online-offer identity is complete. Finish part 2B only after the owner provides the exact vinyl, ink, laminate/coating and packaging facts; validate real material documentation, supported use/warnings and physical marking.
 3. **Blocker F:** `legendmural.com` canonical/Open Graph/SEO cleanup.
 4. **Final website audit:** confirm legal/content/UI gates, owner IP gate and relevant CI; Blocker C must still be resolved before Dutch consumer Production launch.
 5. **Production only after explicit approval:** controlled Netlify Production cutover and later live proof at the correct shared release gate.
@@ -216,15 +218,11 @@ Replace remaining preview/GitHub Pages canonical/Open Graph references with corr
 
 **Do not deploy Netlify Production. Do not change PayPal/V3 behavior. Do not invent material warnings.**
 
-Blocker D part 1 is complete: audit and centralized implementation plan are documented.
+Blocker D part 1 and part 2A are complete. The centralized online-offer Product ID and manufacturer/contact identity are implemented across all 111 managed product pages.
 
-The next website step has two parts in order:
+The exact next website step is:
 
-> **Blocker D part 2A:** implement only the already-established GPSR online-offer identity fields centrally: visible `LM-2026-xxxxx` product ID plus Alka Group / LegendMural manufacturer postal/electronic contact on managed product pages, with generated-page contract coverage. This does not depend on unverified material claims and must not touch V3.
-
-Then:
-
-> **Blocker D part 2B:** once the owner provides the exact vinyl, ink, laminate/coating and packaging facts, validate the real supplier documentation and finalize intended-use wording, any genuinely required warnings, and the physical label/insert specification.
+> **Blocker D part 2B:** obtain the owner-confirmed exact vinyl/media, ink family, laminate/coating status and final consumer packaging. Validate the real supplier documentation, decide which existing claims are supported, add only genuinely required use/safety wording, and define the lightweight physical product/packaging label or insert. Do not invent warnings while those material facts remain unknown.
 
 No Production deployment is authorized by this handoff.
 
