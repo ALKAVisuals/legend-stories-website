@@ -26,15 +26,15 @@ If a website task appears to require a protected V3 file or responsibility, stop
 
 ## 2. Current repository checkpoint
 
-The PayPal-only correction branch was created from fresh `main`:
+The PayPal-only feasibility handoff branch was created from fresh `main`:
 
-`1b3b42e3e348d6720157e675a1b7cbb379aaf661`
+`36eee92432778446fa44f97585eabf942ff5fcf5`
 
 Branch:
 
-`docs/blocker-c-paypal-only-20260904`
+`docs/blocker-c-paypal-only-feasibility-20260904`
 
-PR #183 previously recorded external after-delivery provider research. That research remains useful background, but its recommendation to pursue Riverty/Mollie is **superseded by the owner's explicit business decision on 4 September 2026: LegendMural remains PayPal-only for now.** Do not treat Mollie, Riverty, Klarna or another payment provider as an approved implementation direction.
+PR #184 made the owner's business direction canonical: **LegendMural remains PayPal-only for now.** Do not introduce Mollie, Riverty, Klarna or another payment provider merely to solve Blocker C.
 
 At this checkpoint, storefront `main` also contains separate V3 work including PR #182. That V3 work is outside this website track; do not reconstruct or modify its implementation from this handoff.
 
@@ -43,7 +43,8 @@ Recent substantive website merges include:
 - PR #172 — production-preview WebKit regression hardening;
 - PR #173 — Privacy-audit handoff;
 - PR #174 — Privacy/AVG launch wording and contract tests;
-- PR #183 — Blocker C read-only checkout/payment-method research handoff, now partially superseded on provider direction by the PayPal-only owner decision above.
+- PR #183 — Blocker C read-only checkout/payment-method research handoff;
+- PR #184 — canonical PayPal-only owner direction.
 
 Before every new website branch and immediately before every merge, fresh-check `main` because the V3 workstream may merge in parallel.
 
@@ -62,14 +63,14 @@ These percentages are internal project-tracking estimates, not legal certificati
 | Privacy / AVG | **95%** | Audit and public wording implementation complete; final launch audit still applies |
 | Cookies / tracking | **90%** | Functional storage documented; no advertising pixels/behavioural analytics found in tracked baseline |
 | Returns / statutory withdrawal | **95%** | 14-day right, model form and online withdrawal function exist |
-| Checkout / payment-law presentation | **65%** | Read-only audit complete; PayPal-only Dutch advance-payment solution still unresolved |
+| Checkout / payment-law presentation | **72%** | PayPal-only feasibility research complete; coordinated 50/50 architecture still needs V3 design/implementation |
 | Pricing / shipping / commercial-claim consistency | **95%** | Blocker A closed via PR #159 |
 | GPSR / product-safety presentation | **40%** | Manufacturer/contact/identification/safety presentation incomplete |
 | Final-domain metadata / SEO | **50%** | Old preview/GitHub Pages metadata still needs cleanup |
 | Netlify Production cutover | **0%** | Not authorized yet |
 | Controlled Live proof | **0%** | Only after all launch gates and explicit owner approval |
 
-**Overall public website launch-readiness estimate: ~84%.**
+**Overall public website launch-readiness estimate: ~85%.**
 
 The unresolved launch gates matter more than the average percentage.
 
@@ -137,7 +138,7 @@ The merged Privacy implementation:
 
 ## 5. Remaining public website launch blockers
 
-### Blocker C — checkout/payment-law presentation — AUDIT COMPLETE, PAYPAL-ONLY SOLUTION OPEN
+### Blocker C — checkout/payment-law presentation — PAYPAL-ONLY FEASIBILITY COMPLETE, COORDINATED IMPLEMENTATION OPEN
 
 #### Current checkout mapping
 
@@ -153,9 +154,12 @@ Working conclusion: the LegendMural **`Continue to payment`** button is a transi
 
 #### Dutch advance-payment blocker
 
-Authoritative ACM guidance currently states that for consumer goods not yet delivered a seller may require at most 50% advance payment, while full advance payment may still be offered voluntarily if the consumer also has a real option to pay at least 50% after delivery.
+Authoritative ACM guidance states that for consumer goods not yet delivered a seller may require at most 50% advance payment. Full advance payment may still be offered voluntarily if the consumer also has a real option to pay at least 50% after delivery.
 
-Source: `https://www.acm.nl/nl/verkoop-aan-consumenten/de-koop-sluiten/betaalmogelijkheden-aanbieden`
+Sources:
+
+- `https://www.acm.nl/nl/verkoop-aan-consumenten/de-koop-sluiten/betaalmogelijkheden-aanbieden`
+- `https://consument.acm.nl/rekeningen-en-incassoprocedures/wat-zijn-mijn-rechten-bij-een-aanbetaling`
 
 The existing PayPal-only launch structure captures the full order amount and therefore does **not** by itself provide the required Dutch after-delivery alternative.
 
@@ -172,20 +176,61 @@ Therefore:
 - do not implement Mollie;
 - do not implement Riverty;
 - do not implement Klarna;
-- do not introduce another payment provider merely to solve Blocker C;
-- previous external-provider research is background only and is not the approved business direction.
+- do not introduce another payment provider merely to solve Blocker C.
 
-The next investigation must stay inside PayPal and determine whether an official PayPal-native flow available to Dutch buyers can satisfy the Dutch advance-payment requirement.
+#### PayPal-only feasibility result — 4 September 2026
 
-#### Known PayPal limitation requiring fresh research
+Fresh official PayPal research confirms:
 
-Prior official PayPal developer research did not list the Netherlands as a Pay Later buyer market. That means PayPal Pay Later cannot currently be assumed to solve the Dutch requirement. This must be fresh-checked against current PayPal documentation before any conclusion or implementation.
+1. **PayPal Pay Later is not currently a Dutch-buyer solution.** PayPal's current developer payment-method table lists Pay Later buyer availability for AU, FR, DE, IT, ES, GB and US, not NL. `Pay upon Invoice` is listed for DE only.
+2. **PayPal AUTHORIZE + delayed CAPTURE does not provide the clean compliance answer.** An authorization can delay settlement, but PayPal places a hold on the buyer's funds for up to 29 days. Partial captures are possible, but a full authorization still reserves the full authorized amount and therefore is not a clear substitute for a genuine option to pay at least 50% only after delivery. It also introduces a 29-day authorization limit and lower capture certainty after PayPal's first 3-day honor period.
+3. **PayPal Facturering/Invoicing is available to Dutch PayPal business users.** PayPal NL publicly offers invoicing, and the current Invoicing API supports creating, sending and managing invoices with due-on-receipt or later payment terms.
 
-If no PayPal-native after-delivery option exists for Dutch buyers, the remaining PayPal-only architecture may require a partial-payment structure, for example no more than 50% at order time with a later PayPal balance payment. That would materially affect payment status, paid-order finalization, invoice timing, reconciliation and potentially the canonical order lifecycle.
+Official PayPal sources:
 
-Such a solution belongs partly or wholly to the V3 Commerce / Orders / Invoices workstream. The website track must stop before modifying any protected PayPal capture/webhook/finalizer/Profile/invoice/delivery behavior.
+- `https://developer.paypal.com/docs/checkout/apm/`
+- `https://developer.paypal.com/payment-methods/auth-honor/`
+- `https://developer.paypal.com/checkout/delay-capture`
+- `https://developer.paypal.com/api/payments/v2/authorizations-capture`
+- `https://www.paypal.com/nl/business/accept-payments/invoice`
+- `https://developer.paypal.com/api/invoicing/`
+- `https://developer.paypal.com/api/invoicing/v2/definitions/payment_term_type`
 
-A small later website-only improvement remains likely after the payment structure is decided: clearly present the actual PayPal payment arrangement before the consumer leaves LegendMural. Do not implement that wording until the payment structure is proven.
+#### Recommended PayPal-only business/architecture direction
+
+The most direct PayPal-only structure to take into V3 design is:
+
+- keep the current **100% PayPal payment** as a voluntary full-prepayment option;
+- for Dutch consumers, also offer a real **50% PayPal deposit** option at order time;
+- fulfill and deliver the order under a balance-due state;
+- only **after actual delivery**, request the remaining 50% through PayPal Facturering/Invoicing;
+- treat the PayPal invoice as the payment request for the remaining balance, not as a replacement for LegendMural's canonical fiscal/order invoice unless V3 explicitly designs otherwise.
+
+This is an architecture direction, not a final legal certification. Before launch, the exact 50% calculation, wording, contractual timing and invoicing/accounting treatment must be validated in the coordinated implementation.
+
+#### Exact V3 dependencies discovered
+
+The present implementation is structurally full-payment-only:
+
+- `server/payments/paypal-checkout.mjs` creates one PayPal order for the full authoritative grand total with `intent: CAPTURE`;
+- `server/orders/checkout-persistence.mjs` requires the hosted checkout grand total to equal the authoritative full order total and stores one `paymentSessionId`;
+- `server/payments/paypal-capture.mjs` rejects a PayPal capture unless the captured total equals the full stored `amountTotal`;
+- `server/api/capture-paypal-order.mjs` turns a successful full capture directly into `paid` and then invokes paid-order finalization/notifications;
+- `server/orders/order-status.mjs` has only `payment_pending`, `payment_processing`, `payment_failed`, `expired` and `paid`; it has no deposit-paid/balance-due model;
+- `server/adapters/neon-paid-order-finalizer.mjs` requires verified payment evidence to equal the full order amount, then marks the order `paid` and for Profile 1 issues the immutable V3 invoice.
+
+Therefore a 50/50 PayPal-only path needs a coordinated V3 design before code changes. At architecture level that likely requires:
+
+- explicit distinction between **order total**, **deposit paid**, **balance due** and **fully paid**;
+- durable identity for more than one PayPal payment object (initial checkout order/capture plus later PayPal invoice/balance payment);
+- idempotent reconciliation for both payment stages;
+- a defined fulfillment rule allowing shipment/delivery while the order is not yet fully paid;
+- an agreed canonical invoice/receipt timing policy so a PayPal payment request does not conflict with the immutable V3 invoice model;
+- updated customer-facing statuses and notification timing.
+
+These are V3-owned responsibilities. The website track must not implement them independently.
+
+A small later website-only change remains likely after V3 approves the payment model: present both PayPal choices clearly before the consumer leaves LegendMural, including the timing of the 50% balance. Do not implement that UI before the shared architecture is approved.
 
 ### Blocker D — GPSR / product-safety presentation
 
@@ -203,7 +248,7 @@ Replace remaining preview/GitHub Pages canonical/Open Graph references with corr
 
 ## 6. Exact website release order from here
 
-1. **Blocker C:** read-only PayPal-only feasibility research; if a PayPal-native Dutch solution exists, define the smallest coordinated implementation. If not, stop and coordinate any partial-payment architecture with V3 before code changes.
+1. **Blocker C:** coordinate the PayPal-only 50% deposit + post-delivery balance architecture with the V3 Commerce / Orders / Invoices workstream. Do not mutate payment code until the shared data/status/invoice design is approved. Then implement the coordinated backend/payment changes and only afterward the public checkout presentation.
 2. **Blocker D:** centralized GPSR/product-safety presentation.
 3. **Blocker F:** `legendmural.com` canonical/Open Graph/SEO cleanup.
 4. **Final website audit:** confirm legal/content/UI gates, owner IP gate and relevant CI; coordinate with V3 track and freeze an exact release SHA.
@@ -213,13 +258,13 @@ Replace remaining preview/GitHub Pages canonical/Open Graph references with corr
 
 ## 7. Exact next step
 
-**Do not deploy Netlify Production yet. Do not add Mollie, Riverty, Klarna or another payment provider.**
+**Do not deploy Netlify Production yet. Do not add another payment provider. Do not change PayPal/V3 code from the website track yet.**
 
-The exact next website step is:
+The exact next step is:
 
-> **Blocker C, PayPal-only part 2: perform a fresh read-only audit of official PayPal capabilities for Dutch buyers. Determine whether PayPal itself offers a compliant after-delivery or delayed-payment route for the Netherlands. If not, determine at architecture level whether a PayPal-only maximum-50%-at-order + later-balance flow is feasible, and identify the exact V3-owned dependencies before any code change.**
+> **Blocker C, PayPal-only part 3: hand the proven 50% deposit + post-delivery PayPal balance requirement to the V3 Commerce / Orders / Invoices workstream and design the canonical shared lifecycle before implementation. The design must define order/payment states, storage for both PayPal payment identities, reconciliation/idempotency, fulfillment-before-full-payment behavior, and V3 invoice issuance timing. Only after that shared design is approved may code changes begin.**
 
-Do not change checkout/payment/V3 code during this research step.
+The website track may continue with Blocker D only if Blocker C is explicitly parked awaiting V3 coordination; do not silently bypass the payment-law launch blocker.
 
 ---
 
