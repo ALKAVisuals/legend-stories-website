@@ -6,6 +6,7 @@ import {
 } from './neon-order-store.mjs';
 
 const REFERENCE_PATTERN = /^[a-f0-9]{64}$/;
+const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const NOTIFICATION_TYPES = new Set([
   'merchant_paid_order',
   'customer_paid_order',
@@ -72,6 +73,58 @@ function optionalText(value, field, maxLength) {
     fail('INVALID_ORDER_NOTIFICATION_DELIVERY', `${field} is invalid.`, { field });
   }
   return normalized;
+}
+
+function exactText(value, field, maxLength, code = 'INVALID_ORDER_NOTIFICATION_DELIVERY') {
+  const normalized = String(value ?? '');
+  if (!normalized
+    || normalized.length > maxLength
+    || normalized !== normalized.trim()
+    || /[\u0000-\u001F\u007F]/.test(normalized)) {
+    fail(code, `${field} is invalid.`, { field });
+  }
+  return normalized;
+}
+
+function normalizeV3Artifact({
+  claimToken,
+  rendererVersion,
+  pdfSha256,
+  pdfByteLength,
+  attachmentFilename,
+}) {
+  const normalizedClaimToken = exactText(
+    claimToken,
+    'claimToken',
+    120,
+    'INVALID_ORDER_NOTIFICATION_CLAIM_TOKEN',
+  );
+  const renderer = positiveInteger(rendererVersion, 'rendererVersion');
+  const sha256 = exactText(pdfSha256, 'pdfSha256', 64, 'INVALID_ORDER_NOTIFICATION_ARTIFACT');
+  if (!SHA256_PATTERN.test(sha256)) {
+    fail('INVALID_ORDER_NOTIFICATION_ARTIFACT', 'pdfSha256 is invalid.', { field: 'pdfSha256' });
+  }
+  const byteLength = positiveInteger(pdfByteLength, 'pdfByteLength');
+  const filename = exactText(
+    attachmentFilename,
+    'attachmentFilename',
+    200,
+    'INVALID_ORDER_NOTIFICATION_ARTIFACT',
+  );
+  if (filename.includes('/') || filename.includes('\\') || !filename.toLowerCase().endsWith('.pdf')) {
+    fail(
+      'INVALID_ORDER_NOTIFICATION_ARTIFACT',
+      'attachmentFilename is invalid.',
+      { field: 'attachmentFilename' },
+    );
+  }
+  return Object.freeze({
+    claimToken: normalizedClaimToken,
+    rendererVersion: renderer,
+    pdfSha256: sha256,
+    pdfByteLength: byteLength,
+    attachmentFilename: filename,
+  });
 }
 
 function normalizeV3Binding(type, invoiceId, snapshotSchemaVersion) {
@@ -201,6 +254,40 @@ const CLAIM_NOTIFICATION = `
   RETURNING ${COLUMNS}
 `;
 
+const PREPARE_V3_INVOICE_ARTIFACT = `
+  UPDATE legend_commerce.order_notifications
+  SET renderer_version = COALESCE(renderer_version, $4),
+      pdf_sha256 = COALESCE(pdf_sha256, $5),
+      pdf_byte_length = COALESCE(pdf_byte_length, $6),
+      attachment_filename = COALESCE(attachment_filename, $7),
+      updated_at = CASE WHEN renderer_version IS NULL THEN $8 ELSE updated_at END
+  WHERE order_reference = $1
+    AND notification_type = 'customer_v3_invoice'
+    AND invoice_id = $2
+    AND snapshot_schema_version = 1
+    AND delivery_status = 'sending'
+    AND claim_token = $3
+    AND claimed_at IS NOT NULL
+    AND claimed_at <= $8
+    AND lease_expires_at IS NOT NULL
+    AND lease_expires_at > $8
+    AND (
+      (
+        renderer_version IS NULL
+        AND pdf_sha256 IS NULL
+        AND pdf_byte_length IS NULL
+        AND attachment_filename IS NULL
+      )
+      OR (
+        renderer_version = $4
+        AND pdf_sha256 = $5
+        AND pdf_byte_length = $6
+        AND attachment_filename = $7
+      )
+    )
+  RETURNING ${COLUMNS}
+`;
+
 const RECORD_SENT = `
   UPDATE legend_commerce.order_notifications
   SET delivery_status = 'sent',
@@ -232,6 +319,20 @@ const RECORD_FAILED = `
     AND ($6::text IS NULL OR claim_token = $6)
   RETURNING ${COLUMNS}
 `;
+
+function artifactMatches(notification, artifact) {
+  return notification.rendererVersion === artifact.rendererVersion
+    && notification.pdfSha256 === artifact.pdfSha256
+    && notification.pdfByteLength === artifact.pdfByteLength
+    && notification.attachmentFilename === artifact.attachmentFilename;
+}
+
+function artifactAbsent(notification) {
+  return notification.rendererVersion === null
+    && notification.pdfSha256 === null
+    && notification.pdfByteLength === null
+    && notification.attachmentFilename === null;
+}
 
 export function createNeonOrderNotificationStore({
   connectionString = process.env.DATABASE_URL,
@@ -325,6 +426,85 @@ export function createNeonOrderNotificationStore({
         const current = rowToNotification(existing.rows?.[0]);
         if (!current) fail('ORDER_NOTIFICATION_NOT_FOUND', 'Order notification could not be loaded.');
         return Object.freeze({ claimed: false, notification: current });
+      });
+    },
+
+    async prepareV3InvoiceArtifact({
+      orderReference,
+      invoiceId,
+      claimToken,
+      rendererVersion,
+      pdfSha256,
+      pdfByteLength,
+      attachmentFilename,
+      updatedAt,
+    }) {
+      const reference = normalizeReference(orderReference);
+      const normalizedInvoiceId = positiveInteger(invoiceId, 'invoiceId');
+      const artifact = normalizeV3Artifact({
+        claimToken,
+        rendererVersion,
+        pdfSha256,
+        pdfByteLength,
+        attachmentFilename,
+      });
+      const updated = timestamp(updatedAt, 'updatedAt');
+
+      return withClient(clientFactory, databaseUrl, async (client) => {
+        const result = await client.query(PREPARE_V3_INVOICE_ARTIFACT, [
+          reference,
+          normalizedInvoiceId,
+          artifact.claimToken,
+          artifact.rendererVersion,
+          artifact.pdfSha256,
+          artifact.pdfByteLength,
+          artifact.attachmentFilename,
+          updated,
+        ]);
+        const prepared = rowToNotification(result.rows?.[0]);
+        if (prepared) return prepared;
+
+        const existing = await client.query(SELECT_NOTIFICATION, [
+          reference,
+          'customer_v3_invoice',
+        ]);
+        const current = rowToNotification(existing.rows?.[0]);
+        if (!current) {
+          fail('ORDER_NOTIFICATION_NOT_FOUND', 'V3 invoice notification could not be loaded.');
+        }
+        if (current.invoiceId !== normalizedInvoiceId || current.snapshotSchemaVersion !== 1) {
+          fail(
+            'ORDER_NOTIFICATION_IDENTITY_MISMATCH',
+            'V3 invoice notification is bound to different immutable invoice identity.',
+          );
+        }
+        if (current.deliveryStatus !== 'sending') {
+          fail(
+            'ORDER_NOTIFICATION_STATE_CONFLICT',
+            'V3 invoice notification is not in an active sending state.',
+          );
+        }
+        if (current.claimToken !== artifact.claimToken
+          || current.claimedAt === null
+          || current.claimedAt > updated
+          || current.leaseExpiresAt === null
+          || current.leaseExpiresAt <= updated) {
+          fail(
+            'ORDER_NOTIFICATION_CLAIM_CONFLICT',
+            'V3 invoice notification claim is stale or no longer owned by this delivery attempt.',
+          );
+        }
+        if (artifactMatches(current, artifact)) return current;
+        if (!artifactAbsent(current)) {
+          fail(
+            'ORDER_NOTIFICATION_ARTIFACT_MISMATCH',
+            'V3 invoice artifact metadata differs from the immutable prepared identity.',
+          );
+        }
+        fail(
+          'ORDER_NOTIFICATION_STATE_CONFLICT',
+          'V3 invoice artifact preparation state changed unexpectedly.',
+        );
       });
     },
 

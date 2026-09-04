@@ -4,8 +4,10 @@ import {
   validateNeonConnectionString,
 } from '../server/adapters/neon-order-store.mjs';
 import { createNeonDocumentNumberAllocator } from '../server/adapters/neon-document-number-allocator.mjs';
+import { createNeonOrderNotificationStore } from '../server/adapters/neon-order-notification-store.mjs';
 import { createNeonPaidOrderFinalizer } from '../server/adapters/neon-paid-order-finalizer.mjs';
 import { createNeonPayPalWebhookStore } from '../server/adapters/neon-paypal-webhook-store.mjs';
+import { createNeonV3InvoiceDeliverySource } from '../server/adapters/neon-v3-invoice-delivery-source.mjs';
 import { createNeonWithdrawalStore } from '../server/adapters/neon-withdrawal-store.mjs';
 import { createPendingOrderRecord } from '../server/orders/order-status.mjs';
 import { runOrderStoreConformance } from '../server/orders/store-conformance.mjs';
@@ -37,6 +39,10 @@ const FINALIZER_RACE_ORDER_ID = 'FINALIZERRACE001';
 const FINALIZER_ROLLBACK_ORDER_ID = 'FINALIZERROLLBACK001';
 const FINALIZER_CREATED_AT = 1_800_200_000;
 const FINALIZER_PAID_AT = 1_800_200_100;
+const V3_DELIVERY_CLAIM_AT = FINALIZER_PAID_AT + 50;
+const V3_DELIVERY_PDF_SHA256 = 'd'.repeat(64);
+const V3_DELIVERY_PDF_BYTE_LENGTH = 4321;
+const V3_DELIVERY_FILENAME = 'TEST-GATE3-V3-INVOICE.pdf';
 
 async function withClient(connectionString, action) {
   const client = await createDefaultNeonClient(connectionString);
@@ -610,6 +616,150 @@ async function verifyProfile1PaidFinalizerOnRealNeon() {
   });
 }
 
+async function verifyV3InvoiceDeliveryApplicationOnRealNeon() {
+  const state = await readFinalizerState({
+    reference: FINALIZER_FIRST_REFERENCE,
+    seriesPrefix: 'gate3-first',
+  });
+  assertSingleDurableFinalizerIdentity(state, {
+    reference: FINALIZER_FIRST_REFERENCE,
+  });
+
+  const invoice = state.invoices[0];
+  const invoiceId = Number(invoice.id);
+  const deliverySource = createNeonV3InvoiceDeliverySource({ connectionString: runtimeUrl });
+  const loaded = await deliverySource.loadIssuedInvoiceForDelivery({
+    orderReference: FINALIZER_FIRST_REFERENCE,
+    invoiceId,
+  });
+  if (loaded.invoiceId !== invoiceId
+    || loaded.orderNumber !== state.order.order_number
+    || loaded.invoiceNumber !== invoice.invoice_number
+    || loaded.snapshotSchemaVersion !== 1
+    || loaded.amountTotal !== 2995
+    || loaded.snapshot?.document?.invoiceNumber !== invoice.invoice_number) {
+    throw new Error('V3 delivery source did not return the immutable issued invoice identity.');
+  }
+
+  try {
+    await deliverySource.loadIssuedInvoiceForDelivery({
+      orderReference: FINALIZER_FIRST_REFERENCE,
+      invoiceId: invoiceId + 1,
+    });
+    throw new Error('V3 delivery source unexpectedly accepted a different invoice id.');
+  } catch (error) {
+    if (error?.code !== 'V3_INVOICE_DELIVERY_IDENTITY_MISMATCH') throw error;
+  }
+
+  const notificationStore = createNeonOrderNotificationStore({ connectionString: runtimeUrl });
+  const ensured = await notificationStore.ensureNotification({
+    orderReference: FINALIZER_FIRST_REFERENCE,
+    notificationType: 'customer_v3_invoice',
+    createdAt: V3_DELIVERY_CLAIM_AT - 1,
+    invoiceId,
+    snapshotSchemaVersion: 1,
+  });
+  if (!ensured.created
+    || ensured.notification.invoiceId !== invoiceId
+    || ensured.notification.snapshotSchemaVersion !== 1) {
+    throw new Error('Could not persist the isolated V3 invoice delivery notification identity.');
+  }
+
+  const claimed = await notificationStore.claimNotification({
+    orderReference: FINALIZER_FIRST_REFERENCE,
+    notificationType: 'customer_v3_invoice',
+    attemptedAt: V3_DELIVERY_CLAIM_AT,
+    leaseSeconds: 300,
+  });
+  if (!claimed.claimed
+    || claimed.notification.deliveryStatus !== 'sending'
+    || !claimed.notification.claimToken
+    || claimed.notification.leaseExpiresAt !== V3_DELIVERY_CLAIM_AT + 300) {
+    throw new Error('Could not acquire an active isolated V3 invoice delivery claim.');
+  }
+
+  const artifact = {
+    orderReference: FINALIZER_FIRST_REFERENCE,
+    invoiceId,
+    claimToken: claimed.notification.claimToken,
+    rendererVersion: 1,
+    pdfSha256: V3_DELIVERY_PDF_SHA256,
+    pdfByteLength: V3_DELIVERY_PDF_BYTE_LENGTH,
+    attachmentFilename: V3_DELIVERY_FILENAME,
+    updatedAt: V3_DELIVERY_CLAIM_AT + 1,
+  };
+  const prepared = await notificationStore.prepareV3InvoiceArtifact(artifact);
+  if (prepared.rendererVersion !== 1
+    || prepared.pdfSha256 !== V3_DELIVERY_PDF_SHA256
+    || prepared.pdfByteLength !== V3_DELIVERY_PDF_BYTE_LENGTH
+    || prepared.attachmentFilename !== V3_DELIVERY_FILENAME
+    || prepared.claimToken !== claimed.notification.claimToken) {
+    throw new Error('First V3 invoice artifact preparation did not persist deterministic metadata.');
+  }
+
+  const repeated = await notificationStore.prepareV3InvoiceArtifact({
+    ...artifact,
+    updatedAt: V3_DELIVERY_CLAIM_AT + 2,
+  });
+  if (repeated.pdfSha256 !== prepared.pdfSha256
+    || repeated.attachmentFilename !== prepared.attachmentFilename) {
+    throw new Error('Exact V3 invoice artifact preparation was not idempotent.');
+  }
+
+  for (const [name, input, expectedCode] of [
+    [
+      'artifact drift',
+      { ...artifact, pdfSha256: 'e'.repeat(64), updatedAt: V3_DELIVERY_CLAIM_AT + 3 },
+      'ORDER_NOTIFICATION_ARTIFACT_MISMATCH',
+    ],
+    [
+      'wrong claim token',
+      { ...artifact, claimToken: 'wrong-claim-token', updatedAt: V3_DELIVERY_CLAIM_AT + 3 },
+      'ORDER_NOTIFICATION_CLAIM_CONFLICT',
+    ],
+    [
+      'wrong invoice id',
+      { ...artifact, invoiceId: invoiceId + 1, updatedAt: V3_DELIVERY_CLAIM_AT + 3 },
+      'ORDER_NOTIFICATION_IDENTITY_MISMATCH',
+    ],
+    [
+      'expired lease',
+      { ...artifact, updatedAt: claimed.notification.leaseExpiresAt },
+      'ORDER_NOTIFICATION_CLAIM_CONFLICT',
+    ],
+  ]) {
+    try {
+      await notificationStore.prepareV3InvoiceArtifact(input);
+      throw new Error(`V3 artifact preparation unexpectedly accepted ${name}.`);
+    } catch (error) {
+      if (error?.code !== expectedCode) throw error;
+    }
+  }
+
+  await withClient(migrationUrl, async (client) => {
+    const result = await client.query(
+      `SELECT delivery_status, invoice_id, snapshot_schema_version, renderer_version,
+              pdf_sha256, pdf_byte_length, attachment_filename, claim_token, lease_expires_at
+       FROM legend_commerce.order_notifications
+       WHERE order_reference = $1 AND notification_type = 'customer_v3_invoice'`,
+      [FINALIZER_FIRST_REFERENCE],
+    );
+    const stored = result.rows?.[0];
+    if (!stored
+      || stored.delivery_status !== 'sending'
+      || Number(stored.invoice_id) !== invoiceId
+      || Number(stored.snapshot_schema_version) !== 1
+      || Number(stored.renderer_version) !== 1
+      || stored.pdf_sha256 !== V3_DELIVERY_PDF_SHA256
+      || Number(stored.pdf_byte_length) !== V3_DELIVERY_PDF_BYTE_LENGTH
+      || stored.attachment_filename !== V3_DELIVERY_FILENAME
+      || stored.claim_token !== claimed.notification.claimToken
+      || Number(stored.lease_expires_at) !== claimed.notification.leaseExpiresAt) {
+      throw new Error('Rejected V3 artifact writes corrupted the durable prepared identity.');
+    }
+  });
+}
+
 async function inspectRuntimePrivilegeBoundary() {
   return withClient(runtimeUrl, async (client) => {
     let leastPrivilegeVerified = true;
@@ -653,6 +803,7 @@ try {
   await verifyWithdrawalPersistence();
   await verifyDocumentNumberAllocator();
   await verifyProfile1PaidFinalizerOnRealNeon();
+  await verifyV3InvoiceDeliveryApplicationOnRealNeon();
   const leastPrivilegeVerified = await inspectRuntimePrivilegeBoundary();
 
   console.log(
@@ -674,6 +825,10 @@ try {
   console.log('- concurrent V3 paid finalizations converge on exactly one durable invoice/order identity');
   console.log('- failed V3 finalization rolls back order, invoice, and document counters atomically');
   console.log('- retry after V3 rollback reuses document value 1 without burning an official number');
+  console.log('- V3 delivery source reads only the durable issued schema-v1 invoice identity');
+  console.log('- V3 artifact preparation persists deterministic metadata under the active claim lease');
+  console.log('- exact V3 artifact preparation repeats idempotently');
+  console.log('- V3 artifact drift, wrong invoice/token and expired lease fail closed without corruption');
 
   if (leastPrivilegeVerified) {
     console.log('- least-privilege runtime role');

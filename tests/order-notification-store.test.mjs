@@ -10,6 +10,9 @@ import {
 const DATABASE_URL = 'postgresql://runtime:secret@ep-test.neon.tech/legend?sslmode=require';
 const REFERENCE = 'a'.repeat(64);
 const CLAIM_TOKEN = 'claim-token-1';
+const PDF_SHA256 = 'b'.repeat(64);
+const PDF_BYTE_LENGTH = 1234;
+const ATTACHMENT_FILENAME = 'LM-INVOICE-000001.pdf';
 
 function row(overrides = {}) {
   return {
@@ -53,6 +56,44 @@ function createStore(queryHandler) {
     clientFactory: createClientFactory(queryHandler),
     claimTokenFactory: () => CLAIM_TOKEN,
   });
+}
+
+function artifactInput(overrides = {}) {
+  return {
+    orderReference: REFERENCE,
+    invoiceId: 42,
+    claimToken: CLAIM_TOKEN,
+    rendererVersion: 1,
+    pdfSha256: PDF_SHA256,
+    pdfByteLength: PDF_BYTE_LENGTH,
+    attachmentFilename: ATTACHMENT_FILENAME,
+    updatedAt: 300,
+    ...overrides,
+  };
+}
+
+function preparedRow(overrides = {}) {
+  return row({
+    notification_type: 'customer_v3_invoice',
+    delivery_status: 'sending',
+    delivery_attempts: 1,
+    claimed_at: 200,
+    last_attempt_at: 200,
+    invoice_id: 42,
+    snapshot_schema_version: 1,
+    renderer_version: 1,
+    pdf_sha256: PDF_SHA256,
+    pdf_byte_length: PDF_BYTE_LENGTH,
+    attachment_filename: ATTACHMENT_FILENAME,
+    claim_token: CLAIM_TOKEN,
+    lease_expires_at: 500,
+    updated_at: 300,
+    ...overrides,
+  });
+}
+
+function expectStoreCode(code) {
+  return (error) => error instanceof NeonOrderNotificationStoreError && error.code === code;
 }
 
 test('notification types reject unsupported values before database access', async () => {
@@ -202,6 +243,137 @@ test('claimNotification supports pending, due failed and expired sending recover
   assert.equal(result.claimed, true);
   assert.equal(result.notification.claimToken, CLAIM_TOKEN);
   assert.equal(result.notification.leaseExpiresAt, 500);
+});
+
+test('prepareV3InvoiceArtifact atomically persists metadata only for an active V3 claim', async () => {
+  const store = createStore((statement, values) => {
+    assert.match(statement, /UPDATE legend_commerce\.order_notifications/);
+    assert.match(statement, /notification_type = 'customer_v3_invoice'/);
+    assert.match(statement, /invoice_id = \$2/);
+    assert.match(statement, /snapshot_schema_version = 1/);
+    assert.match(statement, /delivery_status = 'sending'/);
+    assert.match(statement, /claim_token = \$3/);
+    assert.match(statement, /claimed_at <= \$8/);
+    assert.match(statement, /lease_expires_at > \$8/);
+    assert.match(statement, /renderer_version = COALESCE\(renderer_version, \$4\)/);
+    assert.deepEqual(values, [
+      REFERENCE,
+      42,
+      CLAIM_TOKEN,
+      1,
+      PDF_SHA256,
+      PDF_BYTE_LENGTH,
+      ATTACHMENT_FILENAME,
+      300,
+    ]);
+    return { rows: [preparedRow()] };
+  });
+
+  const notification = await store.prepareV3InvoiceArtifact(artifactInput());
+  assert.equal(notification.rendererVersion, 1);
+  assert.equal(notification.pdfSha256, PDF_SHA256);
+  assert.equal(notification.pdfByteLength, PDF_BYTE_LENGTH);
+  assert.equal(notification.attachmentFilename, ATTACHMENT_FILENAME);
+  assert.equal(notification.claimToken, CLAIM_TOKEN);
+});
+
+test('prepareV3InvoiceArtifact accepts an exact repeated artifact identity idempotently', async () => {
+  const store = createStore((statement) => {
+    assert.match(statement, /renderer_version = \$4/);
+    assert.match(statement, /pdf_sha256 = \$5/);
+    assert.match(statement, /pdf_byte_length = \$6/);
+    assert.match(statement, /attachment_filename = \$7/);
+    return { rows: [preparedRow({ updated_at: 250 })] };
+  });
+
+  const notification = await store.prepareV3InvoiceArtifact(artifactInput({ updatedAt: 300 }));
+  assert.equal(notification.updatedAt, 250);
+  assert.equal(notification.pdfSha256, PDF_SHA256);
+});
+
+test('prepareV3InvoiceArtifact hard-fails metadata drift after first preparation', async () => {
+  let call = 0;
+  const store = createStore((statement, values) => {
+    call += 1;
+    if (call === 1) {
+      assert.match(statement, /UPDATE legend_commerce\.order_notifications/);
+      return { rows: [] };
+    }
+    assert.match(statement, /SELECT/);
+    assert.deepEqual(values, [REFERENCE, 'customer_v3_invoice']);
+    return { rows: [preparedRow()] };
+  });
+
+  await assert.rejects(
+    store.prepareV3InvoiceArtifact(artifactInput({ pdfSha256: 'c'.repeat(64) })),
+    expectStoreCode('ORDER_NOTIFICATION_ARTIFACT_MISMATCH'),
+  );
+});
+
+test('prepareV3InvoiceArtifact hard-fails wrong invoice, wrong token and stale lease', async (t) => {
+  const cases = [
+    [
+      'wrong invoice',
+      artifactInput({ invoiceId: 43 }),
+      preparedRow(),
+      'ORDER_NOTIFICATION_IDENTITY_MISMATCH',
+    ],
+    [
+      'wrong token',
+      artifactInput({ claimToken: 'other-token' }),
+      preparedRow(),
+      'ORDER_NOTIFICATION_CLAIM_CONFLICT',
+    ],
+    [
+      'expired lease',
+      artifactInput({ updatedAt: 500 }),
+      preparedRow({ lease_expires_at: 500 }),
+      'ORDER_NOTIFICATION_CLAIM_CONFLICT',
+    ],
+    [
+      'backdated attempt',
+      artifactInput({ updatedAt: 199 }),
+      preparedRow({ claimed_at: 200, lease_expires_at: 500 }),
+      'ORDER_NOTIFICATION_CLAIM_CONFLICT',
+    ],
+  ];
+
+  for (const [name, input, currentRow, expectedCode] of cases) {
+    await t.test(name, async () => {
+      let call = 0;
+      const store = createStore(() => {
+        call += 1;
+        return call === 1 ? { rows: [] } : { rows: [currentRow] };
+      });
+      await assert.rejects(
+        store.prepareV3InvoiceArtifact(input),
+        expectStoreCode(expectedCode),
+      );
+    });
+  }
+});
+
+test('prepareV3InvoiceArtifact rejects unsafe artifact identity before database access', async () => {
+  let connected = false;
+  const store = createNeonOrderNotificationStore({
+    connectionString: DATABASE_URL,
+    clientFactory: async () => {
+      connected = true;
+      throw new Error('should not connect');
+    },
+  });
+
+  for (const overrides of [
+    { claimToken: ' claim-token-1 ' },
+    { rendererVersion: 0 },
+    { pdfSha256: 'ABC' },
+    { pdfByteLength: 0 },
+    { attachmentFilename: '../invoice.pdf' },
+    { attachmentFilename: 'invoice.txt' },
+  ]) {
+    await assert.rejects(store.prepareV3InvoiceArtifact(artifactInput(overrides)));
+  }
+  assert.equal(connected, false);
 });
 
 test('failed delivery clears the lease and persists durable retry scheduling', async () => {
