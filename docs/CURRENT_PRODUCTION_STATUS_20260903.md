@@ -26,13 +26,13 @@ If a website task appears to require a protected V3 file or responsibility, stop
 
 ## 2. Current repository checkpoint
 
-Blocker F final-domain source cleanup started from fresh storefront `main`:
+Final website pre-release audit/checklist started from fresh storefront `main`:
 
-`7e923a810c503fba5134c293b21de98ac8235ef0`
+`735cbf8641f0808836dc4d14115cb159011d8b71`
 
 Branch:
 
-`website/blocker-f-final-domain-20260904`
+`docs/final-pre-release-checklist-20260904`
 
 Canonical owner payment decision remains unchanged:
 
@@ -51,7 +51,10 @@ Recent substantive website merges include:
 - PR #184 — canonical PayPal-only owner direction;
 - PR #185 — historical PayPal feasibility research;
 - PR #186 — removed the split-payment direction and made 100% upfront PayPal-only canonical;
-- PR #187 — recorded the targeted Dutch legal verification and parked Blocker C as an unresolved launch gate.
+- PR #187 — recorded the targeted Dutch legal verification and parked Blocker C as an unresolved launch gate;
+- PR #188 — recorded the GPSR audit and centralized plan;
+- PR #190 — added centralized GPSR product/manufacturer identity across the managed catalogue;
+- PR #191 — switched tracked final-domain metadata to `legendmural.com` and deferred GPSR part 2B at owner request.
 
 Before every new website branch and immediately before every merge, fresh-check `main` because the V3 workstream may merge in parallel.
 
@@ -65,7 +68,7 @@ These percentages are internal project-tracking estimates, not legal certificati
 
 | Area | Readiness | Current assessment |
 |---|---:|---|
-| Storefront UI/content core | **96%** | Main shopping experience built and broadly tested |
+| Storefront UI/content core | **96%** | Main shopping experience built/tested; final audit found non-blocking tracked-source legacy copy/variant attributes that still need normalization |
 | Company/legal information pages | **92%** | Strong baseline; later final consistency review remains |
 | Privacy / AVG | **95%** | Audit and public wording implementation complete; final launch audit still applies |
 | Cookies / tracking | **90%** | Functional storage documented; no advertising pixels/behavioural analytics found in tracked baseline |
@@ -217,15 +220,22 @@ Completed in the website track:
 
 No Netlify Production deployment or live-domain verification was performed. Blocker F therefore needs only final live proof at the authorized Production release gate.
 
+### Final pre-release audit/checklist — COMPLETE
+
+Canonical checklist: [`FINAL_PRE_RELEASE_CHECKLIST_20260904.md`](FINAL_PRE_RELEASE_CHECKLIST_20260904.md).
+
+The audit separates already-proven pre-release evidence, parked owner/legal/product gates and live-only post-cutover checks. It also found one remaining executable source-cleanup item: tracked `index.html` and `shop.html` still contain legacy commercial copy that the Vite production build currently rewrites, and homepage product-card source still carries legacy 50-cm variant attributes. The build/runtime is protected by `vite-launch-commercial-copy-plugin.mjs`, canonical 30/45-cm variant resolution and green CI, so this is not currently evidence of a broken production checkout. However, the tracked source should be normalized before final Production so source and built output express the same commercial truth without relying on rewrite debt.
+
 ---
 
 ## 6. Exact website release order from here
 
-1. **Blocker C remains an explicit launch gate:** unchanged 100% upfront PayPal-only model requires external Dutch legal confirmation before Dutch consumer Production launch.
-2. **Blocker D:** part 2A is complete. Part 2B is intentionally deferred until real vinyl/ink/laminate/packaging facts exist; it remains a pre-commercial-release gate.
-3. **Blocker F:** tracked-source `legendmural.com` canonical/Open Graph/sitemap/robots cleanup is complete; live-domain proof waits for the authorized Production release gate.
-4. **Final website audit:** confirm legal/content/UI gates, owner IP gate and relevant CI; Blocker C must still be resolved before Dutch consumer Production launch.
-5. **Production only after explicit approval:** controlled Netlify Production cutover and later live proof at the correct shared release gate.
+1. **Tracked-source cleanup:** normalize legacy price/shipping/returns/delivery copy in `index.html` and `shop.html`, plus legacy homepage 50-cm variant data attributes, while retaining runtime aliases only for backwards compatibility.
+2. **Blocker C remains an explicit launch gate:** unchanged 100% upfront PayPal-only model requires external Dutch legal confirmation before Dutch consumer Production launch.
+3. **Blocker D:** part 2A is complete. Part 2B is intentionally deferred until real vinyl/ink/laminate/packaging facts exist; it remains a pre-commercial-release gate.
+4. **Blocker E:** owner separately confirms required commercial rights/permissions for the designs and protected material.
+5. **Blocker F:** tracked-source `legendmural.com` cleanup is complete; live-domain proof waits for the authorized Production release gate.
+6. **Production only after explicit approval:** controlled Netlify Production cutover, followed by the live-only checks in `FINAL_PRE_RELEASE_CHECKLIST_20260904.md`. Real payment/invoice/email proof remains separately gated and coordinated with V3.
 
 ---
 
@@ -233,11 +243,11 @@ No Netlify Production deployment or live-domain verification was performed. Bloc
 
 **Do not deploy Netlify Production. Do not change PayPal/V3 behavior. Do not invent material warnings.**
 
-Blocker D part 2B is intentionally deferred because the owner does not currently have the exact production/material/packaging facts. Blocker F tracked-source cleanup is complete.
+The final pre-release audit/checklist is complete and lives in `docs/FINAL_PRE_RELEASE_CHECKLIST_20260904.md`. Blocker C, deferred GPSR part 2B and the owner IP gate remain open/parked exactly as documented.
 
-The exact next website step is:
+The exact next executable website step is:
 
-> **Final website pre-release audit/checklist:** audit the current tracked storefront and built output for remaining launch-readiness issues that can be proven before Netlify Production. Separate (a) already-proven pre-release items, (b) parked owner/legal gates such as Blocker C, deferred GPSR part 2B and the IP gate, and (c) checks that can only be performed after the eventual authorized Netlify Production cutover. Do not deploy during this audit.
+> **Tracked-source commercial cleanup:** update `index.html` and `shop.html` so the repository source itself uses the authoritative €35/€45 pricing context, €69-after-discount free-shipping rule, no fixed delivery promise, 14-day statutory withdrawal summary and canonical 30/45-cm homepage variant data. Keep legacy variant aliases in the commerce runtime only for backwards compatibility. Add or extend source-level regression coverage and rerun the normal website CI. Do not deploy Production.
 
 No Production deployment is authorized by this handoff.
 
