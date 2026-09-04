@@ -70,3 +70,9 @@
   to = "/.netlify/functions/order-status"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/api/invoice-download"
+  to = "/.netlify/functions/invoice-download"
+  status = 200
+  force = true
