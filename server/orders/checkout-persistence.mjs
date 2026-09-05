@@ -45,6 +45,14 @@ function normalizeDeliveryCountry(value) {
   return country;
 }
 
+function normalizeDocumentProfileVersion(value) {
+  const normalized = Number(value);
+  if (!Number.isSafeInteger(normalized) || ![0, 1].includes(normalized)) {
+    fail('INVALID_CHECKOUT_RECORD', 'The server document profile is invalid.');
+  }
+  return normalized;
+}
+
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize);
   if (value && typeof value === 'object') {
@@ -114,6 +122,7 @@ function createPendingCheckoutRecord({
   customer,
   deliveryCountry,
   createdAt,
+  documentProfileVersion,
 }) {
   if (checkout.quote.grandTotal !== quote.amountInCents.grandTotal) {
     fail('CHECKOUT_AMOUNT_MISMATCH', 'The Checkout result does not match the authoritative quote.');
@@ -133,6 +142,7 @@ function createPendingCheckoutRecord({
 
   return Object.freeze({
     ...pending,
+    documentProfileVersion: normalizeDocumentProfileVersion(documentProfileVersion),
     customer: Object.freeze({ ...customer }),
     items: Object.freeze(quote.items.map((item) => Object.freeze({
       productId: item.productId,
@@ -177,6 +187,7 @@ function validatePersistedOrder(order, expected) {
     ['currency', expected.currency],
     ['mode', expected.mode],
     ['paymentSessionId', expected.paymentSessionId],
+    ['documentProfileVersion', expected.documentProfileVersion],
   ]) {
     if (order[field] !== expectedValue) {
       fail('CHECKOUT_STORE_CONFLICT', `The persisted order has a conflicting ${field}.`, {
@@ -206,6 +217,7 @@ export async function persistPendingHostedCheckout({
   customer: customerInput,
   catalogProducts,
   checkoutStore,
+  documentProfileVersion = 0,
   createdAt = Math.floor(Date.now() / 1000),
 }) {
   const store = requireCheckoutStore(checkoutStore);
@@ -224,6 +236,7 @@ export async function persistPendingHostedCheckout({
     customer,
     deliveryCountry,
     createdAt,
+    documentProfileVersion,
   });
 
   let result;
