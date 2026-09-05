@@ -76,3 +76,9 @@
   to = "/.netlify/functions/invoice-download"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/api/internal/dashboard-invoice"
+  to = "/.netlify/functions/dashboard-invoice-access"
+  status = 200
+  force = true
