@@ -4,6 +4,10 @@ import {
   getCommerceOrderStore,
   unexpectedCommerceFunctionResponse,
 } from '../../server/netlify/commerce-runtime.mjs';
+import {
+  V3OrderCreationProfileError,
+  resolveV3OrderCreationDocumentProfile,
+} from '../../server/netlify/v3-order-creation-profile.mjs';
 
 function normalizedOrigin(value = '') {
   try {
@@ -36,6 +40,20 @@ function checkoutPausedResponse() {
   });
 }
 
+function v3OrderCreationNotConfiguredResponse() {
+  return Response.json({
+    error: {
+      code: 'V3_ORDER_CREATION_NOT_CONFIGURED',
+      message: 'V3 order creation is not configured.',
+    },
+  }, {
+    status: 503,
+    headers: {
+      'cache-control': 'no-store',
+    },
+  });
+}
+
 export function resolveNetlifyPayPalReturnUrls(request, env = process.env) {
   const requestOrigin = normalizedOrigin(request?.url);
   const browserOrigin = normalizedOrigin(request?.headers?.get?.('origin') || '');
@@ -56,6 +74,8 @@ export function resolveNetlifyPayPalReturnUrls(request, env = process.env) {
 export function createNetlifyPayPalCheckoutHandler({
   env = process.env,
   storeFactory,
+  v3PaidFinalization = null,
+  orderDocumentProfileResolver = resolveV3OrderCreationDocumentProfile,
   handlerOptions = {},
 } = {}) {
   return async function netlifyPayPalCheckoutHandler(request) {
@@ -64,16 +84,25 @@ export function createNetlifyPayPalCheckoutHandler({
     }
 
     try {
+      const documentProfileVersion = orderDocumentProfileResolver({
+        env,
+        v3PaidFinalization,
+      });
       const checkoutStore = getCommerceOrderStore({ env, storeFactory });
       const returnUrls = resolveNetlifyPayPalReturnUrls(request, env);
       return await handleCreatePayPalOrder(request, {
         ...handlerOptions,
         env,
         checkoutStore,
+        documentProfileVersion,
         successUrl: returnUrls.successUrl,
         cancelUrl: returnUrls.cancelUrl,
       });
     } catch (error) {
+      if (error instanceof V3OrderCreationProfileError) {
+        return v3OrderCreationNotConfiguredResponse();
+      }
+
       const configurationResponse = commerceBootstrapErrorResponse(error, {
         code: 'PAYPAL_CHECKOUT_SERVICE_NOT_CONFIGURED',
         message: 'The PayPal checkout service is not configured.',

@@ -57,6 +57,16 @@ function integer(value, field, { nullable = false } = {}) {
   return normalized;
 }
 
+function documentProfileVersion(value) {
+  const normalized = integer(value ?? 0, 'document profile version');
+  if (![0, 1].includes(normalized)) {
+    fail('INVALID_ORDER_STORE_RECORD', 'Stored document profile version is invalid.', {
+      field: 'documentProfileVersion',
+    });
+  }
+  return normalized;
+}
+
 function validateReference(reference) {
   const normalized = String(reference || '').trim().toLowerCase();
   if (!REFERENCE_PATTERN.test(normalized)) {
@@ -151,23 +161,35 @@ function rowToOrder(row, { includeDocumentProfile = false } = {}) {
     totals: row.totals,
   });
   if (includeDocumentProfile) {
-    order.documentProfileVersion = integer(row.document_profile_version ?? 0, 'document profile version');
+    order.documentProfileVersion = documentProfileVersion(row.document_profile_version ?? 0);
   }
   return order;
 }
 
-function pendingOrderValues(order) {
+function pendingOrderValues(order, profileVersion) {
   return [order.reference, order.status, order.amountTotal, order.currency, order.mode,
     order.paymentSessionId, order.createdAt, order.updatedAt, order.paidAt,
     order.lastStripeEventId || null, order.lastStripeEventType || null,
     order.lastStripeEventCreated, order.version,
     serializeJsonb(order.customer, 'customer'), serializeJsonb(order.items, 'items'),
     serializeJsonb(order.discount, 'discount'), serializeJsonb(order.shipping, 'shipping'),
-    serializeJsonb(order.totals, 'totals')];
+    serializeJsonb(order.totals, 'totals'), profileVersion];
 }
 
-function assertSamePendingOrder(actual, expected) {
-  if (!sameValue(actual, expected)) fail('ORDER_STORE_CONFLICT', 'A different order already exists for this checkout reference.', { reference: expected.reference });
+function withoutDocumentProfile(order) {
+  const normalized = clone(order);
+  if (normalized && typeof normalized === 'object') delete normalized.documentProfileVersion;
+  return normalized;
+}
+
+function assertSamePendingOrder(actual, expected, expectedProfileVersion) {
+  if (!actual
+    || documentProfileVersion(actual.documentProfileVersion ?? 0) !== expectedProfileVersion
+    || !sameValue(withoutDocumentProfile(actual), expected)) {
+    fail('ORDER_STORE_CONFLICT', 'A different order already exists for this checkout reference.', {
+      reference: expected.reference,
+    });
+  }
 }
 
 function normalizeDatabaseError(error) {
@@ -221,12 +243,14 @@ const INSERT_PENDING_ORDER = `
     reference, status, amount_total, currency, mode, payment_session_id,
     created_at, updated_at, paid_at, last_stripe_event_id,
     last_stripe_event_type, last_stripe_event_created, version,
-    customer, items, discount, shipping, totals
+    customer, items, discount, shipping, totals,
+    document_profile_version
   ) VALUES (
     $1, $2, $3, $4, $5, $6,
     $7, $8, $9, $10,
     $11, $12, $13,
-    $14::jsonb, $15::jsonb, $16::jsonb, $17::jsonb, $18::jsonb
+    $14::jsonb, $15::jsonb, $16::jsonb, $17::jsonb, $18::jsonb,
+    $19
   )
   ON CONFLICT (reference) DO NOTHING
   RETURNING *
@@ -240,18 +264,29 @@ export function createNeonOrderStore({ connectionString = process.env.DATABASE_U
   return Object.freeze({
     async persistPendingCheckout(orderInput) {
       const expected = normalizePendingOrder(orderInput);
+      const expectedProfileVersion = documentProfileVersion(orderInput?.documentProfileVersion ?? 0);
+      const includeDocumentProfile = Object.hasOwn(orderInput || {}, 'documentProfileVersion');
       return withSerializableTransaction(clientFactory, databaseUrl, async (client) => {
-        const inserted = await client.query(INSERT_PENDING_ORDER, pendingOrderValues(expected));
+        const inserted = await client.query(
+          INSERT_PENDING_ORDER,
+          pendingOrderValues(expected, expectedProfileVersion),
+        );
         if (inserted.rows?.length === 1) {
-          const order = rowToOrder(inserted.rows[0]);
-          assertSamePendingOrder(order, expected);
-          return { created: true, order: clone(order) };
+          const order = rowToOrder(inserted.rows[0], { includeDocumentProfile: true });
+          assertSamePendingOrder(order, expected, expectedProfileVersion);
+          return {
+            created: true,
+            order: clone(includeDocumentProfile ? order : withoutDocumentProfile(order)),
+          };
         }
         const existingResult = await client.query(SELECT_ORDER_FOR_UPDATE, [expected.reference]);
-        const existing = rowToOrder(existingResult.rows?.[0]);
+        const existing = rowToOrder(existingResult.rows?.[0], { includeDocumentProfile: true });
         if (!existing) fail('ORDER_STORE_CONFLICT', 'The existing checkout order could not be loaded.');
-        assertSamePendingOrder(existing, expected);
-        return { created: false, order: clone(existing) };
+        assertSamePendingOrder(existing, expected, expectedProfileVersion);
+        return {
+          created: false,
+          order: clone(includeDocumentProfile ? existing : withoutDocumentProfile(existing)),
+        };
       });
     },
     async getOrderByReference(referenceInput) {
