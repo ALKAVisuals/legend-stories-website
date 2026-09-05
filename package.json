@@ -32,6 +32,8 @@
     "generate:product-previews": "node scripts/generate-product-previews.mjs",
     "generate:runtime-products": "node scripts/generate-runtime-product-registry.mjs",
     "migrate:neon:test": "node scripts/run-neon-test-migrations.mjs",
+    "prepare:neon:runtime-privilege-proof": "node scripts/prepare-neon-runtime-privilege-proof.mjs",
+    "verify:neon:runtime-privileges": "node scripts/verify-neon-runtime-privileges.mjs",
     "optimize:collection-videos": "node scripts/optimize-collection-videos.mjs",
     "test:neon:integration": "node scripts/test-neon-order-store-integration.mjs",
     "validate:homepage-marketing-webp": "node scripts/validate-homepage-marketing-webp.mjs",
