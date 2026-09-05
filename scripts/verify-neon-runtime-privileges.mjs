@@ -3,33 +3,13 @@ import {
   validateNeonConnectionString,
 } from '../server/adapters/neon-order-store.mjs';
 import {
+  EXPECTED_SEQUENCE_PRIVILEGES,
+  EXPECTED_TABLE_PRIVILEGES,
+  EXPECTED_UPDATE_COLUMNS,
   PRIVILEGE_PROOF_CAPABILITY_ROLE,
   PRIVILEGE_PROOF_LOGIN_ROLE,
-} from './prepare-neon-runtime-privilege-proof.mjs';
-
-const TABLE_PRIVILEGES = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER'];
-const EXPECTED_TABLE_PRIVILEGES = Object.freeze({
-  orders: ['SELECT', 'INSERT', 'UPDATE'],
-  stripe_events: ['SELECT', 'INSERT'],
-  paypal_webhook_events: ['SELECT', 'INSERT'],
-  withdrawal_requests: ['SELECT', 'INSERT'],
-  withdrawal_acknowledgements: ['SELECT', 'INSERT'],
-  order_notifications: ['SELECT', 'INSERT', 'UPDATE'],
-  invoices: ['SELECT', 'INSERT'],
-  document_number_series: ['SELECT', 'INSERT'],
-});
-const EXPECTED_UPDATE_COLUMNS = Object.freeze({
-  withdrawal_acknowledgements: [
-    'delivery_status',
-    'delivery_attempts',
-    'last_attempt_at',
-    'sent_at',
-    'provider_message_id',
-    'last_error_code',
-    'updated_at',
-  ],
-  document_number_series: ['next_value', 'updated_at'],
-});
+  TABLE_PRIVILEGES,
+} from './neon-runtime-privilege-contract.mjs';
 
 function requireEnvironmentUrl(name) {
   const value = process.env[name];
@@ -56,7 +36,10 @@ function normalizePgArray(value) {
 
 function expectedBooleanMap(expected) {
   const expectedSet = new Set(expected);
-  return Object.fromEntries(TABLE_PRIVILEGES.map((privilege) => [privilege.toLowerCase(), expectedSet.has(privilege)]));
+  return Object.fromEntries(TABLE_PRIVILEGES.map((privilege) => [
+    `can_${privilege.toLowerCase()}`,
+    expectedSet.has(privilege),
+  ]));
 }
 
 const migrationUrl = requireEnvironmentUrl('NEON_TEST_MIGRATION_URL');
@@ -123,7 +106,7 @@ try {
     WHERE table_schema = 'legend_commerce' AND table_type = 'BASE TABLE'
     ORDER BY table_name
   `);
-  const actualTables = tableListResult.rows.map((row) => row.table_name);
+  const actualTables = tableListResult.rows.map((row) => row.table_name).sort();
   const expectedTables = Object.keys(EXPECTED_TABLE_PRIVILEGES).sort();
   if (!sameMembers(actualTables, expectedTables)) {
     fail('Privilege contract table set drifted and requires review.', { actualTables, expectedTables });
@@ -132,13 +115,13 @@ try {
   for (const tableName of expectedTables) {
     const privilegeResult = await client.query(`
       SELECT
-        has_table_privilege($1, format('legend_commerce.%I', $2), 'SELECT') AS select,
-        has_table_privilege($1, format('legend_commerce.%I', $2), 'INSERT') AS insert,
-        has_table_privilege($1, format('legend_commerce.%I', $2), 'UPDATE') AS update,
-        has_table_privilege($1, format('legend_commerce.%I', $2), 'DELETE') AS delete,
-        has_table_privilege($1, format('legend_commerce.%I', $2), 'TRUNCATE') AS truncate,
-        has_table_privilege($1, format('legend_commerce.%I', $2), 'REFERENCES') AS references,
-        has_table_privilege($1, format('legend_commerce.%I', $2), 'TRIGGER') AS trigger
+        has_table_privilege($1, format('legend_commerce.%I', $2), 'SELECT') AS can_select,
+        has_table_privilege($1, format('legend_commerce.%I', $2), 'INSERT') AS can_insert,
+        has_table_privilege($1, format('legend_commerce.%I', $2), 'UPDATE') AS can_update,
+        has_table_privilege($1, format('legend_commerce.%I', $2), 'DELETE') AS can_delete,
+        has_table_privilege($1, format('legend_commerce.%I', $2), 'TRUNCATE') AS can_truncate,
+        has_table_privilege($1, format('legend_commerce.%I', $2), 'REFERENCES') AS can_references,
+        has_table_privilege($1, format('legend_commerce.%I', $2), 'TRIGGER') AS can_trigger
     `, [PRIVILEGE_PROOF_LOGIN_ROLE, tableName]);
     const actual = privilegeResult.rows[0];
     const expected = expectedBooleanMap(EXPECTED_TABLE_PRIVILEGES[tableName]);
@@ -164,15 +147,20 @@ try {
     }
   }
 
-  const sequenceResult = await client.query(`
-    SELECT
-      has_sequence_privilege($1, 'legend_commerce.invoices_id_seq', 'USAGE') AS usage,
-      has_sequence_privilege($1, 'legend_commerce.invoices_id_seq', 'SELECT') AS select,
-      has_sequence_privilege($1, 'legend_commerce.invoices_id_seq', 'UPDATE') AS update
-  `, [PRIVILEGE_PROOF_LOGIN_ROLE]);
-  const sequence = sequenceResult.rows[0];
-  if (!sequence?.usage || sequence.select || sequence.update) {
-    fail('Invoice sequence privilege contract mismatch.', { sequence });
+  for (const [sequenceName, expectedPrivileges] of Object.entries(EXPECTED_SEQUENCE_PRIVILEGES)) {
+    const sequenceResult = await client.query(`
+      SELECT
+        has_sequence_privilege($1, format('legend_commerce.%I', $2), 'USAGE') AS can_usage,
+        has_sequence_privilege($1, format('legend_commerce.%I', $2), 'SELECT') AS can_select,
+        has_sequence_privilege($1, format('legend_commerce.%I', $2), 'UPDATE') AS can_update
+    `, [PRIVILEGE_PROOF_LOGIN_ROLE, sequenceName]);
+    const sequence = sequenceResult.rows[0];
+    const expectedSet = new Set(expectedPrivileges);
+    if (Boolean(sequence?.can_usage) !== expectedSet.has('USAGE')
+      || Boolean(sequence?.can_select) !== expectedSet.has('SELECT')
+      || Boolean(sequence?.can_update) !== expectedSet.has('UPDATE')) {
+      fail('Sequence privilege contract mismatch.', { sequenceName, sequence, expectedPrivileges });
+    }
   }
 
   console.log('Verified isolated Neon least-privilege runtime contract: no admin/create/delete escalation and exact V3 DML grants.');
