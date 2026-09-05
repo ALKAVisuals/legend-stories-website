@@ -43,12 +43,18 @@ test('runtime privilege contract covers the complete current commerce table set 
   assert.deepEqual(EXPECTED_SEQUENCE_PRIVILEGES.invoices_id_seq, ['USAGE']);
 });
 
-test('isolated proof roles are clearly non-production and are hardened before grants are applied', () => {
+test('isolated proof roles are clearly non-production and fail closed on Neon-managed role drift', () => {
   assert.match(PRIVILEGE_PROOF_CAPABILITY_ROLE, /^legendmural_ci_/);
   assert.match(PRIVILEGE_PROOF_LOGIN_ROLE, /^legendmural_ci_/);
   assert.match(prepSource, /NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS INHERIT/);
   assert.match(prepSource, /LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS INHERIT PASSWORD NULL/);
-  assert.match(prepSource, /REVOKE neon_superuser FROM/);
+  assert.match(prepSource, /rolsuper/);
+  assert.match(prepSource, /rolcreaterole/);
+  assert.match(prepSource, /rolcreatedb/);
+  assert.match(prepSource, /rolreplication/);
+  assert.match(prepSource, /rolbypassrls/);
+  assert.match(prepSource, /inherits an unexpected role/);
+  assert.doesNotMatch(prepSource, /ALTER ROLE/);
   assert.match(prepSource, /REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA legend_commerce/);
   assert.match(prepSource, /REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA legend_commerce/);
   assert.doesNotMatch(prepSource, /PRODUCTION_DATABASE_URL|NETLIFY_DATABASE_URL|DATABASE_URL/);
