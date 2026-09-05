@@ -11,6 +11,10 @@ function enabled(value) {
   return String(value || '').trim().toLowerCase() === 'true';
 }
 
+function productionContext(env) {
+  return String(env?.CONTEXT || '').trim().toLowerCase() === 'production';
+}
+
 function hasServiceToken(value) {
   const token = String(value ?? '');
   return token.length >= 32 && token.length <= 512 && !/[\u0000-\u001f\u007f]/.test(token);
@@ -25,9 +29,11 @@ export function createNetlifyDashboardInvoiceAccessHandler({
 } = {}) {
   return async function netlifyDashboardInvoiceAccessHandler(request) {
     const serviceToken = env.LEGENDMURAL_DASHBOARD_INVOICE_TOKEN;
-    if (!hasServiceToken(serviceToken)) {
+    const apiEnabled = enabled(env.V3_DASHBOARD_INVOICE_API_ENABLED) && productionContext(env);
+    if (!apiEnabled || !hasServiceToken(serviceToken)) {
       return handleDashboardInvoiceAccess(request, {
         ...handlerOptions,
+        apiEnabled,
         serviceToken,
         storageEnabled: env.V3_INVOICE_STORAGE_ENABLED,
       });
@@ -42,6 +48,7 @@ export function createNetlifyDashboardInvoiceAccessHandler({
 
       return await handleDashboardInvoiceAccess(request, {
         ...handlerOptions,
+        apiEnabled,
         serviceToken,
         storageEnabled: env.V3_INVOICE_STORAGE_ENABLED,
         invoiceSource,
