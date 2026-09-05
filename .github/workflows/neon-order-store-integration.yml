@@ -44,6 +44,12 @@ jobs:
       - name: Apply isolated test migrations
         run: npm run migrate:neon:test
 
+      - name: Prepare isolated least-privilege runtime proof roles
+        run: npm run prepare:neon:runtime-privilege-proof
+
+      - name: Verify exact runtime privilege boundary
+        run: npm run verify:neon:runtime-privileges
+
       - name: Run real Neon store conformance
         run: npm run test:neon:integration
 
