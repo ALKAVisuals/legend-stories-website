@@ -12,13 +12,14 @@ GitHub is the source of truth. Always fresh-check current `main` before a new br
 
 ## Latest website checkpoint
 
-Latest completed website work before this handoff:
+Latest completed website work before the Blocker C request preparation:
 
 - PR #194 — tracked-source commercial cleanup;
 - PR #198 — website next-chat handoff;
-- PR #199 — Blocker E IP/commercial-rights audit.
+- PR #199 — Blocker E IP/commercial-rights audit;
+- PR #201 — Blocker E owner confirmations recorded; recognizable-person/title question intentionally deferred.
 
-PR #199 was merged at `main` commit `1e96407d78f2b78f33f5c59b7ac8ef5d608e4894` before the owner confirmations below were recorded.
+After PR #201, the shared repository `main` moved again through separate V3 PR #200. The Blocker C request package work therefore started from fresh `main` commit `15ae768cd3ea7677b045668e5a465b2a3f0f95d4`. That V3 work is outside website scope and must not be modified from this track.
 
 No Netlify Production deployment, PayPal Live activation, Production email activation, V3 Profile 1 activation, Production migration or real live payment/email proof is authorized by this handoff.
 
@@ -38,19 +39,32 @@ Canonical detailed audit: `docs/IP_COMMERCIAL_RIGHTS_AUDIT_20260905.md`.
 
 Blocker E is therefore **open / partially evidenced / intentionally deferred**, not closed.
 
-## Other remaining launch gates
+## Blocker C — Dutch 100%-upfront payment legal gate
 
-### Blocker C — Dutch 100%-upfront payment legal gate
+Still open. Canonical owner decision remains PayPal-only, 100% paid when the order is placed, production after verified full payment, delivery later, no split/deposit/later balance and no extra provider merely to solve this gate.
 
-Still open/parked. Canonical owner decision remains PayPal-only, 100% paid when the order is placed, production after verified full payment, delivery later, no split/deposit/later balance and no extra provider merely to solve this gate.
+A dedicated ready-to-send legal verification package now exists:
 
-Do not redesign PayPal/V3 behavior from the website track. A specific Dutch consumer-law basis/opinion is still required before treating the unchanged Dutch consumer launch model as cleared.
+`docs/BLOCKER_C_DUTCH_CONSUMER_LAW_REQUEST_20260905.md`
 
-### Blocker D part 2B — GPSR material/product-safety completion
+That package records:
+
+- the exact LegendMural checkout/payment model to be assessed;
+- the exact legal question under Article 7:26(2) BW;
+- the required sub-questions and requested `CLEARED / CLEARED WITH CONDITIONS / NOT CLEARED` conclusion;
+- current official ACM ConsuWijzer guidance;
+- a 2026 Dutch Government source confirming that the 50%-advance-payment rule remains in place after government review;
+- a ready-to-send Dutch message for a qualified consumer-law adviser.
+
+Current official-source evidence does **not** provide a basis to close Blocker C internally. Do not redo generic research and do not redesign PayPal/V3 code simply to progress this gate.
+
+**Exact next Blocker C action:** obtain a written opinion from a qualified Dutch consumer-law adviser on the exact model in the request package. When received, record the conclusion in GitHub and only then decide whether any implementation change is required.
+
+## Blocker D part 2B — GPSR material/product-safety completion
 
 Still intentionally deferred until exact vinyl/media, ink, laminate/coating and final packaging/physical-marking facts exist. Do not repeatedly ask for these facts unless the owner says they are now available. Do not invent warnings or stronger material claims.
 
-### Final-domain / Production
+## Final-domain / Production
 
 Tracked `legendmural.com` metadata and source/build readiness are complete to the pre-release baseline. Live domain/DNS/TLS/metadata/smoke proof can only happen after an explicitly authorized Netlify Production cutover.
 
@@ -58,13 +72,17 @@ Production remains unauthorized.
 
 ## Current readiness estimate
 
-Overall public website launch-readiness remains approximately **88%**. The owner confirmations improve the evidence quality inside Blocker E but do not close the remaining recognizable-person/title clearance gate, so the overall percentage is not materially increased.
+Overall public website launch-readiness remains approximately **88%**. Preparing the Blocker C legal request improves process readiness but does not close the legal gate, so the overall percentage is not materially increased.
 
 ## Exact next website handling
 
 There is currently no independently identified storefront source-cleanup task left after PR #194.
 
-Until the owner reopens one of the deferred/legal gates, the website track should:
+The next actionable website release step is now external rather than code:
+
+> **Send/use `docs/BLOCKER_C_DUTCH_CONSUMER_LAW_REQUEST_20260905.md` to obtain a written Dutch consumer-law opinion on the exact mandatory 100%-upfront PayPal model.**
+
+Until that answer arrives, the website track should:
 
 - not re-ask the deferred Blocker E recognizable-person/title question;
 - not re-ask Blocker D part 2B material facts;
