@@ -1,4 +1,6 @@
+import { createNetlifyV3InvoicePdfStore } from '../adapters/netlify-v3-invoice-pdf-store.mjs';
 import { createNeonOrderNotificationStore } from '../adapters/neon-order-notification-store.mjs';
+import { createNeonV3InvoiceArtifactStore } from '../adapters/neon-v3-invoice-artifact-store.mjs';
 import { createNeonV3InvoiceDeliverySource } from '../adapters/neon-v3-invoice-delivery-source.mjs';
 import { createNeonV3InvoiceReconciliationSource } from '../adapters/neon-v3-invoice-reconciliation-source.mjs';
 import { createResendPaidOrderNotifier } from '../notifications/resend-paid-order-notifier.mjs';
@@ -25,6 +27,8 @@ export function createV3InvoiceReconciliationRuntime({
   reconciliationSourceFactory = createNeonV3InvoiceReconciliationSource,
   notificationStoreFactory = createNeonOrderNotificationStore,
   invoiceDeliverySourceFactory = createNeonV3InvoiceDeliverySource,
+  invoiceArtifactStoreFactory = createNeonV3InvoiceArtifactStore,
+  invoicePdfStoreFactory = createNetlifyV3InvoicePdfStore,
   notifierFactory = createResendPaidOrderNotifier,
   deliveryFactory = createV3CustomerInvoiceDeliveryOrchestrator,
   workerFactory = createV3InvoiceReconciliationWorker,
@@ -39,6 +43,7 @@ export function createV3InvoiceReconciliationRuntime({
       return skipped('emails_disabled');
     }
 
+    const usePermanentStorage = enabled(env.V3_INVOICE_STORAGE_ENABLED);
     const source = reconciliationSourceFactory({
       connectionString: env.NEON_DATABASE_URL,
     });
@@ -48,6 +53,12 @@ export function createV3InvoiceReconciliationRuntime({
     const invoiceSource = invoiceDeliverySourceFactory({
       connectionString: env.NEON_DATABASE_URL,
     });
+    const artifactStore = usePermanentStorage
+      ? invoiceArtifactStoreFactory({ connectionString: env.NEON_DATABASE_URL })
+      : null;
+    const pdfStore = usePermanentStorage
+      ? invoicePdfStoreFactory({ env })
+      : null;
     const notifier = notifierFactory({
       apiKey: env.RESEND_API_KEY,
       from: env.RESEND_FROM,
@@ -57,8 +68,11 @@ export function createV3InvoiceReconciliationRuntime({
     const deliverV3CustomerInvoice = deliveryFactory({
       invoiceSource,
       notificationStore,
+      artifactStore,
+      pdfStore,
       notifier,
       emailsEnabled: env.ORDER_EMAILS_ENABLED,
+      storageEnabled: env.V3_INVOICE_STORAGE_ENABLED,
       ...(now === undefined ? {} : { now }),
     });
     const worker = workerFactory({

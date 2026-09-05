@@ -132,6 +132,20 @@ function assertNotificationStore(store) {
   }
 }
 
+function assertStorageDependencies({ storageEnabled, artifactStore, pdfStore }) {
+  if (!enabled(storageEnabled)) return;
+  for (const method of ['loadArtifactState', 'bindStoredArtifact']) {
+    if (typeof artifactStore?.[method] !== 'function') {
+      throw new TypeError(`V3 invoice artifact store is missing ${method}().`);
+    }
+  }
+  for (const method of ['persistVerifiedArtifact', 'loadVerifiedArtifact']) {
+    if (typeof pdfStore?.[method] !== 'function') {
+      throw new TypeError(`V3 invoice PDF store is missing ${method}().`);
+    }
+  }
+}
+
 function assertNotifier(notifier) {
   if (typeof notifier?.sendV3InvoiceEmail !== 'function') {
     throw new TypeError('V3 invoice notifier is missing sendV3InvoiceEmail().');
@@ -159,6 +173,39 @@ function normalizeProfile1Order(order) {
   });
 }
 
+function artifactIdentity(artifact, durable) {
+  return Object.freeze({
+    invoiceId: durable.invoiceId,
+    orderReference: durable.orderReference,
+    snapshotSchemaVersion: durable.snapshotSchemaVersion,
+    rendererVersion: positiveInteger(artifact?.rendererVersion, 'rendererVersion'),
+    pdfSha256: String(artifact?.sha256 || '').trim().toLowerCase(),
+    pdfByteLength: positiveInteger(artifact?.byteLength, 'pdfByteLength'),
+    attachmentFilename: String(artifact?.filename || '').trim(),
+  });
+}
+
+function stateArtifactMatches(state, identity) {
+  if (state.rendererVersion === null) return true;
+  return state.rendererVersion === identity.rendererVersion
+    && state.pdfSha256 === identity.pdfSha256
+    && state.pdfByteLength === identity.pdfByteLength
+    && state.attachmentFilename === identity.attachmentFilename;
+}
+
+function prepareArtifactArgs(identity, claimToken, updatedAt) {
+  return {
+    orderReference: identity.orderReference,
+    invoiceId: identity.invoiceId,
+    claimToken,
+    rendererVersion: identity.rendererVersion,
+    pdfSha256: identity.pdfSha256,
+    pdfByteLength: identity.pdfByteLength,
+    attachmentFilename: identity.attachmentFilename,
+    updatedAt,
+  };
+}
+
 function deliveryResult({
   orderReference,
   invoiceId,
@@ -183,21 +230,27 @@ function deliveryResult({
 export function createV3CustomerInvoiceDeliveryOrchestrator({
   invoiceSource,
   notificationStore,
+  artifactStore = null,
+  pdfStore = null,
   notifier,
   pdfRenderer = renderV3InvoicePdf,
   emailRenderer = renderV3CustomerInvoiceEmail,
   emailsEnabled = process.env.ORDER_EMAILS_ENABLED,
+  storageEnabled = process.env.V3_INVOICE_STORAGE_ENABLED,
   now = () => Math.floor(Date.now() / 1000),
   leaseSeconds,
 } = {}) {
   assertInvoiceSource(invoiceSource);
   assertNotificationStore(notificationStore);
+  assertStorageDependencies({ storageEnabled, artifactStore, pdfStore });
   assertNotifier(notifier);
   assertRenderer(pdfRenderer, 'V3 invoice PDF renderer');
   assertRenderer(emailRenderer, 'V3 customer invoice email renderer');
   if (typeof now !== 'function') {
     throw new TypeError('V3 customer invoice delivery clock must be a function.');
   }
+
+  const usePermanentStorage = enabled(storageEnabled);
 
   return async function deliverV3CustomerInvoice(order) {
     if (!enabled(emailsEnabled)) {
@@ -271,20 +324,82 @@ export function createV3CustomerInvoiceDeliveryOrchestrator({
         );
       }
 
-      stage = 'pdf_render';
-      const artifact = await pdfRenderer({ snapshot: durable.snapshot });
-      const preparedAt = timestamp(now());
-      stage = 'artifact_prepare';
-      await notificationStore.prepareV3InvoiceArtifact({
-        orderReference: durable.orderReference,
-        invoiceId: durable.invoiceId,
-        claimToken,
-        rendererVersion: artifact.rendererVersion,
-        pdfSha256: artifact.sha256,
-        pdfByteLength: artifact.byteLength,
-        attachmentFilename: artifact.filename,
-        updatedAt: preparedAt,
-      });
+      let attachment;
+      if (!usePermanentStorage) {
+        stage = 'pdf_render';
+        const artifact = await pdfRenderer({ snapshot: durable.snapshot });
+        const identity = artifactIdentity(artifact, durable);
+        const preparedAt = timestamp(now());
+        stage = 'artifact_prepare';
+        await notificationStore.prepareV3InvoiceArtifact(
+          prepareArtifactArgs(identity, claimToken, preparedAt),
+        );
+        attachment = Object.freeze({
+          filename: identity.attachmentFilename,
+          bytes: artifact.bytes,
+        });
+      } else {
+        stage = 'artifact_state_load';
+        const state = await artifactStore.loadArtifactState({
+          orderReference: durable.orderReference,
+          invoiceId: durable.invoiceId,
+        });
+
+        if (state.storageBound) {
+          stage = 'storage_load';
+          const persisted = await pdfStore.loadVerifiedArtifact({
+            invoiceId: durable.invoiceId,
+            orderReference: durable.orderReference,
+            snapshotSchemaVersion: durable.snapshotSchemaVersion,
+            rendererVersion: state.rendererVersion,
+            pdfSha256: state.pdfSha256,
+            pdfByteLength: state.pdfByteLength,
+            attachmentFilename: state.attachmentFilename,
+            storageBackend: state.storageBackend,
+            storageKey: state.storageKey,
+          });
+          attachment = Object.freeze({
+            filename: state.attachmentFilename,
+            bytes: persisted.bytes,
+          });
+        } else {
+          stage = 'pdf_render';
+          const artifact = await pdfRenderer({ snapshot: durable.snapshot });
+          const identity = artifactIdentity(artifact, durable);
+          if (!stateArtifactMatches(state, identity)) {
+            fail(
+              'V3_INVOICE_ARTIFACT_IDENTITY_MISMATCH',
+              'Previously prepared V3 invoice artifact identity differs from the deterministic render.',
+            );
+          }
+
+          const preparedAt = timestamp(now());
+          stage = 'artifact_prepare';
+          await notificationStore.prepareV3InvoiceArtifact(
+            prepareArtifactArgs(identity, claimToken, preparedAt),
+          );
+
+          stage = 'storage_persist';
+          const persisted = await pdfStore.persistVerifiedArtifact({
+            ...identity,
+            bytes: artifact.bytes,
+          });
+
+          const storedAt = timestamp(now());
+          stage = 'artifact_bind';
+          const bound = await artifactStore.bindStoredArtifact({
+            ...identity,
+            claimToken,
+            storageBackend: persisted.storageBackend,
+            storageKey: persisted.storageKey,
+            storedAt,
+          });
+          attachment = Object.freeze({
+            filename: bound.attachmentFilename,
+            bytes: persisted.bytes,
+          });
+        }
+      }
 
       stage = 'email_render';
       const renderedEmail = await emailRenderer({ snapshot: durable.snapshot });
@@ -293,10 +408,7 @@ export function createV3CustomerInvoiceDeliveryOrchestrator({
         to: durable.snapshot.customer?.email,
         orderReference: durable.orderReference,
         renderedEmail,
-        attachment: {
-          filename: artifact.filename,
-          bytes: artifact.bytes,
-        },
+        attachment,
       });
 
       const completedAt = timestamp(now());

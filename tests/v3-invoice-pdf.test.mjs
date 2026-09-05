@@ -291,7 +291,7 @@ test('does not mutate the immutable invoice snapshot while rendering', async () 
 test('executes the renderer with PDFKit preserved as a Netlify-style external Node module', async () => {
   const config = await readFile(new URL('../netlify.toml', import.meta.url), 'utf8');
   assert.match(config, /node_bundler\s*=\s*"esbuild"/);
-  assert.match(config, /external_node_modules\s*=\s*\["pdfkit"\]/);
+  assert.match(config, /external_node_modules\s*=\s*\["pdfkit",\s*"@netlify\/blobs"\]/);
 
   const tempDir = await mkdtemp(join(process.cwd(), '.tmp-v3-pdf-bundle-'));
   const outfile = join(tempDir, 'v3-invoice-pdf.bundle.mjs');
