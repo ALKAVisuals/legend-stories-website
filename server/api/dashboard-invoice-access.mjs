@@ -176,6 +176,7 @@ function mapError(error) {
 }
 
 export async function handleDashboardInvoiceAccess(request, {
+  apiEnabled = process.env.V3_DASHBOARD_INVOICE_API_ENABLED,
   serviceToken = process.env.LEGENDMURAL_DASHBOARD_INVOICE_TOKEN,
   storageEnabled = process.env.V3_INVOICE_STORAGE_ENABLED,
   invoiceSource = null,
@@ -187,6 +188,9 @@ export async function handleDashboardInvoiceAccess(request, {
   }
   if (request.method !== 'POST') {
     return errorResponse(405, 'METHOD_NOT_ALLOWED', 'Only POST is allowed.');
+  }
+  if (!enabled(apiEnabled)) {
+    return errorResponse(503, 'DASHBOARD_INVOICE_API_DISABLED', 'Dashboard invoice API is not enabled.');
   }
 
   const expectedToken = configuredToken(serviceToken);
