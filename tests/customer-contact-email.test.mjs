@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -12,37 +13,37 @@ const REQUIRED_PUBLIC_PAGES = [
   'privacy.html',
   'returns.html',
 ];
+const CUSTOMER_FACING_PREFIXES = [
+  'js/',
+  'server/',
+  'netlify/functions/',
+];
+const CUSTOMER_FACING_EXTENSIONS = new Set(['.html', '.js', '.mjs']);
 
-function collectFiles(directory, extensions) {
-  if (!fs.existsSync(directory)) return [];
+function trackedCustomerFacingFiles() {
+  const tracked = execFileSync('git', ['ls-files', '-z'], {
+    cwd: ROOT,
+    encoding: 'utf8',
+  })
+    .split('\0')
+    .filter(Boolean)
+    .filter((relative) => {
+      const isRootHtml = !relative.includes('/') && relative.endsWith('.html');
+      const isRuntimeSource = CUSTOMER_FACING_PREFIXES.some((prefix) => relative.startsWith(prefix))
+        && CUSTOMER_FACING_EXTENSIONS.has(path.extname(relative));
+      return isRootHtml || isRuntimeSource;
+    });
 
-  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const absolute = path.join(directory, entry.name);
-    if (entry.isDirectory()) return collectFiles(absolute, extensions);
-    return extensions.has(path.extname(entry.name)) ? [absolute] : [];
-  });
+  assert.ok(tracked.length > 0, 'Expected Git-tracked customer-facing source files.');
+  return tracked;
 }
 
-function runtimeCustomerFacingFiles() {
-  const rootHtml = fs.readdirSync(ROOT, { withFileTypes: true })
-    .filter((entry) => entry.isFile() && entry.name.endsWith('.html'))
-    .map((entry) => path.join(ROOT, entry.name));
-
-  const runtimeExtensions = new Set(['.html', '.js', '.mjs']);
-  return [
-    ...rootHtml,
-    ...collectFiles(path.join(ROOT, 'js'), runtimeExtensions),
-    ...collectFiles(path.join(ROOT, 'server'), runtimeExtensions),
-    ...collectFiles(path.join(ROOT, 'netlify', 'functions'), runtimeExtensions),
-  ];
-}
-
-test('customer-facing runtime source never exposes the stale ALKA Visuals email', () => {
-  const offenders = runtimeCustomerFacingFiles()
-    .filter((file) => fs.readFileSync(file, 'utf8').toLowerCase().includes(STALE_EMAIL));
+test('Git-tracked customer-facing runtime source never exposes the stale ALKA Visuals email', () => {
+  const offenders = trackedCustomerFacingFiles()
+    .filter((relative) => fs.readFileSync(path.join(ROOT, relative), 'utf8').toLowerCase().includes(STALE_EMAIL));
 
   assert.deepEqual(
-    offenders.map((file) => path.relative(ROOT, file)),
+    offenders,
     [],
     `Replace stale LegendMural customer contact email ${STALE_EMAIL}.`,
   );
