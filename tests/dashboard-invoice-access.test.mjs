@@ -79,8 +79,27 @@ function dependencies({ artifactState = artifact(), pdfBytes = Buffer.from('%PDF
   };
 }
 
+function enabledOptions(deps = {}, overrides = {}) {
+  return {
+    apiEnabled: 'true',
+    serviceToken: token,
+    ...deps,
+    ...overrides,
+  };
+}
+
+test('fails closed while the dedicated dashboard invoice API gate is disabled', async () => {
+  const response = await handleDashboardInvoiceAccess(request({ reference, action: 'metadata' }), {
+    apiEnabled: 'false',
+    serviceToken: token,
+  });
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).error.code, 'DASHBOARD_INVOICE_API_DISABLED');
+});
+
 test('fails closed when the server-side service token is not configured', async () => {
   const response = await handleDashboardInvoiceAccess(request({ reference, action: 'metadata' }), {
+    apiEnabled: 'true',
     serviceToken: '',
   });
   assert.equal(response.status, 503);
@@ -91,7 +110,7 @@ test('requires the exact bearer token and does not disclose invoice data on fail
   const deps = dependencies();
   const response = await handleDashboardInvoiceAccess(
     request({ reference, action: 'metadata' }, { authorization: 'Bearer wrong-token' }),
-    { serviceToken: token, ...deps },
+    enabledOptions(deps),
   );
   assert.equal(response.status, 401);
   const body = await response.json();
@@ -104,7 +123,7 @@ test('rejects direct browser-origin requests even when a bearer token is present
   const deps = dependencies();
   const response = await handleDashboardInvoiceAccess(
     request({ reference, action: 'metadata' }, { origin: 'https://chatgpt.com' }),
-    { serviceToken: token, ...deps },
+    enabledOptions(deps),
   );
   assert.equal(response.status, 403);
   assert.equal((await response.json()).error.code, 'BROWSER_ORIGIN_NOT_ALLOWED');
@@ -115,7 +134,7 @@ test('returns only safe read-only invoice metadata and never exposes Blob identi
   const deps = dependencies();
   const response = await handleDashboardInvoiceAccess(
     request({ reference, action: 'metadata' }),
-    { serviceToken: token, storageEnabled: 'false', ...deps },
+    enabledOptions(deps, { storageEnabled: 'false' }),
   );
   assert.equal(response.status, 200);
   const body = await response.json();
@@ -141,7 +160,7 @@ test('rejects any caller-supplied Blob key before loading invoice truth', async 
   const deps = dependencies();
   const response = await handleDashboardInvoiceAccess(
     request({ reference, action: 'metadata', storageKey }),
-    { serviceToken: token, ...deps },
+    enabledOptions(deps),
   );
   assert.equal(response.status, 400);
   assert.equal((await response.json()).error.code, 'INVALID_DASHBOARD_INVOICE_REQUEST');
@@ -152,7 +171,7 @@ test('keeps metadata available while PDF download remains feature-gated', async 
   const deps = dependencies();
   const response = await handleDashboardInvoiceAccess(
     request({ reference, action: 'download' }),
-    { serviceToken: token, storageEnabled: 'false', ...deps },
+    enabledOptions(deps, { storageEnabled: 'false' }),
   );
   assert.equal(response.status, 503);
   assert.equal((await response.json()).error.code, 'DASHBOARD_INVOICE_DOWNLOAD_DISABLED');
@@ -163,7 +182,7 @@ test('downloads only the Neon-bound, storage-verified PDF with private security 
   const deps = dependencies();
   const response = await handleDashboardInvoiceAccess(
     request({ reference, action: 'download' }),
-    { serviceToken: token, storageEnabled: 'true', ...deps },
+    enabledOptions(deps, { storageEnabled: 'true' }),
   );
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('content-type'), 'application/pdf');
@@ -197,7 +216,7 @@ test('fails closed when no durable PDF storage binding exists', async () => {
   }) });
   const response = await handleDashboardInvoiceAccess(
     request({ reference, action: 'download' }),
-    { serviceToken: token, storageEnabled: 'true', ...deps },
+    enabledOptions(deps, { storageEnabled: 'true' }),
   );
   assert.equal(response.status, 404);
   assert.equal((await response.json()).error.code, 'DASHBOARD_INVOICE_NOT_AVAILABLE');
@@ -213,7 +232,7 @@ test('maps storage integrity failures to a private service-unavailable response'
   };
   const response = await handleDashboardInvoiceAccess(
     request({ reference, action: 'download' }),
-    { serviceToken: token, storageEnabled: 'true', ...deps },
+    enabledOptions(deps, { storageEnabled: 'true' }),
   );
   assert.equal(response.status, 503);
   assert.equal((await response.json()).error.code, 'DASHBOARD_INVOICE_UNAVAILABLE');
