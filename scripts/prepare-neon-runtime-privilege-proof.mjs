@@ -4,9 +4,10 @@ import {
   createDefaultNeonClient,
   validateNeonConnectionString,
 } from '../server/adapters/neon-order-store.mjs';
-
-export const PRIVILEGE_PROOF_CAPABILITY_ROLE = 'legendmural_ci_runtime_contract';
-export const PRIVILEGE_PROOF_LOGIN_ROLE = 'legendmural_ci_app';
+import {
+  PRIVILEGE_PROOF_CAPABILITY_ROLE,
+  PRIVILEGE_PROOF_LOGIN_ROLE,
+} from './neon-runtime-privilege-contract.mjs';
 
 const GRANT_MIGRATIONS = [
   new URL('../server/db/migrations/002_grant_order_store_runtime.sql', import.meta.url),
