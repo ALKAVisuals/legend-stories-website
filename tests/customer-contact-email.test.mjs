@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import fs from 'node:fs';
 import path from 'node:path';
 
 const ROOT = process.cwd();
@@ -20,8 +19,8 @@ const CUSTOMER_FACING_PREFIXES = [
 ];
 const CUSTOMER_FACING_EXTENSIONS = new Set(['.html', '.js', '.mjs']);
 
-function trackedCustomerFacingFiles() {
-  const tracked = execFileSync('git', ['ls-files', '-z'], {
+function committedCustomerFacingFiles() {
+  const tracked = execFileSync('git', ['ls-tree', '-r', '--name-only', '-z', 'HEAD'], {
     cwd: ROOT,
     encoding: 'utf8',
   })
@@ -34,13 +33,20 @@ function trackedCustomerFacingFiles() {
       return isRootHtml || isRuntimeSource;
     });
 
-  assert.ok(tracked.length > 0, 'Expected Git-tracked customer-facing source files.');
+  assert.ok(tracked.length > 0, 'Expected committed customer-facing source files.');
   return tracked;
 }
 
-test('Git-tracked customer-facing runtime source never exposes the stale ALKA Visuals email', () => {
-  const offenders = trackedCustomerFacingFiles()
-    .filter((relative) => fs.readFileSync(path.join(ROOT, relative), 'utf8').toLowerCase().includes(STALE_EMAIL));
+function readCommittedFile(relative) {
+  return execFileSync('git', ['show', `HEAD:${relative}`], {
+    cwd: ROOT,
+    encoding: 'utf8',
+  });
+}
+
+test('committed customer-facing runtime source never exposes the stale ALKA Visuals email', () => {
+  const offenders = committedCustomerFacingFiles()
+    .filter((relative) => readCommittedFile(relative).toLowerCase().includes(STALE_EMAIL));
 
   assert.deepEqual(
     offenders,
@@ -51,7 +57,7 @@ test('Git-tracked customer-facing runtime source never exposes the stale ALKA Vi
 
 test('canonical customer/legal pages expose the approved LegendMural email', () => {
   for (const relative of REQUIRED_PUBLIC_PAGES) {
-    const source = fs.readFileSync(path.join(ROOT, relative), 'utf8').toLowerCase();
+    const source = readCommittedFile(relative).toLowerCase();
     assert.ok(source.includes(CUSTOMER_EMAIL), `${relative} must expose ${CUSTOMER_EMAIL}.`);
   }
 });
