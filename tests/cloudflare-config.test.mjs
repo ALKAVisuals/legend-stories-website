@@ -94,7 +94,7 @@ test('Netlify production context is not used as Cloudflare deployment truth', as
   assert.equal(value.env.production.vars.LEGENDMURAL_DEPLOY_CONTEXT, 'production');
 });
 
-test('PDFKit workerd probe resolves and aliases the Worker-safe browser runtime', async () => {
+test('PDFKit workerd probe resolves and aliases the Worker-safe standalone runtime', async () => {
   const value = JSON.parse(await readFile(pdfKitProbeConfigUrl, 'utf8'));
   assert.equal(value.main, './cloudflare-pdfkit-probe-worker.mjs');
   assert.equal(value.alias?.pdfkit, '../../cloudflare/pdfkit-worker-runtime.mjs');
@@ -106,8 +106,7 @@ test('PDFKit workerd probe resolves and aliases the Worker-safe browser runtime'
   const aliasUrl = new URL(value.alias.pdfkit, pdfKitProbeConfigUrl);
   assert.equal(aliasUrl.href, workerPdfKitRuntimeUrl.href);
   const runtimeSource = await readFile(aliasUrl, 'utf8');
-  assert.match(runtimeSource, /pdfkit\.browser\.mjs/);
-  assert.match(runtimeSource, /Helvetica\.mjs/);
-  assert.match(runtimeSource, /HelveticaBold\.mjs/);
-  assert.match(runtimeSource, /registerStdFonts\(Helvetica, HelveticaBold\)/);
+  assert.match(runtimeSource, /pdfkit\.standalone\.js/);
+  assert.doesNotMatch(runtimeSource, /pdfkit\.browser\.mjs/);
+  assert.match(runtimeSource, /typeof PDFDocument !== 'function'/);
 });
