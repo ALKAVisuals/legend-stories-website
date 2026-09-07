@@ -4,6 +4,6 @@
   "compatibility_date": "2026-09-07",
   "compatibility_flags": ["nodejs_compat"],
   "alias": {
-    "pdfkit": "./cloudflare/pdfkit-worker-runtime.mjs"
+    "pdfkit": "../../cloudflare/pdfkit-worker-runtime.mjs"
   }
 }
