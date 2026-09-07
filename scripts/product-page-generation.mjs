@@ -83,7 +83,7 @@ function structuredData(product) {
       '@type': 'Organization',
       name: 'Alka Group',
       alternateName: 'LegendMural',
-      email: 'info@alkavisuals.nl',
+      email: 'info@legendmural.com',
       address: {
         '@type': 'PostalAddress',
         streetAddress: 'Schutkolk 4 d 1',
