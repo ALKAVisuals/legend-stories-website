@@ -128,14 +128,14 @@ jobs:
           scheduled_status=$(curl --silent --show-error \
             --output /tmp/legendmural-scheduled.json \
             --write-out '%{http_code}' \
-            'http://127.0.0.1:8787/cdn-cgi/local/scheduled?cron=*%2F5+*+*+*+*&format=json' \
+            'http://127.0.0.1:8787/cdn-cgi/handler/scheduled?cron=*%2F5+*+*+*+*&format=json' \
             || true)
+          echo "scheduled_status=${scheduled_status}"
+          cat /tmp/legendmural-scheduled.json 2>/dev/null || true
           if [ "${scheduled_status}" != "200" ]; then
-            cat /tmp/legendmural-scheduled.json 2>/dev/null || true
             cat "${LOG_FILE}" || true
             exit 1
           fi
-          cat /tmp/legendmural-scheduled.json
           grep -Eq '"outcome"[[:space:]]*:[[:space:]]*"ok"' /tmp/legendmural-scheduled.json
 
       - name: Prove R2 create-only semantics in local workerd binding
