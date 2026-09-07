@@ -4,6 +4,7 @@ import test from 'node:test';
 
 const configUrl = new URL('../wrangler.jsonc', import.meta.url);
 const pdfKitProbeConfigUrl = new URL('./fixtures/wrangler.pdfkit-probe.jsonc', import.meta.url);
+const workerPdfKitRuntimeUrl = new URL('../cloudflare/pdfkit-worker-runtime.mjs', import.meta.url);
 const SENSITIVE_BINDING_NAMES = Object.freeze([
   'NEON_DATABASE_URL',
   'PAYPAL_CLIENT_ID',
@@ -93,10 +94,18 @@ test('Netlify production context is not used as Cloudflare deployment truth', as
   assert.equal(value.env.production.vars.LEGENDMURAL_DEPLOY_CONTEXT, 'production');
 });
 
-test('PDFKit workerd probe entry point resolves relative to its Wrangler config', async () => {
+test('PDFKit workerd probe resolves and aliases the Worker-safe browser runtime', async () => {
   const value = JSON.parse(await readFile(pdfKitProbeConfigUrl, 'utf8'));
   assert.equal(value.main, './cloudflare-pdfkit-probe-worker.mjs');
+  assert.equal(value.alias?.pdfkit, './cloudflare/pdfkit-worker-runtime.mjs');
+
   const entryUrl = new URL(value.main, pdfKitProbeConfigUrl);
   const source = await readFile(entryUrl, 'utf8');
   assert.match(source, /renderV3InvoicePdf/);
+
+  const runtimeSource = await readFile(workerPdfKitRuntimeUrl, 'utf8');
+  assert.match(runtimeSource, /pdfkit\.browser\.mjs/);
+  assert.match(runtimeSource, /Helvetica\.mjs/);
+  assert.match(runtimeSource, /HelveticaBold\.mjs/);
+  assert.match(runtimeSource, /registerStdFonts\(Helvetica, HelveticaBold\)/);
 });
