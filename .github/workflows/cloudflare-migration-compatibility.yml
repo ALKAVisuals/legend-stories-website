@@ -147,6 +147,64 @@ jobs:
           assert.equal(proof.bytesEqual, true);
           NODE
 
+      - name: Prove PDFKit invoice rendering in local workerd
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOG_FILE="${RUNNER_TEMP}/legendmural-pdfkit-workerd.log"
+          npx --yes wrangler@4.129.0 dev \
+            --config tests/fixtures/wrangler.pdfkit-probe.jsonc \
+            --local \
+            --port 8791 \
+            --log-level error \
+            >"${LOG_FILE}" 2>&1 &
+          WRANGLER_PID=$!
+          cleanup() {
+            kill "${WRANGLER_PID}" 2>/dev/null || true
+            wait "${WRANGLER_PID}" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ready=false
+          for _ in $(seq 1 60); do
+            status=$(curl --silent --show-error \
+              --output /tmp/legendmural-pdfkit-probe.json \
+              --write-out '%{http_code}' \
+              --request POST \
+              http://127.0.0.1:8791/probe 2>/dev/null || true)
+            if [ "${status}" = "200" ]; then
+              ready=true
+              break
+            fi
+            if [ "${status}" = "500" ]; then
+              cat /tmp/legendmural-pdfkit-probe.json || true
+              cat "${LOG_FILE}" || true
+              exit 1
+            fi
+            sleep 0.5
+          done
+          if [ "${ready}" != "true" ]; then
+            cat /tmp/legendmural-pdfkit-probe.json 2>/dev/null || true
+            cat "${LOG_FILE}"
+            exit 1
+          fi
+
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { readFile } from 'node:fs/promises';
+
+          const proof = JSON.parse(await readFile('/tmp/legendmural-pdfkit-probe.json', 'utf8'));
+          assert.equal(proof.rendererVersion, 2);
+          assert.equal(proof.rendererVersion, proof.expectedRendererVersion);
+          assert.equal(proof.filename, 'invoice-LM-INV-2027-000001.pdf');
+          assert.equal(proof.pdfHeader, '%PDF-1.4');
+          assert.equal(proof.deterministic, true);
+          assert.equal(proof.byteLength, proof.secondByteLength);
+          assert.equal(proof.sha256, proof.secondSha256);
+          assert.match(proof.sha256, /^[a-f0-9]{64}$/);
+          assert.ok(proof.byteLength > 1000);
+          NODE
+
       - name: Bundle preview Worker without deployment
         run: >-
           npx --yes wrangler@4.129.0 deploy
