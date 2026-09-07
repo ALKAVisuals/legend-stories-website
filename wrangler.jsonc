@@ -3,6 +3,12 @@
   "main": "cloudflare/worker.mjs",
   "compatibility_date": "2026-09-07",
   "compatibility_flags": ["nodejs_compat"],
+  "define": {
+    "import.meta.url": "\"file:///legendmural-cloudflare-pdfkit-runtime.mjs\""
+  },
+  "alias": {
+    "pdfkit": "./cloudflare/pdfkit-worker-runtime.mjs"
+  },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
@@ -31,6 +37,12 @@
   "env": {
     "production": {
       "name": "legendmural-cloudflare-production",
+      "define": {
+        "import.meta.url": "\"file:///legendmural-cloudflare-pdfkit-runtime.mjs\""
+      },
+      "alias": {
+        "pdfkit": "./cloudflare/pdfkit-worker-runtime.mjs"
+      },
       "triggers": {
         "crons": ["*/5 * * * *"]
       },
