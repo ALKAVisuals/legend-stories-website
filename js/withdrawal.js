@@ -60,7 +60,7 @@ function deliveryStatusText(status, email) {
     return `An acknowledgement has been sent to ${email}. Keep that email for your records.`;
   }
   if (status === 'failed') {
-    return `Your withdrawal is recorded, but the acknowledgement email could not be sent. Download this confirmation and contact info@alkavisuals.nl so we can resend it.`;
+    return `Your withdrawal is recorded, but the acknowledgement email could not be sent. Download this confirmation and contact info@legendmural.com so we can resend it.`;
   }
   return `Your withdrawal is recorded, but automatic acknowledgement email is not configured in this environment. Download this confirmation. This environment is not approved for production launch.`;
 }
