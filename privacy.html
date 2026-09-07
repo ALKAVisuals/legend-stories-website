@@ -64,6 +64,7 @@
           <div class="text-text-secondary leading-relaxed space-y-3">
             <p>For checkout and fulfilment we process the information you provide for your order: first name, last name, email address, street, optional address line 2, postal code, city and delivery country.</p>
             <p>We also process order information such as selected products and variants, quantities, discounts, shipping zone and cost, order totals, currency, internal order reference, PayPal Order ID, payment state and timestamps needed to reconcile the order safely.</p>
+            <p>When an invoice PDF is requested through an authorized customer or dashboard download flow, we keep a limited security audit record containing the access time, access channel, trusted internal order reference, internal invoice identity where available, the access outcome and a general reason or error class. This audit record does not store the invoice PDF contents, Blob key or URL, service credentials or tokens, customer email solely for logging, full PayPal or checkout-session identifiers solely for logging, raw full IP address or raw full user-agent solely for logging.</p>
             <p>If you contact us through the homepage contact form or by email, we process the name, email address, subject, message and follow-up correspondence you provide so we can answer your request and provide customer support.</p>
             <p>If you use the online withdrawal function, we collect the name you enter, the Order ID and the order email address. The Order ID and order email are used to locate the purchase. Your name and confirmation email are used to create and send the statutory acknowledgement of your withdrawal. The immutable withdrawal record stores the link to the order, the server-side withdrawal timestamp and a confirmation code. A separate acknowledgement record stores the minimum statement snapshot and delivery information needed to provide, evidence and if necessary retry that acknowledgement: your name, confirmation email, Order ID/order reference, withdrawal declaration, confirmation code, receipt timestamp, delivery status, attempt timestamps, provider message identifier where available and a limited technical error code if delivery fails. The form does not ask you to provide a reason for withdrawal.</p>
           </div>
@@ -73,10 +74,11 @@
           <h2 class="font-display text-xl md:text-2xl font-bold mb-3">Why we process this data</h2>
           <div class="text-text-secondary leading-relaxed space-y-3">
             <p>We use order and contact data to create and perform the sales contract, calculate authoritative prices and shipping, process payment, deliver your order, provide order support and handle returns or withdrawal requests.</p>
+            <p>Limited invoice-download audit data is used to protect access to financial documents, investigate denied or failed access attempts, troubleshoot delivery problems and maintain an accountable security trail for customer and dashboard invoice access.</p>
             <p>Contact and support messages are used to answer your request, take requested pre-contractual steps where relevant and maintain ordinary customer service. Depending on the request, this is based on steps connected with a contract or our legitimate interest in responding to customers and operating the storefront.</p>
             <p>For the online withdrawal function, we process the statement data needed to register the withdrawal and provide and evidence the acknowledgement required for that consumer-right process. Limited delivery metadata is used to determine whether an acknowledgement succeeded and to support a controlled resend when delivery fails. This processing is based on our legal obligations relating to statutory withdrawal and, where relevant, the performance and administration of the sales contract.</p>
             <p>We also retain limited order and payment-reconciliation data where necessary to meet legal obligations, maintain financial records, prevent duplicate financial processing, resolve disputes and protect the integrity of the payment flow.</p>
-            <p>The main legal bases are performance of a contract or requested pre-contractual steps, compliance with legal obligations and, where applicable, our legitimate interests in customer support, secure payment reconciliation, fraud/error prevention and establishing or defending legal claims.</p>
+            <p>The main legal bases are performance of a contract or requested pre-contractual steps, compliance with legal obligations and, where applicable, our legitimate interests in customer support, secure payment and invoice-access operations, fraud/error prevention and establishing or defending legal claims.</p>
           </div>
         </section>
 
@@ -84,7 +86,7 @@
           <h2 class="font-display text-xl md:text-2xl font-bold mb-3">Payment, hosting and service providers</h2>
           <div class="text-text-secondary leading-relaxed space-y-3">
             <p><strong class="text-text-primary">PayPal</strong> is used to provide the hosted payment experience and payment status. PayPal processes information under its own privacy terms when you use its service.</p>
-            <p><strong class="text-text-primary">Netlify</strong> is used to host and run the storefront and server functions. <strong class="text-text-primary">Neon</strong> is used for durable order, payment-reconciliation, withdrawal and acknowledgement-delivery records.</p>
+            <p><strong class="text-text-primary">Netlify</strong> is used to host and run the storefront and server functions. <strong class="text-text-primary">Neon</strong> is used for durable order, payment-reconciliation, invoice-access audit, withdrawal and acknowledgement-delivery records.</p>
             <p>Where LegendMural sends transactional email through <strong class="text-text-primary">Resend (Plus Five Five, Inc.)</strong>, Resend receives the recipient email address, message content and technical delivery metadata needed to deliver and troubleshoot the message. Resend's primary processing operations and customer-data storage are in the United States. Its Data Processing Addendum includes safeguards for applicable international transfers, including the EU Standard Contractual Clauses.</p>
             <p>The storefront loads <strong class="text-text-primary">Google Fonts</strong> from Google domains. Your browser may send technical request information such as your IP address and browser/request metadata when requesting those font files.</p>
             <p>The homepage loads the Swiper interface library through <strong class="text-text-primary">jsDelivr</strong>. That CDN request can include technical information such as IP address, browser details, requested URL, referrer-domain information and request time.</p>
@@ -106,6 +108,7 @@
           <div class="text-text-secondary leading-relaxed space-y-3">
             <p>We apply different retention periods to different categories of data instead of keeping all personal data for one blanket period.</p>
             <p>Sales, invoice and accounting information that forms part of our statutory business administration is normally retained for <strong class="text-text-primary">7 years</strong> in line with Dutch tax record-keeping requirements. Where a transaction falls under an applicable One Stop Shop or Import One Stop Shop (OSS/IOSS) regime, the relevant records are retained for <strong class="text-text-primary">10 years after the end of the year in which the supply took place</strong>.</p>
+            <p>Invoice-access audit records are normally retained for <strong class="text-text-primary">90 days</strong>. Specific audit records may be kept longer where a documented security, dispute, legal or regulatory hold requires it.</p>
             <p>Ordinary contact or support correspondence that is not part of an order, complaint, dispute, legal claim or statutory record is retained for up to <strong class="text-text-primary">12 months after the request is resolved</strong>.</p>
             <p>Withdrawal, complaint and other non-fiscal consumer-right or contractual evidence is kept only for as long as reasonably needed to administer the matter and establish, exercise or defend legal claims. Our retention limit for that evidence is generally up to <strong class="text-text-primary">5 years</strong> where that period is needed, unless a shorter period is sufficient.</p>
             <p>Specific information can be kept longer where a tax, legal, chargeback, fraud, security, warranty, dispute or regulatory hold requires it. A longer statutory record-keeping requirement also takes priority where it applies. These periods describe our retention policy; they do not imply that every category is currently subject to an automated deletion process.</p>
@@ -129,7 +132,7 @@
           </div>
         </section>
 
-        <p class="text-xs text-text-muted">Last updated: 3 September 2026.</p>
+        <p class="text-xs text-text-muted">Last updated: 7 September 2026.</p>
       </div>
     </section>
   </main>
