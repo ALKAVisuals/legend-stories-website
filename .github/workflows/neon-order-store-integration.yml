@@ -50,6 +50,9 @@ jobs:
       - name: Verify exact runtime privilege boundary
         run: npm run verify:neon:runtime-privileges
 
+      - name: Prove durable invoice-access audit persistence
+        run: npm run test:neon:invoice-access-audit
+
       - name: Run real Neon store conformance
         run: npm run test:neon:integration
 

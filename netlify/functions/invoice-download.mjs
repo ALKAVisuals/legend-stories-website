@@ -1,5 +1,6 @@
 import { handleInvoiceDownload } from '../../server/api/invoice-download.mjs';
 import { createNetlifyV3InvoicePdfStore } from '../../server/adapters/netlify-v3-invoice-pdf-store.mjs';
+import { createNeonV3InvoiceAccessAuditStore } from '../../server/adapters/neon-v3-invoice-access-audit-store.mjs';
 import { createNeonV3InvoiceArtifactStore } from '../../server/adapters/neon-v3-invoice-artifact-store.mjs';
 import { createNeonV3InvoiceDownloadSource } from '../../server/adapters/neon-v3-invoice-download-source.mjs';
 import {
@@ -17,6 +18,7 @@ export function createNetlifyInvoiceDownloadHandler({
   orderStoreFactory,
   artifactStoreFactory = createNeonV3InvoiceArtifactStore,
   identitySourceFactory = createNeonV3InvoiceDownloadSource,
+  auditStoreFactory = createNeonV3InvoiceAccessAuditStore,
   pdfStoreFactory = createNetlifyV3InvoicePdfStore,
   handlerOptions = {},
 } = {}) {
@@ -33,12 +35,14 @@ export function createNetlifyInvoiceDownloadHandler({
       const orderStore = getCommerceOrderStore({ env, storeFactory: orderStoreFactory });
       const artifactStore = artifactStoreFactory({ connectionString: env.NEON_DATABASE_URL });
       const identitySource = identitySourceFactory({ connectionString: env.NEON_DATABASE_URL });
+      const auditStore = auditStoreFactory({ connectionString: env.NEON_DATABASE_URL });
       const pdfStore = pdfStoreFactory({ env });
       return await handleInvoiceDownload(request, {
         ...handlerOptions,
         orderStore,
         identitySource,
         artifactStore,
+        auditStore,
         pdfStore,
         storageEnabled: env.V3_INVOICE_STORAGE_ENABLED,
         allowedOrigins: env.CHECKOUT_ALLOWED_ORIGINS || '',
@@ -50,7 +54,8 @@ export function createNetlifyInvoiceDownloadHandler({
       });
       if (configurationResponse) return configurationResponse;
 
-      if (String(error?.code || '').startsWith('V3_INVOICE_STORAGE_')) {
+      const errorCode = String(error?.code || '');
+      if (errorCode.startsWith('V3_INVOICE_STORAGE_') || errorCode.startsWith('V3_INVOICE_AUDIT_')) {
         return new Response(JSON.stringify({
           error: {
             code: 'INVOICE_DOWNLOAD_NOT_CONFIGURED',

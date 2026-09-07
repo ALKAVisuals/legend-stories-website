@@ -16,6 +16,7 @@ const GRANT_MIGRATIONS = [
   new URL('../server/db/migrations/008_grant_withdrawal_acknowledgement_runtime.sql', import.meta.url),
   new URL('../server/db/migrations/010_grant_order_notifications_runtime.sql', import.meta.url),
   new URL('../server/db/migrations/012_grant_v3_order_invoice_runtime.sql', import.meta.url),
+  new URL('../server/db/migrations/017_grant_v3_invoice_access_audit_runtime.sql', import.meta.url),
 ];
 
 function requireEnvironmentUrl(name) {
