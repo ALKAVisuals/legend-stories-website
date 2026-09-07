@@ -168,24 +168,44 @@ jobs:
           ready=false
           for _ in $(seq 1 60); do
             status=$(curl --silent --show-error \
-              --output /tmp/legendmural-pdfkit-probe.json \
+              --connect-timeout 1 \
+              --max-time 2 \
+              --output /tmp/legendmural-pdfkit-health.json \
               --write-out '%{http_code}' \
-              --request POST \
-              http://127.0.0.1:8791/probe 2>/dev/null || true)
+              http://127.0.0.1:8791/health 2>/dev/null || true)
             if [ "${status}" = "200" ]; then
               ready=true
               break
             fi
-            if [ "${status}" = "500" ]; then
-              cat /tmp/legendmural-pdfkit-probe.json || true
-              cat "${LOG_FILE}" || true
-              exit 1
-            fi
             sleep 0.5
           done
           if [ "${ready}" != "true" ]; then
+            echo 'PDFKit Worker failed to become healthy.'
+            cat /tmp/legendmural-pdfkit-health.json 2>/dev/null || true
+            cat "${LOG_FILE}" || true
+            exit 1
+          fi
+
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { readFile } from 'node:fs/promises';
+
+          const health = JSON.parse(await readFile('/tmp/legendmural-pdfkit-health.json', 'utf8'));
+          assert.equal(health.ok, true);
+          assert.equal(health.runtime, 'workerd-pdfkit-browser-adapter');
+          NODE
+
+          status=$(curl --silent --show-error \
+            --connect-timeout 2 \
+            --max-time 15 \
+            --output /tmp/legendmural-pdfkit-probe.json \
+            --write-out '%{http_code}' \
+            --request POST \
+            http://127.0.0.1:8791/probe 2>/dev/null || true)
+          if [ "${status}" != "200" ]; then
+            echo "PDFKit workerd render probe returned HTTP ${status:-none}."
             cat /tmp/legendmural-pdfkit-probe.json 2>/dev/null || true
-            cat "${LOG_FILE}"
+            cat "${LOG_FILE}" || true
             exit 1
           fi
 
