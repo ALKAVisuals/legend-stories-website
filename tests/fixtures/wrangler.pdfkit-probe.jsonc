@@ -1,0 +1,6 @@
+{
+  "name": "legendmural-pdfkit-local-probe",
+  "main": "./tests/fixtures/cloudflare-pdfkit-probe-worker.mjs",
+  "compatibility_date": "2026-09-07",
+  "compatibility_flags": ["nodejs_compat"]
+}
