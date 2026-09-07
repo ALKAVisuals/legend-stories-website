@@ -1,0 +1,83 @@
+name: Cloudflare migration compatibility
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/cloudflare-migration-compatibility.yml'
+      - 'wrangler.jsonc'
+      - 'cloudflare/**'
+      - 'server/api/**'
+      - 'server/adapters/cloudflare-r2-v3-invoice-pdf-store.mjs'
+      - 'server/adapters/neon-*.mjs'
+      - 'server/commerce/**'
+      - 'server/invoices/**'
+      - 'server/notifications/**'
+      - 'server/orders/**'
+      - 'server/payments/**'
+      - 'data/products/catalog.json'
+      - 'tests/cloudflare-*.test.mjs'
+      - 'tests/v3-invoice-pdf.test.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-migration-compatibility-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compatibility:
+    name: Worker + R2 + Static Assets dry run
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install exact application dependencies
+        run: npm ci
+
+      - name: Prove Cloudflare routing, isolation and R2 storage contracts
+        run: |
+          node --test \
+            tests/cloudflare-config.test.mjs \
+            tests/cloudflare-r2-v3-invoice-pdf-store.test.mjs \
+            tests/cloudflare-worker-routing.test.mjs
+
+      - name: Preserve deterministic invoice PDF regression proof
+        run: node --test tests/v3-invoice-pdf.test.mjs
+
+      - name: Build Vite storefront static assets
+        run: npm run build
+
+      - name: Bundle preview Worker without deployment
+        run: >-
+          npx --yes wrangler@4.129.0 deploy
+          --dry-run
+          --outdir .wrangler-dry-run/preview
+
+      - name: Bundle production Worker without deployment
+        run: >-
+          npx --yes wrangler@4.129.0 deploy
+          --env production
+          --dry-run
+          --outdir .wrangler-dry-run/production
+
+      - name: Verify dry-run bundles were produced
+        run: |
+          test -d .wrangler-dry-run/preview
+          test -d .wrangler-dry-run/production
+          find .wrangler-dry-run/preview -type f -maxdepth 2 -print
+          find .wrangler-dry-run/production -type f -maxdepth 2 -print
