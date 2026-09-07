@@ -17,6 +17,7 @@ on:
       - 'server/orders/**'
       - 'server/payments/**'
       - 'data/products/catalog.json'
+      - 'scripts/create-cloudflare-pdfkit-node-proof.mjs'
       - 'scripts/verify-cloudflare-workerd-smoke.mjs'
       - 'tests/cloudflare-*.test.mjs'
       - 'tests/fixtures/cloudflare-*.mjs'
@@ -154,6 +155,10 @@ jobs:
           LOG_FILE="${RUNNER_TEMP}/legendmural-pdfkit-workerd.log"
           DIAG_DIR="${RUNNER_TEMP}/legendmural-pdfkit-bundle"
           rm -rf "${DIAG_DIR}"
+
+          node scripts/create-cloudflare-pdfkit-node-proof.mjs \
+            > /tmp/legendmural-pdfkit-node-proof.json
+
           npx --yes wrangler@4.129.0 deploy \
             --config tests/fixtures/wrangler.pdfkit-probe.jsonc \
             --dry-run \
@@ -228,6 +233,8 @@ jobs:
           import { readFile } from 'node:fs/promises';
 
           const proof = JSON.parse(await readFile('/tmp/legendmural-pdfkit-probe.json', 'utf8'));
+          const nodeProof = JSON.parse(await readFile('/tmp/legendmural-pdfkit-node-proof.json', 'utf8'));
+
           assert.equal(proof.rendererVersion, 2);
           assert.equal(proof.rendererVersion, proof.expectedRendererVersion);
           assert.equal(proof.filename, 'invoice-LM-INV-2027-000001.pdf');
@@ -237,6 +244,21 @@ jobs:
           assert.equal(proof.sha256, proof.secondSha256);
           assert.match(proof.sha256, /^[a-f0-9]{64}$/);
           assert.ok(proof.byteLength > 1000);
+
+          assert.equal(nodeProof.rendererVersion, proof.rendererVersion);
+          assert.equal(nodeProof.expectedRendererVersion, proof.expectedRendererVersion);
+          assert.equal(nodeProof.filename, proof.filename);
+          assert.equal(nodeProof.pdfHeader, proof.pdfHeader);
+          assert.equal(
+            proof.byteLength,
+            nodeProof.byteLength,
+            'workerd PDF byte length must match the canonical Node renderer output',
+          );
+          assert.equal(
+            proof.sha256,
+            nodeProof.sha256,
+            'workerd PDF SHA-256 must match the canonical Node renderer output',
+          );
           NODE
 
       - name: Bundle preview Worker without deployment
