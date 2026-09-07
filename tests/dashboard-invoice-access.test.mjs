@@ -53,8 +53,12 @@ function artifact(overrides = {}) {
   });
 }
 
-function dependencies({ artifactState = artifact(), pdfBytes = Buffer.from('%PDF-x') } = {}) {
-  const calls = { summary: [], artifact: [], pdf: [] };
+function dependencies({
+  artifactState = artifact(),
+  pdfBytes = Buffer.from('%PDF-x'),
+  auditError = null,
+} = {}) {
+  const calls = { summary: [], artifact: [], pdf: [], audit: [] };
   return {
     calls,
     invoiceSource: {
@@ -74,6 +78,13 @@ function dependencies({ artifactState = artifact(), pdfBytes = Buffer.from('%PDF
       async loadVerifiedArtifact(input) {
         calls.pdf.push(input);
         return { bytes: pdfBytes };
+      },
+    },
+    auditStore: {
+      async recordInvoiceAccess(input) {
+        calls.audit.push(input);
+        if (auditError) throw auditError;
+        return input;
       },
     },
   };
@@ -106,7 +117,7 @@ test('fails closed when the server-side service token is not configured', async 
   assert.equal((await response.json()).error.code, 'DASHBOARD_INVOICE_API_NOT_CONFIGURED');
 });
 
-test('requires the exact bearer token and does not disclose invoice data on failure', async () => {
+test('requires the exact bearer token and does not disclose invoice data or create audit events on failure', async () => {
   const deps = dependencies();
   const response = await handleDashboardInvoiceAccess(
     request({ reference, action: 'metadata' }, { authorization: 'Bearer wrong-token' }),
@@ -117,6 +128,7 @@ test('requires the exact bearer token and does not disclose invoice data on fail
   assert.equal(body.error.code, 'DASHBOARD_INVOICE_UNAUTHORIZED');
   assert.equal(JSON.stringify(body).includes('LM-INV'), false);
   assert.equal(deps.calls.summary.length, 0);
+  assert.equal(deps.calls.audit.length, 0);
 });
 
 test('rejects direct browser-origin requests even when a bearer token is present', async () => {
@@ -128,9 +140,10 @@ test('rejects direct browser-origin requests even when a bearer token is present
   assert.equal(response.status, 403);
   assert.equal((await response.json()).error.code, 'BROWSER_ORIGIN_NOT_ALLOWED');
   assert.equal(deps.calls.summary.length, 0);
+  assert.equal(deps.calls.audit.length, 0);
 });
 
-test('returns only safe read-only invoice metadata and never exposes Blob identity', async () => {
+test('returns only safe read-only invoice metadata and never audits metadata reads or exposes Blob identity', async () => {
   const deps = dependencies();
   const response = await handleDashboardInvoiceAccess(
     request({ reference, action: 'metadata' }),
@@ -154,6 +167,7 @@ test('returns only safe read-only invoice metadata and never exposes Blob identi
   assert.equal(raw.includes(storageKey), false);
   assert.equal(raw.includes('netlify_blobs'), false);
   assert.equal(deps.calls.pdf.length, 0);
+  assert.equal(deps.calls.audit.length, 0);
 });
 
 test('rejects any caller-supplied Blob key before loading invoice truth', async () => {
@@ -165,9 +179,10 @@ test('rejects any caller-supplied Blob key before loading invoice truth', async 
   assert.equal(response.status, 400);
   assert.equal((await response.json()).error.code, 'INVALID_DASHBOARD_INVOICE_REQUEST');
   assert.equal(deps.calls.summary.length, 0);
+  assert.equal(deps.calls.audit.length, 0);
 });
 
-test('keeps metadata available while PDF download remains feature-gated', async () => {
+test('keeps metadata available while PDF download remains feature-gated without creating audit rows', async () => {
   const deps = dependencies();
   const response = await handleDashboardInvoiceAccess(
     request({ reference, action: 'download' }),
@@ -176,9 +191,10 @@ test('keeps metadata available while PDF download remains feature-gated', async 
   assert.equal(response.status, 503);
   assert.equal((await response.json()).error.code, 'DASHBOARD_INVOICE_DOWNLOAD_DISABLED');
   assert.equal(deps.calls.pdf.length, 0);
+  assert.equal(deps.calls.audit.length, 0);
 });
 
-test('downloads only the Neon-bound, storage-verified PDF with private security headers', async () => {
+test('downloads only the Neon-bound, storage-verified PDF and persists a minimal dashboard audit event', async () => {
   const deps = dependencies();
   const response = await handleDashboardInvoiceAccess(
     request({ reference, action: 'download' }),
@@ -205,9 +221,20 @@ test('downloads only the Neon-bound, storage-verified PDF with private security 
     storageBackend: 'netlify_blobs',
     storageKey,
   });
+  assert.deepEqual(deps.calls.audit, [{
+    channel: 'dashboard',
+    orderReference: reference,
+    invoiceId: 77,
+    outcome: 'success',
+    reasonCode: 'download_success',
+  }]);
+  const auditRaw = JSON.stringify(deps.calls.audit[0]);
+  assert.equal(auditRaw.includes(hash), false);
+  assert.equal(auditRaw.includes(storageKey), false);
+  assert.equal(auditRaw.includes(token), false);
 });
 
-test('fails closed when no durable PDF storage binding exists', async () => {
+test('fails closed when no durable PDF storage binding exists and records only an unavailable audit class', async () => {
   const deps = dependencies({ artifactState: artifact({
     storageBackend: null,
     storageKey: null,
@@ -221,9 +248,16 @@ test('fails closed when no durable PDF storage binding exists', async () => {
   assert.equal(response.status, 404);
   assert.equal((await response.json()).error.code, 'DASHBOARD_INVOICE_NOT_AVAILABLE');
   assert.equal(deps.calls.pdf.length, 0);
+  assert.deepEqual(deps.calls.audit, [{
+    channel: 'dashboard',
+    orderReference: reference,
+    invoiceId: 77,
+    outcome: 'unavailable',
+    reasonCode: 'pdf_not_bound',
+  }]);
 });
 
-test('maps storage integrity failures to a private service-unavailable response', async () => {
+test('maps storage integrity failures to a private service-unavailable response and safe audit reason', async () => {
   const deps = dependencies();
   deps.pdfStore.loadVerifiedArtifact = async () => {
     const error = new Error('hash mismatch');
@@ -236,4 +270,25 @@ test('maps storage integrity failures to a private service-unavailable response'
   );
   assert.equal(response.status, 503);
   assert.equal((await response.json()).error.code, 'DASHBOARD_INVOICE_UNAVAILABLE');
+  assert.deepEqual(deps.calls.audit, [{
+    channel: 'dashboard',
+    orderReference: reference,
+    invoiceId: 77,
+    outcome: 'unavailable',
+    reasonCode: 'storage_unavailable',
+  }]);
+});
+
+test('durable dashboard audit failure blocks otherwise successful PDF delivery', async () => {
+  const auditError = new Error('audit unavailable');
+  auditError.code = 'V3_INVOICE_AUDIT_WRITE_FAILED';
+  const deps = dependencies({ auditError });
+  const response = await handleDashboardInvoiceAccess(
+    request({ reference, action: 'download' }),
+    enabledOptions(deps, { storageEnabled: 'true' }),
+  );
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).error.code, 'DASHBOARD_INVOICE_AUDIT_UNAVAILABLE');
+  assert.equal(deps.calls.pdf.length, 1);
+  assert.equal(deps.calls.audit.length, 1);
 });
