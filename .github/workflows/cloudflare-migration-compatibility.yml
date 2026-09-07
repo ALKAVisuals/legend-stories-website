@@ -17,6 +17,7 @@ on:
       - 'server/orders/**'
       - 'server/payments/**'
       - 'data/products/catalog.json'
+      - 'scripts/verify-cloudflare-workerd-smoke.mjs'
       - 'tests/cloudflare-*.test.mjs'
       - 'tests/fixtures/cloudflare-*.mjs'
       - 'tests/fixtures/wrangler.*.jsonc'
@@ -73,7 +74,7 @@ jobs:
             --local \
             --port 8787 \
             --test-scheduled \
-            --log-level error \
+            --log-level log \
             >"${LOG_FILE}" 2>&1 &
           WRANGLER_PID=$!
           cleanup() {
@@ -82,61 +83,11 @@ jobs:
           }
           trap cleanup EXIT
 
-          ready=false
-          for _ in $(seq 1 60); do
-            if curl --silent --show-error --fail http://127.0.0.1:8787/shop.html >/tmp/legendmural-shop.html 2>/dev/null; then
-              ready=true
-              break
-            fi
-            sleep 0.5
-          done
-          if [ "${ready}" != "true" ]; then
-            cat "${LOG_FILE}"
-            exit 1
-          fi
-
-          grep -qi '<html' /tmp/legendmural-shop.html
-
-          unknown_status=$(curl --silent --show-error \
-            --output /tmp/legendmural-unknown-api.json \
-            --write-out '%{http_code}' \
-            http://127.0.0.1:8787/api/not-real)
-          test "${unknown_status}" = "404"
-          grep -q 'API_ROUTE_NOT_FOUND' /tmp/legendmural-unknown-api.json
-
-          checkout_status=$(curl --silent --show-error \
-            --output /tmp/legendmural-checkout.json \
-            --write-out '%{http_code}' \
-            --request POST \
-            --header 'Origin: http://127.0.0.1:8787' \
-            --header 'Content-Type: application/json' \
-            --data '{}' \
-            http://127.0.0.1:8787/api/paypal/checkout)
-          test "${checkout_status}" = "503"
-          grep -q 'CHECKOUT_PAUSED' /tmp/legendmural-checkout.json
-
-          dashboard_status=$(curl --silent --show-error \
-            --output /tmp/legendmural-dashboard-api.json \
-            --write-out '%{http_code}' \
-            --request POST \
-            --header 'Content-Type: application/json' \
-            --data '{"reference":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","action":"metadata"}' \
-            http://127.0.0.1:8787/api/internal/dashboard-invoice)
-          test "${dashboard_status}" = "503"
-          grep -q 'DASHBOARD_INVOICE_API_DISABLED' /tmp/legendmural-dashboard-api.json
-
-          scheduled_status=$(curl --silent --show-error \
-            --output /tmp/legendmural-scheduled.json \
-            --write-out '%{http_code}' \
-            'http://127.0.0.1:8787/cdn-cgi/handler/scheduled?cron=*%2F5+*+*+*+*&format=json' \
-            || true)
-          echo "scheduled_status=${scheduled_status}"
-          cat /tmp/legendmural-scheduled.json 2>/dev/null || true
-          if [ "${scheduled_status}" != "200" ]; then
+          if ! node scripts/verify-cloudflare-workerd-smoke.mjs; then
+            echo '--- workerd log ---'
             cat "${LOG_FILE}" || true
             exit 1
           fi
-          grep -Eq '"outcome"[[:space:]]*:[[:space:]]*"ok"' /tmp/legendmural-scheduled.json
 
       - name: Prove R2 create-only semantics in local workerd binding
         shell: bash
