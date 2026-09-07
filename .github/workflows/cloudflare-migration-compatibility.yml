@@ -152,6 +152,16 @@ jobs:
         run: |
           set -euo pipefail
           LOG_FILE="${RUNNER_TEMP}/legendmural-pdfkit-workerd.log"
+          DIAG_DIR="${RUNNER_TEMP}/legendmural-pdfkit-bundle"
+          rm -rf "${DIAG_DIR}"
+          npx --yes wrangler@4.129.0 deploy \
+            --config tests/fixtures/wrangler.pdfkit-probe.jsonc \
+            --dry-run \
+            --outdir "${DIAG_DIR}" \
+            >/tmp/legendmural-pdfkit-dry-run.log 2>&1
+          BUNDLE_FILE=$(find "${DIAG_DIR}" -type f -name '*.js' | head -n 1)
+          test -n "${BUNDLE_FILE}"
+
           npx --yes wrangler@4.129.0 dev \
             --config tests/fixtures/wrangler.pdfkit-probe.jsonc \
             --local \
@@ -183,6 +193,10 @@ jobs:
             echo 'PDFKit Worker failed to become healthy.'
             cat /tmp/legendmural-pdfkit-health.json 2>/dev/null || true
             cat "${LOG_FILE}" || true
+            echo '--- PDFKit dry-run bundle around reported startup line ---'
+            nl -ba "${BUNDLE_FILE}" | sed -n '27715,27770p' || true
+            echo '--- new URL occurrences near the failing region ---'
+            grep -n -E 'new URL|URL\(' "${BUNDLE_FILE}" | awk -F: '$1 >= 27500 && $1 <= 28000' || true
             exit 1
           fi
 
