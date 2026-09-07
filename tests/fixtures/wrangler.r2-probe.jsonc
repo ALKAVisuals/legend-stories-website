@@ -1,6 +1,6 @@
 {
   "name": "legendmural-r2-local-probe",
-  "main": "./tests/fixtures/cloudflare-r2-probe-worker.mjs",
+  "main": "./cloudflare-r2-probe-worker.mjs",
   "compatibility_date": "2026-09-07",
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
