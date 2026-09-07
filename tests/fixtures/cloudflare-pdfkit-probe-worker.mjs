@@ -9,7 +9,7 @@ const paidAt = 1_800_300_010;
 const issuedAt = paidAt + 5;
 const paypalOrderId = 'PAYPAL-WORKER-PDF-001';
 
-function buildSnapshot() {
+export function buildPdfKitProbeSnapshot() {
   const order = {
     reference,
     status: 'paid',
@@ -122,13 +122,16 @@ function buildSnapshot() {
 export default {
   async fetch(request) {
     const url = new URL(request.url);
+    if (url.pathname === '/health' && request.method === 'GET') {
+      return Response.json({ ok: true, runtime: 'workerd-pdfkit-browser-adapter' });
+    }
     if (url.pathname !== '/probe' || request.method !== 'POST') {
       return new Response('Not found', { status: 404 });
     }
 
     try {
-      const first = await renderV3InvoicePdf({ snapshot: buildSnapshot() });
-      const second = await renderV3InvoicePdf({ snapshot: buildSnapshot() });
+      const first = await renderV3InvoicePdf({ snapshot: buildPdfKitProbeSnapshot() });
+      const second = await renderV3InvoicePdf({ snapshot: buildPdfKitProbeSnapshot() });
       const pdfHeader = Buffer.from(first.bytes).subarray(0, 8).toString('ascii');
 
       return Response.json({
