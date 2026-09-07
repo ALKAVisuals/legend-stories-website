@@ -1,23 +1,25 @@
-import PDFKitStandalone from '../node_modules/pdfkit/js/pdfkit.standalone.js';
+import {
+  PDFDocument,
+  registerStdFonts,
+} from '../node_modules/pdfkit/js/pdfkit.browser.mjs';
+import Helvetica from '../node_modules/pdfkit/js/standard-fonts/Helvetica.mjs';
+import HelveticaBold from '../node_modules/pdfkit/js/standard-fonts/HelveticaBold.mjs';
 
-// PDFKit 0.20.x exposes a Node ESM build under the `node` export condition and
-// an ES-module browser build as the default export. The browser ESM build still
-// evaluates its PDF/A ICC profile path at module load with
-// `new URL('./data/sRGB_IEC61966_2_1.icc', import.meta.url)`. After Wrangler
-// bundles that build for workerd, the generated import.meta.url is not a valid
-// URL base and the Worker crashes before its fetch handler can start.
+// PDFKit 0.20.x exposes a Node-specific ESM build under the `node` export
+// condition, while its browser ESM build is the right runtime shape for a
+// Worker. Keep the shared invoice renderer platform-neutral by aliasing bare
+// `pdfkit` to this adapter only in Cloudflare bundles.
 //
-// PDFKit also publishes this browserified standalone build as a supported
-// browser distribution. It embeds/transforms browser assets during PDFKit's own
-// build instead of asking the consuming Worker bundle to resolve the PDF/A ICC
-// URL. LegendMural does not request a PDF/A subset, so keep the shared invoice
-// renderer unchanged and isolate this compatibility choice to Cloudflare only.
-const standaloneModule = PDFKitStandalone?.default ?? PDFKitStandalone;
-const PDFDocument = standaloneModule?.PDFDocument ?? standaloneModule;
-
-if (typeof PDFDocument !== 'function') {
-  throw new TypeError('PDFKit standalone build did not expose a PDFDocument constructor.');
-}
+// The browser build computes a PDF/A ICC profile URL at module load with
+// `new URL('./data/sRGB_IEC61966_2_1.icc', import.meta.url)`. LegendMural does
+// not request a PDF/A subset, but workerd still evaluates that expression at
+// startup. The Cloudflare Wrangler config therefore supplies a stable synthetic
+// import.meta.url during bundling. If PDF/A is ever enabled, its ICC asset must
+// be wired explicitly rather than relying on this compatibility boundary.
+//
+// Browser/worker builds do not self-register standard-font metrics. The
+// approved LegendMural invoice renderer uses Helvetica and Helvetica-Bold only.
+registerStdFonts(Helvetica, HelveticaBold);
 
 export { PDFDocument };
 export default PDFDocument;
