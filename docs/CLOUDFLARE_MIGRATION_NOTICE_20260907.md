@@ -11,7 +11,7 @@ The migration is being built entirely on:
 
 ```text
 branch: docs/cloudflare-migration-pointer-20260907
-PR:     #208
+PR:     #208 (pre-cutover implementation; not a deployment authorization)
 base main audit checkpoint: 7c3fd2422ef06045e8d49a2f6f543f2c61f26403
 ```
 
