@@ -112,7 +112,9 @@ Wrangler production env deploy --dry-run bundle: SUCCESS
 
 The workflow uses no Cloudflare Production deployment and no Production credentials.
 
-Later documentation-only commits do not invalidate this code proof; before final merge, the exact final head must rerun all required checks.
+On the later exact head, Cloudflare migration compatibility and Accessibility also reran successfully. Quality and Mobile WebKit are being rechecked as part of the current PR evidence cycle.
+
+Before final merge, the exact final head must have all required checks green after any rebase/update from `main`.
 
 ## Remaining migration work
 
