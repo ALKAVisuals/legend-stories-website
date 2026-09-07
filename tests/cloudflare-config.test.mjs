@@ -5,6 +5,7 @@ import test from 'node:test';
 const configUrl = new URL('../wrangler.jsonc', import.meta.url);
 const pdfKitProbeConfigUrl = new URL('./fixtures/wrangler.pdfkit-probe.jsonc', import.meta.url);
 const workerPdfKitRuntimeUrl = new URL('../cloudflare/pdfkit-worker-runtime.mjs', import.meta.url);
+const PDFKIT_WORKER_IMPORT_META_URL = '"file:///legendmural-cloudflare-pdfkit-runtime.mjs"';
 const SENSITIVE_BINDING_NAMES = Object.freeze([
   'NEON_DATABASE_URL',
   'PAYPAL_CLIENT_ID',
@@ -38,6 +39,11 @@ function assertNoSecretsInVars(vars) {
   }
 }
 
+function assertPdfKitWorkerBoundary(value) {
+  assert.equal(value.alias?.pdfkit, './cloudflare/pdfkit-worker-runtime.mjs');
+  assert.equal(value.define?.['import.meta.url'], PDFKIT_WORKER_IMPORT_META_URL);
+}
+
 test('Wrangler uses Worker + Static Assets with worker-first API routing only', async () => {
   const value = await config();
   assert.equal(value.main, 'cloudflare/worker.mjs');
@@ -46,6 +52,7 @@ test('Wrangler uses Worker + Static Assets with worker-first API routing only', 
   assert.equal(value.assets.directory, './dist');
   assert.equal(value.assets.binding, 'ASSETS');
   assert.deepEqual(value.assets.run_worker_first, ['/api/*']);
+  assertPdfKitWorkerBoundary(value);
 });
 
 test('preview environment is isolated, fail-closed and has no scheduled reconciliation', async () => {
@@ -68,6 +75,7 @@ test('production environment is explicitly separate and still fail-closed before
   assert.equal(production.vars.LEGENDMURAL_DEPLOY_CONTEXT, 'production');
   assertFailClosed(production.vars);
   assertNoSecretsInVars(production.vars);
+  assertPdfKitWorkerBoundary(production);
   assert.deepEqual(production.triggers.crons, ['*/5 * * * *']);
   assert.equal(production.r2_buckets.length, 1);
   assert.equal(production.r2_buckets[0].binding, 'V3_INVOICE_PDFS');
@@ -98,10 +106,7 @@ test('PDFKit workerd probe aliases the browser ESM runtime and stabilizes import
   const value = JSON.parse(await readFile(pdfKitProbeConfigUrl, 'utf8'));
   assert.equal(value.main, './cloudflare-pdfkit-probe-worker.mjs');
   assert.equal(value.alias?.pdfkit, '../../cloudflare/pdfkit-worker-runtime.mjs');
-  assert.equal(
-    value.define?.['import.meta.url'],
-    '"file:///legendmural-cloudflare-pdfkit-runtime.mjs"',
-  );
+  assert.equal(value.define?.['import.meta.url'], PDFKIT_WORKER_IMPORT_META_URL);
 
   const entryUrl = new URL(value.main, pdfKitProbeConfigUrl);
   const source = await readFile(entryUrl, 'utf8');
