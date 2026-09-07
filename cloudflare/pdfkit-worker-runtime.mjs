@@ -1,21 +1,23 @@
-import {
-  PDFDocument,
-  registerStdFonts,
-} from '../node_modules/pdfkit/js/pdfkit.browser.mjs';
-import Helvetica from '../node_modules/pdfkit/js/standard-fonts/Helvetica.mjs';
-import HelveticaBold from '../node_modules/pdfkit/js/standard-fonts/HelveticaBold.mjs';
+import PDFKitStandalone from '../node_modules/pdfkit/js/pdfkit.standalone.js';
 
-// PDFKit 0.20.x deliberately exposes a Node-specific ESM build under the
-// `node` export condition. Cloudflare Workers can advertise Node compatibility
-// for unrelated application dependencies, so importing bare `pdfkit` from a
-// Worker may select that filesystem-oriented build. Keep the invoice renderer
-// platform-neutral by aliasing only Worker bundles to this browser-safe runtime.
+// PDFKit 0.20.x exposes a Node ESM build under the `node` export condition and
+// an ES-module browser build as the default export. The browser ESM build still
+// evaluates its PDF/A ICC profile path at module load with
+// `new URL('./data/sRGB_IEC61966_2_1.icc', import.meta.url)`. After Wrangler
+// bundles that build for workerd, the generated import.meta.url is not a valid
+// URL base and the Worker crashes before its fetch handler can start.
 //
-// Browser/worker builds do not self-register standard-font metrics. The
-// LegendMural invoice renderer currently uses Helvetica and Helvetica-Bold only,
-// so register exactly those approved fonts and leave the Node/Netlify runtime
-// untouched for rollback compatibility.
-registerStdFonts(Helvetica, HelveticaBold);
+// PDFKit also publishes this browserified standalone build as a supported
+// browser distribution. It embeds/transforms browser assets during PDFKit's own
+// build instead of asking the consuming Worker bundle to resolve the PDF/A ICC
+// URL. LegendMural does not request a PDF/A subset, so keep the shared invoice
+// renderer unchanged and isolate this compatibility choice to Cloudflare only.
+const standaloneModule = PDFKitStandalone?.default ?? PDFKitStandalone;
+const PDFDocument = standaloneModule?.PDFDocument ?? standaloneModule;
+
+if (typeof PDFDocument !== 'function') {
+  throw new TypeError('PDFKit standalone build did not expose a PDFDocument constructor.');
+}
 
 export { PDFDocument };
 export default PDFDocument;
