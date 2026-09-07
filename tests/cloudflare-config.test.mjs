@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 const configUrl = new URL('../wrangler.jsonc', import.meta.url);
+const pdfKitProbeConfigUrl = new URL('./fixtures/wrangler.pdfkit-probe.jsonc', import.meta.url);
 const SENSITIVE_BINDING_NAMES = Object.freeze([
   'NEON_DATABASE_URL',
   'PAYPAL_CLIENT_ID',
@@ -90,4 +91,12 @@ test('Netlify production context is not used as Cloudflare deployment truth', as
   assert.equal(Object.hasOwn(value.env.production.vars, 'CONTEXT'), false);
   assert.equal(value.vars.LEGENDMURAL_DEPLOY_CONTEXT, 'preview');
   assert.equal(value.env.production.vars.LEGENDMURAL_DEPLOY_CONTEXT, 'production');
+});
+
+test('PDFKit workerd probe entry point resolves relative to its Wrangler config', async () => {
+  const value = JSON.parse(await readFile(pdfKitProbeConfigUrl, 'utf8'));
+  assert.equal(value.main, './cloudflare-pdfkit-probe-worker.mjs');
+  const entryUrl = new URL(value.main, pdfKitProbeConfigUrl);
+  const source = await readFile(entryUrl, 'utf8');
+  assert.match(source, /renderV3InvoicePdf/);
 });
