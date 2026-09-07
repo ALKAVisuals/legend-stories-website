@@ -3,6 +3,9 @@
   "main": "./cloudflare-pdfkit-probe-worker.mjs",
   "compatibility_date": "2026-09-07",
   "compatibility_flags": ["nodejs_compat"],
+  "define": {
+    "import.meta.url": "\"file:///legendmural-cloudflare-pdfkit-runtime.mjs\""
+  },
   "alias": {
     "pdfkit": "../../cloudflare/pdfkit-worker-runtime.mjs"
   }
