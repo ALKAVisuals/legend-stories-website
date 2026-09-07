@@ -6,11 +6,12 @@ import path from 'node:path';
 const ROOT = process.cwd();
 const STALE_EMAIL = 'info@alkavisuals.nl';
 const CUSTOMER_EMAIL = 'info@legendmural.com';
-const REQUIRED_PUBLIC_PAGES = [
+const REQUIRED_CUSTOMER_CONTACT_SOURCES = [
   'company.html',
   'terms.html',
   'privacy.html',
   'returns.html',
+  'js/withdrawal.js',
 ];
 const CUSTOMER_FACING_PREFIXES = [
   'js/',
@@ -55,8 +56,8 @@ test('committed customer-facing runtime source never exposes the stale ALKA Visu
   );
 });
 
-test('canonical customer/legal pages expose the approved LegendMural email', () => {
-  for (const relative of REQUIRED_PUBLIC_PAGES) {
+test('canonical customer contact surfaces expose the approved LegendMural email', () => {
+  for (const relative of REQUIRED_CUSTOMER_CONTACT_SOURCES) {
     const source = readCommittedFile(relative).toLowerCase();
     assert.ok(source.includes(CUSTOMER_EMAIL), `${relative} must expose ${CUSTOMER_EMAIL}.`);
   }
