@@ -79,7 +79,7 @@ docs/CLOUDFLARE_ENVIRONMENT_AND_SECRET_MAP.md
 docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md
 ```
 
-`.gitignore` now excludes local Cloudflare/env secret files and Wrangler state while allowing explicit example files.
+`.gitignore` excludes local Cloudflare/env secret files and Wrangler state while allowing explicit example files.
 
 ### Implemented behavior
 
@@ -100,7 +100,7 @@ docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md
 
 ## CI proof completed so far
 
-Cloudflare migration compatibility run #1 on implementation head `bd73f6890069aa265b8d328426013b306f96e81a` completed successfully, including:
+Cloudflare migration compatibility has proven on the migration branch:
 
 ```text
 Cloudflare routing/isolation/R2 tests: SUCCESS
@@ -112,9 +112,7 @@ Wrangler production env deploy --dry-run bundle: SUCCESS
 
 The workflow uses no Cloudflare Production deployment and no Production credentials.
 
-On the later exact head, Cloudflare migration compatibility and Accessibility also reran successfully. Quality and Mobile WebKit are being rechecked as part of the current PR evidence cycle.
-
-Before final merge, the exact final head must have all required checks green after any rebase/update from `main`.
+Accessibility also reran successfully on the migration branch. Quality and Mobile WebKit remain part of the current evidence cycle and must be green on the exact final head before merge.
 
 ## Remaining migration work
 
@@ -122,7 +120,7 @@ Repository-side:
 
 1. complete all existing CI regression checks on the current exact head;
 2. review/fix any failures;
-3. add any compatibility fixes revealed by real Worker runtime proof;
+3. add compatibility fixes only if real Worker runtime proof reveals a gap;
 4. synchronize dashboard PR #63 with exact implementation evidence;
 5. fresh-check/rebase against `main` immediately before final CI and merge approval.
 
