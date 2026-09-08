@@ -16,6 +16,11 @@ function productionContext(env) {
   return String(env?.LEGENDMURAL_DEPLOY_CONTEXT || '').trim().toLowerCase() === 'production';
 }
 
+function hasServiceToken(value) {
+  const token = String(value ?? '');
+  return token.length >= 32 && token.length <= 512 && !/[\u0000-\u001f\u007f]/.test(token);
+}
+
 function jsonResponse(status, payload, extraHeaders = {}) {
   return new Response(JSON.stringify(payload), {
     status,
@@ -242,9 +247,10 @@ export async function handleActiveInvoice(request, env) {
   }
 
   try {
-    const [artifactModule, identityModule, r2Module] = await Promise.all([
+    const [artifactModule, identityModule, auditModule, r2Module] = await Promise.all([
       import('../server/adapters/neon-v3-invoice-artifact-store.mjs'),
       import('../server/adapters/neon-v3-invoice-download-source.mjs'),
+      import('../server/adapters/neon-v3-invoice-access-audit-store.mjs'),
       import('../server/adapters/cloudflare-r2-v3-invoice-pdf-store.mjs'),
     ]);
     const orderStore = getCloudflareCommerceOrderStore({ env });
@@ -254,11 +260,15 @@ export async function handleActiveInvoice(request, env) {
     const identitySource = identityModule.createNeonV3InvoiceDownloadSource({
       connectionString: env.NEON_DATABASE_URL,
     });
+    const auditStore = auditModule.createNeonV3InvoiceAccessAuditStore({
+      connectionString: env.NEON_DATABASE_URL,
+    });
     const pdfStore = r2Module.createCloudflareR2V3InvoicePdfStore({ env });
     return await handleInvoiceDownload(request, {
       orderStore,
       identitySource,
       artifactStore,
+      auditStore,
       pdfStore,
       storageEnabled: env.V3_INVOICE_STORAGE_ENABLED,
       allowedOrigins: env.CHECKOUT_ALLOWED_ORIGINS || '',
@@ -270,7 +280,8 @@ export async function handleActiveInvoice(request, env) {
       'Invoice download is not configured.',
     );
     if (configured) return configured;
-    if (String(error?.code || '').startsWith('V3_INVOICE_STORAGE_')) {
+    const errorCode = String(error?.code || '');
+    if (errorCode.startsWith('V3_INVOICE_STORAGE_') || errorCode.startsWith('V3_INVOICE_AUDIT_')) {
       return storageConfigurationResponse();
     }
     console.error('Unexpected Cloudflare invoice-download bootstrap error.', {
@@ -288,11 +299,19 @@ export async function handleActiveDashboardInvoice(request, env) {
   const { handleDashboardInvoiceAccess } = await import('../server/api/dashboard-invoice-access.mjs');
   const serviceToken = env.LEGENDMURAL_DASHBOARD_INVOICE_TOKEN;
   const apiEnabled = enabled(env.V3_DASHBOARD_INVOICE_API_ENABLED) && productionContext(env);
+  if (!apiEnabled || !hasServiceToken(serviceToken)) {
+    return handleDashboardInvoiceAccess(request, {
+      apiEnabled,
+      serviceToken,
+      storageEnabled: env.V3_INVOICE_STORAGE_ENABLED,
+    });
+  }
 
   try {
-    const [invoiceModule, artifactModule, r2Module] = await Promise.all([
+    const [invoiceModule, artifactModule, auditModule, r2Module] = await Promise.all([
       import('../server/adapters/neon-v3-dashboard-invoice-source.mjs'),
       import('../server/adapters/neon-v3-invoice-artifact-store.mjs'),
+      import('../server/adapters/neon-v3-invoice-access-audit-store.mjs'),
       import('../server/adapters/cloudflare-r2-v3-invoice-pdf-store.mjs'),
     ]);
     const invoiceSource = invoiceModule.createNeonV3DashboardInvoiceSource({
@@ -301,7 +320,11 @@ export async function handleActiveDashboardInvoice(request, env) {
     const artifactStore = artifactModule.createNeonV3InvoiceArtifactStore({
       connectionString: env.NEON_DATABASE_URL,
     });
-    const pdfStore = enabled(env.V3_INVOICE_STORAGE_ENABLED)
+    const storageEnabled = enabled(env.V3_INVOICE_STORAGE_ENABLED);
+    const auditStore = storageEnabled
+      ? auditModule.createNeonV3InvoiceAccessAuditStore({ connectionString: env.NEON_DATABASE_URL })
+      : null;
+    const pdfStore = storageEnabled
       ? r2Module.createCloudflareR2V3InvoicePdfStore({ env })
       : null;
     return await handleDashboardInvoiceAccess(request, {
@@ -310,6 +333,7 @@ export async function handleActiveDashboardInvoice(request, env) {
       storageEnabled: env.V3_INVOICE_STORAGE_ENABLED,
       invoiceSource,
       artifactStore,
+      auditStore,
       pdfStore,
     });
   } catch (error) {
@@ -319,7 +343,8 @@ export async function handleActiveDashboardInvoice(request, env) {
       'Dashboard invoice API is not configured.',
     );
     if (configured) return configured;
-    if (String(error?.code || '').startsWith('V3_INVOICE_STORAGE_')) {
+    const errorCode = String(error?.code || '');
+    if (errorCode.startsWith('V3_INVOICE_STORAGE_') || errorCode.startsWith('V3_INVOICE_AUDIT_')) {
       return jsonResponse(503, {
         error: {
           code: 'DASHBOARD_INVOICE_API_NOT_CONFIGURED',
