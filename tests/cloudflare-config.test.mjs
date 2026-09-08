@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
+
+import { writeCloudflareCommerceRuntimeConfig } from '../scripts/generate-cloudflare-commerce-runtime-config.mjs';
 
 const configUrl = new URL('../wrangler.jsonc', import.meta.url);
 const pdfKitProbeConfigUrl = new URL('./fixtures/wrangler.pdfkit-probe.jsonc', import.meta.url);
@@ -54,6 +58,35 @@ test('Wrangler uses Worker + Static Assets with worker-first API routing only', 
   assert.equal(value.assets.binding, 'ASSETS');
   assert.deepEqual(value.assets.run_worker_first, ['/api/*']);
   assertPdfKitWorkerBoundary(value);
+});
+
+test('Wrangler deploy generates the public same-origin browser commerce runtime config', async () => {
+  const value = await config();
+  assert.equal(
+    value.build?.command,
+    'node scripts/generate-cloudflare-commerce-runtime-config.mjs',
+  );
+
+  const directory = await mkdtemp(join(tmpdir(), 'legendmural-cloudflare-runtime-config-'));
+  const targetPath = join(directory, 'runtime-config.mjs');
+
+  try {
+    const generated = await writeCloudflareCommerceRuntimeConfig({ targetPath });
+    const source = await readFile(targetPath, 'utf8');
+
+    assert.deepEqual(generated, {
+      hostedCheckoutEndpoint: '/api/paypal/checkout',
+      orderStatusEndpoint: '/api/order-status',
+      paypalCaptureEndpoint: '/api/paypal/capture',
+    });
+    assert.match(source, /hostedCheckoutEndpoint.*\/api\/paypal\/checkout/s);
+    assert.match(source, /orderStatusEndpoint.*\/api\/order-status/s);
+    assert.match(source, /paypalCaptureEndpoint.*\/api\/paypal\/capture/s);
+    assert.doesNotMatch(source, /NEON_DATABASE_URL|PAYPAL_CLIENT_SECRET|PAYPAL_WEBHOOK_ID/);
+    assert.doesNotMatch(source, /https?:\/\//);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test('preview environment is isolated, fail-closed and has no scheduled reconciliation', async () => {
