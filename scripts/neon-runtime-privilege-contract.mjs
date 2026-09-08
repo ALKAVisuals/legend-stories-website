@@ -20,6 +20,7 @@ export const EXPECTED_TABLE_PRIVILEGES = Object.freeze({
   order_notifications: Object.freeze(['SELECT', 'INSERT', 'UPDATE']),
   invoices: Object.freeze(['SELECT', 'INSERT']),
   document_number_series: Object.freeze(['SELECT', 'INSERT']),
+  invoice_access_audit: Object.freeze(['INSERT']),
 });
 
 export const EXPECTED_UPDATE_COLUMNS = Object.freeze({
