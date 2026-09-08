@@ -27,5 +27,5 @@ test('stale launch-readiness and Google Places wording cannot return', () => {
   assert.doesNotMatch(privacy, /definitive production retention schedule/i);
   assert.doesNotMatch(privacy, /Production sending remains disabled/i);
   assert.doesNotMatch(privacy, /server-side API key/i);
-  assert.match(privacy, /Last updated: 3 September 2026\./);
+  assert.match(privacy, /Last updated: 7 September 2026\./);
 });
