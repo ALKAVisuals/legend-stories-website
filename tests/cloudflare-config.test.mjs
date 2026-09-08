@@ -5,6 +5,7 @@ import test from 'node:test';
 const configUrl = new URL('../wrangler.jsonc', import.meta.url);
 const pdfKitProbeConfigUrl = new URL('./fixtures/wrangler.pdfkit-probe.jsonc', import.meta.url);
 const workerPdfKitRuntimeUrl = new URL('../cloudflare/pdfkit-worker-runtime.mjs', import.meta.url);
+const apiRuntimeUrl = new URL('../cloudflare/api-runtime.mjs', import.meta.url);
 const PDFKIT_WORKER_IMPORT_META_URL = '"file:///legendmural-cloudflare-pdfkit-runtime.mjs"';
 const SENSITIVE_BINDING_NAMES = Object.freeze([
   'NEON_DATABASE_URL',
@@ -100,6 +101,17 @@ test('Netlify production context is not used as Cloudflare deployment truth', as
   assert.equal(Object.hasOwn(value.env.production.vars, 'CONTEXT'), false);
   assert.equal(value.vars.LEGENDMURAL_DEPLOY_CONTEXT, 'preview');
   assert.equal(value.env.production.vars.LEGENDMURAL_DEPLOY_CONTEXT, 'production');
+});
+
+test('Cloudflare invoice download composition preserves durable access audit logging', async () => {
+  const source = await readFile(apiRuntimeUrl, 'utf8');
+  const auditImports = source.match(/neon-v3-invoice-access-audit-store\.mjs/g) || [];
+  const auditFactories = source.match(/createNeonV3InvoiceAccessAuditStore/g) || [];
+  assert.equal(auditImports.length, 2);
+  assert.equal(auditFactories.length, 2);
+  assert.match(source, /auditStore,/);
+  assert.match(source, /V3_INVOICE_AUDIT_/);
+  assert.match(source, /!apiEnabled \|\| !hasServiceToken\(serviceToken\)/);
 });
 
 test('PDFKit workerd probe aliases the browser ESM runtime and stabilizes import.meta.url', async () => {
