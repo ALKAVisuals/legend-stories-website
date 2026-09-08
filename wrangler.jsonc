@@ -9,6 +9,9 @@
   "alias": {
     "pdfkit": "./cloudflare/pdfkit-worker-runtime.mjs"
   },
+  "build": {
+    "command": "node scripts/generate-cloudflare-commerce-runtime-config.mjs"
+  },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
