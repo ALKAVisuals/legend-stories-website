@@ -1,0 +1,157 @@
+name: Cloudflare preview account proof
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/cloudflare-preview-account-proof.yml'
+      - 'wrangler.jsonc'
+      - 'scripts/verify-cloudflare-remote-preview.mjs'
+      - 'tests/cloudflare-preview-account-workflow.test.mjs'
+  workflow_dispatch:
+    inputs:
+      confirm_phrase:
+        description: 'Type PREVIEW_ONLY to authorize non-production Cloudflare provisioning/deploy.'
+        required: true
+        type: string
+      provision_preview_r2:
+        description: 'Ensure the private preview R2 bucket exists.'
+        required: true
+        default: true
+        type: boolean
+      deploy_preview_worker:
+        description: 'Deploy the fail-closed workers.dev preview Worker.'
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-preview-account-proof
+  cancel-in-progress: false
+
+jobs:
+  policy:
+    name: Preview-only policy gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Validate preview workflow policy
+        run: node --test tests/cloudflare-preview-account-workflow.test.mjs
+
+  preview-account:
+    name: Provision and prove Cloudflare preview
+    if: github.event_name == 'workflow_dispatch'
+    needs: policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PREVIEW_R2_BUCKET: legendmural-v3-invoice-pdfs-preview
+
+    steps:
+      - name: Require explicit preview-only confirmation
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ '${{ inputs.confirm_phrase }}' != 'PREVIEW_ONLY' ]; then
+            echo '::error::Refusing to run: confirm_phrase must equal PREVIEW_ONLY.'
+            exit 1
+          fi
+
+      - name: Require Cloudflare CI credentials without printing them
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo '::error::Missing GitHub secret CLOUDFLARE_ACCOUNT_ID.'
+            exit 1
+          fi
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo '::error::Missing GitHub secret CLOUDFLARE_API_TOKEN.'
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install exact application dependencies
+        run: npm ci
+
+      - name: Re-prove preview-only policy before account access
+        run: node --test tests/cloudflare-preview-account-workflow.test.mjs tests/cloudflare-config.test.mjs
+
+      - name: Build storefront static assets
+        run: npm run build
+
+      - name: Verify Cloudflare authentication
+        run: npx --yes wrangler@4.129.0 whoami
+
+      - name: Ensure private preview R2 bucket exists
+        if: inputs.provision_preview_r2
+        shell: bash
+        run: |
+          set -euo pipefail
+          if npx --yes wrangler@4.129.0 r2 bucket info "${PREVIEW_R2_BUCKET}" --json >/tmp/legendmural-preview-r2.json 2>/tmp/legendmural-preview-r2.err; then
+            echo "Preview R2 bucket already exists: ${PREVIEW_R2_BUCKET}"
+          else
+            echo "Creating preview-only R2 bucket: ${PREVIEW_R2_BUCKET}"
+            npx --yes wrangler@4.129.0 r2 bucket create "${PREVIEW_R2_BUCKET}"
+            npx --yes wrangler@4.129.0 r2 bucket info "${PREVIEW_R2_BUCKET}" --json >/tmp/legendmural-preview-r2.json
+          fi
+
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { readFile } from 'node:fs/promises';
+          const info = JSON.parse(await readFile('/tmp/legendmural-preview-r2.json', 'utf8'));
+          assert.equal(info.name, process.env.PREVIEW_R2_BUCKET);
+          console.log(`[preview-r2] confirmed ${info.name}`);
+          NODE
+
+      - name: Deploy fail-closed workers.dev preview
+        if: inputs.deploy_preview_worker
+        id: deploy
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4.129.0'
+          command: deploy
+
+      - name: Verify deployed preview remains fail-closed
+        if: inputs.deploy_preview_worker
+        env:
+          LEGENDMURAL_PREVIEW_ORIGIN: ${{ steps.deploy.outputs.deployment-url }}
+        run: node scripts/verify-cloudflare-remote-preview.mjs
+
+      - name: Record non-production proof summary
+        if: always()
+        shell: bash
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: |
+          {
+            echo '## LegendMural Cloudflare preview account proof'
+            echo
+            echo '- Environment: preview only'
+            echo '- Production env flag: not used'
+            echo '- Production DNS/custom domain: not touched'
+            echo '- Production R2 bucket: not touched'
+            echo '- Neon/PayPal/Resend secrets: not used in B1'
+            if [ -n "${DEPLOYMENT_URL:-}" ]; then
+              echo "- Preview URL: ${DEPLOYMENT_URL}"
+            fi
+          } >> "${GITHUB_STEP_SUMMARY}"
