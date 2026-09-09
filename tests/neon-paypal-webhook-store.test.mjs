@@ -87,7 +87,7 @@ test('duplicate event is acknowledged without a second order mutation', async ()
     { match: /^BEGIN ISOLATION LEVEL SERIALIZABLE$/ },
     { match: /^SELECT \* FROM legend_commerce\.orders/, result: { rows: [paid] } },
     { match: /^INSERT INTO legend_commerce\.paypal_webhook_events/, result: { rows: [] } },
-    { match: /^SELECT event_id, event_type, order_reference/, result: { rows: [{
+    { match: /^SELECT event_id, event_type, order_reference, paypal_order_id, paypal_capture_id, mode, paypal_created_at FROM legend_commerce\.paypal_webhook_events WHERE event_id = \$1$/, result: { rows: [{
       event_id: 'WH-EVENT-1', event_type: 'PAYMENT.CAPTURE.COMPLETED', order_reference: reference,
       paypal_order_id: orderId, paypal_capture_id: '3Y662965014333303', mode: 'test', paypal_created_at: 1_800_000_100,
     }] } },
@@ -100,6 +100,7 @@ test('duplicate event is acknowledged without a second order mutation', async ()
   const result = await store.processPaypalWebhookEvent(event());
   assert.equal(result.duplicate, true);
   assert.equal(result.order.status, 'paid');
+  assert.equal(result.order.version, 1);
   assert.equal(steps.length, 0);
 });
 
