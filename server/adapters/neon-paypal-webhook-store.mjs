@@ -219,7 +219,6 @@ const SELECT_PAYPAL_EVENT = `
          paypal_capture_id, mode, paypal_created_at
   FROM legend_commerce.paypal_webhook_events
   WHERE event_id = $1
-  FOR SHARE
 `;
 
 const UPDATE_ORDER_STATUS = `
