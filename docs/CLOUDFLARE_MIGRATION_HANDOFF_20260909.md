@@ -228,7 +228,7 @@ PR #237 removed the unsupported nested `env.production.alias`, retained the cano
 ## Section C public DNS inventory — PASSED / Netlify account routing proof — PASSED / complete DNS zone still OPEN
 
 Dedicated public DNS evidence: `docs/CLOUDFLARE_DNS_INVENTORY_PROOF_20260910.md`.
-Dedicated Netlify routing evidence: `docs/CLOUDFLARE_NETLIFY_ACCOUNT_ROUTING_PROOF_20260910.md`.
+Dedicated Netlify routing evidence: `docs/NETLIFY_ACCOUNT_READONLY_INVENTORY_PROOF_20260910.md`.
 
 Latest successful public DNS proof:
 
@@ -361,7 +361,7 @@ After the full zone and a working rollback path are proven and committed through
 1. Read `docs/READ_ME_FIRST.md`.
 2. Read this file.
 3. Read `docs/CLOUDFLARE_DNS_INVENTORY_PROOF_20260910.md`.
-4. Read `docs/CLOUDFLARE_NETLIFY_ACCOUNT_ROUTING_PROOF_20260910.md`.
+4. Read `docs/NETLIFY_ACCOUNT_READONLY_INVENTORY_PROOF_20260910.md`.
 5. Read `docs/CLOUDFLARE_STAGE_C_ZERO_SECRET_DECISION_20260910.md`.
 6. Read `docs/CLOUDFLARE_PRODUCTION_WORKER_BOOTSTRAP_PROOF_20260910.md`.
 7. Read `docs/CLOUDFLARE_PRODUCTION_R2_PROVISION_PROOF_20260910.md`.
