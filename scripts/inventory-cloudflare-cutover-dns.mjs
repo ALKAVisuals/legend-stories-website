@@ -1,9 +1,11 @@
 const DOMAIN = 'legendmural.com';
 const DNS_ENDPOINT = 'https://dns.google/resolve';
-const CT_ENDPOINT = `https://crt.sh/?q=%25.${DOMAIN}&output=json`;
+const CRT_SH_ENDPOINT = `https://crt.sh/?q=%25.${DOMAIN}&output=json`;
+const CERTSPOTTER_ENDPOINT = `https://api.certspotter.com/v1/issuances?domain=${DOMAIN}&include_subdomains=true&expand=dns_names`;
 
 const CORE_QUERIES = Object.freeze([
   ['apex_ns', DOMAIN, 'NS'],
+  ['apex_cname', DOMAIN, 'CNAME'],
   ['apex_a', DOMAIN, 'A'],
   ['apex_aaaa', DOMAIN, 'AAAA'],
   ['apex_mx', DOMAIN, 'MX'],
@@ -71,31 +73,92 @@ function normalizeCertificateName(value) {
   return '';
 }
 
-async function discoverCertificateNames() {
+function normalizedCertificateNames(values = []) {
+  const names = new Set();
+  for (const value of values) {
+    const normalized = normalizeCertificateName(value);
+    if (normalized) names.add(normalized);
+  }
+  return [...names].sort();
+}
+
+async function discoverFromCrtSh() {
   try {
-    const response = await fetch(CT_ENDPOINT, {
+    const response = await fetch(CRT_SH_ENDPOINT, {
       headers: { Accept: 'application/json' },
     });
     if (!response.ok) {
-      return { ok: false, status: response.status, names: [] };
+      return { provider: 'crt.sh', ok: false, status: response.status, names: [] };
     }
     const rows = await response.json();
-    const names = new Set([DOMAIN, `www.${DOMAIN}`]);
+    const candidates = [];
     for (const row of Array.isArray(rows) ? rows : []) {
-      for (const candidate of String(row?.name_value || '').split('\n')) {
-        const normalized = normalizeCertificateName(candidate);
-        if (normalized) names.add(normalized);
-      }
+      candidates.push(...String(row?.name_value || '').split('\n'));
     }
-    return { ok: true, status: response.status, names: [...names].sort() };
+    return {
+      provider: 'crt.sh',
+      ok: true,
+      status: response.status,
+      names: normalizedCertificateNames(candidates),
+    };
   } catch (error) {
     return {
+      provider: 'crt.sh',
       ok: false,
       status: 0,
       names: [],
       error: String(error?.message || error).slice(0, 180),
     };
   }
+}
+
+async function discoverFromCertSpotter() {
+  try {
+    const response = await fetch(CERTSPOTTER_ENDPOINT, {
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) {
+      return { provider: 'certspotter', ok: false, status: response.status, names: [] };
+    }
+    const rows = await response.json();
+    const candidates = [];
+    for (const row of Array.isArray(rows) ? rows : []) {
+      if (Array.isArray(row?.dns_names)) candidates.push(...row.dns_names);
+    }
+    return {
+      provider: 'certspotter',
+      ok: true,
+      status: response.status,
+      names: normalizedCertificateNames(candidates),
+    };
+  } catch (error) {
+    return {
+      provider: 'certspotter',
+      ok: false,
+      status: 0,
+      names: [],
+      error: String(error?.message || error).slice(0, 180),
+    };
+  }
+}
+
+async function discoverCertificateNames() {
+  const [crtSh, certSpotter] = await Promise.all([
+    discoverFromCrtSh(),
+    discoverFromCertSpotter(),
+  ]);
+  const names = new Set([DOMAIN, `www.${DOMAIN}`]);
+  for (const source of [crtSh, certSpotter]) {
+    for (const name of source.names || []) names.add(name);
+  }
+  return {
+    ok: crtSh.ok || certSpotter.ok,
+    names: [...names].sort(),
+    providers: {
+      crtSh,
+      certSpotter,
+    },
+  };
 }
 
 async function inventoryCertificateNames(names) {
@@ -198,6 +261,7 @@ async function main() {
     https,
     limitations: [
       'Public DNS and certificate transparency cannot prove every private or unlisted subdomain.',
+      'Certificate-transparency providers are best-effort external sources; provider errors are recorded rather than treated as DNS truth.',
       'Public HTTP/DNS evidence cannot prove the internal Netlify dashboard domain-assignment state.',
       'No DNS, hosting, provider, secret, Worker, R2 or application mutation is performed by this script.',
     ],
