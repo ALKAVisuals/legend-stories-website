@@ -41,6 +41,8 @@
   "env": {
     "production": {
       "name": "legendmural-cloudflare-production",
+      "workers_dev": false,
+      "preview_urls": false,
       "define": {
         "import.meta.url": "\"file:///legendmural-cloudflare-pdfkit-runtime.mjs\""
       },
