@@ -46,9 +46,6 @@
       "define": {
         "import.meta.url": "\"file:///legendmural-cloudflare-pdfkit-runtime.mjs\""
       },
-      "alias": {
-        "pdfkit": "./cloudflare/pdfkit-worker-runtime.mjs"
-      },
       "triggers": {
         "crons": ["*/5 * * * *"]
       },
