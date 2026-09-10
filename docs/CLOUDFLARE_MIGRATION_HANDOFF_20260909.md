@@ -3,7 +3,7 @@
 **Last updated:** 2026-09-10  
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Migration scope:** Netlify -> Cloudflare for the public LegendMural storefront only  
-**Base `main` verified for this handoff update:** `422b98c32e55f2c23e204c607924cc6bd0e90eb8`
+**Base `main` verified for this handoff update:** `ddc8646ab2e1a9b887c94a0542a13dbc2e49af2d`
 
 > This is the canonical continuation document for the active Cloudflare migration. Always fresh-check current `main` before taking an action. GitHub is the source of truth.
 
@@ -19,13 +19,19 @@
 
 ## Current checkpoint
 
-The Cloudflare preview/runtime side is substantially proven and remains fail-closed. Production account inventory has also been completed, and the first inert Production resource has now been provisioned safely.
+Cloudflare preview/runtime proofs are substantially complete. The private Production R2 bucket exists and the distinct Production Worker has now been created in a deliberately fail-closed, non-public state.
 
 Current Production state:
 
 ```text
 Production Worker: legendmural-cloudflare-production
-exists: false
+exists: true
+Worker version ID: 5d05b26d-4179-4ab0-a7b3-35cb990de854
+workers.dev exposure: disabled by repository Production config
+preview URL exposure: disabled by repository Production config
+custom domain / DNS attachment: none
+fail-closed flags proven remotely: true
+Production application secret names present: none
 
 Production R2 bucket: legendmural-v3-invoice-pdfs-prod
 exists: true
@@ -35,12 +41,16 @@ public exposure detected: false
 objects written: none
 ```
 
-No Production Worker, secrets, DNS, PayPal Live, Resend Production or live V3 feature has been activated.
-
-The preview defaults remain fail-closed:
+The Worker has the exact private R2 binding:
 
 ```text
-LEGENDMURAL_DEPLOY_CONTEXT=preview
+V3_INVOICE_PDFS -> legendmural-v3-invoice-pdfs-prod
+```
+
+All live/commerce/V3 switches remain OFF:
+
+```text
+LEGENDMURAL_DEPLOY_CONTEXT=production
 LEGENDMURAL_CHECKOUT_PAUSED=true
 PAYPAL_ALLOW_LIVE=false
 ORDER_EMAILS_ENABLED=false
@@ -49,6 +59,8 @@ V3_INVOICE_RECONCILIATION_ENABLED=false
 V3_INVOICE_STORAGE_ENABLED=false
 V3_DASHBOARD_INVOICE_API_ENABLED=false
 ```
+
+`legendmural.com` has not been cut over. Netlify Production remains the active rollback/current-host target.
 
 ## Important merged checkpoints
 
@@ -68,6 +80,8 @@ V3_DASHBOARD_INVOICE_API_ENABLED=false
 | #231 | Add Cloudflare Production read-only inventory | `30f5dba3ad2a8ad7b7966b5903dd0dc4d4d8e28f` |
 | #232 | Record Production inventory proof | `5a9f5bff1206b0b240140e28b85403b37ff75cbb` |
 | #233 | Add guarded Production R2 bootstrap | `422b98c32e55f2c23e204c607924cc6bd0e90eb8` |
+| #234 | Record Production R2 provisioning proof | `6fc7eb414274685f8102b2268d4614556d5b11e0` |
+| #235 | Add guarded fail-closed Production Worker bootstrap | `ddc8646ab2e1a9b887c94a0542a13dbc2e49af2d` |
 
 ## Preview proof anchors
 
@@ -82,7 +96,7 @@ Worker version ID: 411070c2-5250-480c-85df-2c22e6260d3b
 Result: success
 ```
 
-The separate Cloudflare direct Git/Workers Builds integration is disconnected. The canonical preview deploy route is the repository's manually dispatched GitHub Actions workflow `Cloudflare preview account proof` with exact `PREVIEW_ONLY` confirmation.
+The direct Cloudflare Git/Workers Builds integration remains disconnected. Canonical preview deploys use the repository's manually dispatched GitHub Actions workflow.
 
 ### PayPal Sandbox / isolated Neon
 
@@ -109,7 +123,7 @@ Amount: 45.45 EUR
 Result: duplicate resend delivered; isolated Neon stayed paid/version 1 with one canonical ledger row
 ```
 
-After the proof, preview checkout was restored to `LEGENDMURAL_CHECKOUT_PAUSED=true` and a direct request returned `503 CHECKOUT_PAUSED`.
+Preview checkout was restored to `LEGENDMURAL_CHECKOUT_PAUSED=true` after the proof.
 
 ### Actual Worker PDFKit + preview R2
 
@@ -142,23 +156,7 @@ GET /api/invoice-download               -> 405 METHOD_NOT_ALLOWED
 GET /api/internal/dashboard-invoice     -> 405 METHOD_NOT_ALLOWED
 ```
 
-All six routes reached the canonical preview Worker through GET-only probes with no provider mutation.
-
-## Production read-only inventory — PASSED
-
-Dedicated evidence: `docs/CLOUDFLARE_PRODUCTION_READONLY_INVENTORY_PROOF_20260910.md`.
-
-```text
-Workflow: Cloudflare Production read-only inventory
-Run number: 2
-Run ID: 34473528687
-Head SHA: 30f5dba3ad2a8ad7b7966b5903dd0dc4d4d8e28f
-Result: success
-```
-
-At that point both the expected Production Worker and Production R2 bucket were absent. The inventory used Cloudflare GET requests only and changed nothing.
-
-## Production R2 provisioning — PASSED 2026-09-10
+## Production R2 provisioning — PASSED
 
 Dedicated evidence: `docs/CLOUDFLARE_PRODUCTION_R2_PROVISION_PROOF_20260910.md`.
 
@@ -167,28 +165,42 @@ Workflow: Cloudflare Production R2 bootstrap
 Run number: 2
 Run ID: 34475333977
 Head SHA: 422b98c32e55f2c23e204c607924cc6bd0e90eb8
-Branch: main
-Event: workflow_dispatch
 Result: success
-Confirmation: CREATE_PRODUCTION_R2_BUCKET_ONLY
-```
-
-Exact account result:
-
-```text
 Bucket: legendmural-v3-invoice-pdfs-prod
-Action: created
-Bucket exists: true
 r2.dev public access enabled: false
 Enabled custom domains: none
 Public exposure detected: false
 R2 object writes: none
-Worker deploy: none
-DNS changes: none
-Cloudflare secret changes: none
 ```
 
-This closes the Production R2 existence/private-exposure gate. The bucket is inert: it contains no Production object and no live feature is enabled merely because the bucket exists.
+## Production Worker bootstrap — PASSED
+
+Dedicated evidence: `docs/CLOUDFLARE_PRODUCTION_WORKER_BOOTSTRAP_PROOF_20260910.md`.
+
+```text
+Workflow: Cloudflare Production Worker bootstrap
+Run number: 2
+Run ID: 34478408523
+Head SHA: ddc8646ab2e1a9b887c94a0542a13dbc2e49af2d
+Result: success
+Worker: legendmural-cloudflare-production
+Worker version ID: 5d05b26d-4179-4ab0-a7b3-35cb990de854
+failClosedFlagsProven: true
+Production application secret names present: none
+R2 public exposure detected: false
+```
+
+The five-minute schedule was deployed, but reconciliation remains a no-op while `V3_INVOICE_RECONCILIATION_ENABLED=false` and `ORDER_EMAILS_ENABLED=false`.
+
+### Open Wrangler warning
+
+Both the Production dry-run and real deploy emitted:
+
+```text
+Unexpected fields found in env.production field: "alias"
+```
+
+The Worker deployment and startup succeeded and the post-deploy safety verifier passed, but the nested Production `alias` field must not be considered supported/proven. Resolve this repository-side before DNS/custom-domain cutover.
 
 ## Section B status now
 
@@ -201,54 +213,40 @@ This closes the Production R2 existence/private-exposure gate. The bucket is ine
 - all six intended API routes;
 - PayPal Sandbox create/capture/webhook path;
 - isolated Neon paid persistence and duplicate idempotency;
-- actual Worker PDFKit runtime;
+- actual Worker PDFKit runtime in preview proof;
 - preview checkout restored fail-closed;
 - Production account inventory;
-- Production R2 bucket existence;
-- Production R2 has no `r2.dev` or custom-domain exposure;
-- no Production R2 object has been written.
+- private Production R2 bucket existence;
+- distinct Production Worker existence;
+- Production Worker remote fail-closed flags;
+- Production R2 binding on the Worker;
+- zero Production application secrets currently present;
+- no Production R2 object has been written;
+- no DNS/custom-domain cutover performed.
 
-### Still open on Production side
+### Still open before cutover
 
-- prepare and then separately approve creation/deployment of distinct `legendmural-cloudflare-production`;
-- ensure the first Production Worker state is fail-closed;
-- verify its static assets/API routing in Production Worker context without domain cutover;
-- bind `V3_INVOICE_PDFS` to `legendmural-v3-invoice-pdfs-prod` while storage activation remains OFF;
-- verify all non-secret safety flags remotely;
-- configure only required Production secret names through Cloudflare secret storage under separately approved steps;
-- re-run read-only account verification after setup;
+- clean up and prove the Wrangler `env.production.alias` compatibility issue;
+- re-run Production dry-run with no alias warning;
+- then determine/configure only the Production secrets actually required for the Stage C runtime, through Cloudflare secret storage and under separate exact approval;
+- re-run read-only account verification after any secret/setup step;
 - perform DNS inventory immediately before any later cutover;
 - obtain separate explicit owner approval for the actual domain/runtime cutover.
 
 ## Exact next step
 
-Do **not** deploy a Production Worker yet and do **not** cut over `legendmural.com`.
+Do **not** change DNS, custom domains, Production secrets or live feature flags yet.
 
-The next step is repository-only preparation of a tightly guarded **fail-closed Production Worker bootstrap** on a task branch. Inspect the existing Production Wrangler/dry-run configuration and prepare the smallest workflow/config change needed to create/deploy exactly `legendmural-cloudflare-production` with no DNS/custom-domain change and with all live features OFF.
+The next step is repository-only compatibility cleanup:
 
-Preparation/CI must prove at minimum that the intended first Production Worker configuration uses:
+1. inspect Wrangler environment inheritance/support for `alias`;
+2. remove or relocate the unsupported nested `env.production.alias` declaration if appropriate while preserving the canonical top-level PDFKit alias;
+3. update `tests/cloudflare-config.test.mjs` so the intended alias contract is explicit;
+4. run the Cloudflare compatibility suite and `wrangler deploy --env production --dry-run`;
+5. require that the Production dry-run no longer reports `Unexpected fields found in env.production field: "alias"`;
+6. stop before any Production redeploy and request exact owner approval if a redeploy is needed.
 
-```text
-LEGENDMURAL_DEPLOY_CONTEXT=production
-LEGENDMURAL_CHECKOUT_PAUSED=true
-PAYPAL_ALLOW_LIVE=false
-ORDER_EMAILS_ENABLED=false
-V3_PROFILE1_ORDER_CREATION_ENABLED=false
-V3_INVOICE_RECONCILIATION_ENABLED=false
-V3_INVOICE_STORAGE_ENABLED=false
-V3_DASHBOARD_INVOICE_API_ENABLED=false
-```
-
-The production R2 binding may target:
-
-```text
-binding: V3_INVOICE_PDFS
-bucket: legendmural-v3-invoice-pdfs-prod
-```
-
-but `V3_INVOICE_STORAGE_ENABLED` must remain `false`.
-
-The PR itself must not deploy or create the Production Worker. After CI and a fresh review, stop and request explicit owner approval before merging. After merge, request a **separate exact owner approval** before manually running any workflow that creates/deploys the Production Worker.
+No Production mutation is required for this repository-only cleanup/proof.
 
 ## What must not be changed without a new exact approval
 
@@ -256,7 +254,7 @@ The PR itself must not deploy or create the Production Worker. After CI and a fr
 - Netlify Production;
 - PayPal Live;
 - Resend Production activation;
-- Production Worker creation/deployment;
+- Production Worker redeployment;
 - Production secrets;
 - Production R2 object writes;
 - Production Neon credentials/data;
@@ -269,13 +267,13 @@ The PR itself must not deploy or create the Production Worker. After CI and a fr
 
 1. Read `docs/READ_ME_FIRST.md`.
 2. Read this file.
-3. Read `docs/CLOUDFLARE_PRODUCTION_R2_PROVISION_PROOF_20260910.md`.
-4. Read `docs/CLOUDFLARE_PRODUCTION_READONLY_INVENTORY_PROOF_20260910.md`.
+3. Read `docs/CLOUDFLARE_PRODUCTION_WORKER_BOOTSTRAP_PROOF_20260910.md`.
+4. Read `docs/CLOUDFLARE_PRODUCTION_R2_PROVISION_PROOF_20260910.md`.
 5. Read `docs/CLOUDFLARE_ENVIRONMENT_AND_SECRET_MAP.md`.
 6. Read `docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md`.
 7. Fresh-check current `main` and open migration PRs.
-8. Execute only the exact next repository-only preparation step above.
+8. Execute only the exact next repository-only compatibility step above.
 
 ## Continuation rule
 
-GitHub is the source of truth. If newer `main` changes contradict this handoff, newer repository state wins and this document must be updated again before the chat ends.
+GitHub is the source of truth. If newer `main` changes contradict this handoff, newer repository state wins and this document must be updated before continuing.
