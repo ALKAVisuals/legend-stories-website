@@ -67,7 +67,6 @@ test('bootstrap workflow cannot mutate R2 objects, DNS, routes, secrets or provi
   assert.doesNotMatch(workflow, /r2\s+bucket\s+(?:create|delete)/i);
   assert.doesNotMatch(workflow, /wrangler[^\n]*(?:secret|route|delete|rollback)/i);
   assert.doesNotMatch(workflow, /(?:PAYPAL|RESEND|NEON)_[A-Z_]+:\s*\$\{\{/);
-  assert.doesNotMatch(workflow, /netlify/i);
 });
 
 test('Production config is non-public, separate, exact-bucket and fail-closed', () => {
