@@ -118,6 +118,40 @@ test('checkout is fail-closed while the migration configuration keeps checkout p
   assert.equal(payload.error.code, 'CHECKOUT_PAUSED');
 });
 
+test('Stage C Production API routes fail closed with zero application secrets', async () => {
+  const env = {
+    LEGENDMURAL_DEPLOY_CONTEXT: 'production',
+    LEGENDMURAL_CHECKOUT_PAUSED: 'true',
+    PAYPAL_ALLOW_LIVE: 'false',
+    ORDER_EMAILS_ENABLED: 'false',
+    V3_PROFILE1_ORDER_CREATION_ENABLED: 'false',
+    V3_INVOICE_RECONCILIATION_ENABLED: 'false',
+    V3_INVOICE_STORAGE_ENABLED: 'false',
+    V3_DASHBOARD_INVOICE_API_ENABLED: 'false',
+    CHECKOUT_ALLOWED_ORIGINS: 'https://legendmural.com',
+  };
+  const expected = Object.freeze([
+    ['/api/paypal/checkout', 503, 'CHECKOUT_PAUSED'],
+    ['/api/paypal/capture', 503, 'PAYPAL_CAPTURE_SERVICE_NOT_CONFIGURED'],
+    ['/api/paypal/webhook', 503, 'PAYPAL_WEBHOOK_SERVICE_NOT_CONFIGURED'],
+    ['/api/order-status', 503, 'ORDER_STATUS_SERVICE_NOT_CONFIGURED'],
+    ['/api/invoice-download', 405, 'METHOD_NOT_ALLOWED'],
+    ['/api/internal/dashboard-invoice', 405, 'METHOD_NOT_ALLOWED'],
+  ]);
+
+  for (const [pathname, status, code] of expected) {
+    const response = await routeCloudflareApi(
+      new Request(`https://legendmural.com${pathname}`, { method: 'GET' }),
+      env,
+    );
+    assert.equal(response.status, status, pathname);
+    assert.match(response.headers.get('content-type') || '', /^application\/json/i, pathname);
+    assert.match(response.headers.get('cache-control') || '', /no-store/i, pathname);
+    const payload = await response.json();
+    assert.equal(payload.error.code, code, pathname);
+  }
+});
+
 test('dashboard invoice API cannot be activated by a preview context flag', async () => {
   const token = 'x'.repeat(48);
   const response = await routeCloudflareApi(
