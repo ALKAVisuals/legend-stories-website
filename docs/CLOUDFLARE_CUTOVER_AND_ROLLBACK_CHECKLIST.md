@@ -1,7 +1,7 @@
 # LegendMural — Cloudflare cutover & rollback checklist
 
 **Last updated:** 2026-09-10  
-**Current phase:** pre-cutover proof / no Production domain cutover authorized.
+**Current phase:** Section C DNS inventory / no Production domain cutover authorized.
 
 ## A. Merge-readiness gate — before `main`
 
@@ -53,19 +53,25 @@ Stage C secret rationale and the zero-secret fail-closed API contract are define
 
 ## C. DNS inventory gate — read-only
 
-Immediately before any domain change, inventory the current LegendMural zone:
+Immediately before any domain change, inventory the current LegendMural zone. Public proof is recorded in `docs/CLOUDFLARE_DNS_INVENTORY_PROOF_20260910.md`.
 
-- [ ] authoritative nameservers;
-- [ ] apex A/AAAA/CNAME/flattening state;
-- [ ] `www` record;
-- [ ] MX records;
-- [ ] SPF TXT;
-- [ ] DKIM records;
-- [ ] DMARC TXT;
-- [ ] Resend verification records;
-- [ ] any other LegendMural subdomains;
-- [ ] current TTLs;
-- [ ] current Netlify domain attachment state.
+- [x] authoritative nameservers — Netlify/NS1-backed NS + SOA captured;
+- [ ] apex A/AAAA/CNAME/flattening state — public A/AAAA/CNAME response captured; provider-side flattening configuration still requires account-level zone inspection;
+- [x] `www` public record response state captured;
+- [x] MX records captured;
+- [x] SPF TXT captured;
+- [ ] DKIM records — Microsoft 365 selector1/selector2 and Resend candidate queried and absent, but DKIM selectors are not publicly enumerable; full zone inventory still required;
+- [x] DMARC TXT captured;
+- [ ] Resend verification records — standard public candidate names were queried and absent; full account-level zone inventory still required before calling the zone complete;
+- [ ] any other LegendMural subdomains — two independent certificate-transparency sources found only apex + `www`, but public CT cannot enumerate all DNS names;
+- [x] current TTLs captured for the observed public records;
+- [ ] current Netlify domain attachment state — public HTTPS reaches Netlify, but apex and `www` both return HTTP 404; exact internal site/domain assignment is still unproven.
+
+### Current Section C evidence / blocker
+
+Read-only workflow `Cloudflare DNS read-only inventory`, run #6 / ID `34486539162`, head `8a285a7ab3edcb06386610a0b686eb7335cdf0a2`, completed successfully with zero credentials and zero mutation.
+
+Public authoritative DNS is still Netlify/NS1-backed. Both `https://legendmural.com/` and `https://www.legendmural.com/` returned HTTP 404 with `server: Netlify` and `x-nf-request-id` present. This is a pre-existing observed state, not a result of the migration proof. The exact Netlify site/domain attachment and complete zone record list must be read account-level before any cutover plan can be approved.
 
 Do not modify any DNS record or hosting/domain attachment during this inventory. Do not modify Technisch Bouwadvies DNS or hosting.
 
@@ -156,4 +162,4 @@ Record exact timestamps and versions, never secrets:
 
 ## Current state
 
-All checkboxes above remain operational gates. Repository implementation work may continue, but no checkbox requiring Cloudflare account, DNS or Production action is implied complete merely because code/CI passes. Stage C's empty Production application-secret inventory is an intentional configuration state, not authorization to add credentials.
+Section C is **partially closed**: the public DNS/HTTPS portion is proven, but the account-level Netlify zone/domain-attachment inventory remains mandatory before a cutover plan. No DNS, Netlify domain attachment, Cloudflare custom domain or Production routing mutation is authorized by the public proof.
