@@ -15,6 +15,7 @@ test('DNS inventory workflow is read-only and uses no secrets', () => {
 test('DNS inventory script is constrained to public GET-only observation', () => {
   assert.match(script, /https:\/\/dns\.google\/resolve/);
   assert.match(script, /https:\/\/crt\.sh\//);
+  assert.match(script, /https:\/\/api\.certspotter\.com\/v1\/issuances/);
   assert.match(script, /https:\/\/\$\{DOMAIN\}\//);
   assert.match(script, /https:\/\/www\.\$\{DOMAIN\}\//);
   assert.doesNotMatch(script, /method:\s*['"](?:POST|PUT|PATCH|DELETE)['"]/i);
@@ -26,6 +27,7 @@ test('DNS inventory script is constrained to public GET-only observation', () =>
 test('DNS inventory covers cutover-critical records and Resend candidates', () => {
   for (const token of [
     "['apex_ns', DOMAIN, 'NS']",
+    "['apex_cname', DOMAIN, 'CNAME']",
     "['apex_a', DOMAIN, 'A']",
     "['apex_aaaa', DOMAIN, 'AAAA']",
     "['apex_mx', DOMAIN, 'MX']",
@@ -39,9 +41,11 @@ test('DNS inventory covers cutover-critical records and Resend candidates', () =
   }
 });
 
-test('DNS inventory reports TTLs, certificate-discovered subdomains and public hosting evidence', () => {
+test('DNS inventory reports TTLs, CT provider fallback, discovered subdomains and public hosting evidence', () => {
   assert.match(script, /ttl:\s*Number\(record\.TTL/);
-  assert.match(script, /discoverCertificateNames/);
+  assert.match(script, /discoverFromCrtSh/);
+  assert.match(script, /discoverFromCertSpotter/);
+  assert.match(script, /providers:\s*{/);
   assert.match(script, /inventoryCertificateNames/);
   assert.match(script, /publicNetlifyServingEvidence/);
   assert.match(script, /publicCloudflareServingEvidence/);
