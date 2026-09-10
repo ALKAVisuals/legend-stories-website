@@ -1,122 +1,126 @@
 # LegendMural Cloudflare migration — current handoff
 
-**Date:** 2026-09-09  
+**Last updated:** 2026-09-10  
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Migration scope:** Netlify -> Cloudflare for the public LegendMural storefront only  
-**Starting `main` SHA for this handoff:** `ec777925b34b65a91877e5f831f880ec666edb0b`
+**Current `main` before PR #219:** `c912e012e14a9337a37464f3556977b882b806db`
 
 > This is the canonical continuation document for the active Cloudflare migration. A new chat working on this migration must read this file before reconstructing progress from older chat history.
 
 ## Non-negotiable scope boundaries
 
-- `legendmural.com` production is still on Netlify until an explicit final cutover is approved.
+- `legendmural.com` Production is still on Netlify until an explicit final cutover is approved.
 - Technisch Bouwadvies stays on Netlify and must not be changed by this migration.
 - `ALKAVisuals/legendmural-dashboard` stays hosted through ChatGPT Sites; only migration-required integration points may be touched.
 - Neon remains the database unless a separately approved migration says otherwise.
-- Existing PayPal, Resend and Neon secrets must never be copied into GitHub documentation or source.
-- No PayPal Live activation, DNS cutover, production Cloudflare cutover or production data mutation without explicit owner approval for that exact step.
+- PayPal, Resend, Neon and Cloudflare secret values must never be committed or pasted into repository documentation.
+- No PayPal Live activation, DNS cutover, Production Cloudflare cutover, Netlify Production change or Production-data mutation without explicit owner approval for that exact step.
 
-## What is already done
+## Current checkpoint
 
-### Migration foundation
+The duplicate PayPal webhook least-privilege defect has been fixed, proved with the real Neon integration harness and merged to `main`. A subsequent Cloudflare preview deployment succeeded, but its remote static-asset proof exposed a separate Cloudflare HTML-routing mismatch. PR #219 contains the minimal fix for that routing issue and is awaiting explicit merge approval after CI.
 
-The repository already contains the Cloudflare migration notice, target architecture/migration plan, environment/secret map, preview-account proof, B2 checkout decision map and cutover/rollback checklist. These documents remain supporting evidence; this handoff records the newest continuation state.
+### Merged fixes
 
-### Cloudflare preview runtime
+#### PR #218 — Neon runtime privilege proof parameter typing
 
-- A Cloudflare preview Worker exists for LegendMural.
-- Static assets are bound to the Worker.
-- The preview runtime has an R2 binding for V3 invoice PDFs.
-- The preview PayPal webhook endpoint is the Worker route `/api/paypal/webhook`.
+- Fixed the real-Neon privilege proof harness error `42P18: could not determine data type of parameter $2`.
+- The manual `Neon order-store integration` workflow passed after the fix.
+- Merged to `main` before PR #217.
 
-### PayPal sandbox configuration and webhook verification
+#### PR #217 — PayPal duplicate webhook least-privilege path
 
-A PayPal Sandbox webhook is configured for the Cloudflare preview endpoint with the required checkout/payment events.
+- Removed the unnecessary `FOR SHARE` clause from the duplicate-event read in `server/adapters/neon-paypal-webhook-store.mjs`.
+- Preserved the append-only runtime privilege model for `legend_commerce.paypal_webhook_events`: `SELECT` + `INSERT`, no broad `UPDATE` grant.
+- Strengthened the duplicate webhook unit regression so the duplicate read must remain a plain `SELECT` and the order version remains `1`.
+- Re-ran the real `Neon order-store integration` workflow on the PayPal-fix branch after #218 was merged.
+- The real least-privilege proof passed, including processing the same synthetic webhook event twice without a second order mutation.
+- PR #217 was merged to `main` as commit `c912e012e14a9337a37464f3556977b882b806db`.
 
-During validation, the first Cloudflare webhook attempts returned HTTP `401`. Investigation showed that the Cloudflare `PAYPAL_WEBHOOK_ID` runtime secret did not match the PayPal webhook configured for the Cloudflare preview endpoint.
+## Cloudflare preview deployment status
 
-The owner corrected `PAYPAL_WEBHOOK_ID` in Cloudflare and deployed that secret change. After that correction, a PayPal Sandbox resend reached the Cloudflare Worker and returned HTTP `200`.
+### GitHub CI credentials
 
-This proves that:
+The repository now has the required GitHub Actions repository secrets configured for the preview deploy workflow:
 
-- PayPal can reach the Cloudflare preview Worker;
-- the endpoint URL is correct;
-- the webhook signature-verification path can succeed with the corrected webhook ID;
-- the previous `401` blocker is resolved.
+- `CLOUDFLARE_ACCOUNT_ID`
+- `CLOUDFLARE_API_TOKEN`
 
-Do not recreate the PayPal app or webhook merely because older failed delivery rows remain visible in PayPal.
+Only the secret names are documented here. Secret values remain outside the repository.
 
-## Current blocker discovered on 2026-09-09
+### Preview deploy after PR #217
 
-A later resend of an already-seen `PAYMENT.CAPTURE.COMPLETED` event exposed a second issue in the duplicate-webhook path.
+`Cloudflare preview account proof` was manually run on `main` with:
 
-Cloudflare logged:
+- confirmation: `PREVIEW_ONLY`;
+- preview R2 provisioning disabled;
+- preview Worker deployment enabled.
 
-- `Verified PayPal webhook processing failed.`
-- error name: `NeonPayPalWebhookStoreError`
-- error code: `PAYPAL_WEBHOOK_STORE_UNAVAILABLE`
+The workflow authenticated successfully and the existing `legendmural-cloudflare-preview` Worker deployment step succeeded. Production DNS, the Production Cloudflare environment and Netlify Production were not touched.
 
-The resend itself is not the root cause. It is useful because it exercised the idempotent duplicate-delivery path that PayPal can legitimately use in production.
+The workflow then failed only in the remote verification step:
 
-## Root-cause evidence in current `main`
+```text
+[remote-preview] static-shop: status=307
+AssertionError: 307 !== 200
+```
 
-`server/adapters/neon-paypal-webhook-store.mjs` currently performs the following duplicate-event flow inside a serializable transaction:
+The deployed preview therefore contained the merged PayPal duplicate-webhook fix, but the account-proof workflow did not finish green because `/shop.html` redirected instead of returning the required HTTP `200`.
 
-1. lock/read the matching order;
-2. `INSERT` the PayPal webhook event with `ON CONFLICT (event_id) DO NOTHING`;
-3. when the insert returns no row, read the already-stored webhook event;
-4. that duplicate read currently ends with `FOR SHARE`;
-5. compare the stored event identity and acknowledge the duplicate.
+## Current open PR #219 — preserve explicit `.html` URLs
 
-The canonical runtime privilege contract intentionally gives `legend_commerce.paypal_webhook_events` only:
+**PR:** #219 — `Fix Cloudflare preview HTML URL handling`  
+**Branch:** `fix/cloudflare-preserve-html-urls`
 
-- `SELECT`
-- `INSERT`
+Root cause: Cloudflare Workers Static Assets applies HTML canonicalization when `assets.html_handling` is not explicitly set. That causes an explicit request such as `/shop.html` to redirect with HTTP `307` to an extensionless path. The existing LegendMural B1 contract explicitly requires `/shop.html` to return HTML with HTTP `200`.
 
-It intentionally does **not** grant table-level `UPDATE` to that webhook-event ledger.
+PR #219 therefore makes only the required routing/config change plus its regression protection:
 
-The real least-privilege runtime therefore conflicts with the duplicate read's `FOR SHARE` locking clause. This is the leading root cause for the observed `PAYPAL_WEBHOOK_STORE_UNAVAILABLE` on duplicate/resend processing.
+1. `wrangler.jsonc`
+   - set `assets.html_handling` to `"none"`;
+2. `tests/cloudflare-config.test.mjs`
+   - assert that `value.assets.html_handling === 'none'`;
+3. this handoff document
+   - record the current source-of-truth migration state before merge.
 
-### Important security decision
+Before this documentation update, all five PR checks were green and the PR was mergeable. Adding this handoff update intentionally causes CI to run again. Do not merge until the refreshed checks are green and the owner explicitly approves the merge.
 
-Do **not** fix this by broadly granting `UPDATE` on `paypal_webhook_events`.
+## PayPal Sandbox history still relevant
 
-The webhook-event table is designed as an append-only/idempotency ledger. The preferred minimal fix is to remove the unnecessary row-locking clause from the duplicate read while preserving the current `INSERT ... ON CONFLICT DO NOTHING` idempotency model.
+A PayPal Sandbox webhook is configured for the Cloudflare preview endpoint `/api/paypal/webhook`.
 
-## Existing test coverage and the gap
+Earlier validation found and resolved a mismatched Cloudflare `PAYPAL_WEBHOOK_ID`. After correcting that Cloudflare runtime secret, PayPal could reach the preview Worker and a delivery returned HTTP `200`.
 
-`tests/neon-paypal-webhook-store.test.mjs` already contains a unit test named approximately `duplicate event is acknowledged without a second order mutation`. It proves the intended application behavior with a mocked database client.
+A later resend of an already-seen `PAYMENT.CAPTURE.COMPLETED` event exposed the duplicate-event least-privilege defect fixed by PR #217. PayPal resend/redelivery itself is valid and must be supported idempotently; do not recreate the PayPal app or webhook merely because historical failed delivery rows remain visible.
 
-That test does not execute the query against a real least-privilege Neon role, so it did not catch the privilege conflict caused by `FOR SHARE`.
+## Exact next steps
 
-`tests/neon-runtime-privilege-contract.test.mjs` separately protects the least-privilege contract and confirms that `paypal_webhook_events` is expected to have `SELECT` + `INSERT`, not broad `UPDATE`.
+After the refreshed CI for PR #219 is fully green:
 
-The missing protection is a regression proof that the duplicate PayPal webhook path actually works under the real least-privilege runtime contract.
+1. Stop and obtain explicit owner approval to merge PR #219.
+2. Merge PR #219 to `main` using the repository's normal merge method.
+3. Fresh-check the resulting `main` SHA.
+4. Manually run `Cloudflare preview account proof` on the new `main` with:
+   - `confirm_phrase = PREVIEW_ONLY`;
+   - `provision_preview_r2 = false`;
+   - `deploy_preview_worker = true`.
+5. Require the remote proof to pass, including:
+   - `/shop.html` -> HTTP `200` with HTML;
+   - unknown `/api/*` -> HTTP `404` / `API_ROUTE_NOT_FOUND`;
+   - checkout remains paused -> HTTP `503` / `CHECKOUT_PAUSED`;
+   - dashboard invoice API remains disabled -> HTTP `503` / `DASHBOARD_INVOICE_API_DISABLED`.
+6. Only after that preview proof is green, resend the same already-stored PayPal Sandbox capture webhook once.
+7. Required duplicate-webhook proof:
+   - Cloudflare returns HTTP `200`;
+   - PayPal records successful delivery;
+   - no duplicate webhook ledger row is created;
+   - the order remains `paid`;
+   - no second order mutation/version increment occurs.
+8. Then perform one fresh PayPal Sandbox checkout to prove the first-delivery path still works.
+9. Update this handoff again with the actual proof results before moving to the next migration phase.
+10. Continue remaining Cloudflare preview validation before any Production cutover discussion.
 
-## Exact next step
-
-The next technical action is a minimal code/test PR. Do not make unrelated changes.
-
-1. Fresh-check the current `main` SHA.
-2. Create a dedicated branch from that fresh `main`.
-3. In `server/adapters/neon-paypal-webhook-store.mjs`, remove `FOR SHARE` from the duplicate-event read only.
-4. Keep the existing append-only privilege model; do not add `UPDATE` to `paypal_webhook_events`.
-5. Add regression coverage for duplicate delivery under the least-privilege contract. Prefer a real Neon integration proof if the existing CI harness can exercise the runtime proof role; retain/update the unit test as needed.
-6. Run the targeted PayPal/Neon tests and the full relevant CI suite.
-7. Open a PR and inspect the diff/CI.
-8. Stop before merge and ask the owner for merge approval.
-9. After an approved merge, deploy only the Cloudflare **preview** Worker change. Do not cut over production.
-10. Resend the same PayPal Sandbox capture webhook once.
-11. Required proof after that resend:
-    - Cloudflare returns HTTP `200`;
-    - PayPal eventually records successful delivery;
-    - the already-stored webhook event is not duplicated;
-    - the order remains `paid`;
-    - no second order mutation/version increment is caused by the duplicate event.
-12. Then perform one fresh Sandbox checkout to prove the first-delivery path still works.
-13. Continue the remaining Cloudflare preview validation before any production cutover discussion.
-
-## What must not be changed in the next step
+## What must not be changed during these next steps
 
 - no `legendmural.com` DNS changes;
 - no Netlify Production changes;
@@ -126,7 +130,8 @@ The next technical action is a minimal code/test PR. Do not make unrelated chang
 - no dashboard redesign or dashboard hosting changes;
 - no Neon replacement/migration;
 - no broad database privilege expansion;
-- no unrelated storefront/UI work.
+- no unrelated storefront/UI work;
+- no Production Cloudflare deployment.
 
 ## Recommended startup order for the next migration chat
 
@@ -135,14 +140,9 @@ The next technical action is a minimal code/test PR. Do not make unrelated chang
 3. Read `docs/CLOUDFLARE_B2_CHECKOUT_DECISION_MAP_20260908.md`.
 4. Read `docs/CLOUDFLARE_ENVIRONMENT_AND_SECRET_MAP.md`.
 5. Read `docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md`.
-6. Fresh-check current `main`.
-7. Inspect:
-   - `server/adapters/neon-paypal-webhook-store.mjs`
-   - `tests/neon-paypal-webhook-store.test.mjs`
-   - `tests/neon-runtime-privilege-contract.test.mjs`
-   - the real Neon integration workflow/harness relevant to the runtime proof role.
-8. Execute only the exact next step described above.
+6. Fresh-check current `main` and the status of PR #219.
+7. Execute only the exact next applicable step from this handoff.
 
 ## Continuation rule
 
-GitHub is the source of truth. Do not infer the current Cloudflare migration state from old screenshots or chat summaries when this file and newer repository state are available. If newer `main` changes contradict this handoff, the newer repository state wins and this document should be updated again before the chat ends.
+GitHub is the source of truth. Do not infer the current Cloudflare migration state from old screenshots or chat summaries when this file and newer repository state are available. If newer `main` changes contradict this handoff, the newer repository state wins and this document must be updated again before the chat ends.
