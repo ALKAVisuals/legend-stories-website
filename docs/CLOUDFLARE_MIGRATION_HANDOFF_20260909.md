@@ -3,7 +3,7 @@
 **Last updated:** 2026-09-10  
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Migration scope:** Netlify -> Cloudflare for the public LegendMural storefront only  
-**Current `main`:** `27ff99789d873dd440ce13e511b37a247f5e8720`
+**Current `main`:** `e2618084687b35377359e1809127e11b82875884`
 
 > This is the canonical continuation document for the active Cloudflare migration. A new chat working on this migration must read this file before reconstructing progress from older chat history.
 
@@ -18,11 +18,11 @@
 
 ## Current checkpoint
 
-The duplicate PayPal webhook least-privilege defect is fixed and merged. The separate Cloudflare Static Assets `.html` redirect mismatch is also fixed and merged. A manual Cloudflare preview deploy/proof from the resulting `main` completed fully green on 2026-09-10.
+The duplicate PayPal webhook least-privilege defect is fixed and merged. The Cloudflare Static Assets explicit `.html` routing mismatch is fixed and merged. The later bare-root `/` 404 was also fixed in PR #222 by mapping only `/` internally to `/index.html` while preserving explicit `.html` behavior and fail-closed `/api/*` routing.
 
-PR #220 then updated this canonical handoff and merged as `27ff99789d873dd440ce13e511b37a247f5e8720`.
+PR #221 recorded the manual disconnection of Cloudflare's separate direct Git/Workers Builds integration so the controlled deployment route remains GitHub Actions `Cloudflare preview account proof` with explicit `PREVIEW_ONLY` confirmation.
 
-After that merge, Cloudflare's separate direct Git/Workers Builds integration attempted an automatic build for `main`, but failed during build initialization before cloning/building/deploying because the selected Cloudflare build token had been deleted or rolled. The existing preview Worker remained active. To avoid a duplicate deploy path, the direct Cloudflare Git repository integration was disconnected in the Cloudflare dashboard. The controlled preview deployment path is now the repository's GitHub Actions workflow `Cloudflare preview account proof`, which requires explicit `PREVIEW_ONLY` confirmation before any preview deploy.
+PR #222 was merged to `main` as `e2618084687b35377359e1809127e11b82875884`. A fresh manual Cloudflare preview deploy/proof from that exact `main` then completed fully green as workflow run #10. The deployed Worker now serves both `/` and `/shop.html` with HTTP `200`, while the unknown API, paused checkout and disabled dashboard API fail-closed checks still pass.
 
 The next migration proof is therefore the real PayPal **Sandbox duplicate webhook resend** against the existing Cloudflare preview Worker. No Production work is authorized.
 
@@ -54,6 +54,22 @@ The next migration proof is therefore the real PayPal **Sandbox duplicate webhoo
 
 - Updated this canonical handoff after Cloudflare preview account proof run #7 completed successfully.
 - PR #220 was merged to `main` as commit `27ff99789d873dd440ce13e511b37a247f5e8720`.
+
+#### PR #221 — record Cloudflare Builds disconnect
+
+- Recorded that the separate Cloudflare direct Git/Workers Builds integration attempted an automatic build but failed during initialization because the selected build token had been deleted or rolled.
+- Recorded that the direct Git integration was manually disconnected to avoid a duplicate deployment route.
+- The existing preview Worker remained active and the controlled GitHub Actions preview deployment route remained canonical.
+- PR #221 was merged to `main` as commit `92eb5b3c2460adc653f79f8279add2df516ded5d`.
+
+#### PR #222 — fix Cloudflare bare-root route
+
+- Fixed the workers.dev bare-root `/` 404 without reverting `assets.html_handling = "none"`.
+- Only the exact `/` path is mapped internally to `/index.html` before Static Assets fetch.
+- Explicit routes such as `/shop.html` remain unchanged and `/api/*` routing remains fail-closed.
+- Added a unit regression for bare-root routing.
+- Extended the real remote preview smoke proof so both `/` and `/shop.html` must return HTTP `200` with HTML.
+- PR #222 was merged to `main` as commit `e2618084687b35377359e1809127e11b82875884`.
 
 ## Cloudflare preview deployment status
 
@@ -90,7 +106,36 @@ The remote proof passed all required B1 checks:
 - checkout remains paused -> HTTP `503` / `CHECKOUT_PAUSED`;
 - dashboard invoice API remains disabled -> HTTP `503` / `DASHBOARD_INVOICE_API_DISABLED`.
 
-This proves that the earlier `307` redirect mismatch is resolved in the deployed preview. Production DNS, the Production Cloudflare environment, Production R2 and Netlify Production were not touched.
+This proved that the earlier `307` redirect mismatch was resolved in the deployed preview. Production DNS, the Production Cloudflare environment, Production R2 and Netlify Production were not touched.
+
+### Latest successful preview proof after PR #222
+
+`Cloudflare preview account proof` run **#10** was manually dispatched on `main` after PR #222 merged.
+
+**GitHub Actions run ID:** `34461889551`  
+**Head SHA:** `e2618084687b35377359e1809127e11b82875884`  
+**Result:** `success`  
+**Preview Worker:** `legendmural-cloudflare-preview`  
+**Workers.dev origin:** `https://legendmural-cloudflare-preview.lively-bonus-08da.workers.dev`  
+**Cloudflare Worker version ID:** `411070c2-5250-480c-85df-2c22e6260d3b`
+
+The run used:
+
+- `confirm_phrase = PREVIEW_ONLY`;
+- preview R2 provisioning disabled;
+- preview Worker deployment enabled.
+
+The build completed successfully and validated `128` HTML pages and `301` output files. The remote smoke proof passed all required checks:
+
+- `/` -> HTTP `200` with the LegendMural homepage HTML;
+- `/shop.html` -> HTTP `200` with shop HTML;
+- unknown `/api/*` -> HTTP `404` / `API_ROUTE_NOT_FOUND`;
+- checkout remains paused -> HTTP `503` / `CHECKOUT_PAUSED`;
+- dashboard invoice API remains disabled -> HTTP `503` / `DASHBOARD_INVOICE_API_DISABLED`.
+
+The deployed preview bindings remained fail-closed: `LEGENDMURAL_DEPLOY_CONTEXT="preview"`, `LEGENDMURAL_CHECKOUT_PAUSED="true"`, `PAYPAL_ALLOW_LIVE="false"`, `ORDER_EMAILS_ENABLED="false"`, and all V3 activation flags remained `false`.
+
+Preview R2 provisioning was skipped. Production DNS/custom domains, the Production Cloudflare environment, Production R2, Netlify Production, PayPal Live and Resend Production were not touched.
 
 ### Direct Cloudflare Workers Builds integration disconnected
 
