@@ -20,16 +20,17 @@ test('probe uses GET only and declares zero mutation', () => {
   assert.match(script, /credentialsUsed:\s*false/);
 });
 
-test('probe covers custom apex, www, branch URL and immutable deploy permalink', () => {
+test('probe covers custom domains and all known Netlify serving forms', () => {
   for (const target of [
     'https://legendmural.com',
     'https://www.legendmural.com',
+    'https://legendmural.netlify.app',
     'https://main--legendmural.netlify.app',
     'https://6a8d7a5e5b89930b8ea3b5ff--legendmural.netlify.app',
   ]) {
     assert.ok(script.includes(target), `missing target: ${target}`);
   }
-  for (const path of ["'/'", "'/index.html'", "'/shop.html'"]) {
+  for (const path of ["'/'", "'/index.html'", "'/shop.html'", "'/robots.txt'", "'/sitemap.xml'"]) {
     assert.ok(script.includes(path), `missing path: ${path}`);
   }
 });
