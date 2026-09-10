@@ -52,6 +52,15 @@ test('remote PDF/R2 proof consumes no commerce, email or dashboard runtime secre
   assert.match(workflow, /CLOUDFLARE_ACCOUNT_ID/);
 });
 
+test('remote PDF/R2 proof normalizes surrounding account ID whitespace without exposing the value', () => {
+  assert.match(workflow, /CLOUDFLARE_ACCOUNT_ID_RAW:\s*\$\{\{ secrets\.CLOUDFLARE_ACCOUNT_ID \}\}/);
+  assert.match(workflow, /const accountId = raw\.trim\(\);/);
+  assert.match(workflow, /::add-mask::\$\{accountId\}/);
+  assert.match(workflow, /GITHUB_ENV/);
+  assert.match(workflow, /CLOUDFLARE_ACCOUNT_ID=\$\{accountId\}/);
+  assert.doesNotMatch(workflow, /accountId:\s*\$\{\{ secrets\.CLOUDFLARE_ACCOUNT_ID \}\}/);
+});
+
 test('temporary proof config binds only the existing private preview R2 bucket', () => {
   const parsed = JSON.parse(config);
   assert.equal(parsed.name, 'legendmural-cloudflare-preview-pdf-r2-proof');
