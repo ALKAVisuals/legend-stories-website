@@ -24,7 +24,7 @@ test('DNS inventory script is constrained to public GET-only observation', () =>
   assert.match(script, /credentialsUsed:\s*false/);
 });
 
-test('DNS inventory covers cutover-critical records and Resend candidates', () => {
+test('DNS inventory covers cutover-critical records, Microsoft DKIM and Resend candidates', () => {
   for (const token of [
     "['apex_ns', DOMAIN, 'NS']",
     "['apex_cname', DOMAIN, 'CNAME']",
@@ -34,6 +34,8 @@ test('DNS inventory covers cutover-critical records and Resend candidates', () =
     "['apex_txt', DOMAIN, 'TXT']",
     "['www_cname', `www.${DOMAIN}`, 'CNAME']",
     '`_dmarc.${DOMAIN}`',
+    '`selector1._domainkey.${DOMAIN}`',
+    '`selector2._domainkey.${DOMAIN}`',
     '`resend._domainkey.${DOMAIN}`',
     '`send.${DOMAIN}`',
   ]) {
