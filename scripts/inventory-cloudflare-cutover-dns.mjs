@@ -15,6 +15,10 @@ const CORE_QUERIES = Object.freeze([
   ['www_a', `www.${DOMAIN}`, 'A'],
   ['www_aaaa', `www.${DOMAIN}`, 'AAAA'],
   ['dmarc_txt', `_dmarc.${DOMAIN}`, 'TXT'],
+  ['m365_selector1_dkim_cname', `selector1._domainkey.${DOMAIN}`, 'CNAME'],
+  ['m365_selector1_dkim_txt', `selector1._domainkey.${DOMAIN}`, 'TXT'],
+  ['m365_selector2_dkim_cname', `selector2._domainkey.${DOMAIN}`, 'CNAME'],
+  ['m365_selector2_dkim_txt', `selector2._domainkey.${DOMAIN}`, 'TXT'],
   ['resend_dkim_txt', `resend._domainkey.${DOMAIN}`, 'TXT'],
   ['resend_dkim_cname', `resend._domainkey.${DOMAIN}`, 'CNAME'],
   ['resend_send_mx', `send.${DOMAIN}`, 'MX'],
@@ -262,6 +266,7 @@ async function main() {
     limitations: [
       'Public DNS and certificate transparency cannot prove every private or unlisted subdomain.',
       'Certificate-transparency providers are best-effort external sources; provider errors are recorded rather than treated as DNS truth.',
+      'DKIM selectors are not enumerable through DNS; Microsoft 365 selector1/selector2 and the Resend selector are queried because they are relevant known candidates.',
       'Public HTTP/DNS evidence cannot prove the internal Netlify dashboard domain-assignment state.',
       'No DNS, hosting, provider, secret, Worker, R2 or application mutation is performed by this script.',
     ],
