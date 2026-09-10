@@ -187,7 +187,8 @@ export async function handleCloudflareFetch(request, env) {
   const redirect = canonicalRedirect(request);
   if (redirect) return redirect;
 
-  const pathname = new URL(request.url).pathname;
+  const requestUrl = new URL(request.url);
+  const pathname = requestUrl.pathname;
   if (pathname.startsWith('/api/')) {
     return routeCloudflareApi(request, env);
   }
@@ -198,6 +199,12 @@ export async function handleCloudflareFetch(request, env) {
       'Static asset delivery is not configured.',
     );
   }
+
+  if (pathname === '/') {
+    requestUrl.pathname = '/index.html';
+    return env.ASSETS.fetch(new Request(requestUrl.toString(), request));
+  }
+
   return env.ASSETS.fetch(request);
 }
 
