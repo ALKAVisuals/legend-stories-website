@@ -113,7 +113,9 @@ test('production environment is explicitly separate, non-public and fail-closed 
   assert.equal(production.vars.LEGENDMURAL_DEPLOY_CONTEXT, 'production');
   assertFailClosed(production.vars);
   assertNoSecretsInVars(production.vars);
-  assertPdfKitWorkerBoundary(production);
+  assert.equal(production.define?.['import.meta.url'], PDFKIT_WORKER_IMPORT_META_URL);
+  assert.equal(Object.hasOwn(production, 'alias'), false);
+  assert.equal(value.alias?.pdfkit, './cloudflare/pdfkit-worker-runtime.mjs');
   assert.deepEqual(production.triggers.crons, ['*/5 * * * *']);
   assert.equal(production.r2_buckets.length, 1);
   assert.equal(production.r2_buckets[0].binding, 'V3_INVOICE_PDFS');
