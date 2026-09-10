@@ -67,6 +67,35 @@ test('non-API requests are delegated to Cloudflare Static Assets binding', async
   assert.deepEqual(seen, ['https://preview.example/shop.html']);
 });
 
+test('bare root maps to index.html while preserving query and request metadata', async () => {
+  const seen = [];
+  const env = {
+    ASSETS: {
+      async fetch(request) {
+        seen.push({
+          url: request.url,
+          method: request.method,
+          marker: request.headers.get('x-root-proof'),
+        });
+        return new Response('asset-ok', { status: 200 });
+      },
+    },
+  };
+  const response = await handleCloudflareFetch(
+    new Request('https://preview.example/?from=cloudflare', {
+      headers: { 'x-root-proof': 'preserved' },
+    }),
+    env,
+  );
+  assert.equal(response.status, 200);
+  assert.equal(await response.text(), 'asset-ok');
+  assert.deepEqual(seen, [{
+    url: 'https://preview.example/index.html?from=cloudflare',
+    method: 'GET',
+    marker: 'preserved',
+  }]);
+});
+
 test('checkout is fail-closed while the migration configuration keeps checkout paused', async () => {
   const response = await routeCloudflareApi(
     new Request('https://preview.example/api/paypal/checkout', {

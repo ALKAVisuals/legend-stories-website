@@ -42,6 +42,14 @@ function report(label, response, body) {
   console.log(`[remote-preview] ${label}: status=${response.status} body=${compact}`);
 }
 
+async function verifyStaticRoot() {
+  const response = await fetch(`${ORIGIN}/`, { redirect: 'manual' });
+  const body = await readResponse(response);
+  report('static-root', response, body);
+  assert.equal(response.status, 200);
+  assert.match(body.text, /<html/i);
+}
+
 async function verifyStaticShop() {
   const response = await fetch(`${ORIGIN}/shop.html`, { redirect: 'manual' });
   const body = await readResponse(response);
@@ -90,6 +98,7 @@ async function verifyDashboardDisabled() {
   assert.equal(body.json?.error?.code, 'DASHBOARD_INVOICE_API_DISABLED');
 }
 
+await verifyStaticRoot();
 await verifyStaticShop();
 await verifyUnknownApiFailsClosed();
 await verifyCheckoutPaused();
