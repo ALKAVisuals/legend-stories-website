@@ -3,7 +3,7 @@
 **Last updated:** 2026-09-10  
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Migration scope:** Netlify -> Cloudflare for the public LegendMural storefront only  
-**Current `main`:** `555df319ed155f02f1ccf8d53861051c7d175f64`
+**Current `main`:** `27ff99789d873dd440ce13e511b37a247f5e8720`
 
 > This is the canonical continuation document for the active Cloudflare migration. A new chat working on this migration must read this file before reconstructing progress from older chat history.
 
@@ -19,6 +19,10 @@
 ## Current checkpoint
 
 The duplicate PayPal webhook least-privilege defect is fixed and merged. The separate Cloudflare Static Assets `.html` redirect mismatch is also fixed and merged. A manual Cloudflare preview deploy/proof from the resulting `main` completed fully green on 2026-09-10.
+
+PR #220 then updated this canonical handoff and merged as `27ff99789d873dd440ce13e511b37a247f5e8720`.
+
+After that merge, Cloudflare's separate direct Git/Workers Builds integration attempted an automatic build for `main`, but failed during build initialization before cloning/building/deploying because the selected Cloudflare build token had been deleted or rolled. The existing preview Worker remained active. To avoid a duplicate deploy path, the direct Cloudflare Git repository integration was disconnected in the Cloudflare dashboard. The controlled preview deployment path is now the repository's GitHub Actions workflow `Cloudflare preview account proof`, which requires explicit `PREVIEW_ONLY` confirmation before any preview deploy.
 
 The next migration proof is therefore the real PayPal **Sandbox duplicate webhook resend** against the existing Cloudflare preview Worker. No Production work is authorized.
 
@@ -45,6 +49,11 @@ The next migration proof is therefore the real PayPal **Sandbox duplicate webhoo
 - `assets.html_handling` is now explicitly set to `"none"` in `wrangler.jsonc`.
 - `tests/cloudflare-config.test.mjs` now protects that routing contract.
 - PR #219 was merged to `main` as commit `555df319ed155f02f1ccf8d53861051c7d175f64`.
+
+#### PR #220 — record successful preview proof
+
+- Updated this canonical handoff after Cloudflare preview account proof run #7 completed successfully.
+- PR #220 was merged to `main` as commit `27ff99789d873dd440ce13e511b37a247f5e8720`.
 
 ## Cloudflare preview deployment status
 
@@ -83,6 +92,19 @@ The remote proof passed all required B1 checks:
 
 This proves that the earlier `307` redirect mismatch is resolved in the deployed preview. Production DNS, the Production Cloudflare environment, Production R2 and Netlify Production were not touched.
 
+### Direct Cloudflare Workers Builds integration disconnected
+
+After PR #220 merged, the separate Cloudflare Git integration detected the new `main` commit and attempted an automatic build using:
+
+- Git repository: `ALKAVisuals/legend-stories-website`;
+- production branch: `main`;
+- build command: `npm run build`;
+- deploy command: `npx wrangler deploy`.
+
+That automatic build failed during initialization with Cloudflare reporting that the selected build token had been deleted or rolled. It did not reach clone, build or deploy, so it did not replace the already-working preview deployment.
+
+Because this direct Git integration duplicated the controlled GitHub Actions preview deploy route, the Git repository was disconnected from Workers Builds in the Cloudflare dashboard. No new build token was created. The existing preview Worker remains the target for the next Sandbox proof.
+
 ## PayPal Sandbox history still relevant
 
 A PayPal Sandbox webhook is configured for the Cloudflare preview endpoint:
@@ -99,18 +121,17 @@ PayPal resend/redelivery itself is valid and must be supported idempotently. Do 
 
 ## Exact next steps
 
-1. Merge the docs-only handoff update that records Cloudflare preview run #7, after normal CI and explicit owner approval.
-2. In **PayPal Sandbox only**, locate event `WH-6RC26966LE938421A-4TS169605E543550Y` and resend it once to the existing Cloudflare preview webhook endpoint.
-3. Required duplicate-webhook proof:
+1. In **PayPal Sandbox only**, locate event `WH-6RC26966LE938421A-4TS169605E543550Y` and resend it once to the existing Cloudflare preview webhook endpoint.
+2. Required duplicate-webhook proof:
    - PayPal delivery receives HTTP `200`;
    - no `PAYPAL_WEBHOOK_STORE_UNAVAILABLE` / `NeonPayPalWebhookStoreError` occurs;
    - no duplicate webhook ledger row is created;
    - the existing order remains `paid`;
    - no second order mutation/version increment occurs.
-4. Capture the PayPal delivery result and, where needed, Cloudflare/Neon evidence for the same event so the proof is end-to-end rather than inferred from CI alone.
-5. Update this handoff with the actual duplicate-resend result before starting the next migration action.
-6. Then prepare one fresh PayPal Sandbox checkout to prove the first-delivery path still works. Because the current preview proof intentionally shows `CHECKOUT_PAUSED`, follow the approved B2 preview-runtime plan before enabling any checkout-related preview flag; do not enable PayPal Live or Production runtime settings.
-7. After the fresh Sandbox checkout proof, update this handoff again and continue the remaining Cloudflare preview validation before any Production cutover discussion.
+3. Capture the PayPal delivery result and, where needed, Cloudflare/Neon evidence for the same event so the proof is end-to-end rather than inferred from CI alone.
+4. Update this handoff with the actual duplicate-resend result before starting the next migration action.
+5. Then prepare one fresh PayPal Sandbox checkout to prove the first-delivery path still works. Because the current preview proof intentionally shows `CHECKOUT_PAUSED`, follow the approved B2 preview-runtime plan before enabling any checkout-related preview flag; do not enable PayPal Live or Production runtime settings.
+6. After the fresh Sandbox checkout proof, update this handoff again and continue the remaining Cloudflare preview validation before any Production cutover discussion.
 
 ## What must not be changed during these next steps
 
