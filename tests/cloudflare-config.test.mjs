@@ -56,6 +56,7 @@ test('Wrangler uses Worker + Static Assets with worker-first API routing only', 
   assert.ok(value.compatibility_flags.includes('nodejs_compat'));
   assert.equal(value.assets.directory, './dist');
   assert.equal(value.assets.binding, 'ASSETS');
+  assert.equal(value.assets.html_handling, 'none');
   assert.deepEqual(value.assets.run_worker_first, ['/api/*']);
   assertPdfKitWorkerBoundary(value);
 });
