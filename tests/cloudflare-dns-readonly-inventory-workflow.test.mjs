@@ -31,9 +31,9 @@ test('DNS inventory covers cutover-critical records and Resend candidates', () =
     "['apex_mx', DOMAIN, 'MX']",
     "['apex_txt', DOMAIN, 'TXT']",
     "['www_cname', `www.${DOMAIN}`, 'CNAME']",
-    "['_dmarc.${DOMAIN}`",
-    "resend._domainkey.${DOMAIN}`",
-    "send.${DOMAIN}`",
+    '`_dmarc.${DOMAIN}`',
+    '`resend._domainkey.${DOMAIN}`',
+    '`send.${DOMAIN}`',
   ]) {
     assert.ok(script.includes(token), `missing inventory coverage token: ${token}`);
   }
