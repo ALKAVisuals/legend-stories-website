@@ -1,0 +1,82 @@
+name: Cloudflare Production read-only inventory
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/cloudflare-production-readonly-inventory.yml'
+      - 'scripts/inventory-cloudflare-production-account.mjs'
+      - 'tests/cloudflare-production-readonly-inventory-workflow.test.mjs'
+  workflow_dispatch:
+    inputs:
+      confirm_phrase:
+        description: 'Type PRODUCTION_INVENTORY_READ_ONLY to authorize GET-only Cloudflare Production inventory.'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-production-readonly-inventory
+  cancel-in-progress: false
+
+jobs:
+  policy:
+    name: Production inventory policy gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Validate GET-only inventory policy
+        run: node --test tests/cloudflare-production-readonly-inventory-workflow.test.mjs
+
+  inventory:
+    name: Inventory Cloudflare Production account read-only
+    if: github.event_name == 'workflow_dispatch'
+    needs: policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: Require exact read-only confirmation
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ '${{ inputs.confirm_phrase }}' != 'PRODUCTION_INVENTORY_READ_ONLY' ]; then
+            echo '::error::Refusing to run: confirm_phrase must equal PRODUCTION_INVENTORY_READ_ONLY.'
+            exit 1
+          fi
+
+      - name: Require Cloudflare credentials without printing them
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo '::error::Missing GitHub secret CLOUDFLARE_ACCOUNT_ID.'
+            exit 1
+          fi
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo '::error::Missing GitHub secret CLOUDFLARE_API_TOKEN.'
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Re-prove GET-only policy before account access
+        run: node --test tests/cloudflare-production-readonly-inventory-workflow.test.mjs
+
+      - name: Inventory Production Worker, secret names and R2 exposure with GET only
+        run: node scripts/inventory-cloudflare-production-account.mjs
