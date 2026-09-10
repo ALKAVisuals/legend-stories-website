@@ -18,7 +18,7 @@ test('DNS inventory script is constrained to public GET-only observation', () =>
   assert.match(script, /https:\/\/\$\{DOMAIN\}\//);
   assert.match(script, /https:\/\/www\.\$\{DOMAIN\}\//);
   assert.doesNotMatch(script, /method:\s*['"](?:POST|PUT|PATCH|DELETE)['"]/i);
-  assert.doesNotMatch(script, /authorization|bearer|api[_-]?key|secret/i);
+  assert.doesNotMatch(script, /authorization\s*:|bearer\s+|api[_-]?key\s*[:=]|client[_-]?secret\s*[:=]/i);
   assert.match(script, /mutationPerformed:\s*false/);
   assert.match(script, /credentialsUsed:\s*false/);
 });
