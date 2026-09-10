@@ -1,0 +1,127 @@
+name: Cloudflare Production Worker bootstrap
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/cloudflare-production-worker-bootstrap.yml'
+      - 'wrangler.jsonc'
+      - 'cloudflare/worker.mjs'
+      - 'scripts/verify-cloudflare-production-worker-bootstrap.mjs'
+      - 'tests/cloudflare-production-worker-bootstrap-workflow.test.mjs'
+      - 'tests/cloudflare-config.test.mjs'
+  workflow_dispatch:
+    inputs:
+      confirm_phrase:
+        description: 'Type CREATE_FAIL_CLOSED_PRODUCTION_WORKER_ONLY to authorize creation of only the non-public fail-closed Production Worker.'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-production-worker-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  policy:
+    name: Production Worker bootstrap policy gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Validate create-only fail-closed Worker policy
+        run: node --test tests/cloudflare-production-worker-bootstrap-workflow.test.mjs tests/cloudflare-config.test.mjs
+
+  bootstrap:
+    name: Create and verify non-public fail-closed Production Worker only
+    if: github.event_name == 'workflow_dispatch'
+    needs: policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: Require exact Worker-only confirmation
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ '${{ inputs.confirm_phrase }}' != 'CREATE_FAIL_CLOSED_PRODUCTION_WORKER_ONLY' ]; then
+            echo '::error::Refusing to run: confirm_phrase must equal CREATE_FAIL_CLOSED_PRODUCTION_WORKER_ONLY.'
+            exit 1
+          fi
+
+      - name: Require Cloudflare credentials without printing them
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo '::error::Missing GitHub secret CLOUDFLARE_ACCOUNT_ID.'
+            exit 1
+          fi
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo '::error::Missing GitHub secret CLOUDFLARE_API_TOKEN.'
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install exact application dependencies
+        run: npm ci
+
+      - name: Re-prove Worker bootstrap safety before account mutation
+        run: node --test tests/cloudflare-production-worker-bootstrap-workflow.test.mjs tests/cloudflare-config.test.mjs
+
+      - name: Build storefront static assets
+        run: npm run build
+
+      - name: Preflight Worker absence and private Production R2 with GET only
+        run: node scripts/verify-cloudflare-production-worker-bootstrap.mjs preflight
+
+      - name: Bundle exact Production Worker without deployment
+        run: >-
+          npx --yes wrangler@4.129.0 deploy
+          --env production
+          --dry-run
+          --outdir .wrangler-dry-run/production-bootstrap
+
+      - name: Create exact non-public fail-closed Production Worker
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4.129.0'
+          command: deploy --env production
+
+      - name: Verify remote fail-closed flags, R2 binding and zero application secrets
+        run: node scripts/verify-cloudflare-production-worker-bootstrap.mjs postdeploy
+
+      - name: Record bootstrap safety boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Cloudflare Production Worker bootstrap safety boundary'
+            echo
+            echo '- Intended Worker: legendmural-cloudflare-production'
+            echo '- workers.dev exposure: disabled by repository Production config'
+            echo '- preview URL exposure: disabled by repository Production config'
+            echo '- Custom domain / DNS changes: none'
+            echo '- Application secret configuration: none'
+            echo '- R2 object writes: none'
+            echo '- PayPal Live / Resend / Neon Production activation: none'
+            echo '- Netlify Production: untouched'
+          } >> "${GITHUB_STEP_SUMMARY}"
