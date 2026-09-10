@@ -1,0 +1,50 @@
+name: Cloudflare DNS read-only inventory
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/cloudflare-dns-readonly-inventory.yml'
+      - 'scripts/inventory-cloudflare-cutover-dns.mjs'
+      - 'tests/cloudflare-dns-readonly-inventory-workflow.test.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-dns-readonly-inventory-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  policy:
+    name: DNS inventory policy gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Validate read-only DNS inventory policy
+        run: node --test tests/cloudflare-dns-readonly-inventory-workflow.test.mjs
+
+  inventory:
+    name: Inventory LegendMural DNS and public hosting read-only
+    needs: policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Re-prove read-only policy before network observation
+        run: node --test tests/cloudflare-dns-readonly-inventory-workflow.test.mjs
+
+      - name: Query public DNS, certificate transparency and HTTPS headers only
+        run: node scripts/inventory-cloudflare-cutover-dns.mjs
