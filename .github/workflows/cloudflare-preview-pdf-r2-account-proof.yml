@@ -1,0 +1,144 @@
+name: Cloudflare preview PDF R2 account proof
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_phrase:
+        description: 'Type PREVIEW_PDF_R2_ONLY to authorize the isolated non-production proof.'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-preview-pdf-r2-account-proof
+  cancel-in-progress: false
+
+jobs:
+  policy:
+    name: Preview PDF/R2 policy gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Validate proof workflow policy
+        run: node --test tests/cloudflare-preview-pdf-r2-account-proof-workflow.test.mjs
+
+  proof:
+    name: Prove PDFKit and preview R2 on Cloudflare
+    needs: policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PREVIEW_R2_BUCKET: legendmural-v3-invoice-pdfs-preview
+      LEGENDMURAL_PROOF_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+
+    steps:
+      - name: Require exact preview-only confirmation
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ '${{ inputs.confirm_phrase }}' != 'PREVIEW_PDF_R2_ONLY' ]; then
+            echo '::error::Refusing to run: confirm_phrase must equal PREVIEW_PDF_R2_ONLY.'
+            exit 1
+          fi
+
+      - name: Require Cloudflare CI credentials without printing them
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo '::error::Missing GitHub secret CLOUDFLARE_ACCOUNT_ID.'
+            exit 1
+          fi
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo '::error::Missing GitHub secret CLOUDFLARE_API_TOKEN.'
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install exact application dependencies
+        run: npm ci
+
+      - name: Re-prove preview-only policy before account access
+        run: node --test tests/cloudflare-preview-pdf-r2-account-proof-workflow.test.mjs tests/v3-invoice-pdf.test.mjs
+
+      - name: Verify Cloudflare authentication
+        run: npx --yes wrangler@4.129.0 whoami
+
+      - name: Require the existing preview R2 bucket
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.129.0 r2 bucket info "${PREVIEW_R2_BUCKET}" --json >/tmp/legendmural-preview-r2-proof-bucket.json
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { readFile } from 'node:fs/promises';
+          const info = JSON.parse(await readFile('/tmp/legendmural-preview-r2-proof-bucket.json', 'utf8'));
+          assert.equal(info.name, process.env.PREVIEW_R2_BUCKET);
+          console.log(`[preview-pdf-r2] confirmed existing bucket ${info.name}`);
+          NODE
+
+      - name: Create canonical Node PDF comparison proof
+        run: node scripts/create-cloudflare-pdfkit-node-proof.mjs > /tmp/legendmural-node-pdf-proof.json
+
+      - name: Deploy temporary isolated proof Worker
+        id: deploy
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4.129.0'
+          command: >-
+            deploy
+            --config tests/fixtures/wrangler.remote-pdf-r2-proof.jsonc
+            --var LEGENDMURAL_PROOF_RUN_ID:${{ env.LEGENDMURAL_PROOF_RUN_ID }}
+
+      - name: Verify real Cloudflare Worker PDFKit and preview R2 semantics
+        env:
+          LEGENDMURAL_PROOF_ORIGIN: ${{ steps.deploy.outputs.deployment-url }}
+          LEGENDMURAL_NODE_PDF_PROOF: /tmp/legendmural-node-pdf-proof.json
+        run: node scripts/verify-cloudflare-remote-pdf-r2-proof.mjs
+
+      - name: Delete temporary proof Worker
+        if: always() && steps.deploy.outcome == 'success'
+        shell: bash
+        run: >-
+          npx --yes wrangler@4.129.0 delete
+          --config tests/fixtures/wrangler.remote-pdf-r2-proof.jsonc
+          --force
+
+      - name: Record preview-only proof summary
+        if: always()
+        shell: bash
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: |
+          {
+            echo '## LegendMural Cloudflare preview PDF/R2 account proof'
+            echo
+            echo '- Scope: isolated preview-only proof Worker'
+            echo '- Production Worker/env: not used'
+            echo '- Production R2 bucket: not used'
+            echo '- DNS/custom domain: not touched'
+            echo '- Neon/PayPal/Resend/dashboard secrets: not used'
+            echo '- Preview R2 bucket: existing bucket only; no provisioning'
+            echo '- Test object prefix: proofs/cloudflare-preview-pdf-r2/'
+            echo '- Temporary proof Worker cleanup: requested after proof'
+            if [ -n "${DEPLOYMENT_URL:-}" ]; then
+              echo "- Temporary workers.dev URL: ${DEPLOYMENT_URL}"
+            fi
+          } >> "${GITHUB_STEP_SUMMARY}"
