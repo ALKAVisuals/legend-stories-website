@@ -3,7 +3,7 @@
 **Last updated:** 2026-09-10  
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Migration scope:** Netlify -> Cloudflare for the public LegendMural storefront only  
-**Base `main` verified for this handoff update:** `e2d3acc3e729647ab40e5154350237ce5b995531`
+**Base `main` verified for this handoff update:** `34d8b8f9a6169424daf59dd009b2353bfa0b5a56`
 
 > This is the canonical continuation document for the active Cloudflare migration. A new chat working on this migration must read this file before reconstructing progress from older chat history. Always fresh-check current `main` before taking an action.
 
@@ -15,12 +15,28 @@
 - Neon remains the database unless a separately approved migration says otherwise.
 - PayPal, Resend, Neon and Cloudflare secret values must never be committed or pasted into repository documentation.
 - No PayPal Live activation, DNS cutover, Production Cloudflare cutover, Netlify Production change or Production-data mutation without explicit owner approval for that exact step.
+- GitHub is the source of truth. Repository changes must go through a task branch and PR; do not write directly to `main`.
 
 ## Current checkpoint
 
-The Cloudflare preview runtime is healthy. The PayPal Sandbox duplicate-webhook proof and a fresh end-to-end Sandbox checkout proof have both passed.
+The Cloudflare preview runtime is healthy and fail-closed. The following real non-production proofs have passed:
 
-Checkout was temporarily unpaused only at the existing Cloudflare preview runtime for the approved B2 Sandbox proof. The repository-safe default in `wrangler.jsonc` was not changed. `PAYPAL_ALLOW_LIVE=false`, `ORDER_EMAILS_ENABLED=false`, and all V3 activation flags remained `false` throughout. After the proof, the preview checkout was manually restored to `LEGENDMURAL_CHECKOUT_PAUSED=true` and redeployed. A direct request to `/api/paypal/checkout` then returned `503 CHECKOUT_PAUSED`, confirming the preview is fail-closed again.
+- repository-driven Cloudflare preview deployment and static routing;
+- hardened unknown-API handling;
+- PayPal Sandbox duplicate-webhook idempotency;
+- fresh PayPal Sandbox create/capture/webhook -> isolated Neon `paid` finalization;
+- preview checkout re-pause after the Sandbox test;
+- actual Cloudflare Worker PDFKit rendering;
+- actual preview R2 create-only write, read-back, SHA-256/byte-length integrity and duplicate-write semantics;
+- cleanup of the temporary isolated PDF/R2 proof Worker.
+
+Checkout remains restored to:
+
+```text
+LEGENDMURAL_CHECKOUT_PAUSED=true
+```
+
+The checked-in preview defaults remain fail-closed. `PAYPAL_ALLOW_LIVE=false`, `ORDER_EMAILS_ENABLED=false`, and all V3 activation flags remain `false`.
 
 No Production work is authorized.
 
@@ -75,22 +91,46 @@ No Production work is authorized.
 - Recorded stable isolated-Neon state: paid order stayed version `1`, with exactly one ledger row for the canonical event.
 - Merged as `e2d3acc3e729647ab40e5154350237ce5b995531`.
 
+### PR #225 — record fresh PayPal Sandbox checkout proof
+
+- Recorded the successful fresh Sandbox paid-order proof, capture/webhook delivery, isolated-Neon finalization and preview re-pause.
+- Recorded honestly that multiple fresh Sandbox create-order attempts occurred during buyer-login testing, while only the successful order is used as the final proof anchor.
+- Merged as `0df0966661bbe1164a4ca886120e400c29ed9fca`.
+
+### PR #226 — add isolated Cloudflare preview PDF/R2 account proof
+
+- Added a manually dispatched `Cloudflare preview PDF R2 account proof` workflow.
+- Added a temporary isolated workers.dev proof Worker with only the existing preview R2 binding.
+- Added deterministic Node-vs-Worker PDF comparison and create-only/read-back integrity verification.
+- No Neon, PayPal, Resend or dashboard runtime secrets are consumed by this proof.
+- Merged as `7dac56453ed00fa466dc21ad44063aa949dc3aa4`.
+
+### PR #227 — normalize Cloudflare proof account ID
+
+- Manual PDF/R2 run #1 stopped before deployment because the stored GitHub `CLOUDFLARE_ACCOUNT_ID` contained surrounding whitespace/newline characters.
+- No temporary proof Worker was deployed and no R2 object was written in failed run #1.
+- PR #227 trims only surrounding whitespace, validates the normalized account ID and masks it before export without printing the value.
+- Added regression coverage for this secret-handling boundary.
+- Merged as `34d8b8f9a6169424daf59dd009b2353bfa0b5a56`.
+
 ## Cloudflare preview deployment status
 
 ### Canonical deployment route
 
-Cloudflare's separate direct Git/Workers Builds integration is disconnected. The canonical preview deployment route is the repository's manually dispatched GitHub Actions workflow `Cloudflare preview account proof` with exact `PREVIEW_ONLY` confirmation.
+Cloudflare's separate direct Git/Workers Builds integration is disconnected. The canonical storefront preview deployment route is the repository's manually dispatched GitHub Actions workflow `Cloudflare preview account proof` with exact `PREVIEW_ONLY` confirmation.
 
-### Latest full repository-driven preview proof
+### Latest full storefront preview proof
 
 `Cloudflare preview account proof` run **#10** was manually dispatched after PR #222.
 
-**GitHub Actions run ID:** `34461889551`  
-**Head SHA:** `e2618084687b35377359e1809127e11b82875884`  
-**Result:** `success`  
-**Preview Worker:** `legendmural-cloudflare-preview`  
-**Workers.dev origin:** `https://legendmural-cloudflare-preview.lively-bonus-08da.workers.dev`  
-**Cloudflare Worker version ID:** `411070c2-5250-480c-85df-2c22e6260d3b`
+```text
+GitHub Actions run ID: 34461889551
+Head SHA: e2618084687b35377359e1809127e11b82875884
+Result: success
+Preview Worker: legendmural-cloudflare-preview
+Workers.dev origin: https://legendmural-cloudflare-preview.lively-bonus-08da.workers.dev
+Cloudflare Worker version ID: 411070c2-5250-480c-85df-2c22e6260d3b
+```
 
 Remote smoke proof passed:
 
@@ -154,13 +194,9 @@ V3_INVOICE_STORAGE_ENABLED=false
 V3_DASHBOARD_INVOICE_API_ENABLED=false
 ```
 
-Preview secrets remained encrypted Cloudflare Secrets for the isolated Neon branch and PayPal Sandbox app. No secret values were copied into GitHub or chat.
+### Successful paid order
 
-### Create-order / browser approval result
-
-The browser checkout successfully progressed beyond the `CHECKOUT_PAUSED` guard and redirected to PayPal Sandbox buyer approval, proving the Cloudflare create-order path was active.
-
-During the buyer-login/testing interaction, multiple fresh Sandbox create-order attempts were produced. This means the session was not a strict one-create-order proof. The observed new Sandbox orders included:
+During buyer-login/testing, multiple fresh Sandbox create-order attempts were produced. The observed new Sandbox orders included:
 
 ```text
 0Y197120K6491325H -> payment_pending, test, version 0
@@ -168,11 +204,7 @@ During the buyer-login/testing interaction, multiple fresh Sandbox create-order 
 8YF93007BW575474P -> paid, test, version 1
 ```
 
-No further retries were performed after identifying the successful paid order. The successful end-to-end proof is anchored only to `8YF93007BW575474P`. The two pending Sandbox attempts are retained as test evidence and are not Production data.
-
-### Successful paid order
-
-Successful PayPal Sandbox order:
+No further checkout retries were performed after identifying the successful paid order. The successful end-to-end proof is anchored only to `8YF93007BW575474P`.
 
 ```text
 PayPal order ID: 8YF93007BW575474P
@@ -187,46 +219,25 @@ Read-only Neon verification on isolated branch `cloudflare-preview-b2-20260908` 
 
 ### Capture + webhook result
 
-PayPal capture:
-
 ```text
 Capture ID: 1KF63004E9093115U
-Status: COMPLETED
+Capture status: COMPLETED
 Amount: 49.95 EUR
-```
 
-Successful payment webhook:
-
-```text
 Event ID: WH-7BV26182T4398862C-2AX615180S755454D
 Event type: PAYMENT.CAPTURE.COMPLETED
-PayPal order ID: 8YF93007BW575474P
-Capture ID: 1KF63004E9093115U
 Webhook ID: 48A370959R6889849
 PayPal result: SUCCESS / DELIVERED
 Cloudflare response: HTTP 200 OK
 ```
 
-PayPal showed the attempt on 10 Sep 2026 at 12:29:41 as `DELIVERED`. The transmission target was exactly:
+PayPal showed the attempt on 10 Sep 2026 at 12:29:41 as `DELIVERED` to exactly:
 
 ```text
 https://legendmural-cloudflare-preview.lively-bonus-08da.workers.dev/api/paypal/webhook
 ```
 
-Neon also contains the corresponding first-delivery ledger rows for the successful order:
-
-```text
-CHECKOUT.ORDER.APPROVED
-  event: WH-98440121N7275992F-2DF601654L686514F
-  PayPal order: 8YF93007BW575474P
-
-PAYMENT.CAPTURE.COMPLETED
-  event: WH-7BV26182T4398862C-2AX615180S755454D
-  PayPal order: 8YF93007BW575474P
-  capture: 1KF63004E9093115U
-```
-
-This proves the fresh first-delivery path works end-to-end through Cloudflare preview -> PayPal Sandbox -> webhook -> isolated Neon paid-state finalization.
+Neon contains the corresponding first-delivery ledger rows for `CHECKOUT.ORDER.APPROVED` and `PAYMENT.CAPTURE.COMPLETED`. This proves the fresh first-delivery path works end-to-end through Cloudflare preview -> PayPal Sandbox -> webhook -> isolated Neon paid-state finalization.
 
 ### Preview re-pause after proof
 
@@ -238,13 +249,7 @@ LEGENDMURAL_CHECKOUT_PAUSED=true
 
 and redeployed the Cloudflare preview Worker.
 
-A direct safe request to:
-
-```text
-https://legendmural-cloudflare-preview.lively-bonus-08da.workers.dev/api/paypal/checkout
-```
-
-then returned the expected fail-closed response:
+A direct safe request to `/api/paypal/checkout` then returned the expected fail-closed response:
 
 ```text
 HTTP 503
@@ -253,23 +258,128 @@ error.code: CHECKOUT_PAUSED
 
 The preview is therefore confirmed re-paused after the Sandbox test.
 
+## Cloudflare preview PDFKit + R2 account proof — PASSED 2026-09-10
+
+This proof was deliberately separated from the storefront Worker and from all commerce/email/dashboard runtime secrets.
+
+### Failed run #1 — diagnosed without side effects
+
+`Cloudflare preview PDF R2 account proof` run **#1** reached Cloudflare authentication but stopped at the R2 bucket-info step because `CLOUDFLARE_ACCOUNT_ID` contained surrounding whitespace/newline characters.
+
+```text
+Run ID: 34469027528
+Head SHA: 7dac56453ed00fa466dc21ad44063aa949dc3aa4
+Result: failure before proof deployment
+```
+
+The failure happened before the temporary Worker deployment and before any R2 test object was written. PR #227 fixed only the account-ID normalization boundary.
+
+### Successful run #2
+
+`Cloudflare preview PDF R2 account proof` run **#2** was manually dispatched from `main` using exact confirmation `PREVIEW_PDF_R2_ONLY`.
+
+```text
+Run ID: 34469940961
+Run attempt: 1
+Head SHA: 34d8b8f9a6169424daf59dd009b2353bfa0b5a56
+Result: success
+Temporary Worker: legendmural-cloudflare-preview-pdf-r2-proof
+Temporary Worker version ID: ed2d799c-a696-4089-b64a-0ce5be871fe4
+Preview R2 bucket: legendmural-v3-invoice-pdfs-preview
+Proof run ID: 34469940961-1
+```
+
+The temporary Worker had only:
+
+- the existing preview R2 binding `V3_INVOICE_PDFS` -> `legendmural-v3-invoice-pdfs-preview`;
+- the non-secret proof run identifier.
+
+No Production Worker/env, Production R2 bucket, custom domain/DNS, Neon, PayPal, Resend or dashboard runtime secrets were used.
+
+### Actual Worker PDFKit proof
+
+The real Cloudflare Worker rendered the canonical deterministic invoice fixture successfully:
+
+```text
+rendererVersion: 2
+filename: invoice-LM-INV-2027-000001.pdf
+pdfHeader: %PDF-1.4
+pdfSha256: 8fddafde6eba252eaa257fc85aa357a69043b7651eea829f355770b967718c1f
+pdfByteLength: 24256
+deterministic: true
+```
+
+The Worker output matched the canonical Node comparison proof for both SHA-256 and byte length. This closes the checklist requirement that PDFKit produce the expected invoice fixture under an actual Cloudflare Worker runtime.
+
+### Actual preview R2 create-only/read-back proof
+
+The Worker wrote the deterministic PDF to the private preview R2 bucket under:
+
+```text
+proofs/cloudflare-preview-pdf-r2/34469940961-1/8fddafde6eba252eaa257fc85aa357a69043b7651eea829f355770b967718c1f.pdf
+```
+
+Observed proof result:
+
+```text
+firstDuplicate: false
+secondDuplicate: true
+readSha256: 8fddafde6eba252eaa257fc85aa357a69043b7651eea829f355770b967718c1f
+readByteLength: 24256
+bytesEqual: true
+```
+
+Therefore the actual preview R2 binding proved:
+
+- first create-only write succeeds as a new object;
+- a second identical create-only write is recognized as the duplicate/idempotent case;
+- read-after-write succeeds;
+- SHA-256 matches the generated artifact;
+- byte length matches exactly;
+- read-back bytes are identical.
+
+This closes the Section B preview R2 create-only/read/hash/length proof requirement.
+
+### Temporary Worker cleanup
+
+After the verifier passed, Wrangler successfully deleted:
+
+```text
+legendmural-cloudflare-preview-pdf-r2-proof
+```
+
+The proof Worker therefore does not remain deployed after the test. The preview R2 proof object is non-production test evidence under the dedicated `proofs/cloudflare-preview-pdf-r2/` prefix.
+
+## Section B reconciliation after PDF/R2 proof
+
+The two previously unproven runtime/storage items are now proven:
+
+- PDFKit under actual Cloudflare Worker runtime -> **PROVEN**;
+- preview R2 create-only + read-after-write + hash/length verification -> **PROVEN**.
+
+Already-proven items remain proven for the account/project, preview static serving, unknown API fail-closed behavior, PayPal Sandbox webhook verification, isolated-Neon persistence, Resend non-live state, reconciliation OFF and dashboard invoice API OFF.
+
+Do not infer remaining Section B account/Production items complete merely because this non-production proof passed. In particular, Production Worker/bucket/secrets gates still require their own evidence and explicit authorization where an account-side Production mutation would be involved.
+
 ## Exact next step
 
 Do **not** begin a Production cutover yet.
 
-The next migration action is a **read-only reconciliation of the Cloudflare cutover checklist, especially Section B (account/pre-production setup gate), against the evidence already recorded in GitHub**. The purpose is to mark only what is genuinely proven, identify every still-unproven preview requirement, and select the first remaining non-production proof. No Cloudflare Production, DNS, PayPal Live, Netlify Production, Resend Production, dashboard publication, or Production-data action is authorized by this step.
+The next action is a **read-only remote API-route matrix against the existing Cloudflare preview Worker** to close the remaining Section B routing evidence gap. Verify all six intended public API routes reach the Worker routing layer and return the expected safe/fail-closed response for the current preview flags, without creating another PayPal order, mutating Neon, enabling V3, sending email or changing Cloudflare account configuration.
 
-At minimum, the reconciliation must verify evidence for the remaining Section B items rather than assume them complete, including actual Worker-runtime PDFKit behavior and the preview R2 create-only/read/hash/length proof where applicable.
+Before executing requests, inspect the current Worker route/method guards and choose non-mutating request forms for each route. Record exact path, method, HTTP status and expected error/response code. Do not retry a route with a mutating method merely to force a different response.
 
-Only after all required preview/pre-production gates are proven and recorded may a separate Production cutover discussion begin, and that discussion still requires explicit owner approval before any Production action.
+After that route matrix is proven and recorded, reconcile the remaining account-side Section B items again. Any step that would configure or mutate a Production Worker, Production R2 bucket, Production secret, DNS, PayPal Live, Resend Production, Netlify Production or Production data still requires separate explicit owner approval.
 
 ## What must not be changed during the next step
 
 - no `legendmural.com` DNS changes;
 - no Netlify Production changes;
 - no PayPal Live changes;
+- no new PayPal Sandbox order unless separately approved;
 - no Resend Production activation;
 - no Production Cloudflare deployment;
+- no Production R2 writes;
 - no Production Neon credential or data changes;
 - no V3 activation flags;
 - no dashboard redesign/publication;
@@ -284,7 +394,7 @@ Only after all required preview/pre-production gates are proven and recorded may
 4. Read `docs/CLOUDFLARE_ENVIRONMENT_AND_SECRET_MAP.md`.
 5. Read `docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md`.
 6. Fresh-check current `main` and open migration PRs.
-7. Reconcile the pre-production checklist read-only before choosing any next mutation.
+7. Execute only the exact next non-production/read-only proof recorded above.
 
 ## Continuation rule
 
