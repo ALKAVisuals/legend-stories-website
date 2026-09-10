@@ -1,6 +1,6 @@
 # LegendMural — Cloudflare environment & secret map
 
-**Last updated:** 2026-09-07  
+**Last updated:** 2026-09-10  
 **Rule:** names/classification only. Secret values must never be committed to GitHub.
 
 ## 1. Deployment contexts
@@ -16,18 +16,22 @@ Do not use Netlify `CONTEXT` as Cloudflare production truth.
 
 ## 2. Cloudflare Secrets
 
-Configure these through Cloudflare Secrets for the exact environment that needs them. Do not add them to `wrangler.jsonc` `vars`.
+Configure secrets through Cloudflare Secrets for the exact environment **and activation stage that actually needs them**. Do not add them to `wrangler.jsonc` `vars`.
 
-| Name | Purpose | Preview | Production |
-|---|---|---:|---:|
-| `NEON_DATABASE_URL` | Neon runtime connection | isolated/non-production credential only | dedicated least-privilege Production credential only |
-| `PAYPAL_CLIENT_ID` | PayPal server API | sandbox credential | live credential only when separately authorized |
-| `PAYPAL_CLIENT_SECRET` | PayPal server API | sandbox credential | live credential only when separately authorized |
-| `PAYPAL_WEBHOOK_ID` | PayPal webhook verification | preview/sandbox endpoint ID | Production endpoint ID only at cutover |
-| `RESEND_API_KEY` | transactional email API | non-live/test where needed | Production key only when email activation approved |
+**Stage C hosting-only rule:** the Production Worker intentionally has **zero LegendMural application secrets** while checkout, PayPal Live, email, V3 storage/reconciliation and the dashboard invoice API remain OFF. An absent Stage C application secret is therefore expected, not a setup defect. Never put Sandbox credentials into Production merely to satisfy an inventory/checklist item.
+
+| Name | Purpose | Preview | Production activation rule |
+|---|---|---:|---|
+| `NEON_DATABASE_URL` | Neon runtime connection | isolated/non-production credential only | dedicated least-privilege Production credential only when an approved active path needs Neon |
+| `PAYPAL_CLIENT_ID` | PayPal server API | sandbox credential | live/approved Production credential only when payment activation is separately authorized |
+| `PAYPAL_CLIENT_SECRET` | PayPal server API | sandbox credential | live/approved Production credential only when payment activation is separately authorized |
+| `PAYPAL_WEBHOOK_ID` | PayPal webhook verification | preview/sandbox endpoint ID | Production endpoint ID only when the Production webhook step is separately approved |
+| `RESEND_API_KEY` | transactional email API | non-live/test where needed | Production key only when email activation is approved |
 | `LEGENDMURAL_DASHBOARD_INVOICE_TOKEN` | storefront internal dashboard authorization | absent by default | configure only when dashboard invoice API activation is approved |
 
 Any later credential/token discovered by runtime review is secret by default unless proven otherwise.
+
+Dedicated Stage C rationale and fail-closed route expectations: `docs/CLOUDFLARE_STAGE_C_ZERO_SECRET_DECISION_20260910.md`.
 
 ## 3. Non-secret environment variables / feature flags
 
@@ -36,7 +40,7 @@ These may be Cloudflare `vars` because they contain deployment policy/configurat
 | Name | Preview migration default | Production migration default | Activation rule |
 |---|---|---|---|
 | `LEGENDMURAL_DEPLOY_CONTEXT` | `preview` | `production` | fixed per environment |
-| `LEGENDMURAL_CHECKOUT_PAUSED` | `true` | `true` | unpause only during approved cutover |
+| `LEGENDMURAL_CHECKOUT_PAUSED` | `true` | `true` | unpause only during approved cutover/activation step |
 | `CHECKOUT_SUCCESS_URL` | preview/runtime same-origin where applicable | `https://legendmural.com/order-success.html` | preserve canonical return path |
 | `CHECKOUT_CANCEL_URL` | preview/runtime same-origin where applicable | `https://legendmural.com/order-cancelled.html` | preserve canonical return path |
 | `CHECKOUT_ALLOWED_ORIGINS` | explicit preview origin(s) only when known | `https://legendmural.com` | never wildcard |
@@ -67,7 +71,7 @@ preview bucket:    legendmural-v3-invoice-pdfs-preview
 production bucket: legendmural-v3-invoice-pdfs-prod
 ```
 
-Buckets must remain private. No public R2 domain is part of the invoice contract.
+Buckets must remain private. No public R2 domain is part of the invoice contract. The Production binding may exist during Stage C while `V3_INVOICE_STORAGE_ENABLED=false`; no Production R2 invoice write is authorized by that binding alone.
 
 ## 5. Netlify-only items being retired from runtime truth
 
@@ -80,17 +84,19 @@ Netlify Scheduled Function metadata
 
 They remain in the repository during the migration/rollback window because Netlify Production remains the current host until cutover.
 
-## 6. Secret transfer procedure at the later Cloudflare setup step
+## 6. Secret transfer procedure at a later approved activation step
 
-1. Read current configured values directly from the authorized provider/hosting environment; never copy them through GitHub.
-2. Classify each value against this document.
-3. Create the Cloudflare Secret in the correct Worker environment.
-4. Never print the value into CI logs, PR comments, docs, screenshots or commit messages.
-5. Verify only presence/behavior, not the secret contents.
-6. Preview receives sandbox/isolated credentials only.
-7. Production credentials remain unused while the relevant feature flag is OFF.
-8. Rotate a credential only when rotation is separately required; migration does not itself require unnecessary secret rotation.
+1. Confirm that the target feature/stage has separate explicit approval and actually requires the secret.
+2. Read the configured value directly from the authorized provider/hosting environment; never copy it through GitHub.
+3. Classify the value against this document.
+4. Create the Cloudflare Secret in the correct Worker environment.
+5. Never print the value into CI logs, PR comments, docs, screenshots or commit messages.
+6. Verify only presence/behavior, not the secret contents.
+7. Preview receives sandbox/isolated credentials only.
+8. Production must never receive Sandbox credentials merely for migration parity.
+9. Production credentials remain unused while the relevant feature flag is OFF.
+10. Rotate a credential only when rotation is separately required; migration does not itself require unnecessary secret rotation.
 
 ## 7. Current safety checkpoint
 
-`wrangler.jsonc` intentionally contains **no credential values** and keeps every commerce/V3 Production activation flag OFF. This document does not authorize provisioning or Production changes.
+`wrangler.jsonc` intentionally contains **no credential values** and keeps every commerce/V3 Production activation flag OFF. Stage C intentionally requires no LegendMural application secrets in the Production Worker. This document does not authorize provisioning, secret creation, DNS changes or Production feature activation.

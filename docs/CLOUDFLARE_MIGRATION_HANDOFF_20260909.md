@@ -3,7 +3,7 @@
 **Last updated:** 2026-09-10  
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Migration scope:** Netlify -> Cloudflare for the public LegendMural storefront only  
-**Base `main` verified for this handoff update:** `ddc8646ab2e1a9b887c94a0542a13dbc2e49af2d`
+**Base `main` verified for this handoff update:** `cbfc525b47f4b29e71278b5d8784e7d883f9b0f1`
 
 > This is the canonical continuation document for the active Cloudflare migration. Always fresh-check current `main` before taking an action. GitHub is the source of truth.
 
@@ -19,14 +19,14 @@
 
 ## Current checkpoint
 
-Cloudflare preview/runtime proofs are substantially complete. The private Production R2 bucket exists and the distinct Production Worker has now been created in a deliberately fail-closed, non-public state.
+Cloudflare preview/runtime proofs and the pre-cutover Production bootstrap are substantially complete. The private Production R2 bucket exists and the distinct Production Worker exists in a deliberately fail-closed, non-public state.
 
 Current Production state:
 
 ```text
 Production Worker: legendmural-cloudflare-production
 exists: true
-Worker version ID: 5d05b26d-4179-4ab0-a7b3-35cb990de854
+Worker bootstrap version ID: 5d05b26d-4179-4ab0-a7b3-35cb990de854
 workers.dev exposure: disabled by repository Production config
 preview URL exposure: disabled by repository Production config
 custom domain / DNS attachment: none
@@ -60,7 +60,28 @@ V3_INVOICE_STORAGE_ENABLED=false
 V3_DASHBOARD_INVOICE_API_ENABLED=false
 ```
 
-`legendmural.com` has not been cut over. Netlify Production remains the active rollback/current-host target.
+`legendmural.com` has not been cut over. Netlify Production remains the active host and rollback target.
+
+## Stage C application-secret decision
+
+Stage C is hosting-only. It intentionally requires **zero LegendMural application secrets** in the Cloudflare Production Worker while checkout, PayPal Live, order email and every V3 activation flag remain OFF.
+
+Do not copy Preview/Sandbox credentials into Production. Do not add Live credentials before the separately approved feature stage that actually needs them.
+
+Dedicated decision: `docs/CLOUDFLARE_STAGE_C_ZERO_SECRET_DECISION_20260910.md`.
+
+The repository regression contract for zero-secret Stage C uses GET-only probes and expects:
+
+```text
+GET /api/paypal/checkout                -> 503 CHECKOUT_PAUSED
+GET /api/paypal/capture                 -> 503 PAYPAL_CAPTURE_SERVICE_NOT_CONFIGURED
+GET /api/paypal/webhook                 -> 503 PAYPAL_WEBHOOK_SERVICE_NOT_CONFIGURED
+GET /api/order-status                   -> 503 ORDER_STATUS_SERVICE_NOT_CONFIGURED
+GET /api/invoice-download               -> 405 METHOD_NOT_ALLOWED
+GET /api/internal/dashboard-invoice     -> 405 METHOD_NOT_ALLOWED
+```
+
+These responses must stay JSON + `no-store`. The 503 configuration responses are deliberately fail-closed and require no provider/network mutation.
 
 ## Important merged checkpoints
 
@@ -82,6 +103,8 @@ V3_DASHBOARD_INVOICE_API_ENABLED=false
 | #233 | Add guarded Production R2 bootstrap | `422b98c32e55f2c23e204c607924cc6bd0e90eb8` |
 | #234 | Record Production R2 provisioning proof | `6fc7eb414274685f8102b2268d4614556d5b11e0` |
 | #235 | Add guarded fail-closed Production Worker bootstrap | `ddc8646ab2e1a9b887c94a0542a13dbc2e49af2d` |
+| #236 | Record Production Worker bootstrap proof | `d63d7096e65662e4e18cdf79c36f200267e3c3fa` |
+| #237 | Remove unsupported nested Production `alias`; clean Production dry-run | `cbfc525b47f4b29e71278b5d8784e7d883f9b0f1` |
 
 ## Preview proof anchors
 
@@ -142,7 +165,7 @@ read-back bytes equal: true
 
 The temporary proof Worker was deleted afterward.
 
-### Six-route API matrix
+### Six-route preview API matrix
 
 Dedicated evidence: `docs/CLOUDFLARE_PREVIEW_API_ROUTE_MATRIX_PROOF_20260910.md`.
 
@@ -190,19 +213,19 @@ Production application secret names present: none
 R2 public exposure detected: false
 ```
 
-The five-minute schedule was deployed, but reconciliation remains a no-op while `V3_INVOICE_RECONCILIATION_ENABLED=false` and `ORDER_EMAILS_ENABLED=false`.
+The five-minute schedule is present, but reconciliation remains a no-op while `V3_INVOICE_RECONCILIATION_ENABLED=false` and `ORDER_EMAILS_ENABLED=false`.
 
-### Open Wrangler warning
+## Wrangler Production alias cleanup — CLOSED
 
-Both the Production dry-run and real deploy emitted:
+PR #237 removed the unsupported nested `env.production.alias`, retained the canonical top-level PDFKit alias, and added regression coverage. The Production dry-run completed without the previous:
 
 ```text
 Unexpected fields found in env.production field: "alias"
 ```
 
-The Worker deployment and startup succeeded and the post-deploy safety verifier passed, but the nested Production `alias` field must not be considered supported/proven. Resolve this repository-side before DNS/custom-domain cutover.
+warning. No Production redeploy was performed for this repository-only cleanup.
 
-## Section B status now
+## Section B status
 
 ### Proven / closed
 
@@ -221,32 +244,41 @@ The Worker deployment and startup succeeded and the post-deploy safety verifier 
 - Production Worker remote fail-closed flags;
 - Production R2 binding on the Worker;
 - zero Production application secrets currently present;
+- Stage C decision that zero application secrets are required while active features remain OFF;
+- clean Wrangler Production dry-run after nested alias cleanup;
 - no Production R2 object has been written;
 - no DNS/custom-domain cutover performed.
 
 ### Still open before cutover
 
-- clean up and prove the Wrangler `env.production.alias` compatibility issue;
-- re-run Production dry-run with no alias warning;
-- then determine/configure only the Production secrets actually required for the Stage C runtime, through Cloudflare secret storage and under separate exact approval;
-- re-run read-only account verification after any secret/setup step;
-- perform DNS inventory immediately before any later cutover;
-- obtain separate explicit owner approval for the actual domain/runtime cutover.
+- complete Section C read-only DNS/current-host inventory;
+- prepare the exact Stage C domain-routing change and rollback plan from that inventory;
+- obtain separate explicit owner approval for the actual domain/runtime cutover;
+- after routing, verify canonical HTTPS/static assets and the zero-secret GET-only API matrix before considering any later feature activation.
 
 ## Exact next step
 
-Do **not** change DNS, custom domains, Production secrets or live feature flags yet.
+**Section C read-only DNS inventory.**
 
-The next step is repository-only compatibility cleanup:
+Do not change any DNS record, nameserver, custom domain, Netlify attachment, Cloudflare route, Production secret or live feature flag during this step.
 
-1. inspect Wrangler environment inheritance/support for `alias`;
-2. remove or relocate the unsupported nested `env.production.alias` declaration if appropriate while preserving the canonical top-level PDFKit alias;
-3. update `tests/cloudflare-config.test.mjs` so the intended alias contract is explicit;
-4. run the Cloudflare compatibility suite and `wrangler deploy --env production --dry-run`;
-5. require that the Production dry-run no longer reports `Unexpected fields found in env.production field: "alias"`;
-6. stop before any Production redeploy and request exact owner approval if a redeploy is needed.
+Inventory and record only:
 
-No Production mutation is required for this repository-only cleanup/proof.
+1. authoritative nameservers for the LegendMural zone;
+2. apex A/AAAA/CNAME/flattening state;
+3. `www` record;
+4. MX records;
+5. SPF TXT;
+6. DKIM records;
+7. DMARC TXT;
+8. Resend verification records;
+9. any other LegendMural subdomains;
+10. current TTLs;
+11. current Netlify domain attachment state.
+
+If any item cannot be read with the currently authorized tools, record it as unproven and stop rather than guessing or changing provider settings.
+
+After the inventory, write the evidence to GitHub through a task branch/PR. Only after that PR is merged should the exact Stage C cutover plan be prepared. No DNS mutation is authorized by the inventory.
 
 ## What must not be changed without a new exact approval
 
@@ -255,7 +287,7 @@ No Production mutation is required for this repository-only cleanup/proof.
 - PayPal Live;
 - Resend Production activation;
 - Production Worker redeployment;
-- Production secrets;
+- Production application secrets;
 - Production R2 object writes;
 - Production Neon credentials/data;
 - V3 activation flags;
@@ -267,12 +299,13 @@ No Production mutation is required for this repository-only cleanup/proof.
 
 1. Read `docs/READ_ME_FIRST.md`.
 2. Read this file.
-3. Read `docs/CLOUDFLARE_PRODUCTION_WORKER_BOOTSTRAP_PROOF_20260910.md`.
-4. Read `docs/CLOUDFLARE_PRODUCTION_R2_PROVISION_PROOF_20260910.md`.
-5. Read `docs/CLOUDFLARE_ENVIRONMENT_AND_SECRET_MAP.md`.
-6. Read `docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md`.
-7. Fresh-check current `main` and open migration PRs.
-8. Execute only the exact next repository-only compatibility step above.
+3. Read `docs/CLOUDFLARE_STAGE_C_ZERO_SECRET_DECISION_20260910.md`.
+4. Read `docs/CLOUDFLARE_PRODUCTION_WORKER_BOOTSTRAP_PROOF_20260910.md`.
+5. Read `docs/CLOUDFLARE_PRODUCTION_R2_PROVISION_PROOF_20260910.md`.
+6. Read `docs/CLOUDFLARE_ENVIRONMENT_AND_SECRET_MAP.md`.
+7. Read `docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md`.
+8. Fresh-check current `main` and open migration PRs.
+9. Execute only the Section C read-only DNS inventory.
 
 ## Continuation rule
 
