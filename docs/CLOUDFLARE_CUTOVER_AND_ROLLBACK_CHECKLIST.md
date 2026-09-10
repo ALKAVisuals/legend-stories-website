@@ -1,7 +1,7 @@
 # LegendMural — Cloudflare cutover & rollback checklist
 
-**Last updated:** 2026-09-07  
-**Current phase:** branch implementation / no Production cutover authorized.
+**Last updated:** 2026-09-10  
+**Current phase:** pre-cutover proof / no Production domain cutover authorized.
 
 ## A. Merge-readiness gate — before `main`
 
@@ -34,7 +34,7 @@ Before any custom-domain cutover:
 - [ ] preview R2 bucket exists;
 - [ ] Production R2 bucket exists but Production invoice storage remains OFF;
 - [ ] preview gets sandbox/isolated credentials only;
-- [ ] Production Secrets are configured only through Cloudflare secret storage;
+- [ ] Production application-secret inventory matches the active stage and any required secrets are configured only through Cloudflare secret storage; **Stage C intentionally requires zero application secrets**;
 - [ ] no secret values are exposed in GitHub or CI;
 - [ ] real Cloudflare preview serves Vite static assets correctly;
 - [ ] all six existing public API routes respond through Worker routing;
@@ -48,6 +48,8 @@ Before any custom-domain cutover:
 - [ ] Resend stays non-live unless separately approved;
 - [ ] reconciliation stays OFF unless a non-production proof explicitly enables it;
 - [ ] dashboard invoice API stays OFF by default.
+
+Stage C secret rationale and the zero-secret fail-closed API contract are defined in `docs/CLOUDFLARE_STAGE_C_ZERO_SECRET_DECISION_20260910.md`. Never copy Preview/Sandbox credentials into Production just to satisfy this gate.
 
 ## C. DNS inventory gate — read-only
 
@@ -65,14 +67,15 @@ Immediately before any domain change, inventory the current LegendMural zone:
 - [ ] current TTLs;
 - [ ] current Netlify domain attachment state.
 
-Do not modify Technisch Bouwadvies DNS or hosting.
+Do not modify any DNS record or hosting/domain attachment during this inventory. Do not modify Technisch Bouwadvies DNS or hosting.
 
 ## D. Runtime/domain cutover gate — Stage C
 
-This stage changes hosting runtime only. Permanent V3 R2 invoice storage remains OFF.
+This stage changes hosting runtime only. Permanent V3 R2 invoice storage remains OFF. Stage C starts with **zero LegendMural application secrets** in the Production Worker.
 
 - [ ] explicit owner approval for this exact Production cutover;
 - [ ] Cloudflare Production Worker version identified and recorded;
+- [ ] Production application-secret inventory remains intentionally empty for hosting-only Stage C;
 - [ ] `LEGENDMURAL_CHECKOUT_PAUSED=true` before routing change;
 - [ ] `PAYPAL_ALLOW_LIVE=false` unless a separate approved live-payment step says otherwise;
 - [ ] `ORDER_EMAILS_ENABLED=false` unless separately approved;
@@ -84,7 +87,7 @@ This stage changes hosting runtime only. Permanent V3 R2 invoice storage remains
 - [ ] `www` canonical redirect verified;
 - [ ] HTTPS certificate/redirect verified;
 - [ ] homepage/shop/product/static media smoke test passed;
-- [ ] six API paths verified at canonical origin;
+- [ ] six API paths verified at canonical origin using non-mutating GET probes and the Stage C zero-secret expected matrix;
 - [ ] security/no-store/CORS behavior verified;
 - [ ] Netlify site retained as rollback target;
 - [ ] old `legendmural.netlify.app` behavior reviewed separately.
@@ -153,4 +156,4 @@ Record exact timestamps and versions, never secrets:
 
 ## Current state
 
-All checkboxes above remain operational gates. Repository implementation work may continue, but no checkbox requiring Cloudflare account, DNS or Production action is implied complete merely because code/CI passes.
+All checkboxes above remain operational gates. Repository implementation work may continue, but no checkbox requiring Cloudflare account, DNS or Production action is implied complete merely because code/CI passes. Stage C's empty Production application-secret inventory is an intentional configuration state, not authorization to add credentials.
