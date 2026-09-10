@@ -1,11 +1,12 @@
 const TARGETS = Object.freeze([
   { label: 'custom_apex', base: 'https://legendmural.com' },
   { label: 'custom_www', base: 'https://www.legendmural.com' },
+  { label: 'netlify_default_site', base: 'https://legendmural.netlify.app' },
   { label: 'netlify_main_branch', base: 'https://main--legendmural.netlify.app' },
   { label: 'netlify_immutable_deploy', base: 'https://6a8d7a5e5b89930b8ea3b5ff--legendmural.netlify.app' },
 ]);
 
-const PATHS = Object.freeze(['/', '/index.html', '/shop.html']);
+const PATHS = Object.freeze(['/', '/index.html', '/shop.html', '/robots.txt', '/sitemap.xml']);
 const SAFE_HEADERS = Object.freeze([
   'server',
   'location',
@@ -24,7 +25,7 @@ async function probe(target, path) {
       method: 'GET',
       redirect: 'manual',
       headers: {
-        accept: 'text/html,application/xhtml+xml',
+        accept: 'text/html,application/xhtml+xml,text/plain,application/xml',
         'user-agent': 'LegendMural-netlify-readonly-routing-proof/1.0',
       },
     });
