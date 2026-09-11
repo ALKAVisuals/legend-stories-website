@@ -19,10 +19,10 @@ test('zone bootstrap is manual-only for mutation and requires the exact confirma
 test('production zone bootstrap script is create-only and cannot alter delegation, Worker routing or existing DNS records', () => {
   assert.match(script, /apiRequest\('\/zones', 'POST'/);
   assert.match(script, /apiRequest\(`\/zones\/\$\{zoneId\}\/dns_records`, 'POST'/);
+  assert.equal([...script.matchAll(/'POST'/g)].length, 2);
   assert.doesNotMatch(script, /'PUT'/);
   assert.doesNotMatch(script, /'PATCH'/);
   assert.doesNotMatch(script, /'DELETE'/);
-  assert.doesNotMatch(script, /registrar/i);
   assert.doesNotMatch(script, /workers\/domains`, 'POST'/);
   assert.doesNotMatch(script, /workers\/routes/i);
 });
