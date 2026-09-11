@@ -19,7 +19,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: cloudflare-production-readonly-inventory
+  group: cloudflare-production-readonly-inventory-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -35,8 +35,11 @@ jobs:
         run: node --test tests/cloudflare-production-readonly-inventory-workflow.test.mjs
 
   inventory:
-    name: Inventory Cloudflare Production account read-only
-    if: github.event_name == 'workflow_dispatch'
+    name: Inventory Cloudflare Gate 0 read-only
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository)
     needs: policy
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -45,7 +48,8 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
     steps:
-      - name: Require exact read-only confirmation
+      - name: Require exact manual read-only confirmation
+        if: github.event_name == 'workflow_dispatch'
         shell: bash
         run: |
           set -euo pipefail
@@ -78,5 +82,5 @@ jobs:
       - name: Re-prove GET-only policy before account access
         run: node --test tests/cloudflare-production-readonly-inventory-workflow.test.mjs
 
-      - name: Inventory Production Worker, secret names and R2 exposure with GET only
+      - name: Inventory Production zone, Worker, secret names and R2 exposure with GET only
         run: node scripts/inventory-cloudflare-production-account.mjs
