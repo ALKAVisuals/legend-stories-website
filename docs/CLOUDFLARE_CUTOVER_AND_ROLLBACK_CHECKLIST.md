@@ -1,7 +1,7 @@
 # LegendMural — Cloudflare cutover & rollback checklist
 
 **Last updated:** 2026-09-10  
-**Current phase:** Section C DNS inventory / no Production domain cutover authorized.
+**Current phase:** Section C account/DNS inventory / no Production domain cutover authorized.
 
 ## A. Merge-readiness gate — before `main`
 
@@ -51,12 +51,12 @@ Before any custom-domain cutover:
 
 Stage C secret rationale and the zero-secret fail-closed API contract are defined in `docs/CLOUDFLARE_STAGE_C_ZERO_SECRET_DECISION_20260910.md`. Never copy Preview/Sandbox credentials into Production just to satisfy this gate.
 
-## C. DNS inventory gate — read-only
+## C. DNS / current-host inventory gate — read-only
 
-Immediately before any domain change, inventory the current LegendMural zone. Public proof is recorded in `docs/CLOUDFLARE_DNS_INVENTORY_PROOF_20260910.md`.
+Public DNS evidence is recorded in `docs/CLOUDFLARE_DNS_INVENTORY_PROOF_20260910.md`. Netlify account/routing evidence is recorded in `docs/NETLIFY_ACCOUNT_READONLY_INVENTORY_PROOF_20260910.md`.
 
 - [x] authoritative nameservers — Netlify/NS1-backed NS + SOA captured;
-- [ ] apex A/AAAA/CNAME/flattening state — public A/AAAA/CNAME response captured; provider-side flattening configuration still requires account-level zone inspection;
+- [ ] apex A/AAAA/CNAME/flattening state — public A/AAAA/CNAME response captured; provider-side flattening configuration still requires complete zone inspection;
 - [x] `www` public record response state captured;
 - [x] MX records captured;
 - [x] SPF TXT captured;
@@ -65,13 +65,22 @@ Immediately before any domain change, inventory the current LegendMural zone. Pu
 - [ ] Resend verification records — standard public candidate names were queried and absent; full account-level zone inventory still required before calling the zone complete;
 - [ ] any other LegendMural subdomains — two independent certificate-transparency sources found only apex + `www`, but public CT cannot enumerate all DNS names;
 - [x] current TTLs captured for the observed public records;
-- [ ] current Netlify domain attachment state — public HTTPS reaches Netlify, but apex and `www` both return HTTP 404; exact internal site/domain assignment is still unproven.
+- [x] current Netlify project/domain attachment identified account-level as project `legendmural` with primary custom URL `https://legendmural.com`;
+- [x] active Netlify Production deploy identified: deploy `6a8d7a5e5b89930b8ea3b5ff`, commit `95a57e8f05a0af547efa0dfc4d044b8a96de7fe3`, state `ready`;
+- [x] branch and immutable Netlify deploy URLs captured;
+- [x] current 404 scope isolated: custom apex, `www`, default Netlify hostname, `main` branch hostname and immutable deploy hostname all return Netlify 404 for tested storefront/static paths;
+- [ ] complete Netlify DNS-zone record list captured — **blocked because the connected Netlify integration exposes no DNS-record-list reader; requires Netlify DNS UI/export evidence**;
+- [ ] a working Netlify or equivalent rollback serving target proven — **current immutable Production deploy is not a valid proven rollback target because it returns 404**.
 
-### Current Section C evidence / blocker
+### Current Section C evidence / blockers
 
-Read-only workflow `Cloudflare DNS read-only inventory`, run #6 / ID `34486539162`, head `8a285a7ab3edcb06386610a0b686eb7335cdf0a2`, completed successfully with zero credentials and zero mutation.
+Public DNS workflow `Cloudflare DNS read-only inventory`, run #6 / ID `34486539162`, completed successfully with zero credentials and zero mutation.
 
-Public authoritative DNS is still Netlify/NS1-backed. Both `https://legendmural.com/` and `https://www.legendmural.com/` returned HTTP 404 with `server: Netlify` and `x-nf-request-id` present. This is a pre-existing observed state, not a result of the migration proof. The exact Netlify site/domain attachment and complete zone record list must be read account-level before any cutover plan can be approved.
+Netlify routing workflow `Netlify account routing read-only proof`, run #3 / ID `34492049415`, head `098a0b944e973587ab5b56038392673d208d121f`, completed successfully with zero provider credentials and GET-only probes. All 25 tested URL/path combinations returned HTTP 404 with Netlify serving evidence, including the immutable deploy permalink itself.
+
+The active Production commit contains `index.html` and `shop.html`; its Vite config explicitly builds all root HTML files to `dist`, and `netlify.toml` publishes `dist`. The available read-only evidence therefore rules out a custom-domain-only issue and rules out the simple explanation that `index.html` is absent from the configured source/build contract. It does **not** prove the exact internal Netlify cause, so do not guess or mutate Production to diagnose it without separate approval.
+
+Because the current authoritative DNS is Netlify/NS1-backed, a future Cloudflare cutover may require a nameserver-level DNS-hosting transition. Do not change nameservers until the complete Netlify DNS zone is captured and every record is accounted for.
 
 Do not modify any DNS record or hosting/domain attachment during this inventory. Do not modify Technisch Bouwadvies DNS or hosting.
 
@@ -89,13 +98,15 @@ This stage changes hosting runtime only. Permanent V3 R2 invoice storage remains
 - [ ] `V3_INVOICE_RECONCILIATION_ENABLED=false`;
 - [ ] `V3_INVOICE_STORAGE_ENABLED=false`;
 - [ ] `V3_DASHBOARD_INVOICE_API_ENABLED=false`;
+- [ ] complete current DNS zone captured before any nameserver change;
+- [ ] working rollback serving target proven before routing change;
 - [ ] custom domain/origin changed to Cloudflare;
 - [ ] `www` canonical redirect verified;
 - [ ] HTTPS certificate/redirect verified;
 - [ ] homepage/shop/product/static media smoke test passed;
 - [ ] six API paths verified at canonical origin using non-mutating GET probes and the Stage C zero-secret expected matrix;
 - [ ] security/no-store/CORS behavior verified;
-- [ ] Netlify site retained as rollback target;
+- [ ] rollback target retained and re-proven after cutover;
 - [ ] old `legendmural.netlify.app` behavior reviewed separately.
 
 Only after runtime stability is established may checkout/live feature activation be considered under its own existing V3/launch gates.
@@ -111,17 +122,19 @@ Rollback trigger examples:
 - PDF runtime incompatibility that affects active paths;
 - severe security/CORS regression.
 
-Rollback steps:
+**Current blocker:** the published Netlify Production deploy is not currently a proven working rollback target. Its immutable deploy permalink returns 404 for the tested storefront/static paths. Do not authorize Stage C cutover until a working rollback serving target has been proven.
+
+Once a working rollback target exists, rollback steps are:
 
 1. pause checkout if not already paused;
 2. keep all V3 activation/storage flags OFF;
-3. restore `legendmural.com` origin/DNS to the proven Netlify Production site;
+3. restore `legendmural.com` origin/DNS to the specifically proven rollback target;
 4. verify HTTPS/apex/www;
-5. verify storefront and API smoke tests on Netlify;
+5. verify storefront and applicable API smoke tests on that target;
 6. record the failed Cloudflare Worker version and evidence in GitHub;
 7. fix on branch/preview before another cutover attempt.
 
-Because Stage C has no Production R2 invoice writes, this rollback remains operationally simple.
+Because Stage C has no Production R2 invoice writes, storage rollback remains operationally simple, but DNS/runtime rollback is not considered ready until the serving target itself is proven.
 
 ## F. R2 Production storage activation — Stage D, separate later action
 
@@ -162,4 +175,4 @@ Record exact timestamps and versions, never secrets:
 
 ## Current state
 
-Section C is **partially closed**: the public DNS/HTTPS portion is proven, but the account-level Netlify zone/domain-attachment inventory remains mandatory before a cutover plan. No DNS, Netlify domain attachment, Cloudflare custom domain or Production routing mutation is authorized by the public proof.
+Section C is **partially closed**. Public DNS/HTTPS and the available Netlify account/project/deploy/routing facts are proven. The complete Netlify DNS-zone record list is still mandatory before any nameserver change, and the current Netlify immutable deploy has been proven unusable as a rollback serving target because it returns 404 on all tested paths. No DNS, Netlify deploy/domain attachment, Cloudflare custom domain or Production routing mutation is authorized by these proofs.
