@@ -19,11 +19,18 @@
 
 ## Current checkpoint
 
-The heavy migration proof work, exact cutover planning and **Gate 0 read-only Cloudflare preflight** are complete.
+The heavy migration proof work, exact cutover planning and **Gate 0 read-only preflight** are complete.
 
 Latest Gate 0 proof:
 
 ```text
+Public authoritative NS:
+- dns1.p01.nsone.net
+- dns2.p01.nsone.net
+- dns3.p01.nsone.net
+- dns4.p01.nsone.net
+Public DS records present: false
+
 Cloudflare zone legendmural.com in intended account: ABSENT
 Production Worker: legendmural-cloudflare-production
 Production Worker exists: true
@@ -37,10 +44,11 @@ Production R2 public exposure: false
 Gate 0 evidence:
 
 - `docs/CLOUDFLARE_GATE0_READONLY_PREFLIGHT_PROOF_20260911.md`
-- workflow run `34594862676`
-- inventory job `103248189719`
+- proofed PR head `23d08fbb7550f71f662f1e2a408ebaeab7871848`
+- workflow run `34595472854`
+- inventory job `103250140985`
 
-No Production state was changed by Gate 0.
+No Production state was changed by Gate 0. The public DS lookup returned zero records, so there is no existing registrar-level DS record that must be removed before the future nameserver switch.
 
 Required Stage C fail-closed values remain proven:
 
@@ -97,14 +105,7 @@ The two Netlify hosting records for apex and `www` are migration-specific and wi
 
 Do not clean up or redesign SPF/DMARC/DKIM/mail configuration during this migration. Mail/service CNAMEs stay DNS-only in Cloudflare.
 
-Current public authoritative DNS is still Netlify/NS1-backed. The captured authoritative nameservers are:
-
-```text
-dns1.p01.nsone.net.
-dns2.p01.nsone.net.
-dns3.p01.nsone.net.
-dns4.p01.nsone.net.
-```
+Current public authoritative DNS is still Netlify/NS1-backed and Gate 0 reconfirmed the captured authoritative nameservers. No public DS record is currently published.
 
 ## Current host / rollback decision
 
@@ -120,7 +121,7 @@ Stage C therefore proceeds without an independent third-provider serving fallbac
 
 ## Exact next action
 
-PR #245 contains the Gate 0 proof and the permanent GET-only zone/custom-domain inventory extension. Before any provider write:
+PR #245 contains the Gate 0 proof and the permanent GET-only zone/custom-domain/public-NS/DS inventory extension. Before any provider write:
 
 1. let all exact-head CI on PR #245 finish;
 2. fresh-check `main`, PR head and mergeability;
@@ -133,11 +134,12 @@ The exact cutover mutation bundle is:
 2. record the exact Cloudflare-assigned authoritative nameservers;
 3. recreate the frozen eight mail/service records exactly before delegation changes;
 4. verify those records read-only in Cloudflare;
-5. inspect current registrar DNSSEC/DS state and remove/disable an incompatible old DS only if required for the nameserver transition;
-6. replace the Netlify/NS1 authoritative nameservers at the registrar with only the Cloudflare-assigned pair;
-7. wait until the Cloudflare zone is Active;
-8. attach `legendmural.com` and `www.legendmural.com` to `legendmural-cloudflare-production` as Worker Custom Domains;
-9. run the full non-mutating post-cutover probe matrix and record the result in GitHub.
+5. replace the Netlify/NS1 authoritative nameservers at the registrar with only the Cloudflare-assigned pair;
+6. wait until the Cloudflare zone is Active;
+7. attach `legendmural.com` and `www.legendmural.com` to `legendmural-cloudflare-production` as Worker Custom Domains;
+8. run the full non-mutating post-cutover probe matrix and record the result in GitHub.
+
+Gate 0 found no current DS record, so no registrar DS removal is presently expected before the nameserver switch. Recheck public DS immediately before delegation in case external state changes.
 
 That authorization must also explicitly acknowledge the already chosen pre-live tradeoff that there is **no independent third-provider serving fallback** during this first cutover window.
 
@@ -171,7 +173,7 @@ Resend/order-email activation and V3/R2 invoice-storage activation remain separa
 - #242 historical Netlify Production-source build proof
 - #243 Cloudflare-cutover-then-PayPal-Live execution sequence
 - #244 exact Cloudflare Production cutover plan
-- #245 Gate 0 read-only zone/custom-domain preflight — open at time of this handoff update
+- #245 Gate 0 read-only zone/custom-domain/public-NS/DS preflight — open at time of this handoff update
 
 Canonical preview Worker:
 
