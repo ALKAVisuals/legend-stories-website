@@ -1,6 +1,7 @@
 import { appendFile } from 'node:fs/promises';
 
 const API_BASE = 'https://api.cloudflare.com/client/v4';
+const PUBLIC_DNS_API = 'https://dns.google/resolve';
 const PROD_ZONE = 'legendmural.com';
 const PROD_WORKER = 'legendmural-cloudflare-production';
 const PROD_R2_BUCKET = 'legendmural-v3-invoice-pdfs-prod';
@@ -55,6 +56,30 @@ async function apiGet(pathname) {
   }
 
   return { status: response.status, body };
+}
+
+async function publicDnsGet(type) {
+  const url = new URL(PUBLIC_DNS_API);
+  url.searchParams.set('name', PROD_ZONE);
+  url.searchParams.set('type', type);
+  url.searchParams.set('do', '1');
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: { Accept: 'application/dns-json' },
+  });
+  const text = await response.text();
+  let body = null;
+  if (text) {
+    try {
+      body = JSON.parse(text);
+    } catch {
+      throw new Error(`Public DNS returned non-JSON for ${PROD_ZONE}/${type} (HTTP ${response.status}).`);
+    }
+  }
+  if (!response.ok || Number(body?.Status) !== 0) {
+    throw new Error(`Public DNS ${PROD_ZONE}/${type} read failed (HTTP ${response.status}; DNS status ${body?.Status ?? 'unknown'}).`);
+  }
+  return body;
 }
 
 function isNotFound(result) {
@@ -140,8 +165,27 @@ function zoneSummaryFrom(result) {
   };
 }
 
+function normalizeDnsName(value) {
+  return String(value || '').trim().toLowerCase().replace(/\.$/, '');
+}
+
+function dnsAnswerData(body, typeCode) {
+  const answers = Array.isArray(body?.Answer) ? body.Answer : [];
+  return answers
+    .filter((entry) => Number(entry?.type) === typeCode)
+    .map((entry) => String(entry?.data || '').trim())
+    .filter(Boolean)
+    .sort();
+}
+
 const summary = {
   scope: 'read-only Production account inventory',
+  publicDns: {
+    authoritativeNameservers: [],
+    dsRecords: [],
+    dsPresent: false,
+    dnssecAuthenticatedData: false,
+  },
   productionZone: {
     name: PROD_ZONE,
     existsInAccount: false,
@@ -169,6 +213,13 @@ const summary = {
     publicExposureDetected: null,
   },
 };
+
+const nsDns = await publicDnsGet('NS');
+summary.publicDns.authoritativeNameservers = dnsAnswerData(nsDns, 2).map(normalizeDnsName);
+const dsDns = await publicDnsGet('DS');
+summary.publicDns.dsRecords = dnsAnswerData(dsDns, 43);
+summary.publicDns.dsPresent = summary.publicDns.dsRecords.length > 0;
+summary.publicDns.dnssecAuthenticatedData = dsDns.AD === true;
 
 const zoneResponse = await apiGet(`/zones?name=${encodeURIComponent(PROD_ZONE)}&account.id=${encodeURIComponent(accountId)}&per_page=50`);
 const zoneResult = requireSuccess(zoneResponse, 'Production zone inventory');
@@ -223,6 +274,9 @@ if (process.env.GITHUB_STEP_SUMMARY) {
     '## LegendMural Cloudflare Production account inventory',
     '',
     '- Mode: read-only GET requests only',
+    `- Public authoritative nameservers: ${summary.publicDns.authoritativeNameservers.join(', ') || 'none'}`,
+    `- Public DS records present: ${String(summary.publicDns.dsPresent)}`,
+    `- Public DS record count: ${summary.publicDns.dsRecords.length}`,
     `- Production zone ${PROD_ZONE}: ${summary.productionZone.existsInAccount ? 'exists in scoped account' : 'not present in scoped account'}`,
     `- Production zone status: ${summary.productionZone.status || 'not applicable'}`,
     `- Production zone paused: ${summary.productionZone.existsInAccount ? String(summary.productionZone.paused) : 'not applicable'}`,
