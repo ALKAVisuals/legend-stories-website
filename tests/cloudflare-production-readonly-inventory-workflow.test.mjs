@@ -21,10 +21,16 @@ const forbiddenMutationTokens = [
   'secret bulk',
 ];
 
-test('Production inventory requires exact manual confirmation', () => {
+test('Production inventory preserves exact manual confirmation for workflow dispatch', () => {
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /PRODUCTION_INVENTORY_READ_ONLY/);
   assert.match(workflow, /if: github\.event_name == 'workflow_dispatch'/);
+});
+
+test('Production inventory may read account state automatically only for same-repo pull requests', () => {
+  assert.match(workflow, /github\.event_name == 'pull_request'/);
+  assert.match(workflow, /github\.event\.pull_request\.head\.repo\.full_name == github\.repository/);
+  assert.doesNotMatch(workflow, /pull_request_target/);
 });
 
 test('Production inventory workflow has read-only GitHub permissions', () => {
@@ -37,12 +43,13 @@ test('Production inventory uses only the established Cloudflare credential names
   assert.doesNotMatch(workflow, /PAYPAL_CLIENT_SECRET|NEON_DATABASE_URL|RESEND_API_KEY|LEGENDMURAL_DASHBOARD_INVOICE_TOKEN/);
 });
 
-test('inventory script is fixed to the intended Production Worker and R2 bucket', () => {
+test('inventory script is fixed to the intended Production zone, Worker and R2 bucket', () => {
+  assert.match(script, /const PROD_ZONE = 'legendmural\.com'/);
   assert.match(script, /legendmural-cloudflare-production/);
   assert.match(script, /legendmural-v3-invoice-pdfs-prod/);
 });
 
-test('inventory script uses Cloudflare API GET requests only', () => {
+test('inventory script uses GET requests only', () => {
   assert.match(script, /method: 'GET'/);
   for (const token of forbiddenMutationTokens) {
     assert.equal(script.includes(token), false, `forbidden mutation token present in script: ${token}`);
@@ -50,15 +57,21 @@ test('inventory script uses Cloudflare API GET requests only', () => {
   }
 });
 
-test('inventory covers Worker settings, secret-name presence and R2 public exposure', () => {
+test('inventory covers public NS/DS, zone state, Worker settings, Worker custom domains, secret-name presence and R2 public exposure', () => {
+  assert.match(script, /https:\/\/dns\.google\/resolve/);
+  assert.match(script, /publicDnsGet\('NS'\)/);
+  assert.match(script, /publicDnsGet\('DS'\)/);
+  assert.match(script, /dsPresent/);
+  assert.match(script, /\/zones\?name=\$\{encodeURIComponent\(PROD_ZONE\)\}&account\.id=\$\{encodeURIComponent\(accountId\)\}/);
   assert.match(script, /\/workers\/scripts\/\$\{encodeURIComponent\(PROD_WORKER\)\}\/settings/);
   assert.match(script, /\/workers\/scripts\/\$\{encodeURIComponent\(PROD_WORKER\)\}\/secrets/);
+  assert.match(script, /\/accounts\/\$\{accountId\}\/workers\/domains/);
   assert.match(script, /\/r2\/buckets\/\$\{encodeURIComponent\(PROD_R2_BUCKET\)\}/);
   assert.match(script, /\/domains\/managed/);
   assert.match(script, /\/domains\/custom/);
 });
 
-test('inventory never prints raw Cloudflare responses or secret values', () => {
+test('inventory never prints raw provider responses or secret values', () => {
   assert.doesNotMatch(script, /console\.log\(text\)/);
   assert.doesNotMatch(script, /console\.log\(body\)/);
   assert.doesNotMatch(script, /console\.log\(settings\)/);

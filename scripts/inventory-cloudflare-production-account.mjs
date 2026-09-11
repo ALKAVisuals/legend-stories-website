@@ -1,6 +1,8 @@
 import { appendFile } from 'node:fs/promises';
 
 const API_BASE = 'https://api.cloudflare.com/client/v4';
+const PUBLIC_DNS_API = 'https://dns.google/resolve';
+const PROD_ZONE = 'legendmural.com';
 const PROD_WORKER = 'legendmural-cloudflare-production';
 const PROD_R2_BUCKET = 'legendmural-v3-invoice-pdfs-prod';
 
@@ -56,6 +58,30 @@ async function apiGet(pathname) {
   return { status: response.status, body };
 }
 
+async function publicDnsGet(type) {
+  const url = new URL(PUBLIC_DNS_API);
+  url.searchParams.set('name', PROD_ZONE);
+  url.searchParams.set('type', type);
+  url.searchParams.set('do', '1');
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: { Accept: 'application/dns-json' },
+  });
+  const text = await response.text();
+  let body = null;
+  if (text) {
+    try {
+      body = JSON.parse(text);
+    } catch {
+      throw new Error(`Public DNS returned non-JSON for ${PROD_ZONE}/${type} (HTTP ${response.status}).`);
+    }
+  }
+  if (!response.ok || Number(body?.Status) !== 0) {
+    throw new Error(`Public DNS ${PROD_ZONE}/${type} read failed (HTTP ${response.status}; DNS status ${body?.Status ?? 'unknown'}).`);
+  }
+  return body;
+}
+
 function isNotFound(result) {
   return result.status === 404;
 }
@@ -99,7 +125,7 @@ function secretNamesFrom(result) {
   return [...new Set(result.map((entry) => String(entry?.name || '')).filter(Boolean))].sort();
 }
 
-function customDomainsFrom(result) {
+function r2CustomDomainsFrom(result) {
   const domains = Array.isArray(result?.domains) ? result.domains : [];
   return domains
     .map((entry) => ({ domain: String(entry?.domain || ''), enabled: entry?.enabled === true }))
@@ -107,8 +133,67 @@ function customDomainsFrom(result) {
     .sort((a, b) => a.domain.localeCompare(b.domain));
 }
 
+function workerCustomDomainsFrom(result) {
+  if (!Array.isArray(result)) return [];
+  return result
+    .filter((entry) => String(entry?.service || '') === PROD_WORKER)
+    .map((entry) => ({
+      hostname: String(entry?.hostname || ''),
+      service: String(entry?.service || ''),
+      environment: String(entry?.environment || ''),
+    }))
+    .filter((entry) => entry.hostname)
+    .sort((a, b) => a.hostname.localeCompare(b.hostname));
+}
+
+function zoneSummaryFrom(result) {
+  if (!Array.isArray(result)) return null;
+  const exact = result.filter((entry) => String(entry?.name || '').toLowerCase() === PROD_ZONE);
+  if (exact.length > 1) {
+    throw new Error(`Cloudflare returned multiple exact ${PROD_ZONE} zones for the scoped account.`);
+  }
+  if (exact.length === 0) return null;
+  const zone = exact[0];
+  return {
+    name: String(zone?.name || ''),
+    status: String(zone?.status || ''),
+    paused: zone?.paused === true,
+    accountMatches: String(zone?.account?.id || '') === accountId,
+    nameServers: Array.isArray(zone?.name_servers)
+      ? zone.name_servers.map((value) => String(value || '')).filter(Boolean).sort()
+      : [],
+  };
+}
+
+function normalizeDnsName(value) {
+  return String(value || '').trim().toLowerCase().replace(/\.$/, '');
+}
+
+function dnsAnswerData(body, typeCode) {
+  const answers = Array.isArray(body?.Answer) ? body.Answer : [];
+  return answers
+    .filter((entry) => Number(entry?.type) === typeCode)
+    .map((entry) => String(entry?.data || '').trim())
+    .filter(Boolean)
+    .sort();
+}
+
 const summary = {
   scope: 'read-only Production account inventory',
+  publicDns: {
+    authoritativeNameservers: [],
+    dsRecords: [],
+    dsPresent: false,
+    dnssecAuthenticatedData: false,
+  },
+  productionZone: {
+    name: PROD_ZONE,
+    existsInAccount: false,
+    status: null,
+    paused: null,
+    accountMatches: false,
+    nameServers: [],
+  },
   productionWorker: {
     name: PROD_WORKER,
     exists: false,
@@ -118,6 +203,7 @@ const summary = {
     r2Bindings: [],
     secretNamesPresent: [],
     expectedSecretNames: EXPECTED_SECRET_NAMES,
+    customDomains: [],
   },
   productionR2: {
     name: PROD_R2_BUCKET,
@@ -127,6 +213,24 @@ const summary = {
     publicExposureDetected: null,
   },
 };
+
+const nsDns = await publicDnsGet('NS');
+summary.publicDns.authoritativeNameservers = dnsAnswerData(nsDns, 2).map(normalizeDnsName);
+const dsDns = await publicDnsGet('DS');
+summary.publicDns.dsRecords = dnsAnswerData(dsDns, 43);
+summary.publicDns.dsPresent = summary.publicDns.dsRecords.length > 0;
+summary.publicDns.dnssecAuthenticatedData = dsDns.AD === true;
+
+const zoneResponse = await apiGet(`/zones?name=${encodeURIComponent(PROD_ZONE)}&account.id=${encodeURIComponent(accountId)}&per_page=50`);
+const zoneResult = requireSuccess(zoneResponse, 'Production zone inventory');
+const zone = zoneSummaryFrom(zoneResult);
+if (zone) {
+  summary.productionZone.existsInAccount = true;
+  summary.productionZone.status = zone.status;
+  summary.productionZone.paused = zone.paused;
+  summary.productionZone.accountMatches = zone.accountMatches;
+  summary.productionZone.nameServers = zone.nameServers;
+}
 
 const workerSettingsResponse = await apiGet(`/accounts/${accountId}/workers/scripts/${encodeURIComponent(PROD_WORKER)}/settings`);
 if (!isNotFound(workerSettingsResponse)) {
@@ -142,6 +246,10 @@ if (!isNotFound(workerSettingsResponse)) {
   summary.productionWorker.secretNamesPresent = secretNamesFrom(secrets);
 }
 
+const workerDomainsResponse = await apiGet(`/accounts/${accountId}/workers/domains`);
+const workerDomains = requireSuccess(workerDomainsResponse, 'Production Worker custom-domain inventory');
+summary.productionWorker.customDomains = workerCustomDomainsFrom(workerDomains);
+
 const bucketResponse = await apiGet(`/accounts/${accountId}/r2/buckets/${encodeURIComponent(PROD_R2_BUCKET)}`);
 if (!isNotFound(bucketResponse)) {
   requireSuccess(bucketResponse, 'Production R2 bucket inventory');
@@ -153,7 +261,7 @@ if (!isNotFound(bucketResponse)) {
 
   const customDomainsResponse = await apiGet(`/accounts/${accountId}/r2/buckets/${encodeURIComponent(PROD_R2_BUCKET)}/domains/custom`);
   const customDomains = requireSuccess(customDomainsResponse, 'Production R2 custom-domain inventory');
-  summary.productionR2.customDomains = customDomainsFrom(customDomains);
+  summary.productionR2.customDomains = r2CustomDomainsFrom(customDomains);
   summary.productionR2.publicExposureDetected = summary.productionR2.managedR2DevEnabled
     || summary.productionR2.customDomains.some((entry) => entry.enabled);
 }
@@ -166,10 +274,19 @@ if (process.env.GITHUB_STEP_SUMMARY) {
     '## LegendMural Cloudflare Production account inventory',
     '',
     '- Mode: read-only GET requests only',
+    `- Public authoritative nameservers: ${summary.publicDns.authoritativeNameservers.join(', ') || 'none'}`,
+    `- Public DS records present: ${String(summary.publicDns.dsPresent)}`,
+    `- Public DS record count: ${summary.publicDns.dsRecords.length}`,
+    `- Production zone ${PROD_ZONE}: ${summary.productionZone.existsInAccount ? 'exists in scoped account' : 'not present in scoped account'}`,
+    `- Production zone status: ${summary.productionZone.status || 'not applicable'}`,
+    `- Production zone paused: ${summary.productionZone.existsInAccount ? String(summary.productionZone.paused) : 'not applicable'}`,
+    `- Production zone account match: ${summary.productionZone.existsInAccount ? String(summary.productionZone.accountMatches) : 'not applicable'}`,
+    `- Production zone assigned nameservers: ${summary.productionZone.nameServers.join(', ') || 'none'}`,
     `- Production Worker: ${summary.productionWorker.exists ? 'exists' : 'not configured'}`,
     `- Production Worker name: ${PROD_WORKER}`,
     `- Fail-closed flags proven from remote settings: ${summary.productionWorker.exists ? String(summary.productionWorker.failClosedFlagsProven) : 'not applicable (Worker absent)'}`,
     `- Production secret names present: ${summary.productionWorker.exists ? (summary.productionWorker.secretNamesPresent.join(', ') || 'none') : 'not applicable (Worker absent)'}`,
+    `- Production Worker custom domains: ${summary.productionWorker.customDomains.map((entry) => entry.hostname).join(', ') || 'none'}`,
     `- Production R2 bucket: ${summary.productionR2.exists ? 'exists' : 'not configured'}`,
     `- Production R2 bucket name: ${PROD_R2_BUCKET}`,
     `- r2.dev public access: ${summary.productionR2.exists ? String(summary.productionR2.managedR2DevEnabled) : 'not applicable (bucket absent)'}`,
