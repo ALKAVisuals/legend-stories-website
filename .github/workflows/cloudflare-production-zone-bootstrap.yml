@@ -1,0 +1,104 @@
+name: Cloudflare Production zone bootstrap
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/cloudflare-production-zone-bootstrap.yml'
+      - 'scripts/bootstrap-cloudflare-production-zone.mjs'
+      - 'tests/cloudflare-production-zone-bootstrap-workflow.test.mjs'
+  workflow_dispatch:
+    inputs:
+      confirm_phrase:
+        description: 'Type CREATE_LEGENDMURAL_ZONE_AND_PRESERVE_DNS_ONLY to authorize only the Cloudflare full-zone creation plus the eight frozen mail/service DNS records.'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-production-zone-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  policy:
+    name: Production zone bootstrap policy gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Validate create-only Production DNS bootstrap policy
+        run: node --test tests/cloudflare-production-zone-bootstrap-workflow.test.mjs
+
+  bootstrap:
+    name: Create Cloudflare zone and preserve frozen DNS only
+    if: github.event_name == 'workflow_dispatch'
+    needs: policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: Require exact Production DNS bootstrap confirmation
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ '${{ inputs.confirm_phrase }}' != 'CREATE_LEGENDMURAL_ZONE_AND_PRESERVE_DNS_ONLY' ]; then
+            echo '::error::Refusing to run: confirm_phrase must equal CREATE_LEGENDMURAL_ZONE_AND_PRESERVE_DNS_ONLY.'
+            exit 1
+          fi
+
+      - name: Require Cloudflare credentials without printing them
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo '::error::Missing GitHub secret CLOUDFLARE_ACCOUNT_ID.'
+            exit 1
+          fi
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo '::error::Missing GitHub secret CLOUDFLARE_API_TOKEN.'
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Re-prove create-only Production DNS bootstrap policy
+        run: node --test tests/cloudflare-production-zone-bootstrap-workflow.test.mjs
+
+      - name: Fresh-check Gate 0 and create only the full zone plus eight preserved DNS records
+        run: node scripts/bootstrap-cloudflare-production-zone.mjs
+
+      - name: Record strict safety boundary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Cloudflare Production zone bootstrap safety boundary'
+            echo
+            echo '- Allowed external writes: create legendmural.com full zone; create missing frozen mail/service DNS records only'
+            echo '- Existing DNS overwrite/delete: forbidden'
+            echo '- Registrar nameserver change: not performed'
+            echo '- Worker Custom Domain creation: not performed'
+            echo '- Production Worker deploy/config mutation: not performed'
+            echo '- PayPal Live / checkout activation: not performed'
+            echo '- Resend / Neon / Production R2 object mutation / V3 activation: not performed'
+            echo '- Technisch Bouwadvies / Netlify Production: untouched'
+          } >> "${GITHUB_STEP_SUMMARY}"
