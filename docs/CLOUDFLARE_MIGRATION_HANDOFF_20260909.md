@@ -3,7 +3,7 @@
 **Last updated:** 2026-09-11  
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Migration scope:** Netlify -> Cloudflare for the public LegendMural storefront only  
-**Base `main` verified for this handoff update:** `f69735d3cb52fb4ca1b390c283a0c8006bb8921c`
+**Base `main` verified for this handoff update:** `33b4b373fc5490ca9314f9d195e6de30926b4f09`
 
 > This is the canonical continuation document for the active Cloudflare migration. Always fresh-check current `main` before taking an action. GitHub is the source of truth.
 
@@ -60,6 +60,7 @@ Stage C remains hosting-only and intentionally requires zero LegendMural applica
 | #238 | Stage C zero-secret fail-closed contract | `9a8ccf21618e3fd3af87c3cab6b675d559c3e69e` |
 | #239 | Public DNS cutover inventory | `9cf90d05fb9b57700bb4ea44144208fd1ff2b963` |
 | #240 | Netlify account routing read-only proof | `f69735d3cb52fb4ca1b390c283a0c8006bb8921c` |
+| #241 | Complete Netlify DNS zone export proof | `33b4b373fc5490ca9314f9d195e6de30926b4f09` |
 
 ## Preview/runtime proof anchors
 
@@ -96,13 +97,14 @@ Production application secrets: zero
 custom domain / DNS attachment: none
 ```
 
-## Section C — DNS inventory status
+## Section C — DNS inventory / rollback readiness
 
 Dedicated evidence:
 
 - public DNS: `docs/CLOUDFLARE_DNS_INVENTORY_PROOF_20260910.md`;
 - Netlify project/deploy/routing: `docs/NETLIFY_ACCOUNT_READONLY_INVENTORY_PROOF_20260910.md`;
 - complete Netlify DNS export: `docs/NETLIFY_DNS_ZONE_EXPORT_PROOF_20260911.md`;
+- isolated historical Production-source build: `docs/NETLIFY_PRODUCTION_SOURCE_BUILD_PROOF_20260911.md`;
 - cutover gates: `docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md`.
 
 ### Public/account routing facts already proven
@@ -149,34 +151,66 @@ Important correction to the public-only discovery: Resend/Amazon SES records do 
 
 ### MX priorities — captured
 
-The Netlify CSV schema does not contain a separate priority column. Both preferences are nevertheless now established without DNS mutation:
+The Netlify CSV schema does not contain a separate priority column. Both preferences are nevertheless established without DNS mutation:
 
 - apex Outlook MX priority `0` was captured by the earlier public DNS proof;
 - Amazon SES authoritative Custom MAIL FROM documentation specifies `10 feedback-smtp.<region>.amazonses.com`, so the exported target `feedback-smtp.eu-west-1.amazonses.com` uses priority `10`.
 
 Provider reference: `https://docs.aws.amazon.com/ses/latest/dg/mail-from.html`.
 
-The DNS inventory is therefore complete for cutover planning.
+The DNS inventory is complete for cutover planning.
+
+### Exact Production source build — proven cleanly outside Netlify
+
+The exact source commit behind the current Netlify Production deploy was rebuilt in an isolated GitHub Actions job with no provider credentials and no provider/runtime mutation.
+
+```text
+Source SHA: 95a57e8f05a0af547efa0dfc4d044b8a96de7fe3
+Workflow: Netlify Production source build proof
+Run ID: 34590681486
+Build job ID: 103235087481
+Node: 22.23.2
+Result: success
+Output files: 293
+Total dist bytes: 78,951,418
+Historical repository build validator: 127 HTML pages / 293 output files
+```
+
+Required files were present and non-empty, including `index.html`, `shop.html`, `robots.txt`, `sitemap.xml` and `js/commerce/runtime-config.mjs`.
+
+The generated `dist` was served only on `127.0.0.1:4173`; all of these returned HTTP 200:
+
+```text
+/
+/index.html
+/shop.html
+/robots.txt
+/sitemap.xml
+```
+
+Compact proof artifact ID `10195505491`, ZIP SHA-256 `b88801cc04da860b2906020e78185d6f4e0aec181e4bc6fee9b93c511ca36e5d`.
+
+This rules out the simple explanation that the pinned source/build contract itself cannot produce a serveable storefront. It does **not** identify the internal reason why the current Netlify immutable deploy returns 404.
 
 ## Section C remaining blocker
 
-The only remaining Section C blocker before any Cloudflare Production domain cutover is a **working, independently verified rollback serving target**.
+The only remaining Section C blocker before any Cloudflare Production domain cutover is a **working, independently reachable rollback serving target**.
 
-The current Netlify immutable Production permalink cannot be used as the rollback target because it returns 404 for the tested storefront/static paths. Read-only inspection has not proven the internal Netlify root cause. No repair, redeploy, publish-directory change or domain change has been performed.
+The source artifact is now proven buildable and locally serveable, but the existing Netlify immutable Production permalink still cannot be used because it returns 404 for the tested storefront/static paths. Read-only inspection has not proven the internal Netlify root cause. No repair, redeploy, publish-directory change or domain change has been performed.
 
-The connected Netlify integration exposes current project/deploy metadata but not deploy history, so no older Netlify deploy has been identified objectively through the connector. GitHub history also contains no independently proven old Netlify permalink that can safely be called the rollback target.
+The connected Netlify integration exposes current project/deploy metadata but not deploy history, so no older working Netlify deploy has been identified objectively through the connector. GitHub history also contains no independently proven old Netlify permalink that can safely be called the rollback target.
 
-A Netlify repair/redeploy would change Production and therefore requires separate explicit owner approval before execution. Creating any alternative rollback hosting resource should likewise be planned explicitly and proven before the final cutover.
+A Netlify Production repair/redeploy would change Production and requires separate explicit owner approval. Creating any alternative externally reachable rollback hosting resource is also an external mutation and must be approved for the exact action before execution.
 
 ## Exact next step
 
-1. Prove that the exact current Netlify Production source commit `95a57e8f05a0af547efa0dfc4d044b8a96de7fe3` still produces the expected static `dist` artifact under a clean non-Production build.
-2. Use that evidence to choose the minimum safe rollback-target action.
-3. Prefer an independently testable static rollback target that does not change the current public domain while being prepared.
-4. If the chosen solution requires a Netlify Production redeploy/repair or any new external hosting resource, stop first and request explicit owner approval for that exact action.
-5. Only after the rollback target is HTTP-successful and recorded in GitHub may the exact Cloudflare DNS/nameserver/custom-domain cutover plan be finalized.
+1. Use the proven source/build evidence to choose the minimum-risk way to create one independently reachable rollback serving target **without changing `legendmural.com` or `www` while it is prepared**.
+2. Prefer a non-Production/draft/static target that can be tested by its own unique URL and that can serve the proven historical artifact/source.
+3. Before creating/publishing that external target, stop and request explicit owner approval for the exact provider/action; do not silently repair or redeploy Netlify Production.
+4. After approval and creation, GET-probe at minimum `/`, `/index.html`, `/shop.html`, `/robots.txt` and `/sitemap.xml`, and record the target URL/deploy identifier/source SHA plus HTTP results in GitHub.
+5. Only after the rollback target is independently HTTP-successful may the exact Cloudflare DNS/nameserver/custom-domain cutover plan be finalized.
 
-No DNS, nameserver, Netlify Production, Cloudflare Production route/custom-domain, PayPal Live, Resend activation, Neon Production data, R2 Production write or V3 activation is authorized by the DNS inventory work.
+No DNS, nameserver, Netlify Production, Cloudflare Production route/custom-domain, PayPal Live, Resend activation, Neon Production data, R2 Production write or V3 activation is authorized by the source-build proof.
 
 ## What must not be changed without new exact approval
 
@@ -197,13 +231,14 @@ No DNS, nameserver, Netlify Production, Cloudflare Production route/custom-domai
 
 1. Read `docs/READ_ME_FIRST.md`.
 2. Read this file.
-3. Read `docs/NETLIFY_DNS_ZONE_EXPORT_PROOF_20260911.md`.
-4. Read `docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md`.
-5. Read `docs/NETLIFY_ACCOUNT_READONLY_INVENTORY_PROOF_20260910.md`.
-6. Read `docs/CLOUDFLARE_DNS_INVENTORY_PROOF_20260910.md`.
-7. Read `docs/CLOUDFLARE_STAGE_C_ZERO_SECRET_DECISION_20260910.md`.
-8. Fresh-check current `main` and open migration PRs.
-9. Continue only with rollback-target proof until separate Production cutover approval is given.
+3. Read `docs/NETLIFY_PRODUCTION_SOURCE_BUILD_PROOF_20260911.md`.
+4. Read `docs/NETLIFY_DNS_ZONE_EXPORT_PROOF_20260911.md`.
+5. Read `docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md`.
+6. Read `docs/NETLIFY_ACCOUNT_READONLY_INVENTORY_PROOF_20260910.md`.
+7. Read `docs/CLOUDFLARE_DNS_INVENTORY_PROOF_20260910.md`.
+8. Read `docs/CLOUDFLARE_STAGE_C_ZERO_SECRET_DECISION_20260910.md`.
+9. Fresh-check current `main` and open migration PRs.
+10. Continue only with externally reachable rollback-target proof until separate Production cutover approval is given.
 
 ## Continuation rule
 
