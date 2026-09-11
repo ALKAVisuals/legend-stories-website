@@ -3,18 +3,33 @@
 **Date:** 2026-09-11  
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **PR:** #245  
-**PR head:** `1a147379788e3ca3930e800dcbddb8bf7c5765cc`  
+**Proofed PR head:** `23d08fbb7550f71f662f1e2a408ebaeab7871848`  
 **Workflow:** `Cloudflare Production read-only inventory`  
-**Run ID:** `34594862676`  
-**Inventory job ID:** `103248189719`
+**Run ID:** `34595472854`  
+**Inventory job ID:** `103250140985`
 
 ## Scope
 
-This proof is intentionally read-only. The workflow uses authenticated Cloudflare API **GET** requests only. It performs no zone creation, DNS mutation, nameserver change, Worker deployment, Custom Domain creation, secret write, R2 object write, PayPal change, Netlify change or Neon mutation.
+This proof is intentionally read-only. The workflow uses authenticated Cloudflare API **GET** requests plus public DNS-over-HTTPS **GET** requests only. It performs no zone creation, DNS mutation, nameserver change, Worker deployment, Custom Domain creation, secret write, R2 object write, PayPal change, Netlify change or Neon mutation.
 
 The policy test passed before account access and explicitly rejects POST, PUT, PATCH, DELETE, Wrangler deploy, R2 bucket creation and secret writes.
 
 ## Gate 0 result
+
+### Current public DNS delegation / DNSSEC
+
+```text
+Authoritative NS:
+- dns1.p01.nsone.net
+- dns2.p01.nsone.net
+- dns3.p01.nsone.net
+- dns4.p01.nsone.net
+
+DS records present at public resolver: false
+DS record count: 0
+```
+
+This reconfirms the current Netlify/NS1-backed delegation and proves that no DS record is presently published for `legendmural.com`. There is therefore no existing registrar-level DS record that must be removed before the future nameserver switch. DNSSEC can be enabled separately in Cloudflare only after the new zone is stable, if desired and explicitly approved.
 
 ### Cloudflare zone
 
@@ -68,13 +83,15 @@ Production R2 remains private.
 
 ## Interpretation for the cutover
 
-The read-only preflight resolves the previously open zone-existence question:
+The read-only preflight resolves the previously open Gate 0 questions:
 
-1. `legendmural.com` is **absent** from the intended Cloudflare account;
-2. the Production Worker already exists and remains fail-closed;
-3. there are no Production Worker Custom Domains yet;
-4. no Stage C application secrets are present;
-5. Production R2 remains private.
+1. public authoritative DNS is still the captured Netlify/NS1 set;
+2. no public DS record is present;
+3. `legendmural.com` is **absent** from the intended Cloudflare account;
+4. the Production Worker already exists and remains fail-closed;
+5. there are no Production Worker Custom Domains yet;
+6. no Stage C application secrets are present;
+7. Production R2 remains private.
 
 The next Production mutation bundle, which still requires explicit owner approval before execution, is therefore:
 
@@ -82,11 +99,10 @@ The next Production mutation bundle, which still requires explicit owner approva
 2. record the Cloudflare-assigned authoritative nameservers;
 3. recreate the frozen eight mail/service records exactly;
 4. verify those records in Cloudflare account state;
-5. inspect current registrar DNSSEC/DS state before delegation change;
-6. change authoritative nameservers to Cloudflare only after the DNS contract is complete;
-7. wait for the zone to become Active;
-8. attach `legendmural.com` and `www.legendmural.com` to `legendmural-cloudflare-production` as Worker Custom Domains;
-9. run the non-mutating post-cutover verification matrix.
+5. change authoritative nameservers to Cloudflare only after the DNS contract is complete;
+6. wait for the zone to become Active;
+7. attach `legendmural.com` and `www.legendmural.com` to `legendmural-cloudflare-production` as Worker Custom Domains;
+8. run the non-mutating post-cutover verification matrix.
 
 PayPal Live, checkout opening, Resend activation, V3 activation, Production R2 writes and Neon Production mutation are explicitly outside this authorization boundary.
 
