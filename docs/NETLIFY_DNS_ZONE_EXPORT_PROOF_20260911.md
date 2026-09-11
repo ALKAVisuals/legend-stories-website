@@ -19,13 +19,13 @@ All exported records use TTL `3600`.
 | 1 | `legendmural.com` | `NETLIFY` | `legendmural.netlify.app` | Netlify hosting record; replaced only during an explicitly approved Cloudflare cutover. |
 | 2 | `www.legendmural.com` | `NETLIFY` | `legendmural.netlify.app` | Netlify hosting record; replaced only during an explicitly approved Cloudflare cutover. |
 | 3 | `resend._domainkey.mail.legendmural.com` | `TXT` | `p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDXDHlGTc8VvimOh+Hq90jW6Ur6xmT0YEtjtXdNrehBMq+COeZS/2YbiAQu8TbszeQYr9HU8VWp6LuFx1Z/kEAgVlGx/YdxBtlUHb7tzCf0uz1rXqhxcS87gvND4KmfplQtvI2cLcA9aM/tY3k3DYHg/XGRw0lm/qj1kLcvYUUekwIDAQAB` | Preserve exactly; public DKIM key, not an application secret. |
-| 4 | `send.mail.legendmural.com` | `MX` | `feedback-smtp.eu-west-1.amazonses.com` | Preserve exactly, including MX priority when recreating the record. The CSV export itself does not expose priority as a separate field. |
+| 4 | `send.mail.legendmural.com` | `MX` | `feedback-smtp.eu-west-1.amazonses.com` | Preserve with priority `10`; authoritative AWS SES custom-MAIL-FROM documentation defines this exact `feedback-smtp.<region>.amazonses.com` pattern as priority `10`. |
 | 5 | `send.mail.legendmural.com` | `TXT` | `v=spf1 include:amazonses.com ~all` | Preserve exactly. |
 | 6 | `_dmarc.legendmural.com` | `TXT` | `v=DMARC1; p=none;` | Preserve exactly. |
 | 7 | `legendmural.com` | `TXT` | `v=spf1 include:secureserver.net -all` | Preserve exactly. |
 | 8 | `autodiscover.legendmural.com` | `CNAME` | `autodiscover.outlook.com` | Preserve exactly. |
 | 9 | `email.legendmural.com` | `CNAME` | `email.secureserver.net` | Preserve exactly. |
-| 10 | `legendmural.com` | `MX` | `legendmural-com.mail.protection.outlook.com` | Preserve exactly, including MX priority when recreating the record. Public DNS proof already observed apex priority `0`. |
+| 10 | `legendmural.com` | `MX` | `legendmural-com.mail.protection.outlook.com` | Preserve with priority `0`; public DNS proof already captured apex priority `0`. |
 
 ## Important correction to the public-only inventory
 
@@ -50,15 +50,20 @@ Therefore Resend/Amazon SES-related DNS is present and must be preserved during 
 
 The other eight exported records must be reproduced unchanged in the destination DNS zone before any nameserver switch. Do **not** combine the Cloudflare hosting migration with email-policy cleanup or provider migration.
 
-## MX-priority caveat
+## MX-priority verification
 
-The supplied Netlify CSV schema contains only `name`, `ttl`, `type`, and `value`; it does not carry a separate MX-priority column. Public DNS proof already captured apex MX priority `0` for `legendmural-com.mail.protection.outlook.com`.
+The supplied Netlify CSV schema contains only `name`, `ttl`, `type`, and `value`; it does not carry a separate MX-priority column.
 
-Before the final nameserver change, the `send.mail.legendmural.com` MX priority must be confirmed from a read-only DNS response or Netlify UI if Cloudflare requires it as a separate field. Do not infer or silently invent an MX priority in Production.
+The two required preferences are nevertheless now known without modifying DNS:
+
+- apex `legendmural-com.mail.protection.outlook.com` -> priority `0`, captured by the earlier public DNS proof;
+- `send.mail.legendmural.com` -> `feedback-smtp.eu-west-1.amazonses.com` with priority `10`, confirmed from Amazon SES's authoritative Custom MAIL FROM documentation. AWS specifies the format `10 feedback-smtp.<region>.amazonses.com` and states that `10` is the MX preference value to enter separately when the DNS provider has a priority field.
+
+Authoritative provider reference: `https://docs.aws.amazon.com/ses/latest/dg/mail-from.html`.
 
 ## Section C conclusion
 
-The **complete Netlify-managed record list is now captured account-level**. The DNS-record enumeration blocker is closed.
+The **complete Netlify-managed record list and required MX priorities are now captured**. The DNS-inventory blocker is closed.
 
 The remaining pre-cutover blocker is a **working, independently verified rollback serving target**. The currently published Netlify Production deploy cannot satisfy that requirement because its immutable deploy URL returns HTTP 404 on all previously tested storefront/static paths.
 
