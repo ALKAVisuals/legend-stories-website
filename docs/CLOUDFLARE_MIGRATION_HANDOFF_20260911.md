@@ -112,20 +112,27 @@ No-store/security response headers          PASS
 
 The Cloudflare hosting/DNS migration can therefore be treated as **100% complete**. This completion statement is limited to hosting/DNS and the deliberately fail-closed Stage C runtime.
 
-## Exact next action — PayPal Live phase, awaiting new owner approval
+## Exact next action — guarded PayPal Live activation, awaiting Stage P1 approval
+
+The exact continuation plan is now:
+
+- `docs/CLOUDFLARE_PAYPAL_LIVE_ACTIVATION_PLAN_20260911.md`
 
 Do **not** perform any PayPal Production mutation merely because hosting is complete.
 
-The next main phase is PayPal Live and requires separate explicit owner authorization for that exact phase.
+Read-only audit has established that the Cloudflare Production payment runtime needs the prepared Production `NEON_DATABASE_URL`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` and `PAYPAL_WEBHOOK_ID`, plus the canonical Live API/checkout URL/origin configuration. The old Netlify Production context still contains these prepared values, but its `PAYPAL_ALLOW_LIVE=true` flag must **not** be copied blindly into Cloudflare.
 
-After that separate approval, the planned sequence is:
+The next authorized unit must be **Stage P1 only**, after explicit owner approval:
 
-1. configure PayPal Production credentials only in Cloudflare secret storage;
-2. configure the PayPal Production webhook to the Cloudflare Production endpoint;
-3. prove Live create-order -> approval -> capture -> webhook -> Neon/order-state flow;
-4. perform one small real self-payment;
-5. verify amount, PayPal order/capture, webhook verification, Neon paid state and idempotency;
-6. only after green evidence, request separate owner approval to open customer checkout.
+1. transfer the prepared Production Neon + PayPal secrets into Cloudflare secret storage without exposing values;
+2. configure the canonical Production checkout success/cancel/origin values and `PAYPAL_API_BASE=https://api-m.paypal.com`;
+3. keep `LEGENDMURAL_CHECKOUT_PAUSED=true`;
+4. keep `PAYPAL_ALLOW_LIVE=false` during P1;
+5. keep `ORDER_EMAILS_ENABLED=false` and every V3 activation flag false;
+6. do not create an order, charge, webhook mutation, Neon row, R2 object or email in P1;
+7. verify only presence/configuration and that checkout remains fail-closed.
+
+After P1 evidence is green, Stage P2 (`PAYPAL_ALLOW_LIVE=true` while checkout remains paused) and Stage P3 (one tightly controlled real self-payment with a brief create-order window) each require their own separate explicit approval. Customer checkout remains a later independent gate even after a successful self-payment.
 
 Resend/order-email activation and V3/R2 invoice-storage activation remain separate later phases and must not be bundled into PayPal Live unless separately approved.
 
@@ -144,7 +151,7 @@ Without a new exact authorization, do not:
 - alter Worker Custom Domains;
 - deploy/reconfigure the Production Worker;
 - enable PayPal Live;
-- add PayPal Production secrets;
+- add PayPal Production/Neon secrets to Cloudflare;
 - create/change the PayPal Production webhook;
 - open customer checkout;
 - enable Production order-email sending;
@@ -162,11 +169,13 @@ Read in this order when continuing:
 1. `docs/READ_ME_FIRST.md`
 2. **this file** — `docs/CLOUDFLARE_MIGRATION_HANDOFF_20260911.md`
 3. `docs/CLOUDFLARE_PHASE4_POST_CUTOVER_PROOF_20260911.md`
-4. `docs/CLOUDFLARE_PRODUCTION_CUTOVER_PLAN_20260911.md`
-5. `docs/CLOUDFLARE_GATE0_READONLY_PREFLIGHT_PROOF_20260911.md`
-6. `docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md`
-7. `docs/NETLIFY_DNS_ZONE_EXPORT_PROOF_20260911.md`
-8. `docs/CLOUDFLARE_STAGE_C_ZERO_SECRET_DECISION_20260910.md`
+4. `docs/CLOUDFLARE_PAYPAL_LIVE_ACTIVATION_PLAN_20260911.md`
+5. `docs/CLOUDFLARE_ENVIRONMENT_AND_SECRET_MAP.md`
+6. `docs/CLOUDFLARE_PRODUCTION_CUTOVER_PLAN_20260911.md`
+7. `docs/CLOUDFLARE_GATE0_READONLY_PREFLIGHT_PROOF_20260911.md`
+8. `docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md`
+9. `docs/NETLIFY_DNS_ZONE_EXPORT_PROOF_20260911.md`
+10. `docs/CLOUDFLARE_STAGE_C_ZERO_SECRET_DECISION_20260910.md`
 
 The older `docs/CLOUDFLARE_MIGRATION_HANDOFF_20260909.md` is historical only.
 
@@ -177,6 +186,7 @@ A new chat must **not** reconstruct this migration from screenshots or old chat 
 1. read `docs/READ_ME_FIRST.md`;
 2. read this file;
 3. read `docs/CLOUDFLARE_PHASE4_POST_CUTOVER_PROOF_20260911.md`;
-4. fresh-check current `main` and open PRs;
-5. recognize that Cloudflare hosting/DNS migration is complete;
-6. make no Production mutation unless the owner explicitly authorizes the exact next phase.
+4. read `docs/CLOUDFLARE_PAYPAL_LIVE_ACTIVATION_PLAN_20260911.md`;
+5. fresh-check current `main` and open PRs;
+6. recognize that Cloudflare hosting/DNS migration is complete;
+7. make no Production mutation unless the owner explicitly authorizes the exact next PayPal activation stage.
