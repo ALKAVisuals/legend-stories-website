@@ -3,36 +3,36 @@
 **Last updated:** 2026-09-11  
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Migration scope:** Netlify -> Cloudflare for the public LegendMural storefront  
-**Base `main` verified for this handoff update:** `6949f49f1788686657cfe84e3566db1422bee8d0`
+**Base `main` verified for this handoff update:** `a717c436c5bc767d0959c9597dff8bdb7ae3a050`
 
 > This is the canonical continuation document for the active Cloudflare migration. Always fresh-check current `main` before taking an action. GitHub is the source of truth.
 
 ## Non-negotiable scope boundaries
 
-- `legendmural.com` remains on the current Production path until the owner explicitly approves the exact Cloudflare domain/DNS cutover.
+- `legendmural.com` stays on its current public path until the owner explicitly approves the exact Cloudflare DNS/domain cutover.
 - Technisch Bouwadvies stays on Netlify and is out of scope.
 - `ALKAVisuals/legendmural-dashboard` stays hosted through ChatGPT Sites.
 - Neon remains the database unless separately approved.
-- PayPal, Resend, Neon and Cloudflare secret values must never be committed or printed.
-- No PayPal Live activation, DNS/nameserver cutover, Production Cloudflare cutover, Netlify Production mutation, Production Worker redeploy or Production-data mutation without explicit owner approval for that exact step.
-- Repository changes must go through a task branch and PR; never write directly to `main`.
+- Never commit or print PayPal, Resend, Neon or Cloudflare secret values.
+- No PayPal Live, DNS/nameserver cutover, Cloudflare Production custom-domain/routing mutation, Netlify Production mutation, Production R2 write, Production Neon mutation or V3 activation without explicit owner approval for that exact step.
+- Repository changes must use a task branch and PR; never write directly to `main`.
 
 ## Current checkpoint
 
-Cloudflare preview/runtime proofs and the fail-closed Production bootstrap are complete enough for final cutover planning.
+The heavy migration proof work is complete. The exact hosting cutover is now the active task.
 
 ```text
 Production Worker: legendmural-cloudflare-production
-Worker bootstrap version ID: 5d05b26d-4179-4ab0-a7b3-35cb990de854
-workers.dev exposure: disabled by Production config
-preview URL exposure: disabled by Production config
-custom domain / DNS attachment: none
-Production R2 bucket: legendmural-v3-invoice-pdfs-prod
-R2 public exposure: none
-Production application secret names present: none
+Known bootstrap Worker version: 5d05b26d-4179-4ab0-a7b3-35cb990de854
+workers.dev: disabled
+preview_urls: disabled
+Production custom domain: none yet
+Production R2: legendmural-v3-invoice-pdfs-prod
+Production R2 public exposure: none
+Production application secret names: none for Stage C
 ```
 
-All live/commerce/V3 switches remain OFF:
+Required Stage C fail-closed values:
 
 ```text
 LEGENDMURAL_DEPLOY_CONTEXT=production
@@ -45,115 +45,129 @@ V3_INVOICE_STORAGE_ENABLED=false
 V3_DASHBOARD_INVOICE_API_ENABLED=false
 ```
 
-Stage C remains hosting-only and intentionally requires zero LegendMural application secrets while those features remain off.
+Do not combine the hosting cutover with PayPal Live.
 
-## Merged checkpoints relevant to continuation
+## Exact cutover plan
 
-| PR | Purpose | Main checkpoint |
-|---|---|---|
-| #228 | Actual Worker PDFKit + preview R2 proof | `2d44dd103bea6e136c697e57740d5f9aed27a0b9` |
-| #230 | Preview six-route API matrix proof | `36820e6c64f5d4f88e03e1de0e37758708fb805b` |
-| #232 | Production account inventory proof | `5a9f5bff1206b0b240140e28b85403b37ff75cbb` |
-| #234 | Production R2 provisioning proof | `6fc7eb414274685f8102b2268d4614556d5b11e0` |
-| #236 | Production Worker bootstrap proof | `d63d7096e65662e4e18cdf79c36f200267e3c3fa` |
-| #237 | Clean Production Wrangler alias configuration | `cbfc525b47f4b29e71278b5d8784e7d883f9b0f1` |
-| #238 | Stage C zero-secret fail-closed contract | `9a8ccf21618e3fd3af87c3cab6b675d559c3e69e` |
-| #239 | Public DNS cutover inventory | `9cf90d05fb9b57700bb4ea44144208fd1ff2b963` |
-| #240 | Netlify account routing read-only proof | `f69735d3cb52fb4ca1b390c283a0c8006bb8921c` |
-| #241 | Complete Netlify DNS zone export proof | `33b4b373fc5490ca9314f9d195e6de30926b4f09` |
-| #242 | Historical Netlify Production-source build proof | `6949f49f1788686657cfe84e3566db1422bee8d0` |
+The authoritative execution plan is:
 
-## Evidence already proven
+- `docs/CLOUDFLARE_PRODUCTION_CUTOVER_PLAN_20260911.md`
+
+Read that document before any provider mutation. It defines the read-only preflight, DNS preservation contract, Cloudflare full-zone onboarding, nameserver switch, Worker Custom Domains, post-cutover probes and Stage C recovery behavior.
+
+Key architecture decision: the Production Worker is the storefront origin, so use **Cloudflare Worker Custom Domains**, not classic Worker Routes. The intended final Custom Domains are:
+
+```text
+legendmural.com
+www.legendmural.com
+```
+
+Both point to `legendmural-cloudflare-production`. The existing Worker code already redirects `www.legendmural.com` to `https://legendmural.com` with HTTP 301 while preserving path/query.
+
+Cloudflare requires the zone to be **Active** before Worker Custom Domains can be created. Therefore the DNS zone and preserved records are prepared first, the authoritative nameservers are changed, Cloudflare activation is confirmed, and only then are the two Custom Domains attached.
+
+## DNS contract — complete and frozen for migration
+
+Source proof:
+
+- `docs/NETLIFY_DNS_ZONE_EXPORT_PROOF_20260911.md`
+- source CSV SHA-256: `1681495c3e2a0adf932a20c2f4af7d3dc40bcbfde13cf9ad9f130fa45c75e493`
+- 10 managed records total; all captured TTLs `3600`
+
+The two Netlify hosting records for apex and `www` are migration-specific and will be replaced. The other eight records must be preserved exactly:
+
+1. `resend._domainkey.mail.legendmural.com` TXT — captured Resend DKIM public key;
+2. `send.mail.legendmural.com` MX -> `feedback-smtp.eu-west-1.amazonses.com`, priority `10`;
+3. `send.mail.legendmural.com` TXT -> `v=spf1 include:amazonses.com ~all`;
+4. `_dmarc.legendmural.com` TXT -> `v=DMARC1; p=none;`;
+5. apex TXT -> `v=spf1 include:secureserver.net -all`;
+6. `autodiscover.legendmural.com` CNAME -> `autodiscover.outlook.com`;
+7. `email.legendmural.com` CNAME -> `email.secureserver.net`;
+8. apex MX -> `legendmural-com.mail.protection.outlook.com`, priority `0`.
+
+Do not clean up or redesign SPF/DMARC/DKIM/mail configuration during this migration. Mail/service CNAMEs stay DNS-only in Cloudflare.
+
+Current public authoritative DNS is still Netlify/NS1-backed. The prior authoritative nameservers were captured as:
+
+```text
+dns1.p01.nsone.net.
+dns2.p01.nsone.net.
+dns3.p01.nsone.net.
+dns4.p01.nsone.net.
+```
+
+## Current host / rollback decision
+
+The current Netlify Production deploy is reported `ready`, but every tested custom/default/branch/immutable serving form returns Netlify HTTP 404. It is **not** a proven working serving rollback target.
+
+The exact source behind that deploy, `95a57e8f05a0af547efa0dfc4d044b8a96de7fe3`, was rebuilt successfully outside Netlify: 293 output files / 78,951,418 bytes and HTTP 200 for `/`, `/index.html`, `/shop.html`, `/robots.txt` and `/sitemap.xml` when served locally. Evidence:
+
+- `docs/NETLIFY_PRODUCTION_SOURCE_BUILD_PROOF_20260911.md`
+
+The owner wants to leave Netlify because of credits/cost. Do not create another Netlify rollback project. A GitHub Pages fallback was considered and intentionally skipped because LegendMural is not officially live and checkout remains paused through Stage C.
+
+Stage C therefore proceeds without an independent third-provider serving fallback. Recovery uses the previous known-good Worker version, the complete DNS snapshot, and—only if Cloudflare DNS onboarding itself cannot be recovered—the prior Netlify/NS1 authoritative DNS delegation. Do not describe the old Netlify storefront as a working serving fallback.
+
+## Exact next action
+
+1. Merge the exact cutover-plan documentation PR only after CI and owner approval.
+2. Then perform **read-only Gate 0 preflight** from `docs/CLOUDFLARE_PRODUCTION_CUTOVER_PLAN_20260911.md`:
+   - fresh `main` SHA;
+   - current remote Production Worker/version;
+   - all fail-closed values;
+   - zero Stage C application secrets;
+   - private Production R2;
+   - whether Cloudflare zone `legendmural.com` already exists;
+   - current NS delegation and registrar DNSSEC/DS state;
+   - exact eight-record mail/service contract.
+3. Stop and request explicit owner authorization for the exact cutover mutation bundle.
+4. Only after that authorization may the Cloudflare zone/DNS/nameserver/Custom Domain cutover begin.
+
+No live provider mutation is authorized by this handoff or by the cutover-plan documentation PR.
+
+## Immediately after stable Cloudflare hosting — PayPal Live
+
+Once Cloudflare hosting and the post-cutover checks are green, **PayPal Live is the next main phase**:
+
+1. configure PayPal Production credentials only in Cloudflare secret storage;
+2. configure the PayPal Production webhook to the Cloudflare Production endpoint;
+3. prove Live create-order -> approval -> capture -> webhook -> Neon/order-state flow;
+4. perform one small real self-payment;
+5. verify amount, PayPal order/capture, webhook verification, Neon paid state and idempotency;
+6. request separate explicit owner approval before customer checkout is opened.
+
+Resend/order-email activation and V3/R2 invoice-storage activation remain separate later phases.
+
+## Evidence anchors / merged checkpoints
+
+- #228 actual Worker PDFKit + preview R2 proof
+- #230 six-route preview API matrix
+- #232 Production account inventory
+- #234 Production R2 provisioning
+- #236 Production Worker bootstrap
+- #237 clean Wrangler Production alias configuration
+- #238 Stage C zero-secret fail-closed contract
+- #239 public DNS inventory
+- #240 Netlify account/routing proof
+- #241 complete Netlify DNS export proof
+- #242 historical Netlify Production-source build proof
+- #243 Cloudflare-cutover-then-PayPal-Live execution sequence
 
 Canonical preview Worker:
 
 ```text
-Worker: legendmural-cloudflare-preview
-Origin: https://legendmural-cloudflare-preview.lively-bonus-08da.workers.dev
-Full storefront proof run ID: 34461889551
-Worker version ID: 411070c2-5250-480c-85df-2c22e6260d3b
-Result: success
+https://legendmural-cloudflare-preview.lively-bonus-08da.workers.dev
+Full storefront proof run: 34461889551
+Preview Worker version: 411070c2-5250-480c-85df-2c22e6260d3b
 ```
 
-Preview PayPal Sandbox, isolated Neon paid persistence/idempotency, PDFKit Worker runtime, private preview R2 semantics and the six-route API matrix have all been proven. Preview checkout was restored fail-closed after testing.
+Preview PayPal Sandbox, webhook verification/idempotency, isolated Neon paid persistence, PDFKit Worker runtime, private preview R2 semantics and the six-route API matrix are already proven. Preview checkout was restored fail-closed after testing.
 
-Production R2 exists and is private. The Production Worker exists separately, is fail-closed, has the correct Production R2 binding, has zero application secrets, and has no custom domain attached yet.
-
-## DNS/current-host inventory — complete
-
-Dedicated evidence:
-
-- public DNS: `docs/CLOUDFLARE_DNS_INVENTORY_PROOF_20260910.md`;
-- Netlify project/deploy/routing: `docs/NETLIFY_ACCOUNT_READONLY_INVENTORY_PROOF_20260910.md`;
-- complete Netlify DNS export: `docs/NETLIFY_DNS_ZONE_EXPORT_PROOF_20260911.md`;
-- historical Production-source build: `docs/NETLIFY_PRODUCTION_SOURCE_BUILD_PROOF_20260911.md`;
-- cutover gates: `docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md`.
-
-The complete Netlify DNS export contains 10 records. The two `NETLIFY` hosting records for apex and `www` are the records to replace during the approved cutover. The other eight mail/service records must be preserved exactly, including Microsoft 365, SPF, DMARC and Resend/Amazon SES records under `mail.legendmural.com`.
-
-The current Netlify Production deploy is reported `ready` but all tested custom/default/branch/immutable serving forms return HTTP 404. The exact source commit behind it, `95a57e8f05a0af547efa0dfc4d044b8a96de7fe3`, was rebuilt cleanly outside Netlify: 293 output files, 78,951,418 bytes, with HTTP 200 on `/`, `/index.html`, `/shop.html`, `/robots.txt` and `/sitemap.xml` when served locally. This proves the source/build artifact itself is viable but does not explain Netlify's 404.
-
-## Rollback strategy decision
-
-The owner wants LegendMural to move away from Netlify because Netlify credits/costs are undesirable. A separate Netlify rollback project will therefore **not** be created.
-
-A GitHub Pages fallback was considered but is intentionally not being added before cutover because LegendMural is not officially live yet, checkout will remain paused during the hosting migration, and creating a third hosting path would add work without enough value at this stage.
-
-The initial Stage C rollback strategy is therefore intentionally simpler:
-
-1. retain the previous known-good Cloudflare Worker version so a Worker/runtime regression can be rolled back quickly;
-2. preserve the full DNS-zone export and exact mail/service records so DNS can be reconstructed/restored if needed;
-3. keep checkout/live payments disabled throughout the hosting cutover;
-4. accept that there is no independent third-provider serving fallback during the first cutover window.
-
-This is a deliberate pre-live tradeoff, not a statement that an independent fallback is never useful. If LegendMural becomes business-critical later, add a stronger independent continuity plan then.
-
-## Exact next step — hosting migration
-
-The next task is **not** to build another rollback site.
-
-1. Fresh-check current `main` and current Cloudflare Production Worker/config.
-2. Prepare the exact Cloudflare DNS/nameserver/custom-domain cutover plan using the captured 10-record zone.
-3. Prove in that plan that all eight non-hosting mail/service records are preserved exactly.
-4. Confirm immediately before cutover that checkout and all live/V3 flags remain OFF.
-5. Stop and request explicit owner approval for the exact Production domain/DNS cutover.
-6. After approval, perform the cutover and immediately verify HTTPS, apex, `www`, homepage, shop, product/static media and the six fail-closed API routes.
-7. Record the exact Worker version, storefront commit and post-cutover DNS/runtime proof in GitHub.
-
-Do not combine the hosting cutover with PayPal Live activation.
-
-## Immediately after stable Cloudflare hosting — PayPal Live is next
-
-Once Cloudflare hosting is stable and the post-cutover checks are green, **PayPal Live becomes the next main task**.
-
-Required order:
-
-1. create/confirm the real PayPal Production app/webhook configuration;
-2. add real PayPal credentials only through Cloudflare secret storage, never GitHub;
-3. point the real PayPal webhook at the Cloudflare Production endpoint;
-4. prove Live create-order -> approval -> capture -> webhook -> Neon/order-status end to end;
-5. perform one small real self-payment and verify amount, order state, capture ID, webhook/idempotency and Neon persistence;
-6. keep Resend/V3 invoice-storage activation separate unless explicitly approved;
-7. only after the real payment proof is green, request explicit owner approval to open checkout for customers.
-
-This means the operational sequence is:
-
-```text
-Cloudflare cutover plan
--> explicit cutover approval
--> Cloudflare live
--> technical post-cutover verification
--> PayPal Live configuration
--> real small end-to-end payment test
--> explicit approval to open customer checkout
--> later Resend / V3 invoice-storage activation as separate phases
-```
-
-## What must not be changed without new exact approval
+## What must not change without new exact approval
 
 - `legendmural.com` DNS/nameservers/custom-domain routing;
 - Netlify Production deploy/config/domain attachments;
-- Production Worker deployment or custom domain;
+- Production Worker deployment/custom domain;
 - PayPal Live;
 - Resend Production activation;
 - Production application secrets;
@@ -164,18 +178,17 @@ Cloudflare cutover plan
 - Technisch Bouwadvies;
 - unrelated storefront/UI code.
 
-## Recommended startup order for the next migration chat
+## Startup order for the next migration chat
 
 1. Read `docs/READ_ME_FIRST.md`.
 2. Read this file.
-3. Read `docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md`.
-4. Read `docs/NETLIFY_DNS_ZONE_EXPORT_PROOF_20260911.md`.
-5. Read `docs/NETLIFY_PRODUCTION_SOURCE_BUILD_PROOF_20260911.md`.
+3. Read `docs/CLOUDFLARE_PRODUCTION_CUTOVER_PLAN_20260911.md`.
+4. Read `docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md`.
+5. Read `docs/NETLIFY_DNS_ZONE_EXPORT_PROOF_20260911.md`.
 6. Read `docs/CLOUDFLARE_STAGE_C_ZERO_SECRET_DECISION_20260910.md`.
 7. Fresh-check current `main` and open migration PRs.
-8. Continue with the exact Cloudflare cutover plan; do not create another rollback host unless the owner changes this decision.
-9. After stable Cloudflare hosting, make PayPal Live the next main phase.
+8. Continue only with the exact next action above.
 
 ## Continuation rule
 
-GitHub is the source of truth. If newer `main` changes contradict this handoff, newer repository state wins and this document must be updated before continuing.
+GitHub is the source of truth. Newer `main` state overrides this handoff and must be reconciled before any action.
