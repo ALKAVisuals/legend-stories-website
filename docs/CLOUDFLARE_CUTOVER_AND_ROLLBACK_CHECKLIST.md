@@ -70,10 +70,10 @@ Public DNS evidence is recorded in `docs/CLOUDFLARE_DNS_INVENTORY_PROOF_20260910
 - [x] branch and immutable Netlify deploy URLs captured;
 - [x] current 404 scope isolated: custom apex, `www`, default Netlify hostname, `main` branch hostname and immutable deploy hostname all return Netlify 404 for tested storefront/static paths;
 - [x] complete Netlify DNS-zone record list captured — 10 records, source CSV SHA-256 `1681495c3e2a0adf932a20c2f4af7d3dc40bcbfde13cf9ad9f130fa45c75e493`;
-- [ ] `send.mail.legendmural.com` MX priority confirmed for recreation — source CSV does not expose MX priority as a separate field;
+- [x] required MX priorities captured — apex priority `0` from public DNS proof; `send.mail.legendmural.com` priority `10` from Amazon SES's authoritative Custom MAIL FROM contract for `feedback-smtp.<region>.amazonses.com`;
 - [ ] a working Netlify or equivalent rollback serving target proven — **current immutable Production deploy is not a valid proven rollback target because it returns 404**.
 
-### Current Section C evidence / blockers
+### Current Section C evidence / blocker
 
 Public DNS workflow `Cloudflare DNS read-only inventory`, run #6 / ID `34486539162`, completed successfully with zero credentials and zero mutation.
 
@@ -81,9 +81,11 @@ Netlify routing workflow `Netlify account routing read-only proof`, run #3 / ID 
 
 Owner-provided Netlify DNS CSV export contains exactly 10 managed records. Two are Netlify hosting records for apex and `www`; the other eight are mail/service records that must be preserved during any DNS-hosting transition. The export also corrects the public-only discovery gap by proving that Resend/Amazon SES records exist under `mail.legendmural.com` rather than the common candidate names queried previously.
 
+The CSV does not expose MX priority as a separate field, but both required preferences are now independently known: public DNS proof captured apex priority `0`, and Amazon SES documents the exact Custom MAIL FROM target pattern as priority `10`. No Production DNS inference is required at cutover time.
+
 The active Production commit contains `index.html` and `shop.html`; its Vite config explicitly builds all root HTML files to `dist`, and `netlify.toml` publishes `dist`. The available read-only evidence therefore rules out a custom-domain-only issue and rules out the simple explanation that `index.html` is absent from the configured source/build contract. It does **not** prove the exact internal Netlify cause, so do not guess or mutate Production to diagnose it without separate approval.
 
-Because the current authoritative DNS is Netlify/NS1-backed, a future Cloudflare cutover may require a nameserver-level DNS-hosting transition. The full managed record list is now captured, but no nameserver change is authorized until the remaining MX-priority detail and rollback-serving target are proven.
+Because the current authoritative DNS is Netlify/NS1-backed, a future Cloudflare cutover may require a nameserver-level DNS-hosting transition. The full managed record list and required MX priorities are now captured. The remaining Section C blocker is the rollback serving target.
 
 Do not modify any DNS record or hosting/domain attachment during this inventory. Do not modify Technisch Bouwadvies DNS or hosting.
 
@@ -101,8 +103,7 @@ This stage changes hosting runtime only. Permanent V3 R2 invoice storage remains
 - [ ] `V3_INVOICE_RECONCILIATION_ENABLED=false`;
 - [ ] `V3_INVOICE_STORAGE_ENABLED=false`;
 - [ ] `V3_DASHBOARD_INVOICE_API_ENABLED=false`;
-- [x] complete current DNS zone captured before any nameserver change;
-- [ ] `send.mail.legendmural.com` MX priority captured before recreating the destination zone;
+- [x] complete current DNS zone and required MX priorities captured before any nameserver change;
 - [ ] working rollback serving target proven before routing change;
 - [ ] custom domain/origin changed to Cloudflare;
 - [ ] `www` canonical redirect verified;
@@ -179,4 +180,4 @@ Record exact timestamps and versions, never secrets:
 
 ## Current state
 
-Section C DNS enumeration is **closed**: public DNS/HTTPS, account/project/deploy/routing facts and the complete 10-record Netlify DNS export are now captured. One record-recreation detail remains to be confirmed because the CSV omits MX priority for `send.mail.legendmural.com`. The major remaining cutover blocker is a working rollback serving target; the current Netlify immutable Production deploy is unusable for that purpose because it returns 404 on all tested paths. No DNS, Netlify deploy/domain attachment, Cloudflare custom domain or Production routing mutation is authorized by these proofs.
+Section C DNS inventory is **closed**: public DNS/HTTPS, account/project/deploy/routing facts, the complete 10-record Netlify DNS export and both required MX priorities are captured. The only remaining Section C cutover blocker is a working rollback serving target; the current Netlify immutable Production deploy is unusable for that purpose because it returns 404 on all tested paths. No DNS, Netlify deploy/domain attachment, Cloudflare custom domain or Production routing mutation is authorized by these proofs.
