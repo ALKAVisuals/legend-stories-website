@@ -3,52 +3,43 @@
 **Last updated:** 2026-09-11  
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Scope:** public LegendMural storefront migration from Netlify/NS1-backed DNS + Netlify hosting to Cloudflare DNS + the existing Production Worker  
-**Starting `main` for this handoff update:** `e6d9564f122215bbeb7253601122e6ae039c63a2`
+**Phase 4 evidence base `main`:** `d4221dd8d38327e71e2c6f9e5b8aeac2cf845aca`
 
-> **This file supersedes `docs/CLOUDFLARE_MIGRATION_HANDOFF_20260909.md` for all new Cloudflare-migration chats.** GitHub is the source of truth. Always fresh-check `main` before any new action.
+> **This file is the canonical continuation document for all new Cloudflare-migration chats.** GitHub is the source of truth. Always fresh-check `main` before any new action.
 
-## Current status — cutover is live, DNS propagation is still stabilizing
+## Current status — Cloudflare hosting/DNS migration complete
 
-The Cloudflare Production hosting cutover has progressed through zone creation, DNS preservation, registrar nameserver switch, zone activation and Worker Custom Domain attachment.
+The Netlify -> Cloudflare hosting/DNS migration has completed the planned cutover and post-cutover verification stages.
 
-### Completed
+Canonical post-cutover evidence:
 
-- PR #245 (Gate 0 read-only preflight) is merged.
-  - merge commit: `7eaf0d4d9aca3f84ce9667fbaf406e6722637dab`
-- PR #246 (guarded Production zone bootstrap) is merged.
-  - PR head: `427258087edd60ec4c421019bf7966fb8fa9a9c3`
-  - merge commit: `e6d9564f122215bbeb7253601122e6ae039c63a2`
-- The manual Production zone-bootstrap workflow was run successfully after the Cloudflare API token gained the required `Zone -> Zone -> Edit` and `Zone -> DNS -> Edit` permissions.
-- Cloudflare full zone exists:
-  - zone: `legendmural.com`
-  - zone ID: `a23d780ad02e39b33dfd5877e389b7f1`
-  - Cloudflare dashboard status: **Active**
-- The frozen mail/service DNS contract was created and verified **8/8 exactly** before registrar delegation was changed.
-- Registrar: GoDaddy.
-- Authoritative nameservers were changed at GoDaddy from the previous Netlify/NS1 delegation to exactly:
-  - `crystal.ns.cloudflare.com`
-  - `dean.ns.cloudflare.com`
-- No registrar DS record was present before the switch.
-- Both Production Worker Custom Domains are attached to `legendmural-cloudflare-production`:
-  - `legendmural.com`
-  - `www.legendmural.com`
-- The Worker `workers.dev` URL remains disabled.
-- `www.legendmural.com` is designed to redirect with HTTP 301 to the apex `https://legendmural.com` while preserving path/query.
-- The owner has already observed the storefront loading again on `https://legendmural.com/shop.html` with page styling/assets visible.
+- `docs/CLOUDFLARE_PHASE4_POST_CUTOVER_PROOF_20260911.md`
 
-### Still in progress
+The proof records the completed delegation, Worker Custom Domains, storefront/static delivery, public 8/8 mail/service DNS verification, fail-closed API matrix, checkout-paused behavior and response-header checks.
 
-Public DNS propagation is not yet fully stable across all resolvers/caches. During manual verification the owner saw the site work, but later `robots.txt` / `sitemap.xml` requests intermittently returned browser-level `DNS_PROBE_FINISHED_NXDOMAIN`.
+### Completed migration checkpoints
 
-Treat this as a propagation/stability checkpoint unless fresh evidence shows an actual DNS-contract problem. Do **not** keep changing DNS while propagation is still converging.
-
-Cloudflare notes nameserver propagation can take up to 24 hours.
+- PR #245 — Gate 0 read-only preflight — merged.
+- PR #246 — guarded Production zone bootstrap — merged.
+- Cloudflare full zone created and Active.
+- Frozen eight mail/service DNS records recreated and verified before delegation change.
+- GoDaddy authoritative nameservers changed from Netlify/NS1 to Cloudflare.
+- Both Worker Custom Domains attached to `legendmural-cloudflare-production`.
+- DNS propagation stabilized sufficiently for external public verification.
+- Google Public DNS returns the exact Cloudflare authoritative nameservers.
+- All eight preserved mail/service records were publicly verified exactly.
+- Storefront, shop, robots.txt, sitemap.xml, representative product page and representative image/static delivery were verified live.
+- `www.legendmural.com` canonicalizes to the apex as designed.
+- Unknown `/api/*` remains hardened.
+- Full six-route Stage C GET-only fail-closed matrix passed live.
+- Checkout remains paused after the routing change.
+- Live checkout response remains non-cacheable and carries the expected security headers.
 
 ## Current Production target
 
 ```text
 Worker: legendmural-cloudflare-production
-Known bootstrap Worker version: 5d05b26d-4179-4ab0-a7b3-35cb990de854
+Known/current cutover Worker version: 5d05b26d-4179-4ab0-a7b3-35cb990de854
 workers.dev: disabled
 preview_urls: disabled
 Production R2: legendmural-v3-invoice-pdfs-prod
@@ -61,9 +52,11 @@ Custom Domains:
 - www.legendmural.com
 ```
 
+Cloudflare DNS currently contains the eight preserved service/mail records plus the two Worker Custom Domain records for apex and `www`. No old Netlify apex/www hosting record should be reintroduced.
+
 ## Required fail-closed Production contract
 
-The hosting cutover must remain fail-closed until the later PayPal Live phase is separately approved.
+Hosting is complete, but customer commerce is **not** live. The following remain intentionally OFF until separately approved later phases:
 
 ```text
 LEGENDMURAL_DEPLOY_CONTEXT=production
@@ -76,109 +69,83 @@ V3_INVOICE_STORAGE_ENABLED=false
 V3_DASHBOARD_INVOICE_API_ENABLED=false
 ```
 
-Gate 0 previously proved this exact contract. Phase 4 must re-prove the externally observable behavior after the routing cutover. Do not infer success merely from the homepage loading.
+Do not interpret the completed hosting migration as authorization to alter these values.
 
-## Preserved mail/service DNS contract
+## Preserved mail/service DNS contract — 8/8 publicly proven
 
-These eight records were recreated in Cloudflare and verified before the nameserver switch:
+The following were queried through Google Public DNS after the cutover and matched the migration contract:
 
-1. `resend._domainkey.mail.legendmural.com` TXT — captured Resend DKIM public key.
-2. `send.mail.legendmural.com` MX -> `feedback-smtp.eu-west-1.amazonses.com`, priority `10`.
-3. `send.mail.legendmural.com` TXT -> `v=spf1 include:amazonses.com ~all`.
-4. `_dmarc.legendmural.com` TXT -> `v=DMARC1; p=none;`.
-5. apex TXT -> `v=spf1 include:secureserver.net -all`.
-6. `autodiscover.legendmural.com` CNAME -> `autodiscover.outlook.com`.
-7. `email.legendmural.com` CNAME -> `email.secureserver.net`.
-8. apex MX -> `legendmural-com.mail.protection.outlook.com`, priority `0`.
+1. `resend._domainkey.mail.legendmural.com` TXT — exact captured public Resend DKIM key, TTL 3600.
+2. `send.mail.legendmural.com` MX -> `feedback-smtp.eu-west-1.amazonses.com`, priority 10, TTL 3600.
+3. `send.mail.legendmural.com` TXT -> `v=spf1 include:amazonses.com ~all`, TTL 3600.
+4. `_dmarc.legendmural.com` TXT -> `v=DMARC1; p=none;`, TTL 3600.
+5. apex TXT -> `v=spf1 include:secureserver.net -all`, TTL 3600.
+6. `autodiscover.legendmural.com` CNAME -> `autodiscover.outlook.com`, TTL 3600.
+7. `email.legendmural.com` CNAME -> `email.secureserver.net`, TTL 3600.
+8. apex MX -> `legendmural-com.mail.protection.outlook.com`, priority 0, TTL 3600.
 
-Source proof: `docs/NETLIFY_DNS_ZONE_EXPORT_PROOF_20260911.md`.
+Important distinction: ordinary mailbox routing is not hosted by Netlify or by the storefront Worker. Cloudflare is now authoritative DNS; the actual mail destinations remain unchanged. Production order-email sending through the storefront is still intentionally OFF.
 
-Important distinction: ordinary mailbox routing is not hosted by Netlify. Netlify/NS1 previously hosted DNS only. The actual mail destination remains the same; Cloudflare is now authoritative DNS. Production order-email sending through the storefront remains intentionally OFF (`ORDER_EMAILS_ENABLED=false`) until a later separately approved activation phase.
+## Phase 4 live verification result
 
-## Exact next action — Phase 4 read-only post-cutover verification
+The detailed evidence is in `docs/CLOUDFLARE_PHASE4_POST_CUTOVER_PROOF_20260911.md`.
 
-Do **not** mutate Cloudflare, GoDaddy, Netlify, PayPal, Resend, Neon or R2 merely because some resolvers are still propagating.
-
-Once public DNS is stable enough to test reliably, run the full non-mutating verification matrix below.
-
-Required checks:
-
-1. `https://legendmural.com/` -> expected storefront HTML, HTTP 200.
-2. `https://legendmural.com/index.html` -> HTTP 200.
-3. `https://legendmural.com/shop.html` -> HTTP 200.
-4. Representative product page -> HTTP 200.
-5. Representative static image/media -> HTTP 200.
-6. `https://legendmural.com/robots.txt` -> HTTP 200.
-7. `https://legendmural.com/sitemap.xml` -> HTTP 200.
-8. `https://www.legendmural.com/...` -> HTTP 301 to same path/query on `https://legendmural.com/...`.
-9. Valid HTTPS certificate for apex and `www`.
-10. Public authoritative NS resolves to exactly the Cloudflare pair above.
-11. All eight preserved mail/service records resolve correctly from public DNS.
-12. Unknown `/api/*` remains hardened 404.
-13. The six known GET-only API routes match the Stage C fail-closed matrix.
-14. Security / no-store / CORS behavior matches the existing contract.
-15. Checkout remains paused after the routing change.
-
-Expected GET-only Stage C matrix:
+Summary:
 
 ```text
-GET /api/paypal/checkout            -> 503 CHECKOUT_PAUSED
-GET /api/paypal/capture             -> 503 PAYPAL_CAPTURE_SERVICE_NOT_CONFIGURED
-GET /api/paypal/webhook             -> 503 PAYPAL_WEBHOOK_SERVICE_NOT_CONFIGURED
-GET /api/order-status               -> 503 ORDER_STATUS_SERVICE_NOT_CONFIGURED
-GET /api/invoice-download           -> 405 METHOD_NOT_ALLOWED
-GET /api/internal/dashboard-invoice -> 405 METHOD_NOT_ALLOWED
+Cloudflare authoritative delegation          PASS
+Apex Worker Custom Domain                   PASS
+www Worker Custom Domain                    PASS
+Storefront/static delivery                  PASS
+robots.txt                                  PASS
+sitemap.xml                                 PASS
+Representative product page                 PASS
+Representative product image/static asset   PASS
+Apex/www HTTPS use                          PASS
+www -> apex canonical behavior              PASS
+Public mail/service DNS                     8/8 PASS
+Unknown /api/* hardening                    PASS
+Known GET-only API matrix                    6/6 PASS
+Checkout paused                             PASS
+No-store/security response headers          PASS
 ```
 
-The tracked `sitemap.xml` does exist on current `main`; an NXDOMAIN seen while opening it is a DNS-resolution problem, not proof that the sitemap file is missing.
+The Cloudflare hosting/DNS migration can therefore be treated as **100% complete**. This completion statement is limited to hosting/DNS and the deliberately fail-closed Stage C runtime.
 
-## What to record after Phase 4 is green
+## Exact next action — PayPal Live phase, awaiting new owner approval
 
-Create a task branch + PR and record:
+Do **not** perform any PayPal Production mutation merely because hosting is complete.
 
-- exact timestamp/timezone;
-- exact storefront `main` SHA;
-- Production Worker version/deployment ID;
-- Cloudflare zone ID;
-- public authoritative nameservers;
-- apex + `www` Custom Domain state;
-- all storefront/static probe results;
-- redirect result;
-- HTTPS result;
-- public mail/service DNS verification;
-- API fail-closed matrix;
-- checkout-paused proof.
+The next main phase is PayPal Live and requires separate explicit owner authorization for that exact phase.
 
-Never record secret values.
-
-Only after this evidence is green should the **Cloudflare hosting migration** be called complete.
-
-## Next main phase after hosting is proven stable
-
-The next main phase is **PayPal Live**, and it requires separate exact owner authorization.
-
-Sequence:
+After that separate approval, the planned sequence is:
 
 1. configure PayPal Production credentials only in Cloudflare secret storage;
 2. configure the PayPal Production webhook to the Cloudflare Production endpoint;
-3. prove create-order -> PayPal -> capture -> webhook -> Neon order-state flow;
+3. prove Live create-order -> approval -> capture -> webhook -> Neon/order-state flow;
 4. perform one small real self-payment;
 5. verify amount, PayPal order/capture, webhook verification, Neon paid state and idempotency;
-6. only after all evidence is green, request separate owner approval to open customer checkout.
+6. only after green evidence, request separate owner approval to open customer checkout.
 
-Resend/order-email activation and V3/R2 invoice-storage activation remain separate later phases.
+Resend/order-email activation and V3/R2 invoice-storage activation remain separate later phases and must not be bundled into PayPal Live unless separately approved.
 
-Netlify decommission is **last**, after Cloudflare hosting and the required payment flow are proven stable and only with separate explicit approval.
+## Netlify exit
+
+Do not decommission the LegendMural Netlify project yet. Netlify decommission remains a final, separately authorized cleanup step after Cloudflare hosting and the required payment flow are proven stable.
+
+Technisch Bouwadvies remains on Netlify and is out of scope.
 
 ## Non-negotiable boundaries
 
 Without a new exact authorization, do not:
 
-- change GoDaddy nameservers again;
-- change DNS records simply to chase propagation;
-- delete or redesign the eight mail/service records;
+- change GoDaddy nameservers;
+- change or redesign the eight mail/service records;
+- alter Worker Custom Domains;
 - deploy/reconfigure the Production Worker;
 - enable PayPal Live;
+- add PayPal Production secrets;
+- create/change the PayPal Production webhook;
 - open customer checkout;
 - enable Production order-email sending;
 - activate V3 Profile 1, invoice reconciliation, invoice storage or dashboard invoice API;
@@ -190,18 +157,26 @@ Without a new exact authorization, do not:
 
 ## Canonical supporting documents
 
-Read in this order when continuing the migration:
+Read in this order when continuing:
 
 1. `docs/READ_ME_FIRST.md`
 2. **this file** — `docs/CLOUDFLARE_MIGRATION_HANDOFF_20260911.md`
-3. `docs/CLOUDFLARE_PRODUCTION_CUTOVER_PLAN_20260911.md`
-4. `docs/CLOUDFLARE_GATE0_READONLY_PREFLIGHT_PROOF_20260911.md`
-5. `docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md`
-6. `docs/NETLIFY_DNS_ZONE_EXPORT_PROOF_20260911.md`
-7. `docs/CLOUDFLARE_STAGE_C_ZERO_SECRET_DECISION_20260910.md`
+3. `docs/CLOUDFLARE_PHASE4_POST_CUTOVER_PROOF_20260911.md`
+4. `docs/CLOUDFLARE_PRODUCTION_CUTOVER_PLAN_20260911.md`
+5. `docs/CLOUDFLARE_GATE0_READONLY_PREFLIGHT_PROOF_20260911.md`
+6. `docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md`
+7. `docs/NETLIFY_DNS_ZONE_EXPORT_PROOF_20260911.md`
+8. `docs/CLOUDFLARE_STAGE_C_ZERO_SECRET_DECISION_20260910.md`
 
-The older `docs/CLOUDFLARE_MIGRATION_HANDOFF_20260909.md` is historical and no longer the continuation authority once this file is merged.
+The older `docs/CLOUDFLARE_MIGRATION_HANDOFF_20260909.md` is historical only.
 
 ## Next-chat instruction
 
-A new Cloudflare migration chat should **not reconstruct progress from old chat history**. It should read `docs/READ_ME_FIRST.md`, then this file, fresh-check `main`, and continue with the exact Phase 4 verification step above.
+A new chat must **not** reconstruct this migration from screenshots or old chat history. It should:
+
+1. read `docs/READ_ME_FIRST.md`;
+2. read this file;
+3. read `docs/CLOUDFLARE_PHASE4_POST_CUTOVER_PROOF_20260911.md`;
+4. fresh-check current `main` and open PRs;
+5. recognize that Cloudflare hosting/DNS migration is complete;
+6. make no Production mutation unless the owner explicitly authorizes the exact next phase.
