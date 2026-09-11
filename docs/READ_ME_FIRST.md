@@ -2,8 +2,8 @@
 
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Scope:** public LegendMural webshop / launch-readiness only  
-**Production host:** Netlify  
-**Active Cloudflare migration handoff:** [`CLOUDFLARE_MIGRATION_HANDOFF_20260909.md`](CLOUDFLARE_MIGRATION_HANDOFF_20260909.md)  
+**Current public hosting transition:** Cloudflare Production cutover is live; public DNS propagation/post-cutover verification is still in progress  
+**Active Cloudflare migration handoff:** [`CLOUDFLARE_MIGRATION_HANDOFF_20260911.md`](CLOUDFLARE_MIGRATION_HANDOFF_20260911.md)  
 **Newest general website next-chat handoff:** [`NEXT_CHAT_HANDOFF_20260905_V2.md`](NEXT_CHAT_HANDOFF_20260905_V2.md)  
 **Current operational website status:** [`CURRENT_PRODUCTION_STATUS_20260903.md`](CURRENT_PRODUCTION_STATUS_20260903.md)  
 **Final pre-release checklist:** [`FINAL_PRE_RELEASE_CHECKLIST_20260904.md`](FINAL_PRE_RELEASE_CHECKLIST_20260904.md)  
@@ -12,11 +12,15 @@
 
 > **Every new chat working on the public website must start here.**
 
-## Active Cloudflare migration checkpoint — 9 September 2026
+## Active Cloudflare migration checkpoint — 11 September 2026
 
-The current Netlify-to-Cloudflare migration continuation state is in **`docs/CLOUDFLARE_MIGRATION_HANDOFF_20260909.md`**. If the chat is specifically about the Cloudflare migration, read that file immediately after this one and treat it as the canonical migration handoff.
+The current Netlify-to-Cloudflare migration continuation state is in **`docs/CLOUDFLARE_MIGRATION_HANDOFF_20260911.md`**. If the chat is specifically about the Cloudflare migration, read that file immediately after this one and treat it as the canonical migration handoff.
 
-It records the resolved PayPal webhook-ID/signature-verification blocker, the successful HTTP `200` Cloudflare preview delivery proof, the newly isolated duplicate-webhook/Neon least-privilege blocker, the exact evidence in current source, and the minimal next code/test step. Do not reconstruct that migration state from screenshots or older chats when the handoff is available.
+Current high-level state: the Cloudflare full zone exists and is Active, the frozen eight mail/service DNS records were preserved and verified, GoDaddy authoritative nameservers now point to `crystal.ns.cloudflare.com` and `dean.ns.cloudflare.com`, and both `legendmural.com` and `www.legendmural.com` are attached to `legendmural-cloudflare-production` as Worker Custom Domains. The owner has observed the storefront loading through the new path. Public DNS propagation is still intermittently unstable on some resolver/cache paths, so Phase 4 post-cutover verification is not yet complete.
+
+Do not chase transient `DNS_PROBE_FINISHED_NXDOMAIN` results by repeatedly changing DNS. The exact next migration action is the read-only Phase 4 verification matrix after DNS is stable enough to test reliably, followed by a GitHub proof update. PayPal Live, customer checkout, Production order-email sending, V3/R2 activation and Netlify decommission remain separate later phases requiring separate approval.
+
+The older `docs/CLOUDFLARE_MIGRATION_HANDOFF_20260909.md` is historical for continuation purposes once the 2026-09-11 handoff is merged.
 
 The Cloudflare migration is an explicitly separate infrastructure/runtime workstream. Its handoff may authorize inspection or narrowly scoped changes to migration-required PayPal/webhook/runtime integration code that the ordinary public-website track would otherwise treat as V3/backend-owned. That exception applies only when the owner has explicitly scoped the chat to the Cloudflare migration, and the migration handoff's guardrails remain mandatory.
 
@@ -32,7 +36,7 @@ Blocker E now has three owner-confirmed facts recorded: the final sticker artwor
 
 Blocker C now has a **ready-to-send Dutch consumer-law verification package** in `docs/BLOCKER_C_DUTCH_CONSUMER_LAW_REQUEST_20260905.md`. The package records the exact LegendMural 100%-upfront PayPal model, the current official-source conflict and the questions a qualified Dutch consumer-law adviser must answer. Do **not** redo generic research or redesign payment code merely to progress this gate. The next Blocker C action is to obtain a written opinion on the exact model and then record that conclusion in GitHub.
 
-There is **no further independently identified storefront source-cleanup task**. Blocker C (Dutch 100%-upfront consumer payment legal gate) remains open/parked pending that written opinion, Blocker D part 2B remains intentionally deferred because the production/material facts are not available, Blocker E remains open/partially evidenced/deferred, and Netlify Production remains unauthorized.
+There is **no further independently identified storefront source-cleanup task**. Blocker C (Dutch 100%-upfront consumer payment legal gate) remains open/parked pending that written opinion, Blocker D part 2B remains intentionally deferred because the production/material facts are not available, Blocker E remains open/partially evidenced/deferred, and final customer launch remains unauthorized.
 
 Do **not** repeatedly ask for the Blocker D vinyl/ink/laminate/packaging facts unless the owner says they are now available. Do **not** invent warnings. Do **not** redesign the PayPal/V3 flow merely to close Blocker C.
 
@@ -41,7 +45,7 @@ Always fresh-check `main` before starting because the separate V3 workstream may
 ## Required startup order
 
 1. Read this file.
-2. If the chat is about the Netlify-to-Cloudflare migration, read [`CLOUDFLARE_MIGRATION_HANDOFF_20260909.md`](CLOUDFLARE_MIGRATION_HANDOFF_20260909.md) next and follow its exact continuation step.
+2. If the chat is about the Netlify-to-Cloudflare migration, read [`CLOUDFLARE_MIGRATION_HANDOFF_20260911.md`](CLOUDFLARE_MIGRATION_HANDOFF_20260911.md) next and follow its exact continuation step.
 3. For general public-website/launch-readiness work, read [`NEXT_CHAT_HANDOFF_20260905_V2.md`](NEXT_CHAT_HANDOFF_20260905_V2.md).
 4. Read [`CURRENT_PRODUCTION_STATUS_20260903.md`](CURRENT_PRODUCTION_STATUS_20260903.md) when general operational website status is relevant.
 5. Read [`FINAL_PRE_RELEASE_CHECKLIST_20260904.md`](FINAL_PRE_RELEASE_CHECKLIST_20260904.md) when launch-readiness is relevant.
@@ -94,18 +98,18 @@ Without explicit cross-track approval, this website track must not modify:
 
 The full responsibility-based boundary is mandatory in `docs/PARALLEL_WORKSTREAM_COORDINATION.md`.
 
-If a website task appears to require one of those files or systems, stop and report the exact dependency before changing it. For an explicitly scoped Cloudflare migration chat, follow the narrower migration-specific exception and guardrails recorded in `docs/CLOUDFLARE_MIGRATION_HANDOFF_20260909.md`.
+If a website task appears to require one of those files or systems, stop and report the exact dependency before changing it. For an explicitly scoped Cloudflare migration chat, follow the narrower migration-specific exception and guardrails recorded in `docs/CLOUDFLARE_MIGRATION_HANDOFF_20260911.md`.
 
 ## Current release direction
 
-The public website is technically far advanced, but the final production cutover remains paused until the remaining website/legal/product launch gates and Cloudflare migration proofs are resolved.
+The public website is technically far advanced, but final customer launch remains paused until the remaining website/legal/product launch gates and the Cloudflare/PayPal Production proofs are resolved.
 
 There is currently no independently identified ordinary storefront source-cleanup step. Blocker C's next step is external legal verification using the prepared request package; Blocker D part 2B and the remaining Blocker E question stay deferred until the owner reopens them. Do not manufacture technical work to bypass those gates.
 
 ## Separate workstreams
 
 - Public website/launch-readiness work belongs to this track in `ALKAVisuals/legend-stories-website`.
-- Cloudflare migration work has its own current handoff in `docs/CLOUDFLARE_MIGRATION_HANDOFF_20260909.md` and may cross narrowly into migration-required runtime integrations.
+- Cloudflare migration work has its own current handoff in `docs/CLOUDFLARE_MIGRATION_HANDOFF_20260911.md` and may cross narrowly into migration-required runtime integrations.
 - V3 Commerce / Orders / Invoices backend and delivery work belongs to the separate V3 chat, even though it uses the same repository.
 - Dashboard work belongs in `ALKAVisuals/legendmural-dashboard` and must not be mixed into this track except for explicitly required migration integration points.
 
