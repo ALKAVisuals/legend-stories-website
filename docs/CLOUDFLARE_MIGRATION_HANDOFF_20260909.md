@@ -135,34 +135,43 @@ The 10 managed records are:
 1. apex `NETLIFY` -> `legendmural.netlify.app`;
 2. `www` `NETLIFY` -> `legendmural.netlify.app`;
 3. `resend._domainkey.mail.legendmural.com` TXT public key;
-4. `send.mail.legendmural.com` MX -> `feedback-smtp.eu-west-1.amazonses.com`;
+4. `send.mail.legendmural.com` MX -> `feedback-smtp.eu-west-1.amazonses.com`, priority `10`;
 5. `send.mail.legendmural.com` TXT `v=spf1 include:amazonses.com ~all`;
 6. `_dmarc.legendmural.com` TXT `v=DMARC1; p=none;`;
 7. apex TXT `v=spf1 include:secureserver.net -all`;
 8. `autodiscover.legendmural.com` CNAME -> `autodiscover.outlook.com`;
 9. `email.legendmural.com` CNAME -> `email.secureserver.net`;
-10. apex MX -> `legendmural-com.mail.protection.outlook.com`.
+10. apex MX -> `legendmural-com.mail.protection.outlook.com`, priority `0`.
 
 This closes the prior full-zone enumeration gap. The two `NETLIFY` records are hosting records to replace only during an approved cutover. The other eight records are mail/service records and must be preserved exactly; do not combine this migration with mail-policy cleanup.
 
 Important correction to the public-only discovery: Resend/Amazon SES records do exist, but under `mail.legendmural.com`. Earlier public checks queried common candidate names one level higher and therefore did not enumerate them.
 
-### Remaining DNS detail
+### MX priorities — captured
 
-The source CSV schema contains only `name`, `ttl`, `type`, and `value`, so it does not expose MX priority as a separate field. Public proof already captured apex MX priority `0`. Before recreating the destination zone, confirm the `send.mail.legendmural.com` MX priority read-only rather than inventing it.
+The Netlify CSV schema does not contain a separate priority column. Both preferences are nevertheless now established without DNS mutation:
+
+- apex Outlook MX priority `0` was captured by the earlier public DNS proof;
+- Amazon SES authoritative Custom MAIL FROM documentation specifies `10 feedback-smtp.<region>.amazonses.com`, so the exported target `feedback-smtp.eu-west-1.amazonses.com` uses priority `10`.
+
+Provider reference: `https://docs.aws.amazon.com/ses/latest/dg/mail-from.html`.
+
+The DNS inventory is therefore complete for cutover planning.
 
 ## Section C remaining blocker
 
-The major blocker before any Cloudflare Production domain cutover is now a **working, independently verified rollback serving target**.
+The only remaining Section C blocker before any Cloudflare Production domain cutover is a **working, independently verified rollback serving target**.
 
 The current Netlify immutable Production permalink cannot be used as the rollback target because it returns 404 for the tested storefront/static paths. Read-only inspection has not proven the internal Netlify root cause. No repair, redeploy, publish-directory change or domain change has been performed.
+
+The connected Netlify integration exposes current project/deploy metadata but not deploy history, so no older Netlify deploy has been identified objectively through the connector. GitHub history also contains no independently proven old Netlify permalink that can safely be called the rollback target.
 
 A Netlify repair/redeploy would change Production and therefore requires separate explicit owner approval before execution. Creating any alternative rollback hosting resource should likewise be planned explicitly and proven before the final cutover.
 
 ## Exact next step
 
-1. Confirm `send.mail.legendmural.com` MX priority read-only if possible.
-2. Determine the minimum safe rollback-target action.
+1. Prove that the exact current Netlify Production source commit `95a57e8f05a0af547efa0dfc4d044b8a96de7fe3` still produces the expected static `dist` artifact under a clean non-Production build.
+2. Use that evidence to choose the minimum safe rollback-target action.
 3. Prefer an independently testable static rollback target that does not change the current public domain while being prepared.
 4. If the chosen solution requires a Netlify Production redeploy/repair or any new external hosting resource, stop first and request explicit owner approval for that exact action.
 5. Only after the rollback target is HTTP-successful and recorded in GitHub may the exact Cloudflare DNS/nameserver/custom-domain cutover plan be finalized.
@@ -194,7 +203,7 @@ No DNS, nameserver, Netlify Production, Cloudflare Production route/custom-domai
 6. Read `docs/CLOUDFLARE_DNS_INVENTORY_PROOF_20260910.md`.
 7. Read `docs/CLOUDFLARE_STAGE_C_ZERO_SECRET_DECISION_20260910.md`.
 8. Fresh-check current `main` and open migration PRs.
-9. Continue only with MX-priority confirmation and rollback-target proof until separate Production cutover approval is given.
+9. Continue only with rollback-target proof until separate Production cutover approval is given.
 
 ## Continuation rule
 
