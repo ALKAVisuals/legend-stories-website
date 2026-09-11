@@ -124,6 +124,7 @@ test('production environment is explicitly separate, non-public and fail-closed 
   assert.equal(production.vars.CHECKOUT_SUCCESS_URL, 'https://legendmural.com/order-success.html');
   assert.equal(production.vars.CHECKOUT_CANCEL_URL, 'https://legendmural.com/order-cancelled.html');
   assert.equal(production.vars.CHECKOUT_ALLOWED_ORIGINS, 'https://legendmural.com');
+  assert.equal(production.vars.PAYPAL_API_BASE, 'https://api-m.paypal.com');
 });
 
 test('preview and production never point at the same writable invoice bucket', async () => {
