@@ -55,6 +55,7 @@
         "CHECKOUT_SUCCESS_URL": "https://legendmural.com/order-success.html",
         "CHECKOUT_CANCEL_URL": "https://legendmural.com/order-cancelled.html",
         "CHECKOUT_ALLOWED_ORIGINS": "https://legendmural.com",
+        "PAYPAL_API_BASE": "https://api-m.paypal.com",
         "PAYPAL_ALLOW_LIVE": "false",
         "ORDER_EMAILS_ENABLED": "false",
         "V3_PROFILE1_ORDER_CREATION_ENABLED": "false",
