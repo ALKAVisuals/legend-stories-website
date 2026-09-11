@@ -3,7 +3,7 @@
 **Last updated:** 2026-09-11  
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Migration scope:** Netlify -> Cloudflare for the public LegendMural storefront  
-**Base `main` verified for this handoff update:** `a717c436c5bc767d0959c9597dff8bdb7ae3a050`
+**Base `main` verified for this handoff update:** `899187e87b5548e78c78c12b5404e650beaca9af`
 
 > This is the canonical continuation document for the active Cloudflare migration. Always fresh-check current `main` before taking an action. GitHub is the source of truth.
 
@@ -19,20 +19,30 @@
 
 ## Current checkpoint
 
-The heavy migration proof work is complete. The exact hosting cutover is now the active task.
+The heavy migration proof work, exact cutover planning and **Gate 0 read-only Cloudflare preflight** are complete.
+
+Latest Gate 0 proof:
 
 ```text
+Cloudflare zone legendmural.com in intended account: ABSENT
 Production Worker: legendmural-cloudflare-production
-Known bootstrap Worker version: 5d05b26d-4179-4ab0-a7b3-35cb990de854
-workers.dev: disabled
-preview_urls: disabled
-Production custom domain: none yet
+Production Worker exists: true
+Production Worker Custom Domains: none
+Fail-closed flags proven remotely: true
+Production application secret names present: none
 Production R2: legendmural-v3-invoice-pdfs-prod
-Production R2 public exposure: none
-Production application secret names: none for Stage C
+Production R2 public exposure: false
 ```
 
-Required Stage C fail-closed values:
+Gate 0 evidence:
+
+- `docs/CLOUDFLARE_GATE0_READONLY_PREFLIGHT_PROOF_20260911.md`
+- workflow run `34594862676`
+- inventory job `103248189719`
+
+No Production state was changed by Gate 0.
+
+Required Stage C fail-closed values remain proven:
 
 ```text
 LEGENDMURAL_DEPLOY_CONTEXT=production
@@ -53,7 +63,7 @@ The authoritative execution plan is:
 
 - `docs/CLOUDFLARE_PRODUCTION_CUTOVER_PLAN_20260911.md`
 
-Read that document before any provider mutation. It defines the read-only preflight, DNS preservation contract, Cloudflare full-zone onboarding, nameserver switch, Worker Custom Domains, post-cutover probes and Stage C recovery behavior.
+Read that document before any provider mutation. It defines the DNS preservation contract, Cloudflare full-zone onboarding, nameserver switch, Worker Custom Domains, post-cutover probes and Stage C recovery behavior.
 
 Key architecture decision: the Production Worker is the storefront origin, so use **Cloudflare Worker Custom Domains**, not classic Worker Routes. The intended final Custom Domains are:
 
@@ -62,9 +72,9 @@ legendmural.com
 www.legendmural.com
 ```
 
-Both point to `legendmural-cloudflare-production`. The existing Worker code already redirects `www.legendmural.com` to `https://legendmural.com` with HTTP 301 while preserving path/query.
+Both point to `legendmural-cloudflare-production`. The existing Worker already redirects `www.legendmural.com` to `https://legendmural.com` with HTTP 301 while preserving path/query.
 
-Cloudflare requires the zone to be **Active** before Worker Custom Domains can be created. Therefore the DNS zone and preserved records are prepared first, the authoritative nameservers are changed, Cloudflare activation is confirmed, and only then are the two Custom Domains attached.
+Cloudflare requires the zone to be **Active** before Worker Custom Domains can be created. Gate 0 has now proven that `legendmural.com` is not yet present as a zone in the intended Cloudflare account. Therefore the first approved external write must be **Cloudflare full-zone creation/onboarding** for `legendmural.com`.
 
 ## DNS contract — complete and frozen for migration
 
@@ -87,7 +97,7 @@ The two Netlify hosting records for apex and `www` are migration-specific and wi
 
 Do not clean up or redesign SPF/DMARC/DKIM/mail configuration during this migration. Mail/service CNAMEs stay DNS-only in Cloudflare.
 
-Current public authoritative DNS is still Netlify/NS1-backed. The prior authoritative nameservers were captured as:
+Current public authoritative DNS is still Netlify/NS1-backed. The captured authoritative nameservers are:
 
 ```text
 dns1.p01.nsone.net.
@@ -110,20 +120,28 @@ Stage C therefore proceeds without an independent third-provider serving fallbac
 
 ## Exact next action
 
-1. Merge the exact cutover-plan documentation PR only after CI and owner approval.
-2. Then perform **read-only Gate 0 preflight** from `docs/CLOUDFLARE_PRODUCTION_CUTOVER_PLAN_20260911.md`:
-   - fresh `main` SHA;
-   - current remote Production Worker/version;
-   - all fail-closed values;
-   - zero Stage C application secrets;
-   - private Production R2;
-   - whether Cloudflare zone `legendmural.com` already exists;
-   - current NS delegation and registrar DNSSEC/DS state;
-   - exact eight-record mail/service contract.
-3. Stop and request explicit owner authorization for the exact cutover mutation bundle.
-4. Only after that authorization may the Cloudflare zone/DNS/nameserver/Custom Domain cutover begin.
+PR #245 contains the Gate 0 proof and the permanent GET-only zone/custom-domain inventory extension. Before any provider write:
 
-No live provider mutation is authorized by this handoff or by the cutover-plan documentation PR.
+1. let all exact-head CI on PR #245 finish;
+2. fresh-check `main`, PR head and mergeability;
+3. request owner approval to merge PR #245;
+4. after #245 is merged, request **separate explicit owner authorization for the exact Production cutover mutation bundle** below.
+
+The exact cutover mutation bundle is:
+
+1. add/create `legendmural.com` in the intended Cloudflare account using full/primary DNS setup;
+2. record the exact Cloudflare-assigned authoritative nameservers;
+3. recreate the frozen eight mail/service records exactly before delegation changes;
+4. verify those records read-only in Cloudflare;
+5. inspect current registrar DNSSEC/DS state and remove/disable an incompatible old DS only if required for the nameserver transition;
+6. replace the Netlify/NS1 authoritative nameservers at the registrar with only the Cloudflare-assigned pair;
+7. wait until the Cloudflare zone is Active;
+8. attach `legendmural.com` and `www.legendmural.com` to `legendmural-cloudflare-production` as Worker Custom Domains;
+9. run the full non-mutating post-cutover probe matrix and record the result in GitHub.
+
+That authorization must also explicitly acknowledge the already chosen pre-live tradeoff that there is **no independent third-provider serving fallback** during this first cutover window.
+
+The cutover authorization does **not** authorize PayPal Live, customer checkout opening, Resend activation, V3 activation, Production R2 object writes or Neon Production mutation.
 
 ## Immediately after stable Cloudflare hosting — PayPal Live
 
@@ -152,6 +170,8 @@ Resend/order-email activation and V3/R2 invoice-storage activation remain separa
 - #241 complete Netlify DNS export proof
 - #242 historical Netlify Production-source build proof
 - #243 Cloudflare-cutover-then-PayPal-Live execution sequence
+- #244 exact Cloudflare Production cutover plan
+- #245 Gate 0 read-only zone/custom-domain preflight — open at time of this handoff update
 
 Canonical preview Worker:
 
@@ -165,9 +185,11 @@ Preview PayPal Sandbox, webhook verification/idempotency, isolated Neon paid per
 
 ## What must not change without new exact approval
 
-- `legendmural.com` DNS/nameservers/custom-domain routing;
+- `legendmural.com` Cloudflare zone creation or DNS records;
+- `legendmural.com` registrar nameservers/DNSSEC/DS;
+- Cloudflare Worker Custom Domains;
 - Netlify Production deploy/config/domain attachments;
-- Production Worker deployment/custom domain;
+- Production Worker deployment;
 - PayPal Live;
 - Resend Production activation;
 - Production application secrets;
@@ -183,11 +205,12 @@ Preview PayPal Sandbox, webhook verification/idempotency, isolated Neon paid per
 1. Read `docs/READ_ME_FIRST.md`.
 2. Read this file.
 3. Read `docs/CLOUDFLARE_PRODUCTION_CUTOVER_PLAN_20260911.md`.
-4. Read `docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md`.
-5. Read `docs/NETLIFY_DNS_ZONE_EXPORT_PROOF_20260911.md`.
-6. Read `docs/CLOUDFLARE_STAGE_C_ZERO_SECRET_DECISION_20260910.md`.
-7. Fresh-check current `main` and open migration PRs.
-8. Continue only with the exact next action above.
+4. Read `docs/CLOUDFLARE_GATE0_READONLY_PREFLIGHT_PROOF_20260911.md`.
+5. Read `docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md`.
+6. Read `docs/NETLIFY_DNS_ZONE_EXPORT_PROOF_20260911.md`.
+7. Read `docs/CLOUDFLARE_STAGE_C_ZERO_SECRET_DECISION_20260910.md`.
+8. Fresh-check current `main` and open migration PRs.
+9. Continue only with the exact next action above.
 
 ## Continuation rule
 
