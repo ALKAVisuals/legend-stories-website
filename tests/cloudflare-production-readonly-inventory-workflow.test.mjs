@@ -49,7 +49,7 @@ test('inventory script is fixed to the intended Production zone, Worker and R2 b
   assert.match(script, /legendmural-v3-invoice-pdfs-prod/);
 });
 
-test('inventory script uses Cloudflare API GET requests only', () => {
+test('inventory script uses GET requests only', () => {
   assert.match(script, /method: 'GET'/);
   for (const token of forbiddenMutationTokens) {
     assert.equal(script.includes(token), false, `forbidden mutation token present in script: ${token}`);
@@ -57,7 +57,11 @@ test('inventory script uses Cloudflare API GET requests only', () => {
   }
 });
 
-test('inventory covers zone state, Worker settings, Worker custom domains, secret-name presence and R2 public exposure', () => {
+test('inventory covers public NS/DS, zone state, Worker settings, Worker custom domains, secret-name presence and R2 public exposure', () => {
+  assert.match(script, /https:\/\/dns\.google\/resolve/);
+  assert.match(script, /publicDnsGet\('NS'\)/);
+  assert.match(script, /publicDnsGet\('DS'\)/);
+  assert.match(script, /dsPresent/);
   assert.match(script, /\/zones\?name=\$\{encodeURIComponent\(PROD_ZONE\)\}&account\.id=\$\{encodeURIComponent\(accountId\)\}/);
   assert.match(script, /\/workers\/scripts\/\$\{encodeURIComponent\(PROD_WORKER\)\}\/settings/);
   assert.match(script, /\/workers\/scripts\/\$\{encodeURIComponent\(PROD_WORKER\)\}\/secrets/);
@@ -67,7 +71,7 @@ test('inventory covers zone state, Worker settings, Worker custom domains, secre
   assert.match(script, /\/domains\/custom/);
 });
 
-test('inventory never prints raw Cloudflare responses or secret values', () => {
+test('inventory never prints raw provider responses or secret values', () => {
   assert.doesNotMatch(script, /console\.log\(text\)/);
   assert.doesNotMatch(script, /console\.log\(body\)/);
   assert.doesNotMatch(script, /console\.log\(settings\)/);
