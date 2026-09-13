@@ -3,6 +3,7 @@
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Scope:** public LegendMural webshop / launch-readiness only  
 **Current public hosting transition:** Cloudflare hosting/DNS migration is complete; customer commerce remains fail-closed and the next gated infrastructure phase is PayPal Live Stage P1  
+**Synchronized Cloudflare status:** [`CLOUDFLARE_CURRENT_STATUS_20260913.md`](CLOUDFLARE_CURRENT_STATUS_20260913.md)  
 **Active Cloudflare migration handoff:** [`CLOUDFLARE_MIGRATION_HANDOFF_20260911.md`](CLOUDFLARE_MIGRATION_HANDOFF_20260911.md)  
 **Canonical Cloudflare post-cutover proof:** [`CLOUDFLARE_PHASE4_POST_CUTOVER_PROOF_20260911.md`](CLOUDFLARE_PHASE4_POST_CUTOVER_PROOF_20260911.md)  
 **PayPal Live activation plan:** [`CLOUDFLARE_PAYPAL_LIVE_ACTIVATION_PLAN_20260911.md`](CLOUDFLARE_PAYPAL_LIVE_ACTIVATION_PLAN_20260911.md)  
@@ -16,7 +17,7 @@
 
 ## Active Cloudflare migration checkpoint — synchronized 13 September 2026
 
-The current Netlify-to-Cloudflare migration continuation state is in **`docs/CLOUDFLARE_MIGRATION_HANDOFF_20260911.md`**. If the chat is specifically about the Cloudflare migration or Production runtime activation, read that file immediately after this one and treat it as the canonical migration handoff.
+The compact current status is in **`docs/CLOUDFLARE_CURRENT_STATUS_20260913.md`**. The detailed Netlify-to-Cloudflare continuation state remains in **`docs/CLOUDFLARE_MIGRATION_HANDOFF_20260911.md`**. If the chat is specifically about the Cloudflare migration or Production runtime activation, read both immediately after this file.
 
 The Cloudflare hosting/DNS migration is now **100% complete for its defined scope**. The canonical live proof is `docs/CLOUDFLARE_PHASE4_POST_CUTOVER_PROOF_20260911.md` and records successful authoritative Cloudflare delegation, Worker Custom Domains, storefront/static delivery, apex/`www` HTTPS behavior, public 8/8 mail/service DNS preservation, unknown-API hardening, the 6/6 Stage C fail-closed API matrix, checkout-paused behavior and expected no-store/security response headers.
 
@@ -30,9 +31,9 @@ change: pin Production PAYPAL_API_BASE=https://api-m.paypal.com for P1 preparati
 
 PR #250 is configuration preparation only. It did **not** enable PayPal Live, open checkout, add Production credentials, create an order, mutate Neon, send email, write R2 objects or activate V3.
 
-The exact next infrastructure/runtime phase is **PayPal Live Stage P1**, and it still requires explicit owner authorization before any Production credential/configuration mutation. P1 is limited to safely configuring the prepared Production Neon + PayPal secrets and canonical checkout/Live API configuration in Cloudflare while keeping both `LEGENDMURAL_CHECKOUT_PAUSED=true` and `PAYPAL_ALLOW_LIVE=false`. P2, P3, customer checkout, Resend/order-email, V3/R2 activation and Netlify decommission remain separate later gates.
+The exact next infrastructure/runtime phase is **PayPal Live Stage P1**, and it still requires explicit owner authorization before any Production credential/configuration mutation. P1 is limited to safely configuring the prepared Production payment/database credentials and canonical checkout/Live API configuration in Cloudflare while keeping both `LEGENDMURAL_CHECKOUT_PAUSED=true` and `PAYPAL_ALLOW_LIVE=false`. P2, P3, customer checkout, Resend/order-email, V3/R2 activation and Netlify decommission remain separate later gates.
 
-Do **not** rerun Gate 0 or Phase 4 merely because an older status file says they are pending. The proof files above and the active migration handoff supersede that older checkpoint language.
+Do **not** rerun Gate 0 or Phase 4 merely because an older status file says they are pending. The synchronized status, proof files and active migration handoff supersede that older checkpoint language.
 
 The older `docs/CLOUDFLARE_MIGRATION_HANDOFF_20260909.md` is historical only.
 
@@ -59,28 +60,29 @@ Always fresh-check `main` before starting because the separate V3 workstream may
 ## Required startup order
 
 1. Read this file.
-2. If the chat is about the Netlify-to-Cloudflare migration or Production runtime activation, read [`CLOUDFLARE_MIGRATION_HANDOFF_20260911.md`](CLOUDFLARE_MIGRATION_HANDOFF_20260911.md) next.
-3. Read [`CLOUDFLARE_PHASE4_POST_CUTOVER_PROOF_20260911.md`](CLOUDFLARE_PHASE4_POST_CUTOVER_PROOF_20260911.md) before questioning or rerunning completed hosting/DNS proof.
-4. For PayPal activation work, read [`CLOUDFLARE_PAYPAL_LIVE_ACTIVATION_PLAN_20260911.md`](CLOUDFLARE_PAYPAL_LIVE_ACTIVATION_PLAN_20260911.md) and obey the P1 -> P2 -> P3 approval boundaries.
-5. For general public-website/launch-readiness work, read [`NEXT_CHAT_HANDOFF_20260905_V2.md`](NEXT_CHAT_HANDOFF_20260905_V2.md).
-6. Read [`CURRENT_PRODUCTION_STATUS_20260903.md`](CURRENT_PRODUCTION_STATUS_20260903.md) when general operational website status is relevant.
-7. Read [`FINAL_PRE_RELEASE_CHECKLIST_20260904.md`](FINAL_PRE_RELEASE_CHECKLIST_20260904.md) when launch-readiness is relevant.
-8. Read [`PARALLEL_WORKSTREAM_COORDINATION.md`](PARALLEL_WORKSTREAM_COORDINATION.md).
-9. For Blocker C work, read [`BLOCKER_C_DUTCH_CONSUMER_LAW_REQUEST_20260905.md`](BLOCKER_C_DUTCH_CONSUMER_LAW_REQUEST_20260905.md) before doing any further legal/payment analysis.
-10. Fresh-check the current `main` SHA before making any repository change.
-11. Work one meaningful website or migration step at a time.
-12. Use a task-specific branch for mutations; never write directly to `main`.
-13. Inspect relevant CI before merge.
-14. Immediately before merge, fresh-check `main` again because separate workstreams may have merged in parallel.
-15. If `main` changed, compare/rebase first and rerun relevant CI.
-16. Do not deploy or publish to production without explicit owner approval for that exact release step.
-17. Do not activate PayPal Live, Production email sending, V3 Profile 1, production migrations or V3 invoice issuance unless the explicitly scoped workstream and owner approval authorize that exact action.
+2. If the chat is about the Netlify-to-Cloudflare migration or Production runtime activation, read [`CLOUDFLARE_CURRENT_STATUS_20260913.md`](CLOUDFLARE_CURRENT_STATUS_20260913.md) next.
+3. Read [`CLOUDFLARE_MIGRATION_HANDOFF_20260911.md`](CLOUDFLARE_MIGRATION_HANDOFF_20260911.md) for the detailed migration/runtime continuation contract.
+4. Read [`CLOUDFLARE_PHASE4_POST_CUTOVER_PROOF_20260911.md`](CLOUDFLARE_PHASE4_POST_CUTOVER_PROOF_20260911.md) before questioning or rerunning completed hosting/DNS proof.
+5. For PayPal activation work, read [`CLOUDFLARE_PAYPAL_LIVE_ACTIVATION_PLAN_20260911.md`](CLOUDFLARE_PAYPAL_LIVE_ACTIVATION_PLAN_20260911.md) and obey the P1 -> P2 -> P3 approval boundaries.
+6. For general public-website/launch-readiness work, read [`NEXT_CHAT_HANDOFF_20260905_V2.md`](NEXT_CHAT_HANDOFF_20260905_V2.md).
+7. Read [`CURRENT_PRODUCTION_STATUS_20260903.md`](CURRENT_PRODUCTION_STATUS_20260903.md) when general operational website status is relevant.
+8. Read [`FINAL_PRE_RELEASE_CHECKLIST_20260904.md`](FINAL_PRE_RELEASE_CHECKLIST_20260904.md) when launch-readiness is relevant.
+9. Read [`PARALLEL_WORKSTREAM_COORDINATION.md`](PARALLEL_WORKSTREAM_COORDINATION.md).
+10. For Blocker C work, read [`BLOCKER_C_DUTCH_CONSUMER_LAW_REQUEST_20260905.md`](BLOCKER_C_DUTCH_CONSUMER_LAW_REQUEST_20260905.md) before doing any further legal/payment analysis.
+11. Fresh-check the current `main` SHA before making any repository change.
+12. Work one meaningful website or migration step at a time.
+13. Use a task-specific branch for mutations; never write directly to `main`.
+14. Inspect relevant CI before merge.
+15. Immediately before merge, fresh-check `main` again because separate workstreams may have merged in parallel.
+16. If `main` changed, compare/rebase first and rerun relevant CI.
+17. Do not deploy or publish to production without explicit owner approval for that exact release step.
+18. Do not activate PayPal Live, Production email sending, V3 Profile 1, production migrations or V3 invoice issuance unless the explicitly scoped workstream and owner approval authorize that exact action.
 
 ## Source-of-truth rule
 
 GitHub is the source of truth. Do not reconstruct current website or Cloudflare migration progress from old chat history.
 
-For Cloudflare migration/runtime work, the active migration handoff plus its cited proof documents override older dated status notes. In particular, older statements saying Phase 4 or DNS propagation is still pending are historical and must not cause completed migration proofs to be rerun.
+For Cloudflare migration/runtime work, `CLOUDFLARE_CURRENT_STATUS_20260913.md`, the active migration handoff and their cited proof documents override older dated status notes. In particular, older statements saying Phase 4 or DNS propagation is still pending are historical and must not cause completed migration proofs to be rerun.
 
 Older dated website handoffs and sprint notes may contain useful history, but they do **not** override the active Cloudflare migration handoff for migration work, or the newest general website next-chat handoff/current status/parallel-workstream coordination contract for ordinary website work.
 
@@ -127,7 +129,7 @@ There is currently no independently identified ordinary storefront source-cleanu
 ## Separate workstreams
 
 - Public website/launch-readiness work belongs to this track in `ALKAVisuals/legend-stories-website`.
-- Cloudflare migration/runtime activation work has its current handoff in `docs/CLOUDFLARE_MIGRATION_HANDOFF_20260911.md`; hosting/DNS is complete and PayPal P1 is the next gated infrastructure phase.
+- Cloudflare migration/runtime activation work has its synchronized status in `docs/CLOUDFLARE_CURRENT_STATUS_20260913.md` and detailed handoff in `docs/CLOUDFLARE_MIGRATION_HANDOFF_20260911.md`; hosting/DNS is complete and PayPal P1 is the next gated infrastructure phase.
 - V3 Commerce / Orders / Invoices backend and delivery work belongs to the separate V3 chat, even though it uses the same repository.
 - Dashboard work belongs in `ALKAVisuals/legendmural-dashboard` and must not be mixed into this track except for explicitly required migration integration points.
 
