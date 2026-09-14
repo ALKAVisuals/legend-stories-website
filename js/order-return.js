@@ -82,22 +82,22 @@ const ORDER_RETURN_PRESENTATION = Object.freeze({
     detailStatus: 'Payment confirmed',
     paymentMeta: 'Confirmed',
     productionMeta: 'Preparing your mural',
-    shippingMeta: 'Update by email',
+    shippingMeta: 'Support available',
     paymentDot: '✓',
     actionLabel: 'View installation guides',
     actionHref: 'https://youtube.com/playlist?list=PL69xq-QQTVxjbY7es-YDCGee06GruiRMW',
     documentTitle: 'Order Confirmed — LegendMural',
     label: 'Order confirmed',
     title: 'Your legend is officially yours.',
-    message: 'Payment confirmed. We’ll prepare your LegendMural and keep you updated as your order moves forward.',
+    message: 'Payment confirmed. We’ll prepare your LegendMural and move your order forward.',
     nextSteps: Object.freeze([
       Object.freeze({
         title: 'We prepare your mural',
         copy: 'Your confirmed order now moves forward for preparation.',
       }),
       Object.freeze({
-        title: 'We keep you updated',
-        copy: 'You’ll receive order and shipping information by email as your mural moves forward.',
+        title: 'Need an update?',
+        copy: 'Keep your Order ID. If you have a question before dispatch, contact us and include that ID.',
       }),
       Object.freeze({
         title: 'Get ready for your wall',
@@ -190,7 +190,7 @@ function renderUnavailable(message) {
   const copy = resolveOrderReturnCopy('unavailable');
   render({ ...copy, message: message || copy.message }, 'unavailable');
   if (elements.note) {
-    elements.note.textContent = 'Keep your payment confirmation email. Your saved cart has not been cleared.';
+    elements.note.textContent = 'Keep your PayPal payment confirmation. Your saved cart has not been cleared.';
   }
 }
 
@@ -225,7 +225,7 @@ async function verifyStoredOrder(reference, sessionId) {
   render(copy, status.status);
   if (elements.note) {
     elements.note.textContent = status.paid
-      ? 'Keep your order confirmation email and Order ID for your records.'
+      ? 'Keep your Order ID and PayPal payment confirmation for your records.'
       : 'Your cart remains saved until the server confirms this exact payment as paid.';
   }
 }
