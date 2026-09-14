@@ -1,6 +1,7 @@
 (() => {
   'use strict';
 
+  const ENDPOINT = '/api/contact';
   const section = document.getElementById('contact');
   if (!section) return;
 
@@ -9,16 +10,6 @@
 
   form.setAttribute('name', 'contact');
   form.setAttribute('method', 'POST');
-  form.setAttribute('data-netlify', 'true');
-  form.setAttribute('data-netlify-honeypot', 'bot-field');
-
-  if (!form.querySelector('input[name="form-name"]')) {
-    const formName = document.createElement('input');
-    formName.type = 'hidden';
-    formName.name = 'form-name';
-    formName.value = 'contact';
-    form.prepend(formName);
-  }
 
   if (!form.querySelector('input[name="bot-field"]')) {
     const honeypot = document.createElement('input');
@@ -56,6 +47,7 @@
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (submitting) return;
+    if (!form.reportValidity()) return;
 
     submitting = true;
     if (submitButton) {
@@ -67,23 +59,23 @@
 
     try {
       const data = new FormData(form);
-      data.set('form-name', 'contact');
-      if (!data.has('bot-field')) data.set('bot-field', '');
-
-      const encoded = new URLSearchParams();
-      for (const [key, value] of data.entries()) {
-        if (typeof value === 'string') encoded.append(key, value);
-      }
-
-      const response = await fetch('/', {
+      const response = await fetch(ENDPOINT, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+          'Content-Type': 'application/json',
         },
-        body: encoded.toString(),
+        body: JSON.stringify({
+          name: String(data.get('name') || '').trim(),
+          email: String(data.get('email') || '').trim(),
+          subject: String(data.get('subject') || '').trim(),
+          message: String(data.get('message') || '').trim(),
+          botField: String(data.get('bot-field') || ''),
+        }),
       });
-
-      if (!response.ok) throw new Error(`Contact form returned ${response.status}.`);
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(body?.error?.message || `Contact form returned ${response.status}.`);
+      }
 
       form.reset();
       renderStatus('Thanks — your message has been sent. We will get back to you as soon as possible.');
@@ -91,7 +83,7 @@
       console.error('LegendMural contact form submission failed.', {
         name: error?.name || 'Error',
       });
-      renderStatus('We could not send your message. Please try again in a moment.', { error: true });
+      renderStatus('We could not send your message. Please try again in a moment or email info@legendmural.com.', { error: true });
     } finally {
       submitting = false;
       if (submitButton) {
