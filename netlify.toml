@@ -72,6 +72,18 @@
   force = true
 
 [[redirects]]
+  from = "/api/contact"
+  to = "/.netlify/functions/create-contact"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/withdrawal"
+  to = "/.netlify/functions/create-withdrawal"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/invoice-download"
   to = "/.netlify/functions/invoice-download"
   status = 200
