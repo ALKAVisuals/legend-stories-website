@@ -16,6 +16,7 @@ const SENSITIVE_BINDING_NAMES = Object.freeze([
   'PAYPAL_CLIENT_ID',
   'PAYPAL_CLIENT_SECRET',
   'PAYPAL_WEBHOOK_ID',
+  'P3_TEST_CHECKOUT_TOKEN',
   'RESEND_API_KEY',
   'LEGENDMURAL_DASHBOARD_INVOICE_TOKEN',
 ]);
@@ -24,9 +25,9 @@ async function config() {
   return JSON.parse(await readFile(configUrl, 'utf8'));
 }
 
-function assertFailClosed(vars) {
+function assertGuarded(vars) {
   assert.equal(vars.LEGENDMURAL_CHECKOUT_PAUSED, 'true');
-  assert.equal(vars.PAYPAL_ALLOW_LIVE, 'false');
+  assert.equal(vars.P3_TEST_CHECKOUT_ENABLED, 'false');
   assert.equal(vars.ORDER_EMAILS_ENABLED, 'false');
   assert.equal(vars.V3_PROFILE1_ORDER_CREATION_ENABLED, 'false');
   assert.equal(vars.V3_INVOICE_RECONCILIATION_ENABLED, 'false');
@@ -94,7 +95,8 @@ test('preview environment is isolated, fail-closed and has no scheduled reconcil
   const value = await config();
   assert.equal(value.name, 'legendmural-cloudflare-preview');
   assert.equal(value.vars.LEGENDMURAL_DEPLOY_CONTEXT, 'preview');
-  assertFailClosed(value.vars);
+  assertGuarded(value.vars);
+  assert.equal(value.vars.PAYPAL_ALLOW_LIVE, 'false');
   assertNoSecretsInVars(value.vars);
   assert.deepEqual(value.triggers.crons, []);
   assert.equal(value.r2_buckets.length, 1);
@@ -103,7 +105,7 @@ test('preview environment is isolated, fail-closed and has no scheduled reconcil
   assert.equal(value.r2_buckets[0].preview_bucket_name, 'legendmural-v3-invoice-pdfs-preview');
 });
 
-test('production environment is explicitly separate, non-public and fail-closed before cutover', async () => {
+test('production environment is explicitly separate, non-public and guarded after P2', async () => {
   const value = await config();
   const production = value.env.production;
   assert.equal(production.name, 'legendmural-cloudflare-production');
@@ -111,7 +113,8 @@ test('production environment is explicitly separate, non-public and fail-closed 
   assert.equal(production.preview_urls, false);
   assert.equal(Object.hasOwn(production, 'routes'), false);
   assert.equal(production.vars.LEGENDMURAL_DEPLOY_CONTEXT, 'production');
-  assertFailClosed(production.vars);
+  assertGuarded(production.vars);
+  assert.equal(production.vars.PAYPAL_ALLOW_LIVE, 'true');
   assertNoSecretsInVars(production.vars);
   assert.equal(production.define?.['import.meta.url'], PDFKIT_WORKER_IMPORT_META_URL);
   assert.equal(Object.hasOwn(production, 'alias'), false);
@@ -156,7 +159,7 @@ test('Cloudflare invoice download composition preserves durable access audit log
 
 test('PDFKit workerd probe aliases the browser ESM runtime and stabilizes import.meta.url', async () => {
   const value = JSON.parse(await readFile(pdfKitProbeConfigUrl, 'utf8'));
-  assert.equal(value.main, './cloudflare-pdfkit-probe-worker.mjs');
+  assert.equal(value.main, './cloudflare/pdfkit-probe-worker.mjs');
   assert.equal(value.alias?.pdfkit, '../../cloudflare/pdfkit-worker-runtime.mjs');
   assert.equal(value.define?.['import.meta.url'], PDFKIT_WORKER_IMPORT_META_URL);
 
