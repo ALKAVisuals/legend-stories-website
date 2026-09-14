@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
+import { handleCreatePayPalOrder } from '../server/api/create-paypal-order.mjs';
 import { createAuthoritativeOrderQuote } from '../server/commerce/order-quote.mjs';
 import {
   P3_CONTROLLED_TEST_CATALOG,
@@ -22,6 +23,23 @@ function requestWithToken(token = TEST_TOKEN) {
   });
 }
 
+function checkoutRequest({ token = '', orderRequest = {} } = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['x-legendmural-p3-test-token'] = token;
+  return new Request('https://legendmural.com/api/paypal/checkout', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ request: orderRequest, customer: {} }),
+  });
+}
+
+const P3_ENV = Object.freeze({
+  P3_TEST_CHECKOUT_ENABLED: 'true',
+  P3_TEST_CHECKOUT_TOKEN: TEST_TOKEN,
+  CHECKOUT_SUCCESS_URL: 'https://legendmural.com/order-success.html',
+  CHECKOUT_CANCEL_URL: 'https://legendmural.com/order-cancelled.html',
+});
+
 test('P3 controlled checkout is disabled by default and requires the exact server secret', () => {
   assert.equal(isP3ControlledCheckoutEnabled({}), false);
   assert.equal(isAuthorizedP3ControlledCheckout(requestWithToken(), {}), false);
@@ -34,6 +52,26 @@ test('P3 controlled checkout is disabled by default and requires the exact serve
   assert.equal(isAuthorizedP3ControlledCheckout(requestWithToken(), env), true);
   assert.equal(isAuthorizedP3ControlledCheckout(requestWithToken(`${TEST_TOKEN}x`), env), false);
   assert.equal(isAuthorizedP3ControlledCheckout(requestWithToken('too-short'), env), false);
+});
+
+test('P3 controlled mode keeps ordinary checkout requests fail-closed', async () => {
+  const response = await handleCreatePayPalOrder(checkoutRequest(), { env: P3_ENV });
+  assert.equal(response.status, 503);
+  const payload = await response.json();
+  assert.equal(payload.error.code, 'CHECKOUT_PAUSED');
+});
+
+test('P3 controlled mode rejects an authorized token when the order is not the exact test request', async () => {
+  const response = await handleCreatePayPalOrder(checkoutRequest({
+    token: TEST_TOKEN,
+    orderRequest: {
+      items: [{ slug: 'ordinary-product', quantity: 1 }],
+      countryCode: 'NL',
+    },
+  }), { env: P3_ENV });
+  assert.equal(response.status, 400);
+  const payload = await response.json();
+  assert.equal(payload.error.code, 'P3_TEST_REQUEST_INVALID');
 });
 
 test('P3 controlled request accepts exactly one NL one-cent test item and no discount', () => {
