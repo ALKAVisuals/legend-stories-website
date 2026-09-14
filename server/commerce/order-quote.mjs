@@ -162,6 +162,9 @@ export function createAuthoritativeOrderQuote(payload = {}, catalogProducts = []
     });
   }
 
+  const shippingExempt = quantitiesByLine.size > 0
+    && [...quantitiesByLine.values()].every(({ product }) => product.shippingExempt === true);
+
   const authoritativeItems = [...quantitiesByLine.values()]
     .map(({ product, variant, quantity }) => {
       if (quantity > MAX_QUANTITY_PER_LINE) {
@@ -192,7 +195,6 @@ export function createAuthoritativeOrderQuote(payload = {}, catalogProducts = []
         unitPrice,
         quantity,
         lineTotal: roundMoney(unitPrice * quantity),
-        shippingExempt: product.shippingExempt === true,
       });
     })
     .sort((left, right) => (
@@ -223,8 +225,6 @@ export function createAuthoritativeOrderQuote(payload = {}, catalogProducts = []
   const subtotal = roundMoney(totals.subtotal);
   const discountAmount = roundMoney(totals.discount);
   const discountedSubtotal = roundMoney(totals.discountedSubtotal);
-  const shippingExempt = authoritativeItems.length > 0
-    && authoritativeItems.every((item) => item.shippingExempt === true);
   const shipping = shippingExempt ? 0 : roundMoney(totals.shipping);
   const grandTotal = roundMoney(discountedSubtotal + shipping);
 
