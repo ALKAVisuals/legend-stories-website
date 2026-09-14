@@ -15,7 +15,8 @@ const worker = await readFile(workerUrl, 'utf8');
 const expectedFlags = Object.freeze({
   LEGENDMURAL_DEPLOY_CONTEXT: 'production',
   LEGENDMURAL_CHECKOUT_PAUSED: 'true',
-  PAYPAL_ALLOW_LIVE: 'false',
+  P3_TEST_CHECKOUT_ENABLED: 'false',
+  PAYPAL_ALLOW_LIVE: 'true',
   ORDER_EMAILS_ENABLED: 'false',
   V3_PROFILE1_ORDER_CREATION_ENABLED: 'false',
   V3_INVOICE_RECONCILIATION_ENABLED: 'false',
@@ -28,6 +29,7 @@ const applicationSecretNames = Object.freeze([
   'PAYPAL_CLIENT_ID',
   'PAYPAL_CLIENT_SECRET',
   'PAYPAL_WEBHOOK_ID',
+  'P3_TEST_CHECKOUT_TOKEN',
   'RESEND_API_KEY',
   'LEGENDMURAL_DASHBOARD_INVOICE_TOKEN',
 ]);
@@ -69,7 +71,7 @@ test('bootstrap workflow cannot mutate R2 objects, DNS, routes, secrets or provi
   assert.doesNotMatch(workflow, /(?:PAYPAL|RESEND|NEON)_[A-Z_]+:\s*\$\{\{/);
 });
 
-test('Production config is non-public, separate, exact-bucket and fail-closed', () => {
+test('Production config is non-public, separate, exact-bucket and guarded', () => {
   const production = config.env.production;
   assert.equal(production.name, 'legendmural-cloudflare-production');
   assert.equal(production.workers_dev, false);
