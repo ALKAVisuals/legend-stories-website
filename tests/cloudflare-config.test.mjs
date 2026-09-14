@@ -159,7 +159,7 @@ test('Cloudflare invoice download composition preserves durable access audit log
 
 test('PDFKit workerd probe aliases the browser ESM runtime and stabilizes import.meta.url', async () => {
   const value = JSON.parse(await readFile(pdfKitProbeConfigUrl, 'utf8'));
-  assert.equal(value.main, './cloudflare/pdfkit-probe-worker.mjs');
+  assert.equal(value.main, './cloudflare-pdfkit-probe-worker.mjs');
   assert.equal(value.alias?.pdfkit, '../../cloudflare/pdfkit-worker-runtime.mjs');
   assert.equal(value.define?.['import.meta.url'], PDFKIT_WORKER_IMPORT_META_URL);
 
