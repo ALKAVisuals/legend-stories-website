@@ -3,6 +3,8 @@ export const CLOUDFLARE_API_ROUTES = Object.freeze([
   '/api/paypal/capture',
   '/api/paypal/webhook',
   '/api/order-status',
+  '/api/contact',
+  '/api/withdrawal',
   '/api/invoice-download',
   '/api/internal/dashboard-invoice',
 ]);
@@ -120,6 +122,10 @@ async function loadApiRuntime() {
   return import('./api-runtime.mjs');
 }
 
+async function loadCustomerRuntime() {
+  return import('./customer-runtime.mjs');
+}
+
 export async function routeCloudflareApi(request, env) {
   const pathname = new URL(request.url).pathname;
 
@@ -139,6 +145,14 @@ export async function routeCloudflareApi(request, env) {
   if (pathname === '/api/internal/dashboard-invoice') {
     const disabled = dashboardDisabledResponse(request, env);
     if (disabled) return disabled;
+  }
+
+  if (pathname === '/api/contact' || pathname === '/api/withdrawal') {
+    const customerRuntime = await loadCustomerRuntime();
+    if (pathname === '/api/contact') {
+      return customerRuntime.handleActiveContact(request, env);
+    }
+    return customerRuntime.handleActiveWithdrawal(request, env);
   }
 
   const runtime = await loadApiRuntime();

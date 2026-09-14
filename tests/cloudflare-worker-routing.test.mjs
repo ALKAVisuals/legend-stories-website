@@ -15,15 +15,17 @@ const EXPECTED_ROUTES = Object.freeze([
   '/api/paypal/capture',
   '/api/paypal/webhook',
   '/api/order-status',
+  '/api/contact',
+  '/api/withdrawal',
   '/api/invoice-download',
   '/api/internal/dashboard-invoice',
 ]);
 
-test('Cloudflare Worker exposes exactly the existing public API contract', () => {
+test('Cloudflare Worker exposes the customer and commerce API contract', () => {
   assert.deepEqual(CLOUDFLARE_API_ROUTES, EXPECTED_ROUTES);
   for (const route of EXPECTED_ROUTES) assert.equal(isCloudflareApiRoute(route), true);
-  assert.equal(isCloudflareApiRoute('/api/create-withdrawal'), false);
-  assert.equal(CLOUDFLARE_API_ROUTES.some((route) => route.includes('withdrawal')), false);
+  assert.equal(isCloudflareApiRoute('/.netlify/functions/create-withdrawal'), false);
+  assert.equal(isCloudflareApiRoute('/.netlify/functions/create-contact'), false);
 });
 
 test('unknown API paths fail closed and never fall through to static assets', async () => {
@@ -135,6 +137,8 @@ test('Stage C Production API routes fail closed with zero application secrets', 
     ['/api/paypal/capture', 503, 'PAYPAL_CAPTURE_SERVICE_NOT_CONFIGURED'],
     ['/api/paypal/webhook', 503, 'PAYPAL_WEBHOOK_SERVICE_NOT_CONFIGURED'],
     ['/api/order-status', 503, 'ORDER_STATUS_SERVICE_NOT_CONFIGURED'],
+    ['/api/contact', 503, 'CONTACT_SERVICE_NOT_CONFIGURED'],
+    ['/api/withdrawal', 503, 'WITHDRAWAL_STORE_NOT_CONFIGURED'],
     ['/api/invoice-download', 405, 'METHOD_NOT_ALLOWED'],
     ['/api/internal/dashboard-invoice', 405, 'METHOD_NOT_ALLOWED'],
   ]);
