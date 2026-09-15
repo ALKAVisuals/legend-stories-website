@@ -93,6 +93,12 @@ test('remote verifier is GET-only and checks exact Custom Domains plus PayPal Li
   assert.doesNotMatch(verifier, /clientSecret\s*[:=]\s*['"][^'"]+['"]/i);
 });
 
+test('guarded verifier requires order emails off before deploy and on after deploy', () => {
+  assert.match(verifier, /const expectedOrderEmails = mode === 'preflight' \? 'false' : 'true';/);
+  assert.match(verifier, /flags\.ORDER_EMAILS_ENABLED !== expectedOrderEmails/);
+  assert.match(workflow, /Production order emails intended state: enabled/);
+});
+
 test('live proof after deployment only performs a GET and requires checkout paused', () => {
   assert.match(workflow, /fetch\('https:\/\/legendmural\.com\/api\/paypal\/checkout'/);
   assert.match(workflow, /method: 'GET'/);
