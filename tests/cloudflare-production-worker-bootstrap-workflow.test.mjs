@@ -24,6 +24,11 @@ const expectedFlags = Object.freeze({
   V3_DASHBOARD_INVOICE_API_ENABLED: 'false',
 });
 
+const expectedProductionDomains = Object.freeze([
+  { pattern: 'legendmural.com', custom_domain: true },
+  { pattern: 'www.legendmural.com', custom_domain: true },
+]);
+
 const applicationSecretNames = Object.freeze([
   'NEON_DATABASE_URL',
   'PAYPAL_CLIENT_ID',
@@ -71,12 +76,12 @@ test('bootstrap workflow cannot mutate R2 objects, DNS, routes, secrets or provi
   assert.doesNotMatch(workflow, /(?:PAYPAL|RESEND|NEON)_[A-Z_]+:\s*\$\{\{/);
 });
 
-test('Production config is non-public, separate, exact-bucket and guarded', () => {
+test('current Production config is domain-pinned, separate, exact-bucket and guarded', () => {
   const production = config.env.production;
   assert.equal(production.name, 'legendmural-cloudflare-production');
   assert.equal(production.workers_dev, false);
   assert.equal(production.preview_urls, false);
-  assert.equal(Object.hasOwn(production, 'routes'), false);
+  assert.deepEqual(production.routes, expectedProductionDomains);
   assert.deepEqual(production.triggers.crons, ['*/5 * * * *']);
   assert.equal(production.r2_buckets.length, 1);
   assert.deepEqual(production.r2_buckets[0], {

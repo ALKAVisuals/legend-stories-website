@@ -44,6 +44,16 @@
       "name": "legendmural-cloudflare-production",
       "workers_dev": false,
       "preview_urls": false,
+      "routes": [
+        {
+          "pattern": "legendmural.com",
+          "custom_domain": true
+        },
+        {
+          "pattern": "www.legendmural.com",
+          "custom_domain": true
+        }
+      ],
       "define": {
         "import.meta.url": "\"file:///legendmural-cloudflare-pdfkit-runtime.mjs\""
       },

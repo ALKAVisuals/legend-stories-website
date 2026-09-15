@@ -3,10 +3,18 @@ import { appendFile } from 'node:fs/promises';
 const API_BASE = 'https://api.cloudflare.com/client/v4';
 const PROD_WORKER = 'legendmural-cloudflare-production';
 const PROD_R2_BUCKET = 'legendmural-v3-invoice-pdfs-prod';
+const PROD_CUSTOM_DOMAINS = Object.freeze([
+  'legendmural.com',
+  'www.legendmural.com',
+]);
 
 const GUARDED_FLAGS = Object.freeze({
   LEGENDMURAL_DEPLOY_CONTEXT: 'production',
   LEGENDMURAL_CHECKOUT_PAUSED: 'true',
+  CHECKOUT_SUCCESS_URL: 'https://legendmural.com/order-success.html',
+  CHECKOUT_CANCEL_URL: 'https://legendmural.com/order-cancelled.html',
+  CHECKOUT_ALLOWED_ORIGINS: 'https://legendmural.com',
+  PAYPAL_API_BASE: 'https://api-m.paypal.com',
   PAYPAL_ALLOW_LIVE: 'true',
   ORDER_EMAILS_ENABLED: 'false',
   V3_PROFILE1_ORDER_CREATION_ENABLED: 'false',
@@ -93,6 +101,29 @@ function secretNames(result) {
   return result.map((entry) => String(entry?.name || '')).filter(Boolean).sort();
 }
 
+async function proveCustomDomains() {
+  const query = new URLSearchParams({ service: PROD_WORKER });
+  const result = requireSuccess(
+    await apiGet(`/accounts/${accountId}/workers/domains?${query.toString()}`),
+    'Production Worker custom-domain lookup',
+  );
+  const domains = Array.isArray(result) ? result : [];
+  const attached = domains
+    .filter((entry) => String(entry?.service || '') === PROD_WORKER)
+    .map((entry) => String(entry?.hostname || '').trim().toLowerCase())
+    .filter(Boolean)
+    .sort();
+  const expected = [...PROD_CUSTOM_DOMAINS].sort();
+
+  if (attached.length !== expected.length || attached.some((hostname, index) => hostname !== expected[index])) {
+    throw new Error(
+      `Production Worker Custom Domains do not match the exact repository contract. Expected ${expected.join(', ')}; found ${attached.join(', ') || 'none'}.`,
+    );
+  }
+
+  return attached;
+}
+
 async function provePrivateBucket() {
   const bucket = requireSuccess(
     await apiGet(`/accounts/${accountId}/r2/buckets/${encodeURIComponent(PROD_R2_BUCKET)}`),
@@ -154,6 +185,7 @@ function proveRequiredSecrets(names) {
   }
 }
 
+const customDomains = await proveCustomDomains();
 await provePrivateBucket();
 
 const settings = requireSuccess(
@@ -173,7 +205,9 @@ const phase = mode === 'preflight' ? 'preflight' : 'post-deploy verification';
 console.log(`[cloudflare-production-guarded-update] ${phase} passed; no secret values were read or printed.`);
 console.log(JSON.stringify({
   worker: PROD_WORKER,
+  customDomains,
   guardedFlagsProven: true,
+  paypalLiveEndpointProven: true,
   p3TestCheckoutEnabled: false,
   requiredSecretNamesPresent: REQUIRED_SECRET_NAMES,
   r2Binding: r2,
@@ -187,8 +221,11 @@ if (process.env.GITHUB_STEP_SUMMARY) {
       `## Cloudflare Production guarded update — ${phase}`,
       '',
       `- Worker: ${PROD_WORKER}`,
+      `- Custom Domains: ${customDomains.join(', ')}`,
       '- Customer checkout paused: true',
+      '- PayPal Live API base: https://api-m.paypal.com',
       '- PayPal Live client allowed: true',
+      '- PayPal client ID/secret/webhook secret names present: true',
       '- P3 controlled checkout enabled: false',
       '- Order emails enabled: false',
       '- V3 activation flags enabled: false',

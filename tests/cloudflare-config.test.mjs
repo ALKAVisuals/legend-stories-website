@@ -105,13 +105,16 @@ test('preview environment is isolated, fail-closed and has no scheduled reconcil
   assert.equal(value.r2_buckets[0].preview_bucket_name, 'legendmural-v3-invoice-pdfs-preview');
 });
 
-test('production environment is explicitly separate, non-public and guarded after P2', async () => {
+test('production environment is explicitly separate, Custom-Domain pinned and guarded after P2', async () => {
   const value = await config();
   const production = value.env.production;
   assert.equal(production.name, 'legendmural-cloudflare-production');
   assert.equal(production.workers_dev, false);
   assert.equal(production.preview_urls, false);
-  assert.equal(Object.hasOwn(production, 'routes'), false);
+  assert.deepEqual(production.routes, [
+    { pattern: 'legendmural.com', custom_domain: true },
+    { pattern: 'www.legendmural.com', custom_domain: true },
+  ]);
   assert.equal(production.vars.LEGENDMURAL_DEPLOY_CONTEXT, 'production');
   assertGuarded(production.vars);
   assert.equal(production.vars.PAYPAL_ALLOW_LIVE, 'true');
