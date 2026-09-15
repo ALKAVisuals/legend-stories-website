@@ -75,10 +75,10 @@ test('remote verifier is GET-only, checks exact Custom Domains and required secr
   const methods = [...verifier.matchAll(/method:\s*'([A-Z]+)'/g)].map((match) => match[1]);
   assert.deepEqual([...new Set(methods)], ['GET']);
   for (const secret of requiredSecrets) {
-    assert.match(verifier, new RegExp(`'${secret}'`));
+    assert.ok(verifier.includes(`'${secret}'`));
   }
   for (const hostname of requiredDomains) {
-    assert.match(verifier, new RegExp(`'${hostname.replaceAll('.', '\\.')}''?`.replace("''?", "'")));
+    assert.ok(verifier.includes(`'${hostname}'`));
   }
   assert.match(verifier, /workers\/domains\?\$\{query\.toString\(\)\}/);
   assert.match(verifier, /service:\s*PROD_WORKER/);
