@@ -17,6 +17,11 @@ const requiredSecrets = [
   'PAYPAL_WEBHOOK_ID',
 ];
 
+const requiredDomains = [
+  'legendmural.com',
+  'www.legendmural.com',
+];
+
 test('guarded Production update is manual-only, main-only and commit-pinned', () => {
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /DEPLOY_GUARDED_P3_PREPARATION_ONLY/);
@@ -46,8 +51,9 @@ test('guarded Production update cannot mutate DNS, routes, secrets, R2 objects o
   assert.doesNotMatch(workflow, /curl[^\n]*(?:POST|PUT|PATCH|DELETE)/i);
 });
 
-test('repository Production config remains guarded for the preparation deploy', () => {
-  const vars = config.env.production.vars;
+test('repository Production config remains guarded and pins the exact Custom Domains', () => {
+  const production = config.env.production;
+  const vars = production.vars;
   assert.equal(vars.LEGENDMURAL_DEPLOY_CONTEXT, 'production');
   assert.equal(vars.LEGENDMURAL_CHECKOUT_PAUSED, 'true');
   assert.equal(vars.PAYPAL_ALLOW_LIVE, 'true');
@@ -57,17 +63,25 @@ test('repository Production config remains guarded for the preparation deploy', 
   assert.equal(vars.V3_INVOICE_RECONCILIATION_ENABLED, 'false');
   assert.equal(vars.V3_INVOICE_STORAGE_ENABLED, 'false');
   assert.equal(vars.V3_DASHBOARD_INVOICE_API_ENABLED, 'false');
-  assert.equal(config.env.production.workers_dev, false);
-  assert.equal(config.env.production.preview_urls, false);
-  assert.equal(Object.hasOwn(config.env.production, 'routes'), false);
+  assert.equal(production.workers_dev, false);
+  assert.equal(production.preview_urls, false);
+  assert.deepEqual(production.routes, requiredDomains.map((pattern) => ({
+    pattern,
+    custom_domain: true,
+  })));
 });
 
-test('remote verifier is GET-only, checks required secrets by name and never contains secret values', () => {
+test('remote verifier is GET-only, checks exact Custom Domains and required secret names without secret values', () => {
   const methods = [...verifier.matchAll(/method:\s*'([A-Z]+)'/g)].map((match) => match[1]);
   assert.deepEqual([...new Set(methods)], ['GET']);
   for (const secret of requiredSecrets) {
     assert.match(verifier, new RegExp(`'${secret}'`));
   }
+  for (const hostname of requiredDomains) {
+    assert.match(verifier, new RegExp(`'${hostname.replaceAll('.', '\\.')}''?`.replace("''?", "'")));
+  }
+  assert.match(verifier, /workers\/domains\?\$\{query\.toString\(\)\}/);
+  assert.match(verifier, /service:\s*PROD_WORKER/);
   assert.match(verifier, /workers\/scripts\/\$\{encodeURIComponent\(PROD_WORKER\)\}\/secrets/);
   assert.match(verifier, /P3_TEST_CHECKOUT_ENABLED/);
   assert.match(verifier, /PAYPAL_ALLOW_LIVE: 'true'/);
