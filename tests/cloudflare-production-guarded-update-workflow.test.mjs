@@ -56,6 +56,7 @@ test('repository Production config remains guarded and pins the exact Custom Dom
   const vars = production.vars;
   assert.equal(vars.LEGENDMURAL_DEPLOY_CONTEXT, 'production');
   assert.equal(vars.LEGENDMURAL_CHECKOUT_PAUSED, 'true');
+  assert.equal(vars.PAYPAL_API_BASE, 'https://api-m.paypal.com');
   assert.equal(vars.PAYPAL_ALLOW_LIVE, 'true');
   assert.equal(vars.P3_TEST_CHECKOUT_ENABLED, 'false');
   assert.equal(vars.ORDER_EMAILS_ENABLED, 'false');
@@ -71,7 +72,7 @@ test('repository Production config remains guarded and pins the exact Custom Dom
   })));
 });
 
-test('remote verifier is GET-only, checks exact Custom Domains and required secret names without secret values', () => {
+test('remote verifier is GET-only and checks exact Custom Domains plus PayPal Live contract without secret values', () => {
   const methods = [...verifier.matchAll(/method:\s*'([A-Z]+)'/g)].map((match) => match[1]);
   assert.deepEqual([...new Set(methods)], ['GET']);
   for (const secret of requiredSecrets) {
@@ -83,8 +84,12 @@ test('remote verifier is GET-only, checks exact Custom Domains and required secr
   assert.match(verifier, /workers\/domains\?\$\{query\.toString\(\)\}/);
   assert.match(verifier, /service:\s*PROD_WORKER/);
   assert.match(verifier, /workers\/scripts\/\$\{encodeURIComponent\(PROD_WORKER\)\}\/secrets/);
-  assert.match(verifier, /P3_TEST_CHECKOUT_ENABLED/);
+  assert.match(verifier, /PAYPAL_API_BASE: 'https:\/\/api-m\.paypal\.com'/);
   assert.match(verifier, /PAYPAL_ALLOW_LIVE: 'true'/);
+  assert.match(verifier, /CHECKOUT_SUCCESS_URL: 'https:\/\/legendmural\.com\/order-success\.html'/);
+  assert.match(verifier, /CHECKOUT_CANCEL_URL: 'https:\/\/legendmural\.com\/order-cancelled\.html'/);
+  assert.match(verifier, /CHECKOUT_ALLOWED_ORIGINS: 'https:\/\/legendmural\.com'/);
+  assert.match(verifier, /P3_TEST_CHECKOUT_ENABLED/);
   assert.doesNotMatch(verifier, /clientSecret\s*[:=]\s*['"][^'"]+['"]/i);
 });
 
