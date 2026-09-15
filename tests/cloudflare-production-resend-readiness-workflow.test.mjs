@@ -7,7 +7,7 @@ const verifier = await readFile('scripts/verify-cloudflare-production-resend-rea
 const config = JSON.parse(await readFile('wrangler.jsonc', 'utf8'));
 
 const expectedVars = Object.freeze({
-  ORDER_EMAILS_ENABLED: 'false',
+  ORDER_EMAILS_ENABLED: 'true',
   RESEND_FROM: 'LegendMural <orders@mail.legendmural.com>',
   RESEND_REPLY_TO: 'info@legendmural.com',
   ORDER_NOTIFICATION_TO: 'info@legendmural.com',
@@ -23,7 +23,7 @@ test('Resend readiness workflow is manual-only and read-only', () => {
   assert.doesNotMatch(workflow, /curl[^\n]*(?:POST|PUT|PATCH|DELETE)/i);
 });
 
-test('Production config pins Resend sender metadata while keeping order email delivery disabled', () => {
+test('Production config pins Resend sender metadata with order email delivery enabled', () => {
   const vars = config.env.production.vars;
   for (const [name, expected] of Object.entries(expectedVars)) {
     assert.equal(vars[name], expected);

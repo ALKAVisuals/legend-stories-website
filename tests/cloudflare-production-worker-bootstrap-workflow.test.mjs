@@ -17,7 +17,7 @@ const expectedFlags = Object.freeze({
   LEGENDMURAL_CHECKOUT_PAUSED: 'true',
   P3_TEST_CHECKOUT_ENABLED: 'false',
   PAYPAL_ALLOW_LIVE: 'true',
-  ORDER_EMAILS_ENABLED: 'false',
+  ORDER_EMAILS_ENABLED: 'true',
   V3_PROFILE1_ORDER_CREATION_ENABLED: 'false',
   V3_INVOICE_RECONCILIATION_ENABLED: 'false',
   V3_INVOICE_STORAGE_ENABLED: 'false',
@@ -119,5 +119,5 @@ test('the configured Production cron remains a no-op while reconciliation is dis
     /if \(!enabled\(env\.V3_INVOICE_RECONCILIATION_ENABLED\)\)[\s\S]*skippedReconciliation\('reconciliation_disabled'\)/,
   );
   assert.equal(config.env.production.vars.V3_INVOICE_RECONCILIATION_ENABLED, 'false');
-  assert.equal(config.env.production.vars.ORDER_EMAILS_ENABLED, 'false');
+  assert.equal(config.env.production.vars.ORDER_EMAILS_ENABLED, 'true');
 });

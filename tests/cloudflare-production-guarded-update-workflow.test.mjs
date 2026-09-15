@@ -59,7 +59,7 @@ test('repository Production config remains guarded and pins the exact Custom Dom
   assert.equal(vars.PAYPAL_API_BASE, 'https://api-m.paypal.com');
   assert.equal(vars.PAYPAL_ALLOW_LIVE, 'true');
   assert.equal(vars.P3_TEST_CHECKOUT_ENABLED, 'false');
-  assert.equal(vars.ORDER_EMAILS_ENABLED, 'false');
+  assert.equal(vars.ORDER_EMAILS_ENABLED, 'true');
   assert.equal(vars.V3_PROFILE1_ORDER_CREATION_ENABLED, 'false');
   assert.equal(vars.V3_INVOICE_RECONCILIATION_ENABLED, 'false');
   assert.equal(vars.V3_INVOICE_STORAGE_ENABLED, 'false');
