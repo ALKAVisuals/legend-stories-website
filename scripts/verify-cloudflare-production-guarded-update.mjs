@@ -3,6 +3,10 @@ import { appendFile } from 'node:fs/promises';
 const API_BASE = 'https://api.cloudflare.com/client/v4';
 const PROD_WORKER = 'legendmural-cloudflare-production';
 const PROD_R2_BUCKET = 'legendmural-v3-invoice-pdfs-prod';
+const PROD_CUSTOM_DOMAINS = Object.freeze([
+  'legendmural.com',
+  'www.legendmural.com',
+]);
 
 const GUARDED_FLAGS = Object.freeze({
   LEGENDMURAL_DEPLOY_CONTEXT: 'production',
@@ -93,6 +97,29 @@ function secretNames(result) {
   return result.map((entry) => String(entry?.name || '')).filter(Boolean).sort();
 }
 
+async function proveCustomDomains() {
+  const query = new URLSearchParams({ service: PROD_WORKER });
+  const result = requireSuccess(
+    await apiGet(`/accounts/${accountId}/workers/domains?${query.toString()}`),
+    'Production Worker custom-domain lookup',
+  );
+  const domains = Array.isArray(result) ? result : [];
+  const attached = domains
+    .filter((entry) => String(entry?.service || '') === PROD_WORKER)
+    .map((entry) => String(entry?.hostname || '').trim().toLowerCase())
+    .filter(Boolean)
+    .sort();
+  const expected = [...PROD_CUSTOM_DOMAINS].sort();
+
+  if (attached.length !== expected.length || attached.some((hostname, index) => hostname !== expected[index])) {
+    throw new Error(
+      `Production Worker Custom Domains do not match the exact repository contract. Expected ${expected.join(', ')}; found ${attached.join(', ') || 'none'}.`,
+    );
+  }
+
+  return attached;
+}
+
 async function provePrivateBucket() {
   const bucket = requireSuccess(
     await apiGet(`/accounts/${accountId}/r2/buckets/${encodeURIComponent(PROD_R2_BUCKET)}`),
@@ -154,6 +181,7 @@ function proveRequiredSecrets(names) {
   }
 }
 
+const customDomains = await proveCustomDomains();
 await provePrivateBucket();
 
 const settings = requireSuccess(
@@ -173,6 +201,7 @@ const phase = mode === 'preflight' ? 'preflight' : 'post-deploy verification';
 console.log(`[cloudflare-production-guarded-update] ${phase} passed; no secret values were read or printed.`);
 console.log(JSON.stringify({
   worker: PROD_WORKER,
+  customDomains,
   guardedFlagsProven: true,
   p3TestCheckoutEnabled: false,
   requiredSecretNamesPresent: REQUIRED_SECRET_NAMES,
@@ -187,6 +216,7 @@ if (process.env.GITHUB_STEP_SUMMARY) {
       `## Cloudflare Production guarded update — ${phase}`,
       '',
       `- Worker: ${PROD_WORKER}`,
+      `- Custom Domains: ${customDomains.join(', ')}`,
       '- Customer checkout paused: true',
       '- PayPal Live client allowed: true',
       '- P3 controlled checkout enabled: false',
