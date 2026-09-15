@@ -58,7 +58,17 @@ That package records:
 
 Current official-source evidence does **not** provide a basis to close Blocker C internally. Do not redo generic research and do not redesign PayPal/V3 code simply to progress this gate.
 
-**Exact next Blocker C action:** obtain a written opinion from a qualified Dutch consumer-law adviser on the exact model in the request package. When received, record the conclusion in GitHub and only then decide whether any implementation change is required.
+A concrete jurist shortlist is also prepared in:
+
+`docs/BLOCKER_C_JURIST_SHORTLIST_20260905.md`
+
+Current recommended contact order is:
+
+1. VLDW Advocaten — Cora Blaak-Looij, because the firm's public practice specifically covers consumer rights in internet sales;
+2. Kennedy Van der Laan — Kirsten Gerhards, advocaat with explicit e-commerce and consumer-law work;
+3. Brinkhof — Hanneke Kooijman, advocaat advising on consumer law with a digital-sector focus.
+
+**Exact next Blocker C action:** contact the first suitable adviser from that shortlist, ask for a fixed/capped fee and short written opinion on the exact model in the request package, and obtain a written `CLEARED / CLEARED WITH CONDITIONS / NOT CLEARED` conclusion. When received, record the conclusion in GitHub and only then decide whether any implementation change is required.
 
 ## Blocker D part 2B — GPSR material/product-safety completion
 
@@ -72,7 +82,7 @@ Production remains unauthorized.
 
 ## Current readiness estimate
 
-Overall public website launch-readiness remains approximately **88%**. Preparing the Blocker C legal request improves process readiness but does not close the legal gate, so the overall percentage is not materially increased.
+Overall public website launch-readiness remains approximately **88%**. Preparing the Blocker C legal request and jurist shortlist improves process readiness but does not close the legal gate, so the overall percentage is not materially increased.
 
 ## Exact next website handling
 
@@ -80,7 +90,7 @@ There is currently no independently identified storefront source-cleanup task le
 
 The next actionable website release step is now external rather than code:
 
-> **Send/use `docs/BLOCKER_C_DUTCH_CONSUMER_LAW_REQUEST_20260905.md` to obtain a written Dutch consumer-law opinion on the exact mandatory 100%-upfront PayPal model.**
+> **Use `docs/BLOCKER_C_JURIST_SHORTLIST_20260905.md` and `docs/BLOCKER_C_DUTCH_CONSUMER_LAW_REQUEST_20260905.md` to obtain a short written Dutch consumer-law opinion on the exact mandatory 100%-upfront PayPal model.**
 
 Until that answer arrives, the website track should:
 
