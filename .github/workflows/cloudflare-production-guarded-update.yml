@@ -139,7 +139,7 @@ jobs:
             echo '- Customer checkout intended state: paused'
             echo '- P3 test checkout intended state: disabled'
             echo '- PayPal Live client intended state: allowed'
-            echo '- Production order emails intended state: disabled'
+            echo '- Production order emails intended state: enabled'
             echo '- V3 activation intended state: disabled'
             echo '- Secret values printed or committed: none'
             echo '- DNS/custom-domain commands: none'
