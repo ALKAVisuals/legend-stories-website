@@ -1,0 +1,70 @@
+name: Cloudflare Production Resend readiness
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_phrase:
+        description: 'Type VERIFY_RESEND_READINESS_READ_ONLY to authorize GET-only Resend readiness verification.'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  policy:
+    name: Resend readiness policy gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Validate read-only readiness policy
+        run: node --test tests/cloudflare-production-resend-readiness-workflow.test.mjs
+
+  verify:
+    name: Verify Cloudflare Production Resend readiness read-only
+    needs: policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: Require exact manual read-only confirmation
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ '${{ inputs.confirm_phrase }}' != 'VERIFY_RESEND_READINESS_READ_ONLY' ]; then
+            echo '::error::Refusing to run: confirm_phrase must equal VERIFY_RESEND_READINESS_READ_ONLY.'
+            exit 1
+          fi
+
+      - name: Require Cloudflare credentials without printing them
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo '::error::Missing GitHub secret CLOUDFLARE_ACCOUNT_ID.'
+            exit 1
+          fi
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo '::error::Missing GitHub secret CLOUDFLARE_API_TOKEN.'
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Re-prove read-only policy
+        run: node --test tests/cloudflare-production-resend-readiness-workflow.test.mjs
+
+      - name: Verify Production Resend configuration and secret-name presence with GET only
+        run: node scripts/verify-cloudflare-production-resend-readiness.mjs
