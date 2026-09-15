@@ -28,7 +28,6 @@ async function config() {
 function assertGuarded(vars) {
   assert.equal(vars.LEGENDMURAL_CHECKOUT_PAUSED, 'true');
   assert.equal(vars.P3_TEST_CHECKOUT_ENABLED, 'false');
-  assert.equal(vars.ORDER_EMAILS_ENABLED, 'false');
   assert.equal(vars.V3_PROFILE1_ORDER_CREATION_ENABLED, 'false');
   assert.equal(vars.V3_INVOICE_RECONCILIATION_ENABLED, 'false');
   assert.equal(vars.V3_INVOICE_STORAGE_ENABLED, 'false');
@@ -97,6 +96,7 @@ test('preview environment is isolated, fail-closed and has no scheduled reconcil
   assert.equal(value.vars.LEGENDMURAL_DEPLOY_CONTEXT, 'preview');
   assertGuarded(value.vars);
   assert.equal(value.vars.PAYPAL_ALLOW_LIVE, 'false');
+  assert.equal(value.vars.ORDER_EMAILS_ENABLED, 'false');
   assertNoSecretsInVars(value.vars);
   assert.deepEqual(value.triggers.crons, []);
   assert.equal(value.r2_buckets.length, 1);
@@ -105,7 +105,7 @@ test('preview environment is isolated, fail-closed and has no scheduled reconcil
   assert.equal(value.r2_buckets[0].preview_bucket_name, 'legendmural-v3-invoice-pdfs-preview');
 });
 
-test('production environment is explicitly separate, Custom-Domain pinned and guarded after P2', async () => {
+test('production environment is explicitly separate, Custom-Domain pinned and guarded with order email delivery enabled', async () => {
   const value = await config();
   const production = value.env.production;
   assert.equal(production.name, 'legendmural-cloudflare-production');
@@ -118,6 +118,7 @@ test('production environment is explicitly separate, Custom-Domain pinned and gu
   assert.equal(production.vars.LEGENDMURAL_DEPLOY_CONTEXT, 'production');
   assertGuarded(production.vars);
   assert.equal(production.vars.PAYPAL_ALLOW_LIVE, 'true');
+  assert.equal(production.vars.ORDER_EMAILS_ENABLED, 'true');
   assertNoSecretsInVars(production.vars);
   assert.equal(production.define?.['import.meta.url'], PDFKIT_WORKER_IMPORT_META_URL);
   assert.equal(Object.hasOwn(production, 'alias'), false);
