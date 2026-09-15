@@ -16,7 +16,6 @@ const GUARDED_FLAGS = Object.freeze({
   CHECKOUT_ALLOWED_ORIGINS: 'https://legendmural.com',
   PAYPAL_API_BASE: 'https://api-m.paypal.com',
   PAYPAL_ALLOW_LIVE: 'true',
-  ORDER_EMAILS_ENABLED: 'false',
   V3_PROFILE1_ORDER_CREATION_ENABLED: 'false',
   V3_INVOICE_RECONCILIATION_ENABLED: 'false',
   V3_INVOICE_STORAGE_ENABLED: 'false',
@@ -34,6 +33,7 @@ const mode = String(process.argv[2] || '').trim().toLowerCase();
 if (!['preflight', 'postdeploy'].includes(mode)) {
   throw new Error('Usage: node scripts/verify-cloudflare-production-guarded-update.mjs <preflight|postdeploy>');
 }
+const expectedOrderEmails = mode === 'preflight' ? 'false' : 'true';
 
 const accountId = String(process.env.CLOUDFLARE_ACCOUNT_ID || '').trim();
 const apiToken = String(process.env.CLOUDFLARE_API_TOKEN || '').trim();
@@ -158,6 +158,9 @@ function proveGuardedFlags(settings, { requireP3Flag }) {
       throw new Error(`Production Worker guarded flag ${name} does not match the expected value.`);
     }
   }
+  if (flags.ORDER_EMAILS_ENABLED !== expectedOrderEmails) {
+    throw new Error(`Production Worker guarded flag ORDER_EMAILS_ENABLED does not match the expected ${mode} value.`);
+  }
 
   const p3Value = flags.P3_TEST_CHECKOUT_ENABLED;
   if (requireP3Flag) {
@@ -209,6 +212,7 @@ console.log(JSON.stringify({
   guardedFlagsProven: true,
   paypalLiveEndpointProven: true,
   p3TestCheckoutEnabled: false,
+  orderEmailsEnabled: expectedOrderEmails === 'true',
   requiredSecretNamesPresent: REQUIRED_SECRET_NAMES,
   r2Binding: r2,
   r2PublicExposureDetected: false,
@@ -227,7 +231,7 @@ if (process.env.GITHUB_STEP_SUMMARY) {
       '- PayPal Live client allowed: true',
       '- PayPal client ID/secret/webhook secret names present: true',
       '- P3 controlled checkout enabled: false',
-      '- Order emails enabled: false',
+      `- Order emails enabled: ${expectedOrderEmails}`,
       '- V3 activation flags enabled: false',
       `- R2 binding: V3_INVOICE_PDFS -> ${PROD_R2_BUCKET}`,
       '- Required Production secret names present: true',
