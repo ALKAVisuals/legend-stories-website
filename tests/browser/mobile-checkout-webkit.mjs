@@ -2,8 +2,10 @@ import { webkit, devices } from 'playwright';
 
 const baseUrl = process.env.TEST_BASE_URL || 'http://127.0.0.1:3001';
 const appStartupTimeoutMs = 45_000;
+const checkoutDecisionSafetyBudgetMs = 5_000;
 const maxAttempts = 2;
 const productPagePattern = /\/(?:combat|music|sport|wisdom)-[^/]+\.html(?:[?#].*)?$/i;
+const googlePlacesRequestPattern = /^https:\/\/(?:places\.googleapis\.com\/|maps\.googleapis\.com\/(?:maps\/api\/(?:place|geocode)|\$rpc\/google\.internal\.maps\.mapsjs\.v1\.))/i;
 
 function isRetryableWebKitCrash(error, state) {
   const message = String(error?.message || error || '');
@@ -65,6 +67,7 @@ async function runAttempt(attempt) {
     page = await context.newPage();
     page.setDefaultTimeout(15_000);
     const navigations = [];
+    const googlePlacesRequests = [];
 
     page.on('crash', () => {
       state.pageCrashed = true;
@@ -75,6 +78,10 @@ async function runAttempt(attempt) {
     });
     page.on('framenavigated', (frame) => {
       if (frame === page.mainFrame()) navigations.push(frame.url());
+    });
+    page.on('request', (request) => {
+      const url = request.url();
+      if (googlePlacesRequestPattern.test(url)) googlePlacesRequests.push(url);
     });
 
     async function touchscreenTapCenter(locator, label) {
@@ -172,6 +179,7 @@ async function runAttempt(attempt) {
     await page.locator('#checkout-country').selectOption('NL');
 
     const payButton = page.locator('#checkout-pay-btn');
+    googlePlacesRequests.length = 0;
     const startedAt = Date.now();
     await payButton.tap();
     await page.waitForFunction(() => String(document.getElementById('purchase-feedback')?.textContent || '').includes('Secure online payment is not enabled'));
@@ -181,8 +189,13 @@ async function runAttempt(attempt) {
     if (String(payButtonText || '').toLowerCase().includes('validating address')) {
       throw new Error('Checkout still entered the removed Google address-validation loading state.');
     }
-    if (checkoutDecisionMs >= 2000) {
-      throw new Error(`Local address validation took ${checkoutDecisionMs}ms; checkout should not wait on Google Places.`);
+    if (googlePlacesRequests.length > 0) {
+      throw new Error(`Checkout contacted Google Places during local validation: ${googlePlacesRequests[0]}`);
+    }
+    // Keep a broad wall-clock safety budget for a genuinely blocked checkout while
+    // avoiding false failures from short GitHub Actions scheduling jitter.
+    if (checkoutDecisionMs >= checkoutDecisionSafetyBudgetMs) {
+      throw new Error(`Local checkout decision took ${checkoutDecisionMs}ms; exceeded ${checkoutDecisionSafetyBudgetMs}ms CI safety budget.`);
     }
 
     const currentUrl = page.url();
@@ -205,6 +218,7 @@ async function runAttempt(attempt) {
       device: 'iPhone 13',
       server: 'production-preview',
       appStartupTimeoutMs,
+      checkoutDecisionSafetyBudgetMs,
       attempt,
       cartInteraction: 'touchscreen.tap',
       streetFontSize,
@@ -212,6 +226,7 @@ async function runAttempt(attempt) {
       followingFieldDeltaPx: Number(followingFieldDelta.toFixed(2)),
       streetFocusPreserved: activeId === 'checkout-street',
       checkoutDecisionMs,
+      googlePlacesRequestCount: googlePlacesRequests.length,
       navigationCount: navigations.length,
       finalUrl: currentUrl,
     };
