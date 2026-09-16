@@ -37,7 +37,7 @@ jobs:
 
       - name: Install pinned Playwright WebKit for this test only
         run: |
-          npm install --no-save --ignore-scripts playwright@1.55.0
+          npm install --no-save --ignore-scripts playwright@1.62.1
           npx playwright install --with-deps webkit
 
       - name: Start production preview
@@ -66,6 +66,7 @@ jobs:
       - name: Run iPhone WebKit checkout regression
         env:
           TEST_BASE_URL: http://127.0.0.1:3001
+          DEBUG: pw:browser*
         run: |
           set -o pipefail
           node tests/browser/mobile-checkout-webkit.mjs 2>&1 | tee /tmp/mobile-checkout-webkit.log
