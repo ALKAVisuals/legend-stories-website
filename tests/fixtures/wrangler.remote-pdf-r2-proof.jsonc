@@ -1,0 +1,20 @@
+{
+  "name": "legendmural-cloudflare-preview-pdf-r2-proof",
+  "main": "./cloudflare-remote-pdf-r2-proof-worker.mjs",
+  "compatibility_date": "2026-09-07",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "define": {
+    "import.meta.url": "\"file:///legendmural-cloudflare-pdfkit-runtime.mjs\""
+  },
+  "alias": {
+    "pdfkit": "../../cloudflare/pdfkit-worker-runtime.mjs"
+  },
+  "r2_buckets": [
+    {
+      "binding": "V3_INVOICE_PDFS",
+      "bucket_name": "legendmural-v3-invoice-pdfs-preview",
+      "preview_bucket_name": "legendmural-v3-invoice-pdfs-preview"
+    }
+  ]
+}

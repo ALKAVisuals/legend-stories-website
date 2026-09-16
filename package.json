@@ -34,6 +34,7 @@
     "migrate:neon:test": "node scripts/run-neon-test-migrations.mjs",
     "prepare:neon:runtime-privilege-proof": "node scripts/prepare-neon-runtime-privilege-proof.mjs",
     "verify:neon:runtime-privileges": "node scripts/verify-neon-runtime-privileges.mjs",
+    "test:neon:invoice-access-audit": "node scripts/test-neon-invoice-access-audit-integration.mjs",
     "optimize:collection-videos": "node scripts/optimize-collection-videos.mjs",
     "test:neon:integration": "node scripts/test-neon-order-store-integration.mjs",
     "validate:homepage-marketing-webp": "node scripts/validate-homepage-marketing-webp.mjs",

@@ -61,6 +61,8 @@ const migrations = [
   new URL('../server/db/migrations/013_extend_order_notifications_for_v3_invoice_delivery.sql', import.meta.url),
   new URL('../server/db/migrations/014_harden_v3_invoice_artifact_identity.sql', import.meta.url),
   new URL('../server/db/migrations/015_add_v3_invoice_pdf_storage_binding.sql', import.meta.url),
+  new URL('../server/db/migrations/016_create_v3_invoice_access_audit.sql', import.meta.url),
+  new URL('../server/db/migrations/017_grant_v3_invoice_access_audit_runtime.sql', import.meta.url),
 ];
 
 const client = await createDefaultNeonClient(migrationUrl);

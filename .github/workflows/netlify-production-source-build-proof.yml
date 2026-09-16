@@ -1,0 +1,99 @@
+name: Netlify Production source build proof
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/netlify-production-source-build-proof.yml'
+      - 'scripts/verify-netlify-production-source-build.mjs'
+      - 'tests/netlify-production-source-build-proof.test.mjs'
+      - 'docs/NETLIFY_PRODUCTION_SOURCE_BUILD_PROOF_20260911.md'
+      - 'docs/CLOUDFLARE_MIGRATION_HANDOFF_20260909.md'
+      - 'docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NETLIFY_PRODUCTION_SOURCE_SHA: '95a57e8f05a0af547efa0dfc4d044b8a96de7fe3'
+
+jobs:
+  policy-gate:
+    name: Source build proof policy gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out proof branch
+        uses: actions/checkout@v7
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Prove isolated no-secret no-deploy policy
+        run: node --test tests/netlify-production-source-build-proof.test.mjs
+
+  build-proof:
+    name: Build exact Netlify Production source in isolation
+    needs: policy-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out proof controls
+        uses: actions/checkout@v7
+        with:
+          path: proof-repo
+      - name: Check out exact Netlify Production source
+        uses: actions/checkout@v7
+        with:
+          ref: '95a57e8f05a0af547efa0dfc4d044b8a96de7fe3'
+          path: production-source
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: production-source/package-lock.json
+      - name: Install exact source dependencies
+        working-directory: production-source
+        run: npm ci
+      - name: Run exact static build and public runtime-config generation
+        working-directory: production-source
+        env:
+          LEGENDMURAL_HOSTED_CHECKOUT_ENDPOINT: /api/paypal/checkout
+          LEGENDMURAL_ORDER_STATUS_ENDPOINT: /api/order-status
+          LEGENDMURAL_PAYPAL_CAPTURE_ENDPOINT: /api/paypal/capture
+        run: npm run build && node scripts/generate-commerce-runtime-config.mjs
+      - name: Verify pinned source and generated dist artifact
+        run: node proof-repo/scripts/verify-netlify-production-source-build.mjs production-source proof-repo/out/netlify-production-source-build-proof.json
+      - name: Serve built dist on localhost and prove static HTTP success
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd production-source
+          npm run preview -- --host 127.0.0.1 --port 4173 > ../proof-repo/out/vite-preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
+
+          ready=0
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:4173/ >/dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          test "$ready" = "1"
+
+          for path in / /index.html /shop.html /robots.txt /sitemap.xml; do
+            status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' "http://127.0.0.1:4173${path}")
+            echo "${path} -> ${status}"
+            test "$status" = "200"
+          done
+      - name: Upload compact proof artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: netlify-production-source-build-proof
+          path: |
+            proof-repo/out/netlify-production-source-build-proof.json
+            proof-repo/out/vite-preview.log
+          if-no-files-found: error
+          retention-days: 7

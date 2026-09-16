@@ -27,10 +27,14 @@ test('runtime privilege contract covers the complete current commerce table set 
     'order_notifications',
     'invoices',
     'document_number_series',
+    'invoice_access_audit',
   ]));
 
   for (const [tableName, privileges] of Object.entries(EXPECTED_TABLE_PRIVILEGES)) {
-    assert.ok(privileges.includes('SELECT'), `${tableName} must remain readable by the storefront runtime`);
+    assert.ok(privileges.includes('INSERT'), `${tableName} must accept the runtime writes required by its contract`);
+    if (tableName !== 'invoice_access_audit') {
+      assert.ok(privileges.includes('SELECT'), `${tableName} must remain readable by the storefront runtime`);
+    }
     assert.ok(!privileges.includes('DELETE'), `${tableName} may not grant DELETE`);
     assert.ok(!privileges.includes('TRUNCATE'), `${tableName} may not grant TRUNCATE`);
     assert.ok(!privileges.includes('REFERENCES'), `${tableName} may not grant REFERENCES`);
@@ -38,6 +42,7 @@ test('runtime privilege contract covers the complete current commerce table set 
   }
 
   assert.deepEqual(EXPECTED_TABLE_PRIVILEGES.invoices, ['SELECT', 'INSERT']);
+  assert.deepEqual(EXPECTED_TABLE_PRIVILEGES.invoice_access_audit, ['INSERT']);
   assert.deepEqual(EXPECTED_TABLE_PRIVILEGES.document_number_series, ['SELECT', 'INSERT']);
   assert.deepEqual(EXPECTED_UPDATE_COLUMNS.document_number_series, ['next_value', 'updated_at']);
   assert.deepEqual(EXPECTED_SEQUENCE_PRIVILEGES.invoices_id_seq, ['USAGE']);
@@ -61,10 +66,10 @@ test('isolated proof roles are clearly non-production and fail closed on Neon-ma
 });
 
 test('proof setup derives grants only from the canonical runtime grant migrations', () => {
-  for (const migrationNumber of ['002', '004', '006', '008', '010', '012']) {
+  for (const migrationNumber of ['002', '004', '006', '008', '010', '012', '017']) {
     assert.match(prepSource, new RegExp(`${migrationNumber}_[^']+\\.sql`));
   }
-  for (const migrationNumber of ['001', '003', '005', '007', '009', '011', '013', '014', '015']) {
+  for (const migrationNumber of ['001', '003', '005', '007', '009', '011', '013', '014', '015', '016']) {
     assert.doesNotMatch(prepSource, new RegExp(`new URL\\('../server/db/migrations/${migrationNumber}_`));
   }
 });
@@ -93,10 +98,21 @@ test('real Neon workflow runs privilege setup and verification before functional
     packageJson.scripts['verify:neon:runtime-privileges'],
     'node scripts/verify-neon-runtime-privileges.mjs',
   );
+  assert.equal(
+    packageJson.scripts['test:neon:invoice-access-audit'],
+    'node scripts/test-neon-invoice-access-audit-integration.mjs',
+  );
 
   const migrateIndex = workflowSource.indexOf('npm run migrate:neon:test');
   const prepareIndex = workflowSource.indexOf('npm run prepare:neon:runtime-privilege-proof');
   const verifyIndex = workflowSource.indexOf('npm run verify:neon:runtime-privileges');
+  const auditIndex = workflowSource.indexOf('npm run test:neon:invoice-access-audit');
   const conformanceIndex = workflowSource.indexOf('npm run test:neon:integration');
-  assert.ok(migrateIndex >= 0 && prepareIndex > migrateIndex && verifyIndex > prepareIndex && conformanceIndex > verifyIndex);
+  assert.ok(
+    migrateIndex >= 0
+      && prepareIndex > migrateIndex
+      && verifyIndex > prepareIndex
+      && auditIndex > verifyIndex
+      && conformanceIndex > auditIndex,
+  );
 });

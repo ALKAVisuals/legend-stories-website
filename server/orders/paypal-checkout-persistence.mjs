@@ -23,6 +23,7 @@ function requireStore(checkoutStore) {
 
 export async function createDurablePayPalCheckout({
   checkoutStore,
+  documentProfileVersion = 0,
   createdAt = Math.floor(Date.now() / 1000),
   ...checkoutInput
 }) {
@@ -34,6 +35,7 @@ export async function createDurablePayPalCheckout({
     customer: checkoutInput.customer,
     catalogProducts: checkoutInput.catalogProducts,
     checkoutStore,
+    documentProfileVersion,
     createdAt,
   });
 

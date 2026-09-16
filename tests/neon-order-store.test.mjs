@@ -82,6 +82,7 @@ function databaseRow(order) {
     discount: structuredClone(order.discount),
     shipping: structuredClone(order.shipping),
     totals: structuredClone(order.totals),
+    document_profile_version: order.documentProfileVersion ?? 0,
   };
 }
 
@@ -132,6 +133,7 @@ test('persists a new pending order inside a serializable transaction', async () 
         assert.equal(values[0], reference);
         assert.equal(values[2], order.amountTotal);
         assert.equal(JSON.parse(values[13]).email, order.customer.email);
+        assert.equal(values[18], 0);
       },
       result: { rows: [databaseRow(order)] },
     },
@@ -147,6 +149,30 @@ test('persists a new pending order inside a serializable transaction', async () 
   assert.deepEqual(result.order, order);
   assert.deepEqual(trace, ['connect', 'BEGIN', 'INSERT', 'COMMIT', 'end']);
   assert.equal(steps.length, 0);
+});
+
+test('explicit Profile 1 is persisted in the same immutable pending-order insert', async () => {
+  const order = pendingOrder({ documentProfileVersion: 1 });
+  const steps = [
+    { match: /^BEGIN ISOLATION LEVEL SERIALIZABLE$/ },
+    {
+      match: /^INSERT INTO legend_commerce\.orders/,
+      parameters(values) {
+        assert.equal(values[18], 1);
+      },
+      result: { rows: [databaseRow(order)] },
+    },
+    { match: /^COMMIT$/ },
+  ];
+  const store = createNeonOrderStore({
+    connectionString: DATABASE_URL,
+    clientFactory: createScriptedClientFactory(steps),
+  });
+
+  const result = await store.persistPendingCheckout(order);
+  assert.equal(result.created, true);
+  assert.equal(result.order.documentProfileVersion, 1);
+  assert.deepEqual(result.order, order);
 });
 
 test('accepts an identical existing pending order as an idempotent retry', async () => {
@@ -168,6 +194,30 @@ test('accepts an identical existing pending order as an idempotent retry', async
   const result = await store.persistPendingCheckout(order);
   assert.equal(result.created, false);
   assert.deepEqual(result.order, order);
+});
+
+test('same reference cannot be retried across the Profile 0/Profile 1 cutover boundary', async () => {
+  const requested = pendingOrder({ documentProfileVersion: 1 });
+  const existingLegacy = pendingOrder({ documentProfileVersion: 0 });
+  const steps = [
+    { match: /^BEGIN ISOLATION LEVEL SERIALIZABLE$/ },
+    { match: /^INSERT INTO legend_commerce\.orders/, result: { rows: [] } },
+    {
+      match: /^SELECT \* FROM legend_commerce\.orders WHERE reference = \$1 FOR UPDATE$/,
+      result: { rows: [databaseRow(existingLegacy)] },
+    },
+    { match: /^ROLLBACK$/ },
+  ];
+  const store = createNeonOrderStore({
+    connectionString: DATABASE_URL,
+    clientFactory: createScriptedClientFactory(steps),
+  });
+
+  await assert.rejects(
+    () => store.persistPendingCheckout(requested),
+    (error) => error instanceof NeonOrderStoreError
+      && error.code === 'ORDER_STORE_CONFLICT',
+  );
 });
 
 test('rolls back when an existing pending order conflicts', async () => {
@@ -211,6 +261,7 @@ test('looks up detached order values without opening a write transaction', async
   });
 
   const found = await store.getOrderByReference(reference);
+  assert.equal(found.documentProfileVersion, 0);
   found.customer.email = 'mutated@example.com';
   assert.equal(order.customer.email, 'neon@example.com');
   assert.deepEqual(trace, ['connect', 'SELECT', 'end']);

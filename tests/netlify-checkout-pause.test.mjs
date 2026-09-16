@@ -41,3 +41,33 @@ test('paused checkout returns 503 before database or PayPal bootstrap', async ()
     },
   });
 });
+
+test('Profile-1 checkout fails closed before database or PayPal bootstrap when V3 config is incomplete', async () => {
+  let storeFactoryCalled = false;
+  const handler = createNetlifyPayPalCheckoutHandler({
+    env: {
+      V3_PROFILE1_ORDER_CREATION_ENABLED: 'true',
+      NEON_DATABASE_URL: 'postgresql://test:test@ep-test.neon.tech/neondb?sslmode=require',
+    },
+    v3PaidFinalization: { enabled: true },
+    storeFactory() {
+      storeFactoryCalled = true;
+      throw new Error('storeFactory must not be called for incomplete Profile-1 config');
+    },
+  });
+
+  const response = await handler(new Request('https://legendmural.example/api/paypal/checkout', {
+    method: 'POST',
+    headers: { origin: 'https://legendmural.example' },
+  }));
+
+  assert.equal(response.status, 503);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  assert.equal(storeFactoryCalled, false);
+  assert.deepEqual(await response.json(), {
+    error: {
+      code: 'V3_ORDER_CREATION_NOT_CONFIGURED',
+      message: 'V3 order creation is not configured.',
+    },
+  });
+});

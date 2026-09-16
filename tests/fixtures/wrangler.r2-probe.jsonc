@@ -1,0 +1,16 @@
+{
+  "name": "legendmural-r2-local-probe",
+  "main": "./cloudflare-r2-probe-worker.mjs",
+  "compatibility_date": "2026-09-07",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "LEGENDMURAL_DEPLOY_CONTEXT": "production",
+    "V3_INVOICE_STORAGE_ENABLED": "true"
+  },
+  "r2_buckets": [
+    {
+      "binding": "V3_INVOICE_PDFS",
+      "bucket_name": "legendmural-r2-local-probe-never-deploy"
+    }
+  ]
+}

@@ -1,0 +1,282 @@
+name: Cloudflare migration compatibility
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/cloudflare-migration-compatibility.yml'
+      - 'wrangler.jsonc'
+      - 'cloudflare/**'
+      - 'server/api/**'
+      - 'server/adapters/cloudflare-r2-v3-invoice-pdf-store.mjs'
+      - 'server/adapters/neon-*.mjs'
+      - 'server/commerce/**'
+      - 'server/invoices/**'
+      - 'server/notifications/**'
+      - 'server/orders/**'
+      - 'server/payments/**'
+      - 'data/products/catalog.json'
+      - 'scripts/create-cloudflare-pdfkit-node-proof.mjs'
+      - 'scripts/verify-cloudflare-workerd-smoke.mjs'
+      - 'tests/cloudflare-*.test.mjs'
+      - 'tests/fixtures/cloudflare-*.mjs'
+      - 'tests/fixtures/wrangler.*.jsonc'
+      - 'tests/v3-invoice-pdf.test.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-migration-compatibility-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compatibility:
+    name: Worker + R2 + Static Assets dry run
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install exact application dependencies
+        run: npm ci
+
+      - name: Prove Cloudflare routing, isolation and R2 storage contracts
+        run: |
+          node --test \
+            tests/cloudflare-config.test.mjs \
+            tests/cloudflare-r2-v3-invoice-pdf-store.test.mjs \
+            tests/cloudflare-worker-routing.test.mjs
+
+      - name: Preserve deterministic invoice PDF regression proof
+        run: node --test tests/v3-invoice-pdf.test.mjs
+
+      - name: Build Vite storefront static assets
+        run: npm run build
+
+      - name: Run storefront Worker smoke tests in local workerd
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOG_FILE="${RUNNER_TEMP}/legendmural-workerd.log"
+          npx --yes wrangler@4.129.0 dev \
+            --local \
+            --port 8787 \
+            --test-scheduled \
+            --log-level log \
+            >"${LOG_FILE}" 2>&1 &
+          WRANGLER_PID=$!
+          cleanup() {
+            kill "${WRANGLER_PID}" 2>/dev/null || true
+            wait "${WRANGLER_PID}" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          if ! node scripts/verify-cloudflare-workerd-smoke.mjs; then
+            echo '--- workerd log ---'
+            cat "${LOG_FILE}" || true
+            exit 1
+          fi
+
+      - name: Prove R2 create-only semantics in local workerd binding
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOG_FILE="${RUNNER_TEMP}/legendmural-r2-workerd.log"
+          npx --yes wrangler@4.129.0 dev \
+            --config tests/fixtures/wrangler.r2-probe.jsonc \
+            --local \
+            --port 8790 \
+            --log-level error \
+            >"${LOG_FILE}" 2>&1 &
+          WRANGLER_PID=$!
+          cleanup() {
+            kill "${WRANGLER_PID}" 2>/dev/null || true
+            wait "${WRANGLER_PID}" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ready=false
+          for _ in $(seq 1 60); do
+            status=$(curl --silent --show-error \
+              --output /tmp/legendmural-r2-probe.json \
+              --write-out '%{http_code}' \
+              --request POST \
+              http://127.0.0.1:8790/probe 2>/dev/null || true)
+            if [ "${status}" = "200" ]; then
+              ready=true
+              break
+            fi
+            if [ "${status}" = "500" ]; then
+              cat /tmp/legendmural-r2-probe.json || true
+              cat "${LOG_FILE}" || true
+              exit 1
+            fi
+            sleep 0.5
+          done
+          if [ "${ready}" != "true" ]; then
+            cat /tmp/legendmural-r2-probe.json 2>/dev/null || true
+            cat "${LOG_FILE}"
+            exit 1
+          fi
+
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { readFile } from 'node:fs/promises';
+
+          const proof = JSON.parse(await readFile('/tmp/legendmural-r2-probe.json', 'utf8'));
+          assert.equal(proof.storageBackend, 'cloudflare_r2');
+          assert.match(proof.storageKey, /^v1\/invoices\/900001\/[a-f0-9]{64}\.pdf$/);
+          assert.equal(proof.firstDuplicate, false);
+          assert.equal(proof.secondDuplicate, true);
+          assert.equal(proof.loadedDuplicate, true);
+          assert.equal(proof.firstByteLength, proof.expectedByteLength);
+          assert.equal(proof.secondByteLength, proof.expectedByteLength);
+          assert.equal(proof.loadedByteLength, proof.expectedByteLength);
+          assert.equal(proof.bytesEqual, true);
+          NODE
+
+      - name: Prove PDFKit invoice rendering in local workerd
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOG_FILE="${RUNNER_TEMP}/legendmural-pdfkit-workerd.log"
+          DIAG_DIR="${RUNNER_TEMP}/legendmural-pdfkit-bundle"
+          rm -rf "${DIAG_DIR}"
+
+          node scripts/create-cloudflare-pdfkit-node-proof.mjs \
+            > /tmp/legendmural-pdfkit-node-proof.json
+
+          npx --yes wrangler@4.129.0 deploy \
+            --config tests/fixtures/wrangler.pdfkit-probe.jsonc \
+            --dry-run \
+            --outdir "${DIAG_DIR}" \
+            >/tmp/legendmural-pdfkit-dry-run.log 2>&1
+          BUNDLE_FILE=$(find "${DIAG_DIR}" -type f -name '*.js' | head -n 1)
+          test -n "${BUNDLE_FILE}"
+
+          npx --yes wrangler@4.129.0 dev \
+            --config tests/fixtures/wrangler.pdfkit-probe.jsonc \
+            --local \
+            --port 8791 \
+            --log-level error \
+            >"${LOG_FILE}" 2>&1 &
+          WRANGLER_PID=$!
+          cleanup() {
+            kill "${WRANGLER_PID}" 2>/dev/null || true
+            wait "${WRANGLER_PID}" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          ready=false
+          for _ in $(seq 1 60); do
+            status=$(curl --silent --show-error \
+              --connect-timeout 1 \
+              --max-time 2 \
+              --output /tmp/legendmural-pdfkit-health.json \
+              --write-out '%{http_code}' \
+              http://127.0.0.1:8791/health 2>/dev/null || true)
+            if [ "${status}" = "200" ]; then
+              ready=true
+              break
+            fi
+            sleep 0.5
+          done
+          if [ "${ready}" != "true" ]; then
+            echo 'PDFKit Worker failed to become healthy.'
+            cat /tmp/legendmural-pdfkit-health.json 2>/dev/null || true
+            cat "${LOG_FILE}" || true
+            echo '--- PDFKit dry-run bundle around reported startup line ---'
+            nl -ba "${BUNDLE_FILE}" | sed -n '27715,27770p' || true
+            echo '--- new URL occurrences near the failing region ---'
+            grep -n -E 'new URL|URL\(' "${BUNDLE_FILE}" | awk -F: '$1 >= 27500 && $1 <= 28000' || true
+            exit 1
+          fi
+
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { readFile } from 'node:fs/promises';
+
+          const health = JSON.parse(await readFile('/tmp/legendmural-pdfkit-health.json', 'utf8'));
+          assert.equal(health.ok, true);
+          assert.equal(health.runtime, 'workerd-pdfkit-browser-adapter');
+          NODE
+
+          status=$(curl --silent --show-error \
+            --connect-timeout 2 \
+            --max-time 15 \
+            --output /tmp/legendmural-pdfkit-probe.json \
+            --write-out '%{http_code}' \
+            --request POST \
+            http://127.0.0.1:8791/probe 2>/dev/null || true)
+          if [ "${status}" != "200" ]; then
+            echo "PDFKit workerd render probe returned HTTP ${status:-none}."
+            cat /tmp/legendmural-pdfkit-probe.json 2>/dev/null || true
+            cat "${LOG_FILE}" || true
+            exit 1
+          fi
+
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { readFile } from 'node:fs/promises';
+
+          const proof = JSON.parse(await readFile('/tmp/legendmural-pdfkit-probe.json', 'utf8'));
+          const nodeProof = JSON.parse(await readFile('/tmp/legendmural-pdfkit-node-proof.json', 'utf8'));
+
+          assert.equal(proof.rendererVersion, 2);
+          assert.equal(proof.rendererVersion, proof.expectedRendererVersion);
+          assert.equal(proof.filename, 'invoice-LM-INV-2027-000001.pdf');
+          assert.equal(proof.pdfHeader, '%PDF-1.4');
+          assert.equal(proof.deterministic, true);
+          assert.equal(proof.byteLength, proof.secondByteLength);
+          assert.equal(proof.sha256, proof.secondSha256);
+          assert.match(proof.sha256, /^[a-f0-9]{64}$/);
+          assert.ok(proof.byteLength > 1000);
+
+          assert.equal(nodeProof.rendererVersion, proof.rendererVersion);
+          assert.equal(nodeProof.expectedRendererVersion, proof.expectedRendererVersion);
+          assert.equal(nodeProof.filename, proof.filename);
+          assert.equal(nodeProof.pdfHeader, proof.pdfHeader);
+          assert.equal(
+            proof.byteLength,
+            nodeProof.byteLength,
+            'workerd PDF byte length must match the canonical Node renderer output',
+          );
+          assert.equal(
+            proof.sha256,
+            nodeProof.sha256,
+            'workerd PDF SHA-256 must match the canonical Node renderer output',
+          );
+          NODE
+
+      - name: Bundle preview Worker without deployment
+        run: >-
+          npx --yes wrangler@4.129.0 deploy
+          --dry-run
+          --outdir .wrangler-dry-run/preview
+
+      - name: Bundle production Worker without deployment
+        run: >-
+          npx --yes wrangler@4.129.0 deploy
+          --env production
+          --dry-run
+          --outdir .wrangler-dry-run/production
+
+      - name: Verify dry-run bundles were produced
+        run: |
+          test -d .wrangler-dry-run/preview
+          test -d .wrangler-dry-run/production
+          find .wrangler-dry-run/preview -maxdepth 2 -type f -print
+          find .wrangler-dry-run/production -maxdepth 2 -type f -print

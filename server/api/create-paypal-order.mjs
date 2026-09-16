@@ -2,6 +2,12 @@ import { readFile } from 'node:fs/promises';
 
 import { OrderQuoteError } from '../commerce/order-quote.mjs';
 import {
+  P3_CONTROLLED_TEST_CATALOG,
+  isAuthorizedP3ControlledCheckout,
+  isExactP3ControlledOrderRequest,
+  isP3ControlledCheckoutEnabled,
+} from '../commerce/p3-controlled-test-item.mjs';
+import {
   CheckoutPersistenceError,
 } from '../orders/checkout-persistence.mjs';
 import { createDurablePayPalCheckout } from '../orders/paypal-checkout-persistence.mjs';
@@ -151,6 +157,7 @@ export async function handleCreatePayPalOrder(request, {
   paypalClient = null,
   paypalClientFactory = createPayPalApiClient,
   checkoutStore = null,
+  documentProfileVersion = 0,
   successUrl = env.CHECKOUT_SUCCESS_URL,
   cancelUrl = env.CHECKOUT_CANCEL_URL,
   allowedOrigins = env.CHECKOUT_ALLOWED_ORIGINS || '',
@@ -170,11 +177,30 @@ export async function handleCreatePayPalOrder(request, {
     return errorResponse(405, 'METHOD_NOT_ALLOWED', 'Only POST is allowed.', corsOrigin);
   }
 
+  const p3ControlledMode = isP3ControlledCheckoutEnabled(env);
+  const p3Authorized = p3ControlledMode && isAuthorizedP3ControlledCheckout(request, env);
+  if (p3ControlledMode && !p3Authorized) {
+    return errorResponse(
+      503,
+      'CHECKOUT_PAUSED',
+      'Checkout is temporarily unavailable. Please try again later.',
+      corsOrigin,
+    );
+  }
+
   try {
     const configuredSuccessUrl = validateConfiguredUrl(successUrl, 'CHECKOUT_SUCCESS_URL');
     const configuredCancelUrl = validateConfiguredUrl(cancelUrl, 'CHECKOUT_CANCEL_URL');
     const payload = await parseJsonRequest(request);
-    const products = catalogProducts || await loadCatalogProducts();
+    if (p3Authorized && !isExactP3ControlledOrderRequest(payload?.request)) {
+      throw new CheckoutSessionError(
+        'P3_TEST_REQUEST_INVALID',
+        'The controlled P3 checkout request is invalid.',
+      );
+    }
+    const products = p3Authorized
+      ? P3_CONTROLLED_TEST_CATALOG
+      : (catalogProducts || await loadCatalogProducts());
     const client = paypalClient || paypalClientFactory({
       clientId: env.PAYPAL_CLIENT_ID,
       clientSecret: env.PAYPAL_CLIENT_SECRET,
@@ -188,6 +214,7 @@ export async function handleCreatePayPalOrder(request, {
       catalogProducts: products,
       paypalClient: client,
       checkoutStore,
+      documentProfileVersion,
       successUrl: configuredSuccessUrl,
       cancelUrl: configuredCancelUrl,
       createdAt,

@@ -115,13 +115,13 @@ try {
   for (const tableName of expectedTables) {
     const privilegeResult = await client.query(`
       SELECT
-        has_table_privilege($1, format('legend_commerce.%I', $2), 'SELECT') AS can_select,
-        has_table_privilege($1, format('legend_commerce.%I', $2), 'INSERT') AS can_insert,
-        has_table_privilege($1, format('legend_commerce.%I', $2), 'UPDATE') AS can_update,
-        has_table_privilege($1, format('legend_commerce.%I', $2), 'DELETE') AS can_delete,
-        has_table_privilege($1, format('legend_commerce.%I', $2), 'TRUNCATE') AS can_truncate,
-        has_table_privilege($1, format('legend_commerce.%I', $2), 'REFERENCES') AS can_references,
-        has_table_privilege($1, format('legend_commerce.%I', $2), 'TRIGGER') AS can_trigger
+        has_table_privilege($1, format('legend_commerce.%I', $2::text), 'SELECT') AS can_select,
+        has_table_privilege($1, format('legend_commerce.%I', $2::text), 'INSERT') AS can_insert,
+        has_table_privilege($1, format('legend_commerce.%I', $2::text), 'UPDATE') AS can_update,
+        has_table_privilege($1, format('legend_commerce.%I', $2::text), 'DELETE') AS can_delete,
+        has_table_privilege($1, format('legend_commerce.%I', $2::text), 'TRUNCATE') AS can_truncate,
+        has_table_privilege($1, format('legend_commerce.%I', $2::text), 'REFERENCES') AS can_references,
+        has_table_privilege($1, format('legend_commerce.%I', $2::text), 'TRIGGER') AS can_trigger
     `, [PRIVILEGE_PROOF_LOGIN_ROLE, tableName]);
     const actual = privilegeResult.rows[0];
     const expected = expectedBooleanMap(EXPECTED_TABLE_PRIVILEGES[tableName]);
@@ -135,9 +135,9 @@ try {
   for (const [tableName, expectedColumns] of Object.entries(EXPECTED_UPDATE_COLUMNS)) {
     const columnsResult = await client.query(`
       SELECT column_name,
-             has_column_privilege($1, format('legend_commerce.%I', $2), column_name, 'UPDATE') AS can_update
+             has_column_privilege($1, format('legend_commerce.%I', $2::text), column_name, 'UPDATE') AS can_update
       FROM information_schema.columns
-      WHERE table_schema = 'legend_commerce' AND table_name = $2
+      WHERE table_schema = 'legend_commerce' AND table_name = $2::text
       ORDER BY ordinal_position
     `, [PRIVILEGE_PROOF_LOGIN_ROLE, tableName]);
     const actualColumns = columnsResult.rows.filter((row) => row.can_update).map((row) => row.column_name).sort();
@@ -150,9 +150,9 @@ try {
   for (const [sequenceName, expectedPrivileges] of Object.entries(EXPECTED_SEQUENCE_PRIVILEGES)) {
     const sequenceResult = await client.query(`
       SELECT
-        has_sequence_privilege($1, format('legend_commerce.%I', $2), 'USAGE') AS can_usage,
-        has_sequence_privilege($1, format('legend_commerce.%I', $2), 'SELECT') AS can_select,
-        has_sequence_privilege($1, format('legend_commerce.%I', $2), 'UPDATE') AS can_update
+        has_sequence_privilege($1, format('legend_commerce.%I', $2::text), 'USAGE') AS can_usage,
+        has_sequence_privilege($1, format('legend_commerce.%I', $2::text), 'SELECT') AS can_select,
+        has_sequence_privilege($1, format('legend_commerce.%I', $2::text), 'UPDATE') AS can_update
     `, [PRIVILEGE_PROOF_LOGIN_ROLE, sequenceName]);
     const sequence = sequenceResult.rows[0];
     const expectedSet = new Set(expectedPrivileges);

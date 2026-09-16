@@ -11,7 +11,7 @@ const catalog = JSON.parse(
 
 const MANUFACTURER = 'Alka Group, trading through LegendMural';
 const ADDRESS = 'Schutkolk 4 d 1, 6582 DB Heumen, The Netherlands';
-const EMAIL = 'info@alkavisuals.nl';
+const EMAIL = 'info@legendmural.com';
 
 function extractProductJsonLd(html) {
   const blocks = [...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];

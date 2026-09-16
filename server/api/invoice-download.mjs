@@ -133,6 +133,44 @@ function assertPdfStore(store) {
   }
 }
 
+function assertAuditStore(store) {
+  if (typeof store?.recordInvoiceAccess !== 'function') {
+    const error = new Error('Invoice access audit store is not configured.');
+    error.code = 'V3_INVOICE_AUDIT_NOT_CONFIGURED';
+    throw error;
+  }
+}
+
+function auditFailureClass(error) {
+  const code = String(error?.code || '');
+  if (code.startsWith('V3_INVOICE_STORAGE_')) {
+    return Object.freeze({ outcome: 'unavailable', reasonCode: 'storage_unavailable' });
+  }
+  if (code === 'V3_INVOICE_ARTIFACT_NOT_FOUND'
+    || code === 'V3_INVOICE_DOWNLOAD_ORDER_NOT_FOUND'
+    || code === 'V3_INVOICE_DOWNLOAD_IDENTITY_MISMATCH'
+    || code.startsWith('V3_INVOICE_ARTIFACT_')) {
+    return Object.freeze({ outcome: 'unavailable', reasonCode: 'invoice_not_available' });
+  }
+  return Object.freeze({ outcome: 'error', reasonCode: 'request_failed' });
+}
+
+async function recordAudit(auditStore, {
+  orderReference,
+  invoiceId = null,
+  outcome,
+  reasonCode,
+}) {
+  assertAuditStore(auditStore);
+  await auditStore.recordInvoiceAccess({
+    channel: 'customer',
+    orderReference,
+    invoiceId,
+    outcome,
+    reasonCode,
+  });
+}
+
 function mapError(error, origin) {
   if (error instanceof OrderStoreContractError) {
     return errorResponse(503, 'INVOICE_DOWNLOAD_NOT_CONFIGURED', 'Invoice download is not configured.', origin);
@@ -141,6 +179,9 @@ function mapError(error, origin) {
     return errorResponse(400, error.code, error.message, origin);
   }
   const code = String(error?.code || '');
+  if (code.startsWith('V3_INVOICE_AUDIT_')) {
+    return errorResponse(503, 'INVOICE_AUDIT_UNAVAILABLE', 'Invoice download audit is temporarily unavailable.', origin);
+  }
   if (code === 'V3_INVOICE_ARTIFACT_NOT_FOUND'
     || code === 'V3_INVOICE_DOWNLOAD_ORDER_NOT_FOUND'
     || code === 'V3_INVOICE_DOWNLOAD_IDENTITY_MISMATCH') {
@@ -161,6 +202,7 @@ export async function handleInvoiceDownload(request, {
   identitySource = null,
   artifactStore = null,
   pdfStore = null,
+  auditStore = null,
   storageEnabled = process.env.V3_INVOICE_STORAGE_ENABLED,
   allowedOrigins = process.env.CHECKOUT_ALLOWED_ORIGINS || '',
 } = {}) {
@@ -178,27 +220,53 @@ export async function handleInvoiceDownload(request, {
     return errorResponse(503, 'INVOICE_DOWNLOAD_DISABLED', 'Invoice download is not enabled.', corsOrigin);
   }
 
+  let auditContext = null;
+  let auditRecorded = false;
+
   try {
     const store = requireOrderLookupStore(orderStore);
     assertIdentitySource(identitySource);
     assertArtifactStore(artifactStore);
     assertPdfStore(pdfStore);
+    assertAuditStore(auditStore);
     const lookup = normalizeLookup(await parseJsonRequest(request));
     const order = await store.getOrderByReference(lookup.reference);
+    if (!order || order.reference !== lookup.reference) {
+      return errorResponse(404, 'INVOICE_NOT_AVAILABLE', 'Invoice PDF is not available.', corsOrigin);
+    }
+
+    auditContext = {
+      orderReference: lookup.reference,
+      invoiceId: null,
+    };
+
     if (!orderMatches(order, lookup)
       || order.status !== 'paid'
       || Number(order.documentProfileVersion) !== 1) {
+      await recordAudit(auditStore, {
+        ...auditContext,
+        outcome: 'denied',
+        reasonCode: 'authorization_denied',
+      });
+      auditRecorded = true;
       return errorResponse(404, 'INVOICE_NOT_AVAILABLE', 'Invoice PDF is not available.', corsOrigin);
     }
 
     const identity = await identitySource.loadInvoiceIdentityForDownload({
       orderReference: lookup.reference,
     });
+    auditContext.invoiceId = identity.invoiceId;
     const artifact = await artifactStore.loadArtifactState({
       orderReference: lookup.reference,
       invoiceId: identity.invoiceId,
     });
     if (!artifact.storageBound) {
+      await recordAudit(auditStore, {
+        ...auditContext,
+        outcome: 'unavailable',
+        reasonCode: 'pdf_not_bound',
+      });
+      auditRecorded = true;
       return errorResponse(404, 'INVOICE_NOT_AVAILABLE', 'Invoice PDF is not available.', corsOrigin);
     }
 
@@ -214,14 +282,34 @@ export async function handleInvoiceDownload(request, {
       storageKey: artifact.storageKey,
     });
 
+    await recordAudit(auditStore, {
+      ...auditContext,
+      outcome: 'success',
+      reasonCode: 'download_success',
+    });
+    auditRecorded = true;
+
     return new Response(persisted.bytes, {
       status: 200,
       headers: {
         ...securityHeaders(corsOrigin, 'application/pdf'),
-        'Content-Disposition': `attachment; filename="${artifact.attachmentFilename}"`,
+        'Content-Disposition': `attachment; filename=\"${artifact.attachmentFilename}\"`,
       },
     });
   } catch (error) {
+    const errorCode = String(error?.code || '');
+    if (auditContext && !auditRecorded && !errorCode.startsWith('V3_INVOICE_AUDIT_')) {
+      const failureClass = auditFailureClass(error);
+      try {
+        await recordAudit(auditStore, {
+          ...auditContext,
+          ...failureClass,
+        });
+        auditRecorded = true;
+      } catch (auditError) {
+        return mapError(auditError, corsOrigin);
+      }
+    }
     if (error?.code === 'ORDER_NOT_FOUND') {
       return errorResponse(404, 'INVOICE_NOT_AVAILABLE', 'Invoice PDF is not available.', corsOrigin);
     }

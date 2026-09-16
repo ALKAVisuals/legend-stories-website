@@ -1,5 +1,6 @@
 import { handleDashboardInvoiceAccess } from '../../server/api/dashboard-invoice-access.mjs';
 import { createNeonV3DashboardInvoiceSource } from '../../server/adapters/neon-v3-dashboard-invoice-source.mjs';
+import { createNeonV3InvoiceAccessAuditStore } from '../../server/adapters/neon-v3-invoice-access-audit-store.mjs';
 import { createNeonV3InvoiceArtifactStore } from '../../server/adapters/neon-v3-invoice-artifact-store.mjs';
 import { createNetlifyV3InvoicePdfStore } from '../../server/adapters/netlify-v3-invoice-pdf-store.mjs';
 import {
@@ -24,6 +25,7 @@ export function createNetlifyDashboardInvoiceAccessHandler({
   env = process.env,
   invoiceSourceFactory = createNeonV3DashboardInvoiceSource,
   artifactStoreFactory = createNeonV3InvoiceArtifactStore,
+  auditStoreFactory = createNeonV3InvoiceAccessAuditStore,
   pdfStoreFactory = createNetlifyV3InvoicePdfStore,
   handlerOptions = {},
 } = {}) {
@@ -42,7 +44,11 @@ export function createNetlifyDashboardInvoiceAccessHandler({
     try {
       const invoiceSource = invoiceSourceFactory({ connectionString: env.NEON_DATABASE_URL });
       const artifactStore = artifactStoreFactory({ connectionString: env.NEON_DATABASE_URL });
-      const pdfStore = enabled(env.V3_INVOICE_STORAGE_ENABLED)
+      const storageEnabled = enabled(env.V3_INVOICE_STORAGE_ENABLED);
+      const auditStore = storageEnabled
+        ? auditStoreFactory({ connectionString: env.NEON_DATABASE_URL })
+        : null;
+      const pdfStore = storageEnabled
         ? pdfStoreFactory({ env })
         : null;
 
@@ -53,6 +59,7 @@ export function createNetlifyDashboardInvoiceAccessHandler({
         storageEnabled: env.V3_INVOICE_STORAGE_ENABLED,
         invoiceSource,
         artifactStore,
+        auditStore,
         pdfStore,
       });
     } catch (error) {
@@ -62,7 +69,8 @@ export function createNetlifyDashboardInvoiceAccessHandler({
       });
       if (configurationResponse) return configurationResponse;
 
-      if (String(error?.code || '').startsWith('V3_INVOICE_STORAGE_')) {
+      const errorCode = String(error?.code || '');
+      if (errorCode.startsWith('V3_INVOICE_STORAGE_') || errorCode.startsWith('V3_INVOICE_AUDIT_')) {
         return new Response(JSON.stringify({
           error: {
             code: 'DASHBOARD_INVOICE_API_NOT_CONFIGURED',

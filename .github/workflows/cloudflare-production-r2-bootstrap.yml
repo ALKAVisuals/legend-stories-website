@@ -1,0 +1,82 @@
+name: Cloudflare Production R2 bootstrap
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/cloudflare-production-r2-bootstrap.yml'
+      - 'scripts/provision-cloudflare-production-r2.mjs'
+      - 'tests/cloudflare-production-r2-bootstrap-workflow.test.mjs'
+  workflow_dispatch:
+    inputs:
+      confirm_phrase:
+        description: 'Type CREATE_PRODUCTION_R2_BUCKET_ONLY to authorize creation/verification of only the private Production R2 bucket.'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-production-r2-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  policy:
+    name: Production R2 bootstrap policy gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Validate bucket-only bootstrap policy
+        run: node --test tests/cloudflare-production-r2-bootstrap-workflow.test.mjs
+
+  provision:
+    name: Create and verify private Production R2 bucket only
+    if: github.event_name == 'workflow_dispatch'
+    needs: policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: Require exact bucket-only confirmation
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ '${{ inputs.confirm_phrase }}' != 'CREATE_PRODUCTION_R2_BUCKET_ONLY' ]; then
+            echo '::error::Refusing to run: confirm_phrase must equal CREATE_PRODUCTION_R2_BUCKET_ONLY.'
+            exit 1
+          fi
+
+      - name: Require Cloudflare credentials without printing them
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo '::error::Missing GitHub secret CLOUDFLARE_ACCOUNT_ID.'
+            exit 1
+          fi
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+            echo '::error::Missing GitHub secret CLOUDFLARE_API_TOKEN.'
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Re-prove bucket-only policy before account mutation
+        run: node --test tests/cloudflare-production-r2-bootstrap-workflow.test.mjs
+
+      - name: Create only the Production R2 bucket and verify it remains private
+        run: node scripts/provision-cloudflare-production-r2.mjs

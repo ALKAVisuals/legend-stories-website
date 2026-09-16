@@ -1,0 +1,45 @@
+name: Netlify account routing read-only proof
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/netlify-account-routing-readonly-proof.yml'
+      - 'scripts/probe-netlify-account-routing-readonly.mjs'
+      - 'tests/netlify-account-routing-readonly-proof.test.mjs'
+      - 'docs/NETLIFY_ACCOUNT_READONLY_INVENTORY_PROOF_20260910.md'
+      - 'docs/CLOUDFLARE_MIGRATION_HANDOFF_20260909.md'
+      - 'docs/CLOUDFLARE_CUTOVER_AND_ROLLBACK_CHECKLIST.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  policy-gate:
+    name: Netlify read-only proof policy gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Prove GET-only no-secret policy
+        run: node --test tests/netlify-account-routing-readonly-proof.test.mjs
+
+  probe:
+    name: Probe current Netlify routes read-only
+    needs: policy-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Re-prove policy before network observation
+        run: node --test tests/netlify-account-routing-readonly-proof.test.mjs
+      - name: GET custom domains and immutable Netlify routes only
+        run: node scripts/probe-netlify-account-routing-readonly.mjs

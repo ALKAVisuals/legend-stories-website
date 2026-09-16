@@ -94,12 +94,50 @@ test('durable persistence stores an authoritative PayPal pending order', async (
   assert.equal(storeCapture.order.status, 'payment_pending');
   assert.equal(storeCapture.order.amountTotal, checkout.quote.grandTotal);
   assert.equal(storeCapture.order.paymentSessionId, checkout.sessionId);
+  assert.equal(storeCapture.order.documentProfileVersion, 0);
   assert.equal(storeCapture.order.items[0].name, expectedProductName);
   assert.equal(storeCapture.order.items[0].unitPrice, expectedUnitPrice);
   assert.equal(storeCapture.order.customer.email, customer.email);
   assert.equal(storeCapture.order.discount.code, 'LEGEND10');
   assert.equal(storeCapture.order.version, 0);
   assert.match(paypalCapture.options.idempotencyKey, /^legend-paypal-create-[a-f0-9]{64}$/);
+});
+
+test('document profile comes from the trusted server option and ignores browser payload fields', async () => {
+  const checkout = await createCheckout();
+  const tamperedBrowserRequest = { ...request, documentProfileVersion: 1 };
+  let profile0Order;
+  await persistPendingHostedCheckout({
+    checkout,
+    request: tamperedBrowserRequest,
+    customer,
+    catalogProducts: catalog,
+    checkoutStore: {
+      async persistPendingCheckout(order) {
+        profile0Order = order;
+        return { created: true, order };
+      },
+    },
+    createdAt: 1_800_000_000,
+  });
+  assert.equal(profile0Order.documentProfileVersion, 0);
+
+  let profile1Order;
+  await persistPendingHostedCheckout({
+    checkout,
+    request: { ...request, documentProfileVersion: 0 },
+    customer,
+    catalogProducts: catalog,
+    documentProfileVersion: 1,
+    checkoutStore: {
+      async persistPendingCheckout(order) {
+        profile1Order = order;
+        return { created: true, order };
+      },
+    },
+    createdAt: 1_800_000_000,
+  });
+  assert.equal(profile1Order.documentProfileVersion, 1);
 });
 
 test('missing durable storage rejects before persistence is attempted', async () => {
@@ -151,6 +189,7 @@ test('idempotent storage may return the same pending order as an existing record
   assert.equal(second.reservationCreated, false);
   assert.equal(second.order.reference, first.order.reference);
   assert.equal(second.order.paymentSessionId, first.order.paymentSessionId);
+  assert.equal(second.order.documentProfileVersion, 0);
 });
 
 test('storage conflicts reject the checkout response', async () => {

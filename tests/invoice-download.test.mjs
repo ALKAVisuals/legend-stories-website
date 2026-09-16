@@ -19,7 +19,7 @@ function request(payload, options = {}) {
   });
 }
 
-function harness({ orderOverrides = {}, storageBound = true } = {}) {
+function harness({ orderOverrides = {}, storageBound = true, auditError = null } = {}) {
   const calls = [];
   const orderStore = {
     async getOrderByReference(value) {
@@ -63,7 +63,14 @@ function harness({ orderOverrides = {}, storageBound = true } = {}) {
       return { bytes: pdfBytes };
     },
   };
-  return { calls, orderStore, identitySource, artifactStore, pdfStore };
+  const auditStore = {
+    async recordInvoiceAccess(args) {
+      calls.push(['audit', args]);
+      if (auditError) throw auditError;
+      return args;
+    },
+  };
+  return { calls, orderStore, identitySource, artifactStore, pdfStore, auditStore };
 }
 
 function options(h) {
@@ -86,11 +93,18 @@ test('returns only the SHA-verified persisted PDF after order and payment-sessio
   assert.equal(response.headers.get('cache-control'), 'private, no-store');
   assert.equal(response.headers.get('content-disposition'), 'attachment; filename="invoice-LM-77.pdf"');
   assert.deepEqual(Buffer.from(await response.arrayBuffer()), pdfBytes);
-  assert.deepEqual(h.calls.map(([name]) => name), ['order', 'identity', 'artifact', 'pdf']);
+  assert.deepEqual(h.calls.map(([name]) => name), ['order', 'identity', 'artifact', 'pdf', 'audit']);
   assert.equal(h.calls.find(([name]) => name === 'pdf')[1].storageKey, storageKey);
+  assert.deepEqual(h.calls.find(([name]) => name === 'audit')[1], {
+    channel: 'customer',
+    orderReference: reference,
+    invoiceId: 77,
+    outcome: 'success',
+    reasonCode: 'download_success',
+  });
 });
 
-test('wrong payment session is indistinguishable from unavailable invoice and never reaches storage', async () => {
+test('wrong payment session is indistinguishable from unavailable invoice and creates only a minimal denied audit event', async () => {
   const h = harness();
   const response = await handleInvoiceDownload(
     request({ reference, sessionId: 'WRONGPAYPAL123' }),
@@ -104,7 +118,16 @@ test('wrong payment session is indistinguishable from unavailable invoice and ne
       message: 'Invoice PDF is not available.',
     },
   });
-  assert.deepEqual(h.calls.map(([name]) => name), ['order']);
+  assert.deepEqual(h.calls.map(([name]) => name), ['order', 'audit']);
+  const audit = h.calls.find(([name]) => name === 'audit')[1];
+  assert.deepEqual(audit, {
+    channel: 'customer',
+    orderReference: reference,
+    invoiceId: null,
+    outcome: 'denied',
+    reasonCode: 'authorization_denied',
+  });
+  assert.equal(JSON.stringify(audit).includes('WRONGPAYPAL123'), false);
 });
 
 test('browser-supplied storage keys are ignored; only the durable server-side binding is used', async () => {
@@ -123,9 +146,13 @@ test('browser-supplied storage keys are ignored; only the durable server-side bi
   const load = h.calls.find(([name]) => name === 'pdf')[1];
   assert.equal(load.storageKey, storageKey);
   assert.equal(load.pdfSha256, 'a'.repeat(64));
+  const audit = h.calls.find(([name]) => name === 'audit')[1];
+  assert.equal('storageKey' in audit, false);
+  assert.equal('pdfSha256' in audit, false);
+  assert.equal('sessionId' in audit, false);
 });
 
-test('disabled storage fails before any order, Neon artifact or Blob dependency is used', async () => {
+test('disabled storage fails before any order, Neon artifact, audit or Blob dependency is used', async () => {
   const h = harness();
   const response = await handleInvoiceDownload(
     request({ reference, sessionId }),
@@ -135,17 +162,24 @@ test('disabled storage fails before any order, Neon artifact or Blob dependency 
   assert.equal(h.calls.length, 0);
 });
 
-test('a paid order without a durable storage binding is not downloadable', async () => {
+test('a paid order without a durable storage binding is not downloadable and is audited as unavailable', async () => {
   const h = harness({ storageBound: false });
   const response = await handleInvoiceDownload(
     request({ reference, sessionId }),
     options(h),
   );
   assert.equal(response.status, 404);
-  assert.deepEqual(h.calls.map(([name]) => name), ['order', 'identity', 'artifact']);
+  assert.deepEqual(h.calls.map(([name]) => name), ['order', 'identity', 'artifact', 'audit']);
+  assert.deepEqual(h.calls.find(([name]) => name === 'audit')[1], {
+    channel: 'customer',
+    orderReference: reference,
+    invoiceId: 77,
+    outcome: 'unavailable',
+    reasonCode: 'pdf_not_bound',
+  });
 });
 
-test('cross-origin download is denied before authorization dependencies run', async () => {
+test('cross-origin download is denied before authorization or audit dependencies run', async () => {
   const h = harness();
   const response = await handleInvoiceDownload(
     request({ reference, sessionId }, { origin: 'https://attacker.example' }),
@@ -153,4 +187,18 @@ test('cross-origin download is denied before authorization dependencies run', as
   );
   assert.equal(response.status, 403);
   assert.equal(h.calls.length, 0);
+});
+
+test('a durable audit write failure blocks otherwise successful PDF delivery', async () => {
+  const auditError = new Error('audit unavailable');
+  auditError.code = 'V3_INVOICE_AUDIT_WRITE_FAILED';
+  const h = harness({ auditError });
+  const response = await handleInvoiceDownload(
+    request({ reference, sessionId }),
+    options(h),
+  );
+
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).error.code, 'INVOICE_AUDIT_UNAVAILABLE');
+  assert.deepEqual(h.calls.map(([name]) => name), ['order', 'identity', 'artifact', 'pdf', 'audit']);
 });

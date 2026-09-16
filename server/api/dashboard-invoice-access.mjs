@@ -125,6 +125,14 @@ function assertPdfStore(store) {
   }
 }
 
+function assertAuditStore(store) {
+  if (typeof store?.recordInvoiceAccess !== 'function') {
+    const error = new Error('Invoice access audit store is not configured.');
+    error.code = 'V3_INVOICE_AUDIT_NOT_CONFIGURED';
+    throw error;
+  }
+}
+
 async function loadArtifactOrNull(artifactStore, summary) {
   try {
     return await artifactStore.loadArtifactState({
@@ -151,11 +159,43 @@ function publicMetadata(summary, artifact) {
   });
 }
 
+function auditFailureClass(error) {
+  const code = String(error?.code || '');
+  if (code.startsWith('V3_INVOICE_STORAGE_')) {
+    return Object.freeze({ outcome: 'unavailable', reasonCode: 'storage_unavailable' });
+  }
+  if (code === 'V3_DASHBOARD_INVOICE_NOT_FOUND'
+    || code === 'V3_DASHBOARD_INVOICE_IDENTITY_MISMATCH'
+    || code.startsWith('V3_INVOICE_ARTIFACT_')) {
+    return Object.freeze({ outcome: 'unavailable', reasonCode: 'invoice_not_available' });
+  }
+  return Object.freeze({ outcome: 'error', reasonCode: 'request_failed' });
+}
+
+async function recordAudit(auditStore, {
+  orderReference,
+  invoiceId,
+  outcome,
+  reasonCode,
+}) {
+  assertAuditStore(auditStore);
+  await auditStore.recordInvoiceAccess({
+    channel: 'dashboard',
+    orderReference,
+    invoiceId,
+    outcome,
+    reasonCode,
+  });
+}
+
 function mapError(error) {
   if (error instanceof DashboardInvoiceAccessError) {
     return errorResponse(400, error.code, error.message);
   }
   const code = String(error?.code || '');
+  if (code.startsWith('V3_INVOICE_AUDIT_')) {
+    return errorResponse(503, 'DASHBOARD_INVOICE_AUDIT_UNAVAILABLE', 'Invoice access audit is temporarily unavailable.');
+  }
   if (code === 'V3_DASHBOARD_INVOICE_NOT_FOUND'
     || code === 'V3_DASHBOARD_INVOICE_IDENTITY_MISMATCH'
     || code === 'V3_INVOICE_ARTIFACT_NOT_FOUND'
@@ -182,6 +222,7 @@ export async function handleDashboardInvoiceAccess(request, {
   invoiceSource = null,
   artifactStore = null,
   pdfStore = null,
+  auditStore = null,
 } = {}) {
   if (request.headers.get('origin')) {
     return errorResponse(403, 'BROWSER_ORIGIN_NOT_ALLOWED', 'Browser-origin requests are not allowed.');
@@ -206,13 +247,24 @@ export async function handleDashboardInvoiceAccess(request, {
     );
   }
 
+  let downloadRequested = false;
+  let auditContext = null;
+  let auditRecorded = false;
+
   try {
     assertSummarySource(invoiceSource);
     assertArtifactStore(artifactStore);
     const input = normalizeRequest(await parseJsonRequest(request));
+    downloadRequested = input.action === 'download';
     const summary = await invoiceSource.loadDashboardInvoiceSummary({
       orderReference: input.reference,
     });
+    if (downloadRequested) {
+      auditContext = {
+        orderReference: summary.orderReference,
+        invoiceId: summary.invoiceId,
+      };
+    }
     const artifact = await loadArtifactOrNull(artifactStore, summary);
 
     if (input.action === 'metadata') {
@@ -222,7 +274,14 @@ export async function handleDashboardInvoiceAccess(request, {
     if (!enabled(storageEnabled)) {
       return errorResponse(503, 'DASHBOARD_INVOICE_DOWNLOAD_DISABLED', 'Dashboard invoice download is not enabled.');
     }
+    assertAuditStore(auditStore);
     if (!artifact?.storageBound) {
+      await recordAudit(auditStore, {
+        ...auditContext,
+        outcome: 'unavailable',
+        reasonCode: 'pdf_not_bound',
+      });
+      auditRecorded = true;
       return errorResponse(404, 'DASHBOARD_INVOICE_NOT_AVAILABLE', 'Invoice PDF is not available.');
     }
     assertPdfStore(pdfStore);
@@ -239,14 +298,38 @@ export async function handleDashboardInvoiceAccess(request, {
       storageKey: artifact.storageKey,
     });
 
+    await recordAudit(auditStore, {
+      ...auditContext,
+      outcome: 'success',
+      reasonCode: 'download_success',
+    });
+    auditRecorded = true;
+
     return new Response(persisted.bytes, {
       status: 200,
       headers: {
         ...securityHeaders('application/pdf'),
-        'Content-Disposition': `attachment; filename="${artifact.attachmentFilename}"`,
+        'Content-Disposition': `attachment; filename=\"${artifact.attachmentFilename}\"`,
       },
     });
   } catch (error) {
+    const errorCode = String(error?.code || '');
+    if (downloadRequested
+      && enabled(storageEnabled)
+      && auditContext
+      && !auditRecorded
+      && !errorCode.startsWith('V3_INVOICE_AUDIT_')) {
+      const failureClass = auditFailureClass(error);
+      try {
+        await recordAudit(auditStore, {
+          ...auditContext,
+          ...failureClass,
+        });
+        auditRecorded = true;
+      } catch (auditError) {
+        return mapError(auditError);
+      }
+    }
     return mapError(error);
   }
 }

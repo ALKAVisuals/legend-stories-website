@@ -1,0 +1,75 @@
+name: Cloudflare preview API route matrix
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_phrase:
+        description: 'Type PREVIEW_API_MATRIX_ONLY to authorize read-only preview API probes.'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-preview-api-route-matrix
+  cancel-in-progress: false
+
+jobs:
+  policy:
+    name: Preview API matrix policy gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Validate read-only workflow policy
+        run: node --test tests/cloudflare-preview-api-route-matrix-workflow.test.mjs
+
+  proof:
+    name: Prove all six preview API routes read-only
+    needs: policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      LEGENDMURAL_PREVIEW_ORIGIN: https://legendmural-cloudflare-preview.lively-bonus-08da.workers.dev
+
+    steps:
+      - name: Require exact preview-only confirmation
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ '${{ inputs.confirm_phrase }}' != 'PREVIEW_API_MATRIX_ONLY' ]; then
+            echo '::error::Refusing to run: confirm_phrase must equal PREVIEW_API_MATRIX_ONLY.'
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Re-prove read-only policy before network access
+        run: node --test tests/cloudflare-preview-api-route-matrix-workflow.test.mjs
+
+      - name: Probe canonical preview API routes with GET only
+        run: node scripts/verify-cloudflare-preview-api-route-matrix.mjs
+
+      - name: Record read-only proof summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## LegendMural Cloudflare preview API route matrix'
+            echo
+            echo '- Scope: existing canonical preview Worker only'
+            echo '- Request method: GET only'
+            echo '- Intended API routes: 6'
+            echo '- No request bodies sent'
+            echo '- No Cloudflare/Neon/PayPal/Resend/dashboard secrets used'
+            echo '- No deploy, DNS, Production, order, capture, webhook processing or invoice-write action performed'
+          } >> "${GITHUB_STEP_SUMMARY}"
