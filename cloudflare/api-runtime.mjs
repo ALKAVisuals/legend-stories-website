@@ -7,6 +7,7 @@ import {
   getCloudflareCommerceOrderStore,
   resolveCloudflareOrderCreationDocumentProfile,
 } from './runtime-core.mjs';
+import { resolveCloudflareV3PaidFinalizationConfig } from './v3-paid-finalization-config.mjs';
 
 function enabled(value) {
   return String(value || '').trim().toLowerCase() === 'true';
@@ -63,10 +64,24 @@ async function resolveNotificationRuntime(env) {
   return createCloudflarePaidOrderNotificationRuntime({ env });
 }
 
-export async function handleActiveCheckout(request, env, { successUrl, cancelUrl } = {}) {
+function paidFinalizationConfig(env, override) {
+  return override === undefined
+    ? resolveCloudflareV3PaidFinalizationConfig({ env })
+    : override;
+}
+
+export async function handleActiveCheckout(
+  request,
+  env,
+  { successUrl, cancelUrl, v3PaidFinalization } = {},
+) {
   try {
     const { handleCreatePayPalOrder } = await import('../server/api/create-paypal-order.mjs');
-    const documentProfileVersion = resolveCloudflareOrderCreationDocumentProfile({ env });
+    const resolvedV3PaidFinalization = paidFinalizationConfig(env, v3PaidFinalization);
+    const documentProfileVersion = resolveCloudflareOrderCreationDocumentProfile({
+      env,
+      v3PaidFinalization: resolvedV3PaidFinalization,
+    });
     const checkoutStore = getCloudflareCommerceOrderStore({ env });
     return await handleCreatePayPalOrder(request, {
       env,
@@ -102,12 +117,16 @@ export async function handleActiveCheckout(request, env, { successUrl, cancelUrl
   }
 }
 
-export async function handleActiveCapture(request, env) {
+export async function handleActiveCapture(request, env, { v3PaidFinalization } = {}) {
   try {
     const { handleCapturePayPalOrder } = await import('../server/api/capture-paypal-order.mjs');
     const orderStore = getCloudflareCommerceOrderStore({ env });
     const reconcilePaidOrderNotifications = await resolveNotificationRuntime(env);
-    const finalizePaidOrder = createCloudflareV3PaidFinalizationRuntime({ env });
+    const resolvedV3PaidFinalization = paidFinalizationConfig(env, v3PaidFinalization);
+    const finalizePaidOrder = createCloudflareV3PaidFinalizationRuntime({
+      env,
+      config: resolvedV3PaidFinalization,
+    });
     return await handleCapturePayPalOrder(request, {
       env,
       orderStore,
@@ -141,7 +160,7 @@ function safeNotificationBootstrapLog(error) {
   } catch {}
 }
 
-export async function handleActiveWebhook(request, env) {
+export async function handleActiveWebhook(request, env, { v3PaidFinalization } = {}) {
   let paypalClient;
   let processor;
   let PayPalConfigurationError;
@@ -162,7 +181,11 @@ export async function handleActiveWebhook(request, env) {
       } catch (error) {
         safeNotificationBootstrapLog(error);
       }
-      const finalizePaidOrder = createCloudflareV3PaidFinalizationRuntime({ env });
+      const resolvedV3PaidFinalization = paidFinalizationConfig(env, v3PaidFinalization);
+      const finalizePaidOrder = createCloudflareV3PaidFinalizationRuntime({
+        env,
+        config: resolvedV3PaidFinalization,
+      });
       const { createPayPalWebhookReconciler } = await import('../server/payments/paypal-webhook-reconciliation.mjs');
       processor = createPayPalWebhookReconciler({
         orderStore,
