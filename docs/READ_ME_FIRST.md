@@ -2,8 +2,8 @@
 
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Scope:** public LegendMural webshop / launch-readiness plus explicitly scoped Cloudflare/payment runtime work  
-**Current runtime state:** Cloudflare hosting/DNS migration complete; PayPal P1/P2/P3 complete; customer checkout still fail-closed  
-**Synchronized Cloudflare status:** [`CLOUDFLARE_CURRENT_STATUS_20260914.md`](CLOUDFLARE_CURRENT_STATUS_20260914.md)  
+**Current runtime state:** Cloudflare hosting/DNS migration complete; PayPal P1/P2/P3 complete; Production order-email runtime enabled; customer checkout still fail-closed  
+**Synchronized Cloudflare status:** [`CLOUDFLARE_CURRENT_STATUS_20260916.md`](CLOUDFLARE_CURRENT_STATUS_20260916.md)  
 **P3 proof:** [`CLOUDFLARE_PAYPAL_P3_PROOF_20260914.md`](CLOUDFLARE_PAYPAL_P3_PROOF_20260914.md)  
 **P3 controlled-payment plan:** [`CLOUDFLARE_PAYPAL_P3_CONTROLLED_PAYMENT_PLAN_20260914.md`](CLOUDFLARE_PAYPAL_P3_CONTROLLED_PAYMENT_PLAN_20260914.md)  
 **P2 proof:** [`CLOUDFLARE_PAYPAL_P2_PROOF_20260914.md`](CLOUDFLARE_PAYPAL_P2_PROOF_20260914.md)  
@@ -18,27 +18,30 @@
 
 > **Every new chat working on the public website or Production payment/runtime path must start here.**
 
-## Active Cloudflare / PayPal checkpoint — synchronized 14 September 2026
+## Active Cloudflare / PayPal checkpoint — synchronized 16 September 2026
 
-The Cloudflare hosting/DNS migration is **100% complete for its defined scope**. PayPal Stage P1, P2 and the controlled P3 Live-payment proof are also complete for their defined scopes.
+The Cloudflare hosting/DNS migration is **100% complete for its defined scope**. PayPal Stage P1, P2 and the controlled P3 Live-payment proof are complete. Production order-email runtime activation is also complete.
 
 P3 proved exactly one controlled **EUR 0.01** Live PayPal order end to end: durable Neon `payment_pending`, buyer approval, capture/webhook reconciliation and final durable `paid` state. The sanitized proof is in `docs/CLOUDFLARE_PAYPAL_P3_PROOF_20260914.md`.
 
-Repository/runtime baseline used for P3:
+On 16 September 2026, the guarded Production workflow deployed exact commit `553fa04ca56c856721040f0748d3dea5a2f193e3` to `legendmural-cloudflare-production`. GitHub Actions run `35065848714` completed successfully. Preflight proved order emails were still off before deployment; postdeploy verification proved they were on afterward. The live checkout proof still returned `CHECKOUT_PAUSED`.
+
+Current proven Production runtime state:
 
 ```text
-main: df44f94c762e543f9fb2540f7cd2447cef6094a1
 PAYPAL_ALLOW_LIVE=true
 LEGENDMURAL_CHECKOUT_PAUSED=true
 P3_TEST_CHECKOUT_ENABLED=false
-ORDER_EMAILS_ENABLED=false
+ORDER_EMAILS_ENABLED=true
 V3_PROFILE1_ORDER_CREATION_ENABLED=false
 V3_INVOICE_RECONCILIATION_ENABLED=false
 V3_INVOICE_STORAGE_ENABLED=false
 V3_DASHBOARD_INVOICE_API_ENABLED=false
 ```
 
-Customer checkout remains deliberately paused. A successful P3 proof is **not** permission to launch customer commerce.
+Customer checkout remains deliberately paused. Successful P3 and order-email activation are **not** permission to launch customer commerce.
+
+Production is now configured to send the existing paid-order emails when that normal runtime path is reached. This activation did **not** create another real-money order and therefore does not by itself prove a newly delivered real Production order email. Any new real-money/email end-to-end proof requires separate explicit approval.
 
 During P3, Production Neon required one minimal schema repair because the current order-store adapter expected `document_profile_version`. The exact repair and proof are recorded in the P3 proof/current-status docs. Do not infer that the full V3 migration set was activated; the V3 runtime flags remain off.
 
@@ -65,7 +68,7 @@ No refund is recorded as completed. A refund is a separate money-moving Producti
 Do not enable or execute any of the following without a new explicit scope/approval:
 
 - general customer checkout;
-- Production order-email sending;
+- a new controlled real-money/order-email proof;
 - V3 Profile 1 order creation;
 - V3 invoice reconciliation;
 - V3 invoice storage / Production R2 writes;
@@ -74,7 +77,7 @@ Do not enable or execute any of the following without a new explicit scope/appro
 - unrelated LegendMural dashboard changes;
 - changes to Technisch Bouwadvies.
 
-Do not rerun completed Cloudflare Gate 0, Phase 4, P1, P2 or P3 merely because an older document says they are pending. The synchronized current-status and proof files supersede older checkpoint language.
+Do not rerun completed Cloudflare Gate 0, Phase 4, P1, P2, P3 or the Production order-email activation merely because an older document says they are pending. The synchronized current-status and proof files supersede older checkpoint language.
 
 ## Current public-website / launch-readiness state
 
@@ -91,7 +94,7 @@ Do not manufacture technical work to bypass these launch gates.
 ## Required startup order
 
 1. Read this file.
-2. For Cloudflare/Production payment/runtime work, read `CLOUDFLARE_CURRENT_STATUS_20260914.md`.
+2. For Cloudflare/Production payment/runtime work, read `CLOUDFLARE_CURRENT_STATUS_20260916.md`.
 3. Read `CLOUDFLARE_PAYPAL_P3_PROOF_20260914.md` before questioning or rerunning P3.
 4. Read `CLOUDFLARE_PAYPAL_P3_CONTROLLED_PAYMENT_PLAN_20260914.md` for historical P3 controls; where its mandatory-removal rule conflicts with the later owner decision, the current status/P3 proof controls.
 5. Read `CLOUDFLARE_MIGRATION_HANDOFF_20260911.md` for detailed migration/runtime continuation boundaries.
@@ -104,13 +107,13 @@ Do not manufacture technical work to bypass these launch gates.
 12. Inspect relevant CI before merge.
 13. Immediately before merge, fresh-check `main`; compare/rebase if it changed.
 14. Do not deploy or publish to Production without explicit owner approval for that exact release step.
-15. Do not open customer checkout, send Production emails, enable V3 Profile 1, run additional Production migrations, issue V3 invoices, or move money unless the explicitly scoped workstream and owner approval authorize that exact action.
+15. Do not open customer checkout, trigger a new controlled real-money/order-email proof, enable V3 Profile 1, run additional Production migrations, issue V3 invoices, or move money unless the explicitly scoped workstream and owner approval authorize that exact action.
 
 ## Source-of-truth rule
 
 GitHub is the source of truth. Do not reconstruct current website or Cloudflare/payment progress from old chat history.
 
-For Cloudflare/payment runtime work, `CLOUDFLARE_CURRENT_STATUS_20260914.md` and `CLOUDFLARE_PAYPAL_P3_PROOF_20260914.md` are the active compact continuation state. Older dated status notes may contain useful history but do not override them.
+For Cloudflare/payment runtime work, `CLOUDFLARE_CURRENT_STATUS_20260916.md` and `CLOUDFLARE_PAYPAL_P3_PROOF_20260914.md` are the active compact continuation state. Older dated status notes may contain useful history but do not override them.
 
 For ordinary public-website/launch-readiness work, the newest general website handoff/current status and `PARALLEL_WORKSTREAM_COORDINATION.md` remain authoritative unless replaced by a newer synchronized handoff.
 
