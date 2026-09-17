@@ -10,7 +10,6 @@ const PROD_CUSTOM_DOMAINS = Object.freeze([
 
 const GUARDED_FLAGS = Object.freeze({
   LEGENDMURAL_DEPLOY_CONTEXT: 'production',
-  LEGENDMURAL_CHECKOUT_PAUSED: 'true',
   CHECKOUT_SUCCESS_URL: 'https://legendmural.com/order-success.html',
   CHECKOUT_CANCEL_URL: 'https://legendmural.com/order-cancelled.html',
   CHECKOUT_ALLOWED_ORIGINS: 'https://legendmural.com',
@@ -27,12 +26,14 @@ const REQUIRED_SECRET_NAMES = Object.freeze([
   'PAYPAL_CLIENT_ID',
   'PAYPAL_CLIENT_SECRET',
   'PAYPAL_WEBHOOK_ID',
+  'RESEND_API_KEY',
 ]);
 
 const mode = String(process.argv[2] || '').trim().toLowerCase();
 if (!['preflight', 'postdeploy'].includes(mode)) {
   throw new Error('Usage: node scripts/verify-cloudflare-production-guarded-update.mjs <preflight|postdeploy>');
 }
+const expectedCheckoutPaused = mode === 'preflight' ? 'true' : 'false';
 const expectedOrderEmails = 'true';
 
 const accountId = String(process.env.CLOUDFLARE_ACCOUNT_ID || '').trim();
@@ -158,6 +159,9 @@ function proveGuardedFlags(settings, { requireP3Flag }) {
       throw new Error(`Production Worker guarded flag ${name} does not match the expected value.`);
     }
   }
+  if (flags.LEGENDMURAL_CHECKOUT_PAUSED !== expectedCheckoutPaused) {
+    throw new Error(`Production Worker guarded flag LEGENDMURAL_CHECKOUT_PAUSED does not match the expected ${mode} value.`);
+  }
   if (flags.ORDER_EMAILS_ENABLED !== expectedOrderEmails) {
     throw new Error(`Production Worker guarded flag ORDER_EMAILS_ENABLED does not match the expected ${mode} value.`);
   }
@@ -210,6 +214,7 @@ console.log(JSON.stringify({
   worker: PROD_WORKER,
   customDomains,
   guardedFlagsProven: true,
+  customerCheckoutPaused: expectedCheckoutPaused === 'true',
   paypalLiveEndpointProven: true,
   p3TestCheckoutEnabled: false,
   orderEmailsEnabled: expectedOrderEmails === 'true',
@@ -226,10 +231,11 @@ if (process.env.GITHUB_STEP_SUMMARY) {
       '',
       `- Worker: ${PROD_WORKER}`,
       `- Custom Domains: ${customDomains.join(', ')}`,
-      '- Customer checkout paused: true',
+      `- Customer checkout paused: ${expectedCheckoutPaused}`,
       '- PayPal Live API base: https://api-m.paypal.com',
       '- PayPal Live client allowed: true',
       '- PayPal client ID/secret/webhook secret names present: true',
+      '- Resend API secret name present: true',
       '- P3 controlled checkout enabled: false',
       `- Order emails enabled: ${expectedOrderEmails}`,
       '- V3 activation flags enabled: false',

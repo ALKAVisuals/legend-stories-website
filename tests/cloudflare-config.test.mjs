@@ -25,8 +25,8 @@ async function config() {
   return JSON.parse(await readFile(configUrl, 'utf8'));
 }
 
-function assertGuarded(vars) {
-  assert.equal(vars.LEGENDMURAL_CHECKOUT_PAUSED, 'true');
+function assertGuarded(vars, { checkoutPaused = 'true' } = {}) {
+  assert.equal(vars.LEGENDMURAL_CHECKOUT_PAUSED, checkoutPaused);
   assert.equal(vars.P3_TEST_CHECKOUT_ENABLED, 'false');
   assert.equal(vars.V3_PROFILE1_ORDER_CREATION_ENABLED, 'false');
   assert.equal(vars.V3_INVOICE_RECONCILIATION_ENABLED, 'false');
@@ -105,7 +105,7 @@ test('preview environment is isolated, fail-closed and has no scheduled reconcil
   assert.equal(value.r2_buckets[0].preview_bucket_name, 'legendmural-v3-invoice-pdfs-preview');
 });
 
-test('production environment is explicitly separate, Custom-Domain pinned and guarded with order email delivery enabled', async () => {
+test('production environment is explicitly separate, Custom-Domain pinned, checkout-active and guarded with order email delivery enabled', async () => {
   const value = await config();
   const production = value.env.production;
   assert.equal(production.name, 'legendmural-cloudflare-production');
@@ -116,7 +116,7 @@ test('production environment is explicitly separate, Custom-Domain pinned and gu
     { pattern: 'www.legendmural.com', custom_domain: true },
   ]);
   assert.equal(production.vars.LEGENDMURAL_DEPLOY_CONTEXT, 'production');
-  assertGuarded(production.vars);
+  assertGuarded(production.vars, { checkoutPaused: 'false' });
   assert.equal(production.vars.PAYPAL_ALLOW_LIVE, 'true');
   assert.equal(production.vars.ORDER_EMAILS_ENABLED, 'true');
   assertNoSecretsInVars(production.vars);
