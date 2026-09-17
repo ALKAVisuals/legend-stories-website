@@ -33,7 +33,7 @@ const mode = String(process.argv[2] || '').trim().toLowerCase();
 if (!['preflight', 'postdeploy'].includes(mode)) {
   throw new Error('Usage: node scripts/verify-cloudflare-production-guarded-update.mjs <preflight|postdeploy>');
 }
-const expectedOrderEmails = mode === 'preflight' ? 'false' : 'true';
+const expectedOrderEmails = 'true';
 
 const accountId = String(process.env.CLOUDFLARE_ACCOUNT_ID || '').trim();
 const apiToken = String(process.env.CLOUDFLARE_API_TOKEN || '').trim();
