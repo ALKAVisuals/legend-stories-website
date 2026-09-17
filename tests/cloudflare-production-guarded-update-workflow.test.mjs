@@ -15,6 +15,7 @@ const requiredSecrets = [
   'PAYPAL_CLIENT_ID',
   'PAYPAL_CLIENT_SECRET',
   'PAYPAL_WEBHOOK_ID',
+  'RESEND_API_KEY',
 ];
 
 const requiredDomains = [
@@ -24,7 +25,7 @@ const requiredDomains = [
 
 test('guarded Production update is manual-only, main-only and commit-pinned', () => {
   assert.match(workflow, /workflow_dispatch:/);
-  assert.match(workflow, /DEPLOY_GUARDED_P3_PREPARATION_ONLY/);
+  assert.match(workflow, /DEPLOY_GUARDED_CUSTOMER_CHECKOUT_LAUNCH/);
   assert.match(workflow, /refs\/heads\/main/);
   assert.match(workflow, /EXPECTED_COMMIT/);
   assert.match(workflow, /GITHUB_SHA/);
@@ -51,11 +52,11 @@ test('guarded Production update cannot mutate DNS, routes, secrets, R2 objects o
   assert.doesNotMatch(workflow, /curl[^\n]*(?:POST|PUT|PATCH|DELETE)/i);
 });
 
-test('repository Production config remains guarded and pins the exact Custom Domains', () => {
+test('repository Production config opens customer checkout while retaining payment and V3 guards', () => {
   const production = config.env.production;
   const vars = production.vars;
   assert.equal(vars.LEGENDMURAL_DEPLOY_CONTEXT, 'production');
-  assert.equal(vars.LEGENDMURAL_CHECKOUT_PAUSED, 'true');
+  assert.equal(vars.LEGENDMURAL_CHECKOUT_PAUSED, 'false');
   assert.equal(vars.PAYPAL_API_BASE, 'https://api-m.paypal.com');
   assert.equal(vars.PAYPAL_ALLOW_LIVE, 'true');
   assert.equal(vars.P3_TEST_CHECKOUT_ENABLED, 'false');
@@ -72,7 +73,7 @@ test('repository Production config remains guarded and pins the exact Custom Dom
   })));
 });
 
-test('remote verifier is GET-only and checks exact Custom Domains plus PayPal Live contract without secret values', () => {
+test('remote verifier is GET-only and checks exact Custom Domains plus PayPal Live and email contracts without secret values', () => {
   const methods = [...verifier.matchAll(/method:\s*'([A-Z]+)'/g)].map((match) => match[1]);
   assert.deepEqual([...new Set(methods)], ['GET']);
   for (const secret of requiredSecrets) {
@@ -93,15 +94,20 @@ test('remote verifier is GET-only and checks exact Custom Domains plus PayPal Li
   assert.doesNotMatch(verifier, /clientSecret\s*[:=]\s*['"][^'"]+['"]/i);
 });
 
-test('guarded verifier requires order emails on before and after deploy', () => {
+test('guarded verifier proves paused preflight, active postdeploy and order emails on throughout', () => {
+  assert.match(verifier, /const expectedCheckoutPaused = mode === 'preflight' \? 'true' : 'false';/);
+  assert.match(verifier, /flags\.LEGENDMURAL_CHECKOUT_PAUSED !== expectedCheckoutPaused/);
   assert.match(verifier, /const expectedOrderEmails = 'true';/);
   assert.match(verifier, /flags\.ORDER_EMAILS_ENABLED !== expectedOrderEmails/);
+  assert.match(workflow, /Customer checkout intended state: active/);
   assert.match(workflow, /Production order emails intended state: enabled/);
 });
 
-test('live proof after deployment only performs a GET and requires checkout paused', () => {
+test('live proof after deployment uses safe OPTIONS and creates no PayPal order', () => {
   assert.match(workflow, /fetch\('https:\/\/legendmural\.com\/api\/paypal\/checkout'/);
-  assert.match(workflow, /method: 'GET'/);
-  assert.match(workflow, /response\.status !== 503/);
-  assert.match(workflow, /CHECKOUT_PAUSED/);
+  assert.match(workflow, /method: 'OPTIONS'/);
+  assert.match(workflow, /Access-Control-Request-Method': 'POST'/);
+  assert.match(workflow, /response\.status !== 204/);
+  assert.match(workflow, /OPTIONS probe created no PayPal order/);
+  assert.doesNotMatch(workflow, /method: 'POST'/);
 });
