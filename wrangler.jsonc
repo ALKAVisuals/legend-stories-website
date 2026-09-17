@@ -62,7 +62,7 @@
       },
       "vars": {
         "LEGENDMURAL_DEPLOY_CONTEXT": "production",
-        "LEGENDMURAL_CHECKOUT_PAUSED": "true",
+        "LEGENDMURAL_CHECKOUT_PAUSED": "false",
         "P3_TEST_CHECKOUT_ENABLED": "false",
         "CHECKOUT_SUCCESS_URL": "https://legendmural.com/order-success.html",
         "CHECKOUT_CANCEL_URL": "https://legendmural.com/order-cancelled.html",
