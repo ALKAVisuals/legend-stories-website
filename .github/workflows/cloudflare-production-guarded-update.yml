@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       confirm_phrase:
-        description: 'Type DEPLOY_GUARDED_P3_PREPARATION_ONLY to authorize the guarded Production update.'
+        description: 'Type DEPLOY_GUARDED_CUSTOMER_CHECKOUT_LAUNCH to authorize the guarded Production checkout launch.'
         required: true
         type: string
       expected_commit:
@@ -39,7 +39,7 @@ jobs:
             echo '::error::Refusing to deploy: this workflow may only run from main.'
             exit 1
           fi
-          if [ "$CONFIRM_PHRASE" != 'DEPLOY_GUARDED_P3_PREPARATION_ONLY' ]; then
+          if [ "$CONFIRM_PHRASE" != 'DEPLOY_GUARDED_CUSTOMER_CHECKOUT_LAUNCH' ]; then
             echo '::error::Refusing to deploy: confirmation phrase is incorrect.'
             exit 1
           fi
@@ -80,7 +80,7 @@ jobs:
       - name: Install exact application dependencies
         run: npm ci
 
-      - name: Re-prove P3 and Cloudflare guarded contracts before account mutation
+      - name: Re-prove checkout launch and Cloudflare guarded contracts before account mutation
         run: >-
           node --test
           tests/p3-controlled-payment.test.mjs
@@ -111,20 +111,30 @@ jobs:
       - name: Verify remote guarded state and required secret names after deployment
         run: node scripts/verify-cloudflare-production-guarded-update.mjs postdeploy
 
-      - name: Prove public checkout remains paused
+      - name: Prove public checkout route is active without creating an order
         shell: bash
         run: |
           set -euo pipefail
           node --input-type=module <<'NODE'
           const response = await fetch('https://legendmural.com/api/paypal/checkout', {
-            method: 'GET',
-            headers: { Accept: 'application/json' },
+            method: 'OPTIONS',
+            headers: {
+              Origin: 'https://legendmural.com',
+              'Access-Control-Request-Method': 'POST',
+            },
           });
-          const body = await response.json();
-          if (response.status !== 503 || body?.error?.code !== 'CHECKOUT_PAUSED') {
-            throw new Error(`Checkout guard proof failed: HTTP ${response.status}, code ${body?.error?.code || 'missing'}`);
+          const allowedOrigin = response.headers.get('access-control-allow-origin') || '';
+          const allowedMethods = response.headers.get('access-control-allow-methods') || '';
+          if (response.status !== 204) {
+            throw new Error(`Checkout route proof failed: expected HTTP 204, received ${response.status}.`);
           }
-          console.log('[cloudflare-production-guarded-update] live checkout remains paused.');
+          if (allowedOrigin !== 'https://legendmural.com') {
+            throw new Error(`Checkout route proof failed: unexpected Access-Control-Allow-Origin ${allowedOrigin || 'missing'}.`);
+          }
+          if (!allowedMethods.split(',').map((value) => value.trim()).includes('POST')) {
+            throw new Error(`Checkout route proof failed: POST is missing from Access-Control-Allow-Methods (${allowedMethods || 'missing'}).`);
+          }
+          console.log('[cloudflare-production-guarded-update] live checkout route is active; OPTIONS probe created no PayPal order.');
           NODE
 
       - name: Record guarded deployment boundary
@@ -136,11 +146,12 @@ jobs:
             echo
             echo "- Approved commit: $GITHUB_SHA"
             echo '- Intended Worker: legendmural-cloudflare-production'
-            echo '- Customer checkout intended state: paused'
+            echo '- Customer checkout intended state: active'
             echo '- P3 test checkout intended state: disabled'
             echo '- PayPal Live client intended state: allowed'
             echo '- Production order emails intended state: enabled'
             echo '- V3 activation intended state: disabled'
+            echo '- Postdeploy checkout proof: safe OPTIONS only; no PayPal order created'
             echo '- Secret values printed or committed: none'
             echo '- DNS/custom-domain commands: none'
             echo '- R2 object writes: none'
