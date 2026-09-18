@@ -84,3 +84,35 @@ jobs:
 
       - name: Inventory Production zone, Worker, secret names and R2 exposure with GET only
         run: node scripts/inventory-cloudflare-production-account.mjs
+
+
+  neon_runtime_role_probe:
+    name: Read-only Production order-status DB probe
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    needs: policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Exercise existing Production Neon read path without customer data
+        shell: bash
+        run: |
+          set -euo pipefail
+          endpoint='https://legendmural.com/api/order-status'
+          payload='{"reference":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","sessionId":"5O190127TN364715T"}'
+
+          for i in $(seq 1 90); do
+            status="$(
+              curl --silent --show-error                 --output /dev/null                 --write-out '%{http_code}'                 --request POST                 --header 'Content-Type: application/json'                 --header 'Origin: https://legendmural.com'                 --data "$payload"                 "$endpoint"
+            )"
+
+            if [ "$status" != '404' ]; then
+              echo "::error::Expected HTTP 404 from nonexistent read-only order lookup; got $status."
+              exit 1
+            fi
+
+            sleep 1
+          done
+
+          echo "Read-only Production Neon lookup probe completed."
