@@ -5,7 +5,12 @@ import {
 
 const REFERENCE_PATTERN = /^[a-f0-9]{64}$/;
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
-const STORAGE_BACKEND = 'netlify_blobs';
+const LEGACY_STORAGE_BACKEND = 'netlify_blobs';
+const CLOUDFLARE_R2_STORAGE_BACKEND = 'cloudflare_r2';
+const STORAGE_BACKENDS = new Set([
+  LEGACY_STORAGE_BACKEND,
+  CLOUDFLARE_R2_STORAGE_BACKEND,
+]);
 
 export class NeonV3InvoiceArtifactStoreError extends Error {
   constructor(code, message, details = {}) {
@@ -212,7 +217,7 @@ function rowToState(row, expected = {}) {
   }
   if (storageComplete) {
     if (!artifactComplete
-      || storageBackend !== STORAGE_BACKEND
+      || !STORAGE_BACKENDS.has(storageBackend)
       || storedKey !== storageKey(invoiceId, pdfSha256)
       || !Number.isSafeInteger(storedAt)
       || storedAt < 0) {
@@ -245,7 +250,7 @@ function expectedArtifact(input) {
   const pdfSha256 = sha(input.pdfSha256);
   const backend = exactText(input.storageBackend, 'storageBackend', 40);
   const key = exactText(input.storageKey, 'storageKey', 240);
-  if (backend !== STORAGE_BACKEND || key !== storageKey(invoiceId, pdfSha256)) {
+  if (!STORAGE_BACKENDS.has(backend) || key !== storageKey(invoiceId, pdfSha256)) {
     fail('INVALID_V3_INVOICE_ARTIFACT_REQUEST', 'Storage binding does not match deterministic identity.');
   }
   return Object.freeze({
@@ -347,4 +352,7 @@ export function createNeonV3InvoiceArtifactStore({
   });
 }
 
-export { STORAGE_BACKEND as V3_INVOICE_STORAGE_BACKEND };
+export {
+  LEGACY_STORAGE_BACKEND as V3_INVOICE_STORAGE_BACKEND,
+  CLOUDFLARE_R2_STORAGE_BACKEND as V3_INVOICE_CLOUDFLARE_R2_STORAGE_BACKEND,
+};
