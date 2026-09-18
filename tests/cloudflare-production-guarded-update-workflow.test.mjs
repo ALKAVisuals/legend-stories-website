@@ -25,7 +25,7 @@ const requiredDomains = [
 
 test('guarded Production update is manual-only, main-only and commit-pinned', () => {
   assert.match(workflow, /workflow_dispatch:/);
-  assert.match(workflow, /DEPLOY_GUARDED_CUSTOMER_CHECKOUT_LAUNCH/);
+  assert.match(workflow, /DEPLOY_GUARDED_V3_CHECKOUT_LAUNCH/);
   assert.match(workflow, /refs\/heads\/main/);
   assert.match(workflow, /EXPECTED_COMMIT/);
   assert.match(workflow, /GITHUB_SHA/);
@@ -52,7 +52,7 @@ test('guarded Production update cannot mutate DNS, routes, secrets, R2 objects o
   assert.doesNotMatch(workflow, /curl[^\n]*(?:POST|PUT|PATCH|DELETE)/i);
 });
 
-test('repository Production config opens customer checkout while retaining payment and V3 guards', () => {
+test('repository Production config opens customer checkout with Profile-1 invoice delivery enabled', () => {
   const production = config.env.production;
   const vars = production.vars;
   assert.equal(vars.LEGENDMURAL_DEPLOY_CONTEXT, 'production');
@@ -61,9 +61,9 @@ test('repository Production config opens customer checkout while retaining payme
   assert.equal(vars.PAYPAL_ALLOW_LIVE, 'true');
   assert.equal(vars.P3_TEST_CHECKOUT_ENABLED, 'false');
   assert.equal(vars.ORDER_EMAILS_ENABLED, 'true');
-  assert.equal(vars.V3_PROFILE1_ORDER_CREATION_ENABLED, 'false');
-  assert.equal(vars.V3_INVOICE_RECONCILIATION_ENABLED, 'false');
-  assert.equal(vars.V3_INVOICE_STORAGE_ENABLED, 'false');
+  assert.equal(vars.V3_PROFILE1_ORDER_CREATION_ENABLED, 'true');
+  assert.equal(vars.V3_INVOICE_RECONCILIATION_ENABLED, 'true');
+  assert.equal(vars.V3_INVOICE_STORAGE_ENABLED, 'true');
   assert.equal(vars.V3_DASHBOARD_INVOICE_API_ENABLED, 'false');
   assert.equal(production.workers_dev, false);
   assert.equal(production.preview_urls, false);
@@ -91,16 +91,26 @@ test('remote verifier is GET-only and checks exact Custom Domains plus PayPal Li
   assert.match(verifier, /CHECKOUT_CANCEL_URL: 'https:\/\/legendmural\.com\/order-cancelled\.html'/);
   assert.match(verifier, /CHECKOUT_ALLOWED_ORIGINS: 'https:\/\/legendmural\.com'/);
   assert.match(verifier, /P3_TEST_CHECKOUT_ENABLED/);
+  assert.match(verifier, /RESEND_FROM: 'LegendMural <orders@mail\.legendmural\.com>'/);
+  assert.match(verifier, /RESEND_REPLY_TO: 'info@legendmural\.com'/);
+  assert.match(verifier, /ORDER_NOTIFICATION_TO: 'info@legendmural\.com'/);
   assert.doesNotMatch(verifier, /clientSecret\s*[:=]\s*['"][^'"]+['"]/i);
 });
 
-test('guarded verifier proves paused preflight, active postdeploy and order emails on throughout', () => {
+test('guarded verifier proves paused/V3-off preflight and active/V3-on postdeploy with emails on throughout', () => {
   assert.match(verifier, /const expectedCheckoutPaused = mode === 'preflight' \? 'true' : 'false';/);
   assert.match(verifier, /flags\.LEGENDMURAL_CHECKOUT_PAUSED !== expectedCheckoutPaused/);
   assert.match(verifier, /const expectedOrderEmails = 'true';/);
   assert.match(verifier, /flags\.ORDER_EMAILS_ENABLED !== expectedOrderEmails/);
+  assert.match(verifier, /const expectedV3Activation = mode === 'preflight' \? 'false' : 'true';/);
+  assert.match(verifier, /V3_PROFILE1_ORDER_CREATION_ENABLED/);
+  assert.match(verifier, /V3_INVOICE_RECONCILIATION_ENABLED/);
+  assert.match(verifier, /V3_INVOICE_STORAGE_ENABLED/);
   assert.match(workflow, /Customer checkout intended state: active/);
   assert.match(workflow, /Production order emails intended state: enabled/);
+  assert.match(workflow, /V3 Profile-1 creation intended state: enabled/);
+  assert.match(workflow, /V3 invoice storage intended state: enabled/);
+  assert.match(workflow, /V3 invoice reconciliation intended state: enabled/);
 });
 
 test('live proof after deployment uses safe OPTIONS and creates no PayPal order', () => {
