@@ -4,8 +4,9 @@ import test from 'node:test';
 
 const ROOT = new URL('../', import.meta.url);
 
-const [migration, migrationRunner, netlifyConfig, packageSource] = await Promise.all([
+const [migration, migration018, migrationRunner, netlifyConfig, packageSource] = await Promise.all([
   readFile(new URL('server/db/migrations/015_add_v3_invoice_pdf_storage_binding.sql', ROOT), 'utf8'),
+  readFile(new URL('server/db/migrations/018_allow_cloudflare_r2_v3_invoice_pdf_storage.sql', ROOT), 'utf8'),
   readFile(new URL('scripts/run-neon-test-migrations.mjs', ROOT), 'utf8'),
   readFile(new URL('netlify.toml', ROOT), 'utf8'),
   readFile(new URL('package.json', ROOT), 'utf8'),
@@ -33,11 +34,31 @@ test('migration 015 makes the private PDF binding all-or-nothing and determinist
   assert.equal(/\b(DELETE|TRUNCATE)\b/.test(migration), false);
 });
 
+test('migration 018 preserves Netlify bindings and allows Cloudflare R2 bindings', () => {
+  for (const marker of [
+    'DROP CONSTRAINT IF EXISTS order_notifications_v3_pdf_storage_binding_complete',
+    "pdf_storage_backend IN ('netlify_blobs', 'cloudflare_r2')",
+    "'v1/invoices/' || invoice_id::text || '/' || pdf_sha256 || '.pdf'",
+    'pdf_stored_at >= 0',
+  ]) {
+    assert.ok(migration018.includes(marker), `missing migration 018 marker: ${marker}`);
+  }
+
+  assert.equal(/\b(DELETE|TRUNCATE)\b/.test(migration018), false);
+});
+
 test('real-Neon test migration runner applies storage binding only after artifact hardening', () => {
   const artifactHardening = migrationRunner.indexOf('014_harden_v3_invoice_artifact_identity.sql');
   const storageBinding = migrationRunner.indexOf('015_add_v3_invoice_pdf_storage_binding.sql');
   assert.ok(artifactHardening >= 0);
   assert.ok(storageBinding > artifactHardening);
+});
+
+test('real-Neon test migration runner applies Cloudflare R2 widening after migration 017', () => {
+  const accessAuditGrant = migrationRunner.indexOf('017_grant_v3_invoice_access_audit_runtime.sql');
+  const cloudflareR2Binding = migrationRunner.indexOf('018_allow_cloudflare_r2_v3_invoice_pdf_storage.sql');
+  assert.ok(accessAuditGrant >= 0);
+  assert.ok(cloudflareR2Binding > accessAuditGrant);
 });
 
 test('Netlify bundles Blobs and exposes only the server function download route', () => {
