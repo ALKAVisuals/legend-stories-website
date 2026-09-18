@@ -18,9 +18,9 @@ const expectedFlags = Object.freeze({
   P3_TEST_CHECKOUT_ENABLED: 'false',
   PAYPAL_ALLOW_LIVE: 'true',
   ORDER_EMAILS_ENABLED: 'true',
-  V3_PROFILE1_ORDER_CREATION_ENABLED: 'false',
-  V3_INVOICE_RECONCILIATION_ENABLED: 'false',
-  V3_INVOICE_STORAGE_ENABLED: 'false',
+  V3_PROFILE1_ORDER_CREATION_ENABLED: 'true',
+  V3_INVOICE_RECONCILIATION_ENABLED: 'true',
+  V3_INVOICE_STORAGE_ENABLED: 'true',
   V3_DASHBOARD_INVOICE_API_ENABLED: 'false',
 });
 
@@ -76,7 +76,7 @@ test('bootstrap workflow cannot mutate R2 objects, DNS, routes, secrets or provi
   assert.doesNotMatch(workflow, /(?:PAYPAL|RESEND|NEON)_[A-Z_]+:\s*\$\{\{/);
 });
 
-test('current Production config is domain-pinned, separate, exact-bucket and guarded', () => {
+test('current Production target config is domain-pinned, exact-bucket and V3-enabled', () => {
   const production = config.env.production;
   assert.equal(production.name, 'legendmural-cloudflare-production');
   assert.equal(production.workers_dev, false);
@@ -110,7 +110,7 @@ test('account verifier is GET-only and enforces create-only preflight plus zero 
   assert.match(verifier, /\/secrets/);
 });
 
-test('the configured Production cron remains a no-op while reconciliation is disabled', () => {
+test('the configured Production cron retains its reconciliation guard while Production enables reconciliation', () => {
   const scheduledStart = worker.indexOf('export async function handleCloudflareScheduled');
   assert.ok(scheduledStart >= 0);
   const scheduledSource = worker.slice(scheduledStart);
@@ -118,6 +118,8 @@ test('the configured Production cron remains a no-op while reconciliation is dis
     scheduledSource,
     /if \(!enabled\(env\.V3_INVOICE_RECONCILIATION_ENABLED\)\)[\s\S]*skippedReconciliation\('reconciliation_disabled'\)/,
   );
-  assert.equal(config.env.production.vars.V3_INVOICE_RECONCILIATION_ENABLED, 'false');
+  assert.equal(config.env.production.vars.V3_INVOICE_RECONCILIATION_ENABLED, 'true');
+  assert.equal(config.env.production.vars.V3_INVOICE_STORAGE_ENABLED, 'true');
+  assert.equal(config.env.production.vars.V3_PROFILE1_ORDER_CREATION_ENABLED, 'true');
   assert.equal(config.env.production.vars.ORDER_EMAILS_ENABLED, 'true');
 });

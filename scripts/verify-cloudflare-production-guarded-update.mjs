@@ -15,9 +15,9 @@ const GUARDED_FLAGS = Object.freeze({
   CHECKOUT_ALLOWED_ORIGINS: 'https://legendmural.com',
   PAYPAL_API_BASE: 'https://api-m.paypal.com',
   PAYPAL_ALLOW_LIVE: 'true',
-  V3_PROFILE1_ORDER_CREATION_ENABLED: 'false',
-  V3_INVOICE_RECONCILIATION_ENABLED: 'false',
-  V3_INVOICE_STORAGE_ENABLED: 'false',
+  RESEND_FROM: 'LegendMural <orders@mail.legendmural.com>',
+  RESEND_REPLY_TO: 'info@legendmural.com',
+  ORDER_NOTIFICATION_TO: 'info@legendmural.com',
   V3_DASHBOARD_INVOICE_API_ENABLED: 'false',
 });
 
@@ -35,6 +35,7 @@ if (!['preflight', 'postdeploy'].includes(mode)) {
 }
 const expectedCheckoutPaused = mode === 'preflight' ? 'true' : 'false';
 const expectedOrderEmails = 'true';
+const expectedV3Activation = mode === 'preflight' ? 'false' : 'true';
 
 const accountId = String(process.env.CLOUDFLARE_ACCOUNT_ID || '').trim();
 const apiToken = String(process.env.CLOUDFLARE_API_TOKEN || '').trim();
@@ -166,6 +167,16 @@ function proveGuardedFlags(settings, { requireP3Flag }) {
     throw new Error(`Production Worker guarded flag ORDER_EMAILS_ENABLED does not match the expected ${mode} value.`);
   }
 
+  for (const name of [
+    'V3_PROFILE1_ORDER_CREATION_ENABLED',
+    'V3_INVOICE_RECONCILIATION_ENABLED',
+    'V3_INVOICE_STORAGE_ENABLED',
+  ]) {
+    if (flags[name] !== expectedV3Activation) {
+      throw new Error(`Production Worker guarded flag ${name} does not match the expected ${mode} value.`);
+    }
+  }
+
   const p3Value = flags.P3_TEST_CHECKOUT_ENABLED;
   if (requireP3Flag) {
     if (p3Value !== 'false') {
@@ -218,6 +229,9 @@ console.log(JSON.stringify({
   paypalLiveEndpointProven: true,
   p3TestCheckoutEnabled: false,
   orderEmailsEnabled: expectedOrderEmails === 'true',
+  v3Profile1CreationEnabled: expectedV3Activation === 'true',
+  v3InvoiceReconciliationEnabled: expectedV3Activation === 'true',
+  v3InvoiceStorageEnabled: expectedV3Activation === 'true',
   requiredSecretNamesPresent: REQUIRED_SECRET_NAMES,
   r2Binding: r2,
   r2PublicExposureDetected: false,
@@ -238,7 +252,10 @@ if (process.env.GITHUB_STEP_SUMMARY) {
       '- Resend API secret name present: true',
       '- P3 controlled checkout enabled: false',
       `- Order emails enabled: ${expectedOrderEmails}`,
-      '- V3 activation flags enabled: false',
+      `- V3 Profile-1 creation enabled: ${expectedV3Activation}`,
+      `- V3 invoice reconciliation enabled: ${expectedV3Activation}`,
+      `- V3 invoice storage enabled: ${expectedV3Activation}`,
+      '- V3 dashboard invoice API enabled: false',
       `- R2 binding: V3_INVOICE_PDFS -> ${PROD_R2_BUCKET}`,
       '- Required Production secret names present: true',
       '- Secret values read or printed: false',
