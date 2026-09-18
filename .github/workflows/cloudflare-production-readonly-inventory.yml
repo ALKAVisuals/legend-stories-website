@@ -84,3 +84,38 @@ jobs:
 
       - name: Inventory Production zone, Worker, secret names and R2 exposure with GET only
         run: node scripts/inventory-cloudflare-production-account.mjs
+
+
+  credential_presence:
+    name: Read-only deployment credential presence
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    needs: policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_API_TOKEN: ${{ secrets.NEON_API_TOKEN }}
+      NEON_PROJECT_API_KEY: ${{ secrets.NEON_PROJECT_API_KEY }}
+    steps:
+      - name: Report presence only
+        shell: bash
+        run: |
+          set -euo pipefail
+          present() {
+            if [ -n "${!1:-}" ]; then
+              echo "$1=true"
+            else
+              echo "$1=false"
+            fi
+          }
+
+          present CLOUDFLARE_API_TOKEN
+          present CLOUDFLARE_ACCOUNT_ID
+          present NEON_API_KEY
+          present NEON_API_TOKEN
+          present NEON_PROJECT_API_KEY
+          echo "No credential values are printed."
