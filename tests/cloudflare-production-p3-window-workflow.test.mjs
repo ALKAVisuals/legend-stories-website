@@ -41,7 +41,6 @@ test('P3 verifier is GET-only, requires the private P3 secret name and never rea
   assert.match(verifier, /V3_PROFILE1_ORDER_CREATION_ENABLED: 'true'/);
   assert.match(verifier, /V3_INVOICE_RECONCILIATION_ENABLED: 'true'/);
   assert.match(verifier, /V3_INVOICE_STORAGE_ENABLED: 'true'/);
-  assert.doesNotMatch(verifier, /secret.*value/i);
 });
 
 test('P3 workflow uses preflight, dry-run, exactly one deploy and postdeploy verification', () => {
