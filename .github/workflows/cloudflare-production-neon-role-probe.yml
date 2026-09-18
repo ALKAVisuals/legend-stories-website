@@ -1,0 +1,59 @@
+name: Cloudflare Production Neon runtime role probe
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/cloudflare-production-neon-role-probe.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-production-neon-role-probe-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: Read-only Production order-status DB probe
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Explain safety boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Read-only probe: POST a synthetic nonexistent order lookup to the existing Production order-status endpoint."
+          echo "No secret, customer identifier, payment, checkout creation, database write, deploy, flag change or R2/email action is used."
+
+      - name: Exercise existing Production Neon read path without customer data
+        shell: bash
+        run: |
+          set -euo pipefail
+          endpoint='https://legendmural.com/api/order-status'
+          payload='{"reference":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","sessionId":"5O190127TN364715T"}'
+
+          for i in $(seq 1 90); do
+            status="$(
+              curl --silent --show-error                 --output /dev/null                 --write-out '%{http_code}'                 --request POST                 --header 'Content-Type: application/json'                 --header 'Origin: https://legendmural.com'                 --data "$payload"                 "$endpoint"
+            )"
+
+            case "$status" in
+              404)
+                ;;
+              503)
+                echo "::error::Production order-status read path is not configured or unavailable."
+                exit 1
+                ;;
+              *)
+                echo "::error::Unexpected HTTP status from safe Production read probe: $status"
+                exit 1
+                ;;
+            esac
+
+            sleep 1
+          done
+
+          echo "Read-only Production order-status probe completed with 404-only nonexistent lookups."
