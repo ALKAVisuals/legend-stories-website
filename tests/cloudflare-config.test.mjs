@@ -25,10 +25,11 @@ async function config() {
   return JSON.parse(await readFile(configUrl, 'utf8'));
 }
 
-function assertGuarded(vars, { checkoutPaused = 'true', v3Enabled = false } = {}) {
+function assertGuarded(vars, { checkoutPaused = 'true', v3Enabled = false, p3Enabled = false } = {}) {
   const expectedV3 = v3Enabled ? 'true' : 'false';
+  const expectedP3 = p3Enabled ? 'true' : 'false';
   assert.equal(vars.LEGENDMURAL_CHECKOUT_PAUSED, checkoutPaused);
-  assert.equal(vars.P3_TEST_CHECKOUT_ENABLED, 'false');
+  assert.equal(vars.P3_TEST_CHECKOUT_ENABLED, expectedP3);
   assert.equal(vars.V3_PROFILE1_ORDER_CREATION_ENABLED, expectedV3);
   assert.equal(vars.V3_INVOICE_RECONCILIATION_ENABLED, expectedV3);
   assert.equal(vars.V3_INVOICE_STORAGE_ENABLED, expectedV3);
@@ -117,7 +118,7 @@ test('production environment is explicitly separate, Custom-Domain pinned and V3
     { pattern: 'www.legendmural.com', custom_domain: true },
   ]);
   assert.equal(production.vars.LEGENDMURAL_DEPLOY_CONTEXT, 'production');
-  assertGuarded(production.vars, { checkoutPaused: 'false', v3Enabled: true });
+  assertGuarded(production.vars, { checkoutPaused: 'false', v3Enabled: true, p3Enabled: true });
   assert.equal(production.vars.PAYPAL_ALLOW_LIVE, 'true');
   assert.equal(production.vars.ORDER_EMAILS_ENABLED, 'true');
   assertNoSecretsInVars(production.vars);
