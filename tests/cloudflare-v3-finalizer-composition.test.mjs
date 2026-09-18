@@ -30,8 +30,13 @@ function completeSyntheticConfig() {
   };
 }
 
-test('Cloudflare approved Profile-1 business/legal config remains fail-closed by default', () => {
-  assert.equal(resolveCloudflareV3PaidFinalizationConfig(), null);
+test('Cloudflare approved Profile-1 business/legal config is resolved by default', () => {
+  const config = resolveCloudflareV3PaidFinalizationConfig();
+
+  assert.equal(config?.enabled, true);
+  assert.equal(typeof config?.numberingPolicy?.resolveSeriesKey, 'function');
+  assert.equal(typeof config?.numberingPolicy?.format, 'function');
+  assert.equal(typeof config?.documentContextProvider, 'function');
 });
 
 test('Cloudflare checkout rejects Profile-1 activation before durable mutation when approved config is absent', async () => {
@@ -49,6 +54,7 @@ test('Cloudflare checkout rejects Profile-1 activation before durable mutation w
   }, {
     successUrl: 'https://legendmural.com/order-success.html',
     cancelUrl: 'https://legendmural.com/order-cancelled.html',
+    v3PaidFinalization: null,
   });
   const payload = await response.json();
 
