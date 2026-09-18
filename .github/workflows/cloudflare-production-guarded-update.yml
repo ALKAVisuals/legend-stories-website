@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       confirm_phrase:
-        description: 'Type DEPLOY_GUARDED_CUSTOMER_CHECKOUT_LAUNCH to authorize the guarded Production checkout launch.'
+        description: 'Type DEPLOY_GUARDED_V3_CHECKOUT_LAUNCH to authorize the guarded Production checkout launch.'
         required: true
         type: string
       expected_commit:
@@ -39,7 +39,7 @@ jobs:
             echo '::error::Refusing to deploy: this workflow may only run from main.'
             exit 1
           fi
-          if [ "$CONFIRM_PHRASE" != 'DEPLOY_GUARDED_CUSTOMER_CHECKOUT_LAUNCH' ]; then
+          if [ "$CONFIRM_PHRASE" != 'DEPLOY_GUARDED_V3_CHECKOUT_LAUNCH' ]; then
             echo '::error::Refusing to deploy: confirmation phrase is incorrect.'
             exit 1
           fi
@@ -85,6 +85,8 @@ jobs:
           node --test
           tests/p3-controlled-payment.test.mjs
           tests/cloudflare-config.test.mjs
+          tests/cloudflare-v3-paid-finalization-config.test.mjs
+          tests/cloudflare-r2-neon-v3-invoice-artifact-binding.test.mjs
           tests/cloudflare-production-guarded-update-workflow.test.mjs
 
       - name: Build storefront static assets
@@ -150,7 +152,10 @@ jobs:
             echo '- P3 test checkout intended state: disabled'
             echo '- PayPal Live client intended state: allowed'
             echo '- Production order emails intended state: enabled'
-            echo '- V3 activation intended state: disabled'
+            echo '- V3 Profile-1 creation intended state: enabled'
+            echo '- V3 invoice storage intended state: enabled'
+            echo '- V3 invoice reconciliation intended state: enabled'
+            echo '- V3 dashboard invoice API intended state: disabled'
             echo '- Postdeploy checkout proof: safe OPTIONS only; no PayPal order created'
             echo '- Secret values printed or committed: none'
             echo '- DNS/custom-domain commands: none'
