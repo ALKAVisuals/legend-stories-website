@@ -13,7 +13,7 @@ const worker = await readFile(workerUrl, 'utf8');
 test('temporary P3 page is unlinked-style, noindex and explains the one-click boundary', () => {
   assert.match(html, /<meta name="robots" content="noindex,nofollow,noarchive">/);
   assert.match(html, /Click Start only once/);
-  assert.match(html, /Do not pay until the pending Profile-1 order has been checked/);
+  assert.match(html, /do not pay until the pending Profile-1 order has been checked/i);
   assert.match(html, /type="password"/);
   assert.match(html, /p3-v3-one-cent-test\.mjs/);
 });
