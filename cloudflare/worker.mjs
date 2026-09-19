@@ -7,6 +7,7 @@ export const CLOUDFLARE_API_ROUTES = Object.freeze([
   '/api/withdrawal',
   '/api/invoice-download',
   '/api/internal/dashboard-invoice',
+  '/api/internal/p3-v3-one-cent-start',
 ]);
 
 const API_ROUTE_SET = new Set(CLOUDFLARE_API_ROUTES);
@@ -80,6 +81,122 @@ function checkoutPausedResponse() {
   });
 }
 
+const P3_V3_WINDOW_KEY_SHA256 = 'c6fd26ba7e116fb9329e64cb123a5d47059c9f232b6de6dd4143aec326dd4b8d';
+
+async function sha256Hex(value) {
+  const bytes = new TextEncoder().encode(String(value || ''));
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+function timingSafeEqual(left, right) {
+  const a = String(left || '');
+  const b = String(right || '');
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let index = 0; index < a.length; index += 1) {
+    diff |= a.charCodeAt(index) ^ b.charCodeAt(index);
+  }
+  return diff === 0;
+}
+
+function validP3Secret(value) {
+  const token = String(value || '');
+  return token.length >= 32
+    && token.length <= 512
+    && !/[\u0000-\u001f\u007f]/.test(token);
+}
+
+async function handleP3V3OneCentStart(request, env) {
+  if (!productionContext(env) || !enabled(env.P3_TEST_CHECKOUT_ENABLED)) {
+    return jsonResponse(404, {
+      error: {
+        code: 'API_ROUTE_NOT_FOUND',
+        message: 'The requested API route does not exist.',
+      },
+    });
+  }
+  if (request.method !== 'POST') {
+    return jsonResponse(405, {
+      error: {
+        code: 'METHOD_NOT_ALLOWED',
+        message: 'Only POST is allowed.',
+      },
+    });
+  }
+
+  const requestOrigin = normalizedOrigin(request.headers.get('origin') || '');
+  if (requestOrigin !== 'https://legendmural.com') {
+    return jsonResponse(403, {
+      error: {
+        code: 'ORIGIN_NOT_ALLOWED',
+        message: 'Request origin is not allowed.',
+      },
+    });
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return jsonResponse(400, {
+      error: {
+        code: 'INVALID_JSON',
+        message: 'Request body is invalid JSON.',
+      },
+    });
+  }
+
+  const providedHash = await sha256Hex(payload?.key);
+  if (!timingSafeEqual(providedHash, P3_V3_WINDOW_KEY_SHA256)) {
+    return jsonResponse(403, {
+      error: {
+        code: 'P3_TEST_WINDOW_UNAUTHORIZED',
+        message: 'The temporary test code is invalid.',
+      },
+    });
+  }
+
+  const p3Token = String(env.P3_TEST_CHECKOUT_TOKEN || '');
+  if (!validP3Secret(p3Token)) {
+    return jsonResponse(503, {
+      error: {
+        code: 'P3_TEST_WINDOW_NOT_CONFIGURED',
+        message: 'The temporary test window is not configured.',
+      },
+    });
+  }
+
+  const runtime = await loadApiRuntime();
+  const checkoutRequest = new Request('https://legendmural.com/api/paypal/checkout', {
+    method: 'POST',
+    headers: {
+      Origin: 'https://legendmural.com',
+      'Content-Type': 'application/json',
+      'x-legendmural-p3-test-token': p3Token,
+    },
+    body: JSON.stringify({
+      request: {
+        items: [{
+          slug: '__p3-controlled-payment-test__',
+          quantity: 1,
+        }],
+        countryCode: 'NL',
+        discountCode: '',
+      },
+      customer: payload?.customer,
+    }),
+  });
+
+  return runtime.handleActiveCheckout(
+    checkoutRequest,
+    env,
+    resolveCloudflarePayPalReturnUrls(checkoutRequest, env),
+  );
+}
+
 function dashboardDisabledResponse(request, env) {
   if (request.headers.get('origin')) {
     return jsonResponse(403, {
@@ -145,6 +262,10 @@ export async function routeCloudflareApi(request, env) {
   if (pathname === '/api/internal/dashboard-invoice') {
     const disabled = dashboardDisabledResponse(request, env);
     if (disabled) return disabled;
+  }
+
+  if (pathname === '/api/internal/p3-v3-one-cent-start') {
+    return handleP3V3OneCentStart(request, env);
   }
 
   if (pathname === '/api/contact' || pathname === '/api/withdrawal') {
