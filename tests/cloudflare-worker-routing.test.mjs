@@ -19,6 +19,7 @@ const EXPECTED_ROUTES = Object.freeze([
   '/api/withdrawal',
   '/api/invoice-download',
   '/api/internal/dashboard-invoice',
+  '/api/internal/p3-v3-one-cent-start',
 ]);
 
 test('Cloudflare Worker exposes the customer and commerce API contract', () => {
@@ -154,6 +155,61 @@ test('Stage C Production API routes fail closed with zero application secrets', 
     const payload = await response.json();
     assert.equal(payload.error.code, code, pathname);
   }
+});
+
+
+test('temporary P3 browser start route is hidden while P3 is disabled', async () => {
+  const response = await routeCloudflareApi(
+    new Request('https://legendmural.com/api/internal/p3-v3-one-cent-start', {
+      method: 'POST',
+      headers: {
+        origin: 'https://legendmural.com',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ key: 'not-used', customer: {} }),
+    }),
+    {
+      LEGENDMURAL_DEPLOY_CONTEXT: 'production',
+      P3_TEST_CHECKOUT_ENABLED: 'false',
+    },
+  );
+
+  assert.equal(response.status, 404);
+  const payload = await response.json();
+  assert.equal(payload.error.code, 'API_ROUTE_NOT_FOUND');
+});
+
+test('temporary P3 browser start route rejects an invalid one-time code before checkout bootstrap', async () => {
+  const response = await routeCloudflareApi(
+    new Request('https://legendmural.com/api/internal/p3-v3-one-cent-start', {
+      method: 'POST',
+      headers: {
+        origin: 'https://legendmural.com',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        key: 'definitely-wrong',
+        customer: {
+          firstname: 'Test',
+          lastname: 'Buyer',
+          email: 'buyer@example.invalid',
+          street: 'Teststraat 1',
+          line2: '',
+          zip: '1234 AB',
+          city: 'Nijmegen',
+          country: 'NL',
+        },
+      }),
+    }),
+    {
+      LEGENDMURAL_DEPLOY_CONTEXT: 'production',
+      P3_TEST_CHECKOUT_ENABLED: 'true',
+    },
+  );
+
+  assert.equal(response.status, 403);
+  const payload = await response.json();
+  assert.equal(payload.error.code, 'P3_TEST_WINDOW_UNAUTHORIZED');
 });
 
 test('dashboard invoice API cannot be activated by a preview context flag', async () => {
