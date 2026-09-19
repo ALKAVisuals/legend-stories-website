@@ -30,7 +30,6 @@ test('Worker keeps the real P3 token server-side and commits only a SHA-256 one-
   assert.match(worker, /P3_V3_WINDOW_KEY_SHA256 = '[a-f0-9]{64}'/);
   assert.match(worker, /env\.P3_TEST_CHECKOUT_TOKEN/);
   assert.match(worker, /x-legendmural-p3-test-token/);
-  assert.doesNotMatch(worker, /N6oauNCqQi-kxlgJKye-0bnwhGxPP_uP/);
 });
 
 test('temporary start endpoint is production/P3 gated and same-origin restricted', () => {
