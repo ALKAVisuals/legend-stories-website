@@ -2,7 +2,7 @@
 
 **Updated:** 2026-09-21  
 **Repository:** `ALKAVisuals/legend-stories-website`  
-**Latest synchronized main before this proof update:** `15191d4a93ea6580c12887971f4238220954afb4`  
+**Latest synchronized main:** `734454c28e28d557969428996507188a2dc85c88`  
 **Purpose:** compact source of truth for the current Cloudflare / PayPal / V3 checkout and invoice-delivery state.
 
 > Read this before older Cloudflare, P3 or V3 status files. Older dated handoffs remain historical evidence but do not override this checkpoint.
@@ -134,11 +134,11 @@ Important safety result:
 - postdeploy proof was skipped;
 - no PayPal order/payment/email/Neon/R2 mutation occurred.
 
-A workflow-only repair is being prepared so routine Production redeploys verify the already-active state before deployment while preserving the historical launch preflight mode for auditability.
+PR #293 repaired this workflow and was merged to `main` as `734454c28e28d557969428996507188a2dc85c88`. Routine guarded Production redeploys now verify the already-active state before mutation while the historical launch `preflight` mode remains available for auditability.
 
 ## Exact next engineering step
 
-> Merge the active-state guarded-redeploy workflow repair after green CI. Then obtain fresh owner approval for the new exact `main` commit and rerun the guarded Production workflow. Do not reuse the failed run or its old approved commit SHA.
+> PR #293 is merged. Obtain fresh owner approval for exact `main` `734454c28e28d557969428996507188a2dc85c88`, then rerun `.github/workflows/cloudflare-production-guarded-update.yml` with confirmation phrase `DEPLOY_GUARDED_V3_CHECKOUT_LAUNCH`. Do not reuse the failed run or old commit SHA.
 
 ## Dashboard state
 
