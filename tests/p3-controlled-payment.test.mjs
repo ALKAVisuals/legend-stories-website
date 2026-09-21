@@ -98,6 +98,12 @@ test('P3 controlled product produces an authoritative EUR 0.01 grand total with 
   assert.equal(quote.amountInCents.shipping, 0);
   assert.equal(quote.amountInCents.grandTotal, 1);
   assert.equal(quote.shipping.qualifiesForFreeShipping, true);
+  assert.equal(quote.items.length, 1);
+  assert.equal(quote.items[0].variantId, 'p3-test');
+  assert.equal(quote.items[0].variantLabel, 'P3 Test');
+  assert.equal(quote.items[0].sizeLabel, '1 cm');
+  assert.equal(quote.items[0].unitPrice, 0.01);
+  assert.equal(quote.items[0].lineTotal, 0.01);
 });
 
 test('ordinary products retain normal Netherlands shipping', () => {
