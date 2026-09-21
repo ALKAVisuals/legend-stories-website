@@ -15,11 +15,23 @@ async function sha256Hex(value) {
     .join('');
 }
 
+function normalizeRecoveryText(value) {
+  return String(value || '')
+    .normalize('NFKC')
+    .replace(/[\u200B-\u200D\u2060\uFEFF]/g, '')
+    .replace(/[`'"“”‘’]/g, '')
+    .replace(/\s+/g, '')
+    .trim();
+}
+
 function decodeRecovery(value) {
-  const raw = String(value || '').trim();
-  const match = /^LMR1:([a-f0-9]{64}):([A-Z0-9]{1,36})$/.exec(raw);
+  const raw = normalizeRecoveryText(value);
+  const match = /^LMR1:([a-f0-9]{64}):([a-z0-9]{1,36})$/i.exec(raw);
   if (!match) throw new Error('INVALID_RECOVERY_CODE');
-  return { reference: match[1], orderId: match[2] };
+  return {
+    reference: match[1].toLowerCase(),
+    orderId: match[2].toUpperCase(),
+  };
 }
 
 form?.addEventListener('submit', async (event) => {
