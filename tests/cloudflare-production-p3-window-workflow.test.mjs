@@ -21,10 +21,10 @@ test('P3 window workflow is manual-only, main-only, commit-pinned and supports e
   assert.doesNotMatch(workflow, /\bpull_request:/);
 });
 
-test('temporary repository target enables only the existing P3 gate while preserving live V3 and email state', () => {
+test('repository target disables the temporary P3 gate while preserving live V3 and email state', () => {
   const vars = config.env.production.vars;
   assert.equal(vars.LEGENDMURAL_CHECKOUT_PAUSED, 'false');
-  assert.equal(vars.P3_TEST_CHECKOUT_ENABLED, 'true');
+  assert.equal(vars.P3_TEST_CHECKOUT_ENABLED, 'false');
   assert.equal(vars.PAYPAL_ALLOW_LIVE, 'true');
   assert.equal(vars.ORDER_EMAILS_ENABLED, 'true');
   assert.equal(vars.V3_PROFILE1_ORDER_CREATION_ENABLED, 'true');
