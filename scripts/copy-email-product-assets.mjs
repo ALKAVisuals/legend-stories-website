@@ -23,7 +23,7 @@ for (const product of products) {
   }
 
   const source = resolve(ROOT, asset.sourcePath);
-  const destination = resolve(DIST, asset.publicPath.replace(/^\\/+/, ''));
+  const destination = resolve(DIST, asset.publicPath.startsWith('/') ? asset.publicPath.slice(1) : asset.publicPath);
   if (!source.startsWith(`${ROOT}/`) || !destination.startsWith(`${OUTPUT_ROOT}/`)) {
     throw new Error(`Unsafe email product asset path for ${product.productId}.`);
   }
