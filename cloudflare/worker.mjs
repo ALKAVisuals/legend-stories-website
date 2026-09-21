@@ -81,7 +81,7 @@ function checkoutPausedResponse() {
   });
 }
 
-const P3_V3_WINDOW_KEY_SHA256 = 'c6fd26ba7e116fb9329e64cb123a5d47059c9f232b6de6dd4143aec326dd4b8d';
+const P3_V3_WINDOW_KEY_SHA256 = 'b9c882ed809231911a641d0c49bcf297e0722b705d3f48cb0c37f1988f157c83';
 
 async function sha256Hex(value) {
   const bytes = new TextEncoder().encode(String(value || ''));
