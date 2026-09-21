@@ -52,14 +52,14 @@ test('guarded Production update cannot mutate DNS, routes, secrets, R2 objects o
   assert.doesNotMatch(workflow, /curl[^\n]*(?:POST|PUT|PATCH|DELETE)/i);
 });
 
-test('repository Production config temporarily targets the controlled P3 window with V3 invoice delivery enabled', () => {
+test('repository Production config targets normal V3 checkout with the temporary P3 window disabled', () => {
   const production = config.env.production;
   const vars = production.vars;
   assert.equal(vars.LEGENDMURAL_DEPLOY_CONTEXT, 'production');
   assert.equal(vars.LEGENDMURAL_CHECKOUT_PAUSED, 'false');
   assert.equal(vars.PAYPAL_API_BASE, 'https://api-m.paypal.com');
   assert.equal(vars.PAYPAL_ALLOW_LIVE, 'true');
-  assert.equal(vars.P3_TEST_CHECKOUT_ENABLED, 'true');
+  assert.equal(vars.P3_TEST_CHECKOUT_ENABLED, 'false');
   assert.equal(vars.ORDER_EMAILS_ENABLED, 'true');
   assert.equal(vars.V3_PROFILE1_ORDER_CREATION_ENABLED, 'true');
   assert.equal(vars.V3_INVOICE_RECONCILIATION_ENABLED, 'true');
