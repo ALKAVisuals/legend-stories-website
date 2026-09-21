@@ -16,13 +16,18 @@ test('temporary recovery page is noindex and explicitly does not create a second
   assert.match(html, /p3-v3-one-cent-resume\.mjs/);
 });
 
-test('recovery client validates the owner code before restoring browser return context', () => {
+test('recovery client validates the owner code and finalizes only the decoded existing PayPal order', () => {
   assert.match(client, /EXPECTED_KEY_SHA256 = '[a-f0-9]{64}'/);
   assert.match(client, /INVALID_TEST_CODE/);
   assert.match(client, /\^LMR1:/);
   assert.match(client, /legendCheckoutSessionId/);
   assert.match(client, /legendCheckoutReference/);
-  assert.match(client, /order-success\.html\?token=/);
+  assert.match(client, /fetch\('\/api\/paypal\/capture'/);
+  assert.match(client, /JSON\.stringify\(\{ reference, orderId \}\)/);
+  assert.match(client, /result\?\.status !== 'paid'/);
+  assert.match(client, /result\?\.paid !== true/);
+  assert.match(client, /Payment confirmation completed\. Do not submit again\./);
+  assert.doesNotMatch(client, /p3-v3-one-cent-start/);
 });
 
 test('recovery client contains no concrete Production order identity', () => {
