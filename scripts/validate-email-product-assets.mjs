@@ -20,7 +20,7 @@ for (const product of products) {
   seen.add(asset.publicPath);
 
   const source = await stat(resolve(ROOT, asset.sourcePath));
-  const output = await stat(resolve(DIST, asset.publicPath.replace(/^\\/+/, '')));
+  const output = await stat(resolve(DIST, asset.publicPath.startsWith('/') ? asset.publicPath.slice(1) : asset.publicPath));
   if (!source.isFile() || !output.isFile() || source.size !== output.size || output.size < 1) {
     throw new Error(`Email product asset validation failed for ${product.productId}.`);
   }
