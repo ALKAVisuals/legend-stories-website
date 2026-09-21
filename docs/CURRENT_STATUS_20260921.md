@@ -110,9 +110,35 @@ No Production deploy, payment, Resend send, Neon/R2 mutation or dashboard change
 
 Resend's supported CID attachment mechanism is used so the receiving mail client no longer has to hot-link the logo or product artwork itself.
 
+## Failed guarded deploy attempt — no Production mutation
+
+Owner-approved GitHub Actions run `35605332116` attempted to deploy current `main` `309ecd34b9dc9f5146b7b98ca8594780b85e5d21`, but failed safely before the dry-run/deploy steps.
+
+The failure was in the read-only preflight verifier:
+
+```text
+Production Worker guarded flag LEGENDMURAL_CHECKOUT_PAUSED does not match the expected preflight value.
+```
+
+Cause: the guarded workflow still used the original launch-era `preflight` contract, which expects checkout paused and V3 disabled. Production is already correctly in the post-launch active state, so that historical preflight is no longer valid for routine guarded redeploys.
+
+Important safety result:
+
+- exact commit/confirmation gate passed;
+- credentials gate passed;
+- repository tests passed;
+- storefront build passed;
+- read-only Cloudflare verification detected the state mismatch;
+- dry-run was skipped;
+- real deploy was skipped;
+- postdeploy proof was skipped;
+- no PayPal order/payment/email/Neon/R2 mutation occurred.
+
+A workflow-only repair is being prepared so routine Production redeploys verify the already-active state before deployment while preserving the historical launch preflight mode for auditability.
+
 ## Exact next engineering step
 
-> PR #291 is merged. The next action is a separate owner-approved Cloudflare Production deployment of current `main` so renderer v3/CID images become live. Do not deploy or create another real-money test without a new explicit Production approval.
+> Merge the active-state guarded-redeploy workflow repair after green CI. Then obtain fresh owner approval for the new exact `main` commit and rerun the guarded Production workflow. Do not reuse the failed run or its old approved commit SHA.
 
 ## Dashboard state
 
