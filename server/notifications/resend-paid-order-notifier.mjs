@@ -131,7 +131,9 @@ function normalizeV3InlineImages(value, rendererVersion) {
       });
     }
     if (remote.origin !== V3_INLINE_IMAGE_ORIGIN
-      || !['/media/stikkers/', '/media/browser-products/'].some((prefix) => remote.pathname.startsWith(prefix))
+      || !remote.pathname.startsWith('/email-products/')
+      || remote.search
+      || remote.hash
       || remote.username
       || remote.password) {
       fail('RESEND_PAID_ORDER_INVALID_MESSAGE', `${field}.path is not an approved LegendMural image URL.`, {
