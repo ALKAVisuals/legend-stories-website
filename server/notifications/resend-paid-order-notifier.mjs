@@ -1,6 +1,10 @@
 const RESEND_EMAIL_ENDPOINT = 'https://api.resend.com/emails';
 const V3_REFERENCE_PATTERN = /^[a-f0-9]{64}$/;
-const SUPPORTED_V3_EMAIL_RENDERER_VERSIONS = new Set([1, 2]);
+const SUPPORTED_V3_EMAIL_RENDERER_VERSIONS = new Set([1, 2, 3]);
+const MAX_V3_INLINE_IMAGES = 51;
+const V3_INLINE_IMAGE_CONTENT_ID_PATTERN = /^[A-Za-z0-9._-]{1,127}$/;
+const V3_INLINE_IMAGE_CONTENT_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
+const V3_INLINE_IMAGE_ORIGIN = 'https://legendmural.com';
 
 export class ResendPaidOrderNotifierError extends Error {
   constructor(code, message, details = {}) {
@@ -57,6 +61,89 @@ function normalizeV3OrderReference(value) {
   return reference;
 }
 
+function normalizeV3InlineImages(value, rendererVersion) {
+  if (value === null || value === undefined) return Object.freeze([]);
+  if (!Array.isArray(value) || value.length > MAX_V3_INLINE_IMAGES) {
+    fail('RESEND_PAID_ORDER_INVALID_MESSAGE', 'renderedEmail.inlineImages is invalid.', {
+      field: 'renderedEmail.inlineImages',
+    });
+  }
+  if (rendererVersion < 3 && value.length > 0) {
+    fail('RESEND_PAID_ORDER_INVALID_MESSAGE', 'Inline images require renderer version 3 or later.', {
+      field: 'renderedEmail.inlineImages',
+    });
+  }
+
+  const seenContentIds = new Set();
+  const normalized = value.map((image, index) => {
+    const field = `renderedEmail.inlineImages[${index}]`;
+    if (!image || typeof image !== 'object' || Array.isArray(image)) {
+      fail('RESEND_PAID_ORDER_INVALID_MESSAGE', `${field} is invalid.`, { field });
+    }
+
+    const filename = String(image.filename || '').trim();
+    if (!filename || filename.length > 200 || /[\u0000-\u001F\u007F\\/]/.test(filename)) {
+      fail('RESEND_PAID_ORDER_INVALID_MESSAGE', `${field}.filename is invalid.`, {
+        field: `${field}.filename`,
+      });
+    }
+
+    const contentId = String(image.contentId || '').trim();
+    if (!V3_INLINE_IMAGE_CONTENT_ID_PATTERN.test(contentId) || seenContentIds.has(contentId)) {
+      fail('RESEND_PAID_ORDER_INVALID_MESSAGE', `${field}.contentId is invalid.`, {
+        field: `${field}.contentId`,
+      });
+    }
+    seenContentIds.add(contentId);
+
+    const contentType = String(image.contentType || '').trim().toLowerCase();
+    if (!V3_INLINE_IMAGE_CONTENT_TYPES.has(contentType)) {
+      fail('RESEND_PAID_ORDER_INVALID_MESSAGE', `${field}.contentType is invalid.`, {
+        field: `${field}.contentType`,
+      });
+    }
+
+    const contentBase64 = typeof image.contentBase64 === 'string' ? image.contentBase64.trim() : '';
+    const path = typeof image.path === 'string' ? image.path.trim() : '';
+    if (Boolean(contentBase64) === Boolean(path)) {
+      fail('RESEND_PAID_ORDER_INVALID_MESSAGE', `${field} must contain exactly one image source.`, {
+        field,
+      });
+    }
+
+    if (contentBase64) {
+      if (contentBase64.length > 2_000_000
+        || contentBase64.length % 4 !== 0
+        || !/^[A-Za-z0-9+/]+={0,2}$/.test(contentBase64)) {
+        fail('RESEND_PAID_ORDER_INVALID_MESSAGE', `${field}.contentBase64 is invalid.`, {
+          field: `${field}.contentBase64`,
+        });
+      }
+      return Object.freeze({ filename, contentId, contentType, contentBase64 });
+    }
+
+    let remote;
+    try {
+      remote = new URL(path);
+    } catch {
+      fail('RESEND_PAID_ORDER_INVALID_MESSAGE', `${field}.path is invalid.`, {
+        field: `${field}.path`,
+      });
+    }
+    if (remote.origin !== V3_INLINE_IMAGE_ORIGIN
+      || !['/media/stikkers/', '/media/browser-products/'].some((prefix) => remote.pathname.startsWith(prefix))
+      || remote.username
+      || remote.password) {
+      fail('RESEND_PAID_ORDER_INVALID_MESSAGE', `${field}.path is not an approved LegendMural image URL.`, {
+        field: `${field}.path`,
+      });
+    }
+    return Object.freeze({ filename, contentId, contentType, path: remote.href });
+  });
+
+  return Object.freeze(normalized);
+}
+
 function normalizeV3RenderedEmail(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     fail('RESEND_PAID_ORDER_INVALID_MESSAGE', 'renderedEmail is invalid.', {
@@ -72,6 +159,7 @@ function normalizeV3RenderedEmail(value) {
     subject: requiredMessageString(value.subject, 'renderedEmail.subject', 998),
     text: requiredMessageString(value.text, 'renderedEmail.text', 200_000),
     html: requiredMessageString(value.html, 'renderedEmail.html', 500_000),
+    inlineImages: normalizeV3InlineImages(value.inlineImages, value.rendererVersion),
     rendererVersion: value.rendererVersion,
   });
 }
@@ -296,6 +384,13 @@ export function createResendPaidOrderNotifier({
       const rendered = normalizeV3RenderedEmail(renderedEmail);
       const pdf = normalizeV3Attachment(attachment);
 
+      const inlineAttachments = rendered.inlineImages.map((image) => ({
+        filename: image.filename,
+        ...(image.path ? { path: image.path } : { content: image.contentBase64 }),
+        content_type: image.contentType,
+        content_id: image.contentId,
+      }));
+
       const response = await fetchImpl(endpoint, {
         method: 'POST',
         headers: {
@@ -315,7 +410,7 @@ export function createResendPaidOrderNotifier({
             filename: pdf.filename,
             content: pdf.bytes.toString('base64'),
             content_type: 'application/pdf',
-          }],
+          }, ...inlineAttachments],
         }),
       });
 
