@@ -1,11 +1,10 @@
 import { V3_EMAIL_BRAND_LOGO } from './v3-email-inline-assets.mjs';
+import { resolveV3EmailProductAsset } from './v3-email-product-media.mjs';
 
 export const V3_CUSTOMER_INVOICE_EMAIL_RENDERER_VERSION = 3;
 
 const SUPPORTED_SNAPSHOT_SCHEMA_VERSION = 1;
 const SUPPORTED_CURRENCY = 'EUR';
-const BRAND_ORIGIN = 'https://legendmural.com';
-const PRODUCT_MEDIA_PREFIXES = Object.freeze(['media/stikkers/', 'media/browser-products/']);
 
 export class V3CustomerInvoiceEmailError extends Error {
   constructor(code, message, details = {}) {
@@ -176,31 +175,6 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
-function resolveProductImage(value) {
-  const raw = String(value ?? '').trim();
-  if (!raw || raw.includes('\\') || raw.includes('\u0000')) return null;
-  const relative = raw.replace(/^\/+/, '');
-  if (!PRODUCT_MEDIA_PREFIXES.some((prefix) => relative.startsWith(prefix))) return null;
-  if (relative.split('/').some((segment) => segment === '.' || segment === '..')) return null;
-
-  let url;
-  try {
-    url = new URL(`/${relative}`, `${BRAND_ORIGIN}/`);
-  } catch {
-    return null;
-  }
-  if (url.origin !== BRAND_ORIGIN) return null;
-  if (!PRODUCT_MEDIA_PREFIXES.some((prefix) => url.pathname.startsWith(`/${prefix}`))) return null;
-
-  const pathname = url.pathname.toLowerCase();
-  if (pathname.endsWith('.png')) return { path: url.href, contentType: 'image/png', extension: 'png' };
-  if (pathname.endsWith('.jpg') || pathname.endsWith('.jpeg')) {
-    return { path: url.href, contentType: 'image/jpeg', extension: 'jpg' };
-  }
-  if (pathname.endsWith('.webp')) return { path: url.href, contentType: 'image/webp', extension: 'webp' };
-  return null;
-}
-
 function buildInlineImagePlan(snapshot) {
   const inlineImages = [V3_EMAIL_BRAND_LOGO];
   const contentIdByLineIndex = new Map();
@@ -208,19 +182,19 @@ function buildInlineImagePlan(snapshot) {
   let productImageCounter = 0;
 
   snapshot.lines.forEach((line, index) => {
-    const image = resolveProductImage(line.image);
+    const image = resolveV3EmailProductAsset(line.image);
     if (!image) return;
 
-    let contentId = contentIdByPath.get(image.path);
+    let contentId = contentIdByPath.get(image.url);
     if (!contentId) {
       productImageCounter += 1;
       contentId = `legendmural-product-${productImageCounter}`;
-      contentIdByPath.set(image.path, contentId);
+      contentIdByPath.set(image.url, contentId);
       inlineImages.push(Object.freeze({
         contentId,
         filename: `legendmural-product-${productImageCounter}.${image.extension}`,
         contentType: image.contentType,
-        path: image.path,
+        path: image.url,
       }));
     }
     contentIdByLineIndex.set(index, contentId);
