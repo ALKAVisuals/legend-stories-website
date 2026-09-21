@@ -2,7 +2,7 @@
 
 **Updated:** 2026-09-21  
 **Repository:** `ALKAVisuals/legend-stories-website`  
-**Latest synchronized main:** `e37a9edb61c56d353207166c4d1b46c9b8a9d47c`  
+**Latest synchronized main:** `b93e165162af71224a0fe98e0ccd9affffca00ef`  
 **Purpose:** compact source of truth for the current Cloudflare / PayPal / V3 checkout and invoice-delivery state.
 
 > Read this before older Cloudflare, P3 or V3 status files. Older dated handoffs remain historical evidence but do not override this checkpoint.
@@ -91,7 +91,7 @@ Implemented and merged from final PR head `9faba7f8a10d218e912c1ed4ab2030dc1f813
 - V3 customer email renderer advanced to version 3;
 - canonical LegendMural logo is embedded as a CID attachment from byte-identical repository PNG data;
 - ordinary product rows render the actual immutable snapshot `line.image` as CID product artwork;
-- only approved `https://legendmural.com/media/stikkers/*` or `/media/browser-products/*` sources may be fetched by Resend;
+- the initial deployed implementation asked Resend to fetch the repository-style `/media/stikkers/*` source URL; the synthetic proof below showed that path is not a reliable deployed Static Asset URL;
 - missing/invalid product images keep the deliberate `LM` fallback tile;
 - existing PDF attachment and V3 email idempotency key are preserved;
 - unapproved external image origins fail closed before provider delivery;
@@ -168,13 +168,56 @@ V3_INVOICE_PDFS -> legendmural-v3-invoice-pdfs-prod
 
 The public checkout route returned the expected safe CORS/OPTIONS proof and **no PayPal order was created**.
 
-Therefore renderer v3 and the CID logo/product-image email implementation from PR #291 are now live in the Production Worker.
+Renderer v3 and the CID logo/product-image email implementation from PR #291 were therefore live in the Production Worker, but this deployment alone did not prove provider-side retrieval of the product image.
 
-This deployment does **not** itself prove how a specific receiving mail client visually renders the new CID images, because no new customer email was sent during the deployment.
+## Synthetic non-payment email proof — product source path failure isolated
+
+After explicit owner approval, one synthetic transactional email was submitted to Resend for visual verification without creating a PayPal order, payment, Neon order or invoice.
+
+Resend email ID:
+
+`01a0c43b-7acf-7088-ba3b-521a3af4fdc3`
+
+Observed provider state:
+
+```text
+status: failed
+message_id: null
+processed inline attachments: 1
+processed attachment: legendmural-logo.png (25,948 bytes)
+product attachment: not processed
+```
+
+This isolates the remaining defect to the product-image remote attachment source. The embedded CID logo itself was accepted by Resend. The product image source used a repository-style `https://legendmural.com/media/stikkers/*` URL which is not guaranteed to exist as that same stable path in the Vite/Cloudflare Static Assets build.
+
+No recipient delivery occurred for this failed proof.
+
+## Stable email product asset repair — IMPLEMENTED, NOT MERGED / NOT DEPLOYED
+
+The current repair branch adds a deterministic build-time Static Asset namespace:
+
+```text
+snapshot line.image:
+media/stikkers/...
+
+deployed email source:
+https://legendmural.com/email-products/stikkers/...
+```
+
+The repair:
+
+- derives the public email asset from the immutable stored snapshot `line.image`;
+- copies every catalog product image into `dist/email-products/**` during the normal production build;
+- preserves the source path hierarchy so snapshot image identity remains deterministic;
+- validates every copied asset against its source file before build completion;
+- restricts Resend remote CID sources to the dedicated `/email-products/*` namespace only;
+- rejects the old `/media/stikkers/*` remote attachment URLs in notifier validation;
+- keeps the brand logo as byte-identical embedded base64 CID data;
+- does not change PayPal, order truth, invoice truth, Neon, R2 or checkout behavior.
 
 ## Exact next engineering step
 
-> Obtain an explicit owner-approved non-payment email-render proof to a chosen test recipient, using synthetic/test invoice data only. Do not create another PayPal order or payment merely to validate the email visuals.
+> Complete CI for the stable email-product asset repair, then obtain separate owner approval to merge its exact PR head. After merge, obtain a separate Production-deploy approval before retesting one synthetic email. Do not create another PayPal order or payment for this visual proof.
 
 ## Dashboard state
 
