@@ -82,11 +82,11 @@ The latest customer-email screenshot exposed two visual/media defects that are n
    - It does not render the purchased product image.
    - The controlled P3 test item itself intentionally has `image: ''`, so it cannot prove real-product thumbnail rendering.
 
-## Customer email media fix — IMPLEMENTED / MERGE-READY, NOT DEPLOYED
+## Customer email media fix — MERGED, NOT YET DEPLOYED
 
-Storefront PR #291 implements the customer-email media repair exposed by the controlled V3 proof.
+Storefront PR #291 implemented the customer-email media repair exposed by the controlled V3 proof and was merged to `main` as `812edde5cbebf0014c1d0cfe45bfb4a7105621a3`.
 
-Implemented on PR head `5a453fa281aad61c1c8895101cab643515c54ca5`:
+Implemented and merged from final PR head `9faba7f8a10d218e912c1ed4ab2030dc1f813dd7`:
 
 - V3 customer email renderer advanced to version 3;
 - canonical LegendMural logo is embedded as a CID attachment from byte-identical repository PNG data;
@@ -112,7 +112,7 @@ Resend's supported CID attachment mechanism is used so the receiving mail client
 
 ## Exact next engineering step
 
-> Obtain separate owner approval to merge PR #291. After merge, synchronize this handoff to the merge commit. Do not deploy the email change to Cloudflare Production or create another real-money test without a new explicit Production approval.
+> PR #291 is merged. The next action is a separate owner-approved Cloudflare Production deployment of current `main` so renderer v3/CID images become live. Do not deploy or create another real-money test without a new explicit Production approval.
 
 ## Dashboard state
 
