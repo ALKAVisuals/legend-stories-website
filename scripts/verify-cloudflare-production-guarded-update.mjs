@@ -30,12 +30,13 @@ const REQUIRED_SECRET_NAMES = Object.freeze([
 ]);
 
 const mode = String(process.argv[2] || '').trim().toLowerCase();
-if (!['preflight', 'postdeploy'].includes(mode)) {
-  throw new Error('Usage: node scripts/verify-cloudflare-production-guarded-update.mjs <preflight|postdeploy>');
+if (!['preflight', 'predeploy', 'postdeploy'].includes(mode)) {
+  throw new Error('Usage: node scripts/verify-cloudflare-production-guarded-update.mjs <preflight|predeploy|postdeploy>');
 }
-const expectedCheckoutPaused = mode === 'preflight' ? 'true' : 'false';
+const isHistoricalLaunchPreflight = mode === 'preflight';
+const expectedCheckoutPaused = isHistoricalLaunchPreflight ? 'true' : 'false';
 const expectedOrderEmails = 'true';
-const expectedV3Activation = mode === 'preflight' ? 'false' : 'true';
+const expectedV3Activation = isHistoricalLaunchPreflight ? 'false' : 'true';
 
 const accountId = String(process.env.CLOUDFLARE_ACCOUNT_ID || '').trim();
 const apiToken = String(process.env.CLOUDFLARE_API_TOKEN || '').trim();
@@ -210,7 +211,7 @@ const settings = requireSuccess(
   await apiGet(`/accounts/${accountId}/workers/scripts/${encodeURIComponent(PROD_WORKER)}/settings`),
   'Production Worker settings lookup',
 );
-proveGuardedFlags(settings, { requireP3Flag: mode === 'postdeploy' });
+proveGuardedFlags(settings, { requireP3Flag: mode !== 'preflight' });
 const r2 = proveR2Binding(settings);
 
 const secrets = secretNames(requireSuccess(
@@ -219,7 +220,9 @@ const secrets = secretNames(requireSuccess(
 ));
 proveRequiredSecrets(secrets);
 
-const phase = mode === 'preflight' ? 'preflight' : 'post-deploy verification';
+const phase = mode === 'preflight'
+  ? 'historical launch preflight'
+  : (mode === 'predeploy' ? 'active-state pre-deploy verification' : 'post-deploy verification');
 console.log(`[cloudflare-production-guarded-update] ${phase} passed; no secret values were read or printed.`);
 console.log(JSON.stringify({
   worker: PROD_WORKER,
