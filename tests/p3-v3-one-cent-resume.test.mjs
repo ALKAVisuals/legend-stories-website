@@ -30,6 +30,15 @@ test('recovery client validates the owner code and finalizes only the decoded ex
   assert.doesNotMatch(client, /p3-v3-one-cent-start/);
 });
 
+test('recovery parser normalizes common clipboard artifacts while preserving strict identity shape', () => {
+  assert.match(client, /\.normalize\('NFKC'\)/);
+  assert.match(client, /\\u200B-\\u200D\\u2060\\uFEFF/);
+  assert.match(client, /replace\(\/\\s\+\/g, ''\)/);
+  assert.match(client, /\^LMR1:\(\[a-f0-9\]\{64\}\):\(\[a-z0-9\]\{1,36\}\)\$\/i/);
+  assert.match(client, /reference: match\[1\]\.toLowerCase\(\)/);
+  assert.match(client, /orderId: match\[2\]\.toUpperCase\(\)/);
+});
+
 test('recovery client contains no concrete Production order identity', () => {
   assert.doesNotMatch(client, /0b5c1de03fee2545b5567fd02e7473bd2f7cf0c544deedf3f3eed8920385d357/);
   assert.doesNotMatch(client, /3E34290805196632L/);
