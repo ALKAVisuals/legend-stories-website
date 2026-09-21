@@ -179,6 +179,64 @@ test('V3 invoice email sends one Base64 PDF attachment with stable attempt-indep
   assert.equal(body.attachments[0].content.includes('%PDF'), false);
 });
 
+test('V3 invoice email maps approved renderer inline images to Resend CID attachments', async () => {
+  const calls = [];
+  const notifier = createResendPaidOrderNotifier({
+    apiKey: 'resend-test-token',
+    from: 'LegendMural <orders@legendmural.com>',
+    replyTo: 'info@legendmural.com',
+    fetchImpl: acceptedFetch(calls),
+  });
+  const pdfBytes = Buffer.from('%PDF-1.4\nsynthetic-v3-invoice\n', 'utf8');
+
+  await notifier.sendV3InvoiceEmail({
+    to: 'ada@example.com',
+    orderReference: 'c'.repeat(64),
+    renderedEmail: renderedV3Email({
+      rendererVersion: 3,
+      html: '<!doctype html><html><body><img src="cid:legendmural-logo"><img src="cid:legendmural-product-1"></body></html>',
+      inlineImages: [
+        {
+          filename: 'legendmural-logo.png',
+          contentId: 'legendmural-logo',
+          contentType: 'image/png',
+          contentBase64: 'aGVsbG8=',
+        },
+        {
+          filename: 'legendmural-product-1.png',
+          contentId: 'legendmural-product-1',
+          contentType: 'image/png',
+          path: 'https://legendmural.com/media/stikkers/legend-one.png',
+        },
+      ],
+    }),
+    attachment: {
+      filename: 'invoice-INVOICE-77.pdf',
+      bytes: pdfBytes,
+    },
+  });
+
+  const body = JSON.parse(calls[0].options.body);
+  assert.equal(body.attachments.length, 3);
+  assert.deepEqual(body.attachments[0], {
+    filename: 'invoice-INVOICE-77.pdf',
+    content: pdfBytes.toString('base64'),
+    content_type: 'application/pdf',
+  });
+  assert.deepEqual(body.attachments[1], {
+    filename: 'legendmural-logo.png',
+    content: 'aGVsbG8=',
+    content_type: 'image/png',
+    content_id: 'legendmural-logo',
+  });
+  assert.deepEqual(body.attachments[2], {
+    filename: 'legendmural-product-1.png',
+    path: 'https://legendmural.com/media/stikkers/legend-one.png',
+    content_type: 'image/png',
+    content_id: 'legendmural-product-1',
+  });
+});
+
 test('V3 invoice email rejects invalid reference, renderer payload or PDF attachment before Resend', async () => {
   const calls = [];
   const notifier = createResendPaidOrderNotifier({
@@ -205,7 +263,7 @@ test('V3 invoice email rejects invalid reference, renderer payload or PDF attach
   await assert.rejects(
     notifier.sendV3InvoiceEmail({
       ...base,
-      renderedEmail: renderedV3Email({ rendererVersion: 3 }),
+      renderedEmail: renderedV3Email({ rendererVersion: 4 }),
     }),
     (error) => error instanceof ResendPaidOrderNotifierError
       && error.code === 'RESEND_PAID_ORDER_INVALID_MESSAGE'
@@ -228,6 +286,23 @@ test('V3 invoice email rejects invalid reference, renderer payload or PDF attach
     (error) => error instanceof ResendPaidOrderNotifierError
       && error.code === 'RESEND_PAID_ORDER_INVALID_MESSAGE'
       && error.details.field === 'attachment.filename',
+  );
+  await assert.rejects(
+    notifier.sendV3InvoiceEmail({
+      ...base,
+      renderedEmail: renderedV3Email({
+        rendererVersion: 3,
+        inlineImages: [{
+          filename: 'evil.png',
+          contentId: 'evil',
+          contentType: 'image/png',
+          path: 'https://attacker.example/evil.png',
+        }],
+      }),
+    }),
+    (error) => error instanceof ResendPaidOrderNotifierError
+      && error.code === 'RESEND_PAID_ORDER_INVALID_MESSAGE'
+      && error.details.field === 'renderedEmail.inlineImages[0].path',
   );
   assert.equal(calls.length, 0);
 });
