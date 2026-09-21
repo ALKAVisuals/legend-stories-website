@@ -14,9 +14,10 @@ function mediaType(pathname) {
 
 export function resolveV3EmailProductAsset(value) {
   const raw = String(value ?? '').trim();
-  if (!raw || raw.includes('\\\\') || raw.includes('\\u0000')) return null;
+  if (!raw || raw.includes('\\') || raw.includes('\u0000')) return null;
 
-  const sourcePath = raw.replace(/^\\/+/, '');
+  let sourcePath = raw;
+  while (sourcePath.startsWith('/')) sourcePath = sourcePath.slice(1);
   if (!SOURCE_PREFIXES.some((prefix) => sourcePath.startsWith(prefix))) return null;
   if (sourcePath.split('/').some((segment) => segment === '.' || segment === '..' || segment === '')) {
     return null;
