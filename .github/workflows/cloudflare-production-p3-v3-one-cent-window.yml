@@ -127,7 +127,12 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$WINDOW_ACTION" = 'enable' ]; then
-            node scripts/verify-cloudflare-production-guarded-update.mjs postdeploy
+            if node scripts/verify-cloudflare-production-p3-window.mjs; then
+              echo '[cloudflare-production-p3-window] exact P3=true state already active; safe redeploy preflight passed.'
+            else
+              echo '[cloudflare-production-p3-window] P3=true state not active; requiring exact normal V3 Production state before enable.'
+              node scripts/verify-cloudflare-production-guarded-update.mjs postdeploy
+            fi
           else
             node scripts/verify-cloudflare-production-p3-window.mjs
           fi
