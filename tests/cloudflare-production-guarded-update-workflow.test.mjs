@@ -33,13 +33,13 @@ test('guarded Production update is manual-only, main-only and commit-pinned', ()
   assert.doesNotMatch(workflow, /\bpull_request:/);
 });
 
-test('guarded Production update performs preflight, dry-run, one real deploy and postdeploy verification', () => {
+test('guarded Production update verifies active state, dry-runs, deploys once and post-verifies', () => {
   const deployCommands = workflow.match(/command: deploy --env production/g) || [];
   assert.equal(deployCommands.length, 1);
-  assert.match(workflow, /verify-cloudflare-production-guarded-update\.mjs preflight/);
+  assert.match(workflow, /verify-cloudflare-production-guarded-update\.mjs predeploy/);
   assert.match(workflow, /wrangler@4\.129\.0 deploy[\s\S]*--env production[\s\S]*--dry-run/);
   assert.match(workflow, /verify-cloudflare-production-guarded-update\.mjs postdeploy/);
-  assert.ok(workflow.indexOf('preflight') < workflow.indexOf('--dry-run'));
+  assert.ok(workflow.indexOf('predeploy') < workflow.indexOf('--dry-run'));
   assert.ok(workflow.indexOf('--dry-run') < workflow.indexOf('command: deploy --env production'));
   assert.ok(workflow.indexOf('command: deploy --env production') < workflow.indexOf('postdeploy'));
 });
@@ -97,12 +97,15 @@ test('remote verifier is GET-only and checks exact Custom Domains plus PayPal Li
   assert.doesNotMatch(verifier, /clientSecret\s*[:=]\s*['"][^'"]+['"]/i);
 });
 
-test('guarded verifier proves paused/V3-off preflight and active/V3-on postdeploy with emails on throughout', () => {
-  assert.match(verifier, /const expectedCheckoutPaused = mode === 'preflight' \? 'true' : 'false';/);
+test('guarded verifier preserves historical launch preflight and adds active-state predeploy verification', () => {
+  assert.match(verifier, /\['preflight', 'predeploy', 'postdeploy'\]/);
+  assert.match(verifier, /const isHistoricalLaunchPreflight = mode === 'preflight';/);
+  assert.match(verifier, /const expectedCheckoutPaused = isHistoricalLaunchPreflight \? 'true' : 'false';/);
   assert.match(verifier, /flags\.LEGENDMURAL_CHECKOUT_PAUSED !== expectedCheckoutPaused/);
   assert.match(verifier, /const expectedOrderEmails = 'true';/);
   assert.match(verifier, /flags\.ORDER_EMAILS_ENABLED !== expectedOrderEmails/);
-  assert.match(verifier, /const expectedV3Activation = mode === 'preflight' \? 'false' : 'true';/);
+  assert.match(verifier, /const expectedV3Activation = isHistoricalLaunchPreflight \? 'false' : 'true';/);
+  assert.match(verifier, /requireP3Flag: mode !== 'preflight'/);
   assert.match(verifier, /V3_PROFILE1_ORDER_CREATION_ENABLED/);
   assert.match(verifier, /V3_INVOICE_RECONCILIATION_ENABLED/);
   assert.match(verifier, /V3_INVOICE_STORAGE_ENABLED/);
