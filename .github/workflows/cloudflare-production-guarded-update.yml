@@ -92,8 +92,8 @@ jobs:
       - name: Build storefront static assets
         run: npm run build
 
-      - name: Verify existing Production Worker, guarded flags, required secret names and private R2
-        run: node scripts/verify-cloudflare-production-guarded-update.mjs preflight
+      - name: Verify existing active Production Worker, guarded flags, required secret names and private R2
+        run: node scripts/verify-cloudflare-production-guarded-update.mjs predeploy
 
       - name: Bundle exact Production update without deployment
         run: >-
