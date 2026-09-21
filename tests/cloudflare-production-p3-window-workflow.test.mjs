@@ -43,6 +43,18 @@ test('P3 verifier is GET-only, requires the private P3 secret name and never rea
   assert.match(verifier, /V3_INVOICE_STORAGE_ENABLED: 'true'/);
 });
 
+test('enable preflight accepts only exact normal V3 state or the already-active exact P3 state', () => {
+  const preflightStart = workflow.indexOf('Verify exact existing remote state before mutation');
+  const dryRunStart = workflow.indexOf('Bundle exact Production update without deployment');
+  assert.ok(preflightStart >= 0);
+  assert.ok(dryRunStart > preflightStart);
+  const preflight = workflow.slice(preflightStart, dryRunStart);
+  assert.match(preflight, /if node scripts\/verify-cloudflare-production-p3-window\.mjs; then/);
+  assert.match(preflight, /exact P3=true state already active; safe redeploy preflight passed/);
+  assert.match(preflight, /node scripts\/verify-cloudflare-production-guarded-update\.mjs postdeploy/);
+  assert.match(preflight, /P3=true state not active; requiring exact normal V3 Production state before enable/);
+});
+
 test('P3 workflow uses preflight, dry-run, exactly one deploy and postdeploy verification', () => {
   const deployCommands = workflow.match(/command: deploy --env production/g) || [];
   assert.equal(deployCommands.length, 1);
