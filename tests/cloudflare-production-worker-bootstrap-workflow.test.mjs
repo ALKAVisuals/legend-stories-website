@@ -15,7 +15,7 @@ const worker = await readFile(workerUrl, 'utf8');
 const expectedFlags = Object.freeze({
   LEGENDMURAL_DEPLOY_CONTEXT: 'production',
   LEGENDMURAL_CHECKOUT_PAUSED: 'false',
-  P3_TEST_CHECKOUT_ENABLED: 'true',
+  P3_TEST_CHECKOUT_ENABLED: 'false',
   PAYPAL_ALLOW_LIVE: 'true',
   ORDER_EMAILS_ENABLED: 'true',
   V3_PROFILE1_ORDER_CREATION_ENABLED: 'true',
