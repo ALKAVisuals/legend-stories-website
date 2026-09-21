@@ -41,8 +41,39 @@ form?.addEventListener('submit', async (event) => {
     sessionStorage.setItem('legendCheckoutSessionId', orderId);
     sessionStorage.setItem('legendCheckoutReference', reference);
 
-    message('Opening secure payment confirmation…');
-    window.location.assign(`/order-success.html?token=${encodeURIComponent(orderId)}`);
+    message('Finalizing the existing PayPal payment…');
+    const response = await fetch('/api/paypal/capture', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ reference, orderId }),
+      cache: 'no-store',
+      credentials: 'omit',
+      redirect: 'error',
+    });
+
+    let result;
+    try {
+      result = await response.json();
+    } catch {
+      throw new Error('INVALID_CAPTURE_RESPONSE');
+    }
+
+    if (!response.ok) {
+      throw new Error(result?.error?.code || `HTTP_${response.status}`);
+    }
+    if (result?.provider !== 'paypal'
+      || result?.reference !== reference
+      || result?.orderId !== orderId
+      || result?.mode !== 'live'
+      || result?.status !== 'paid'
+      || result?.paid !== true) {
+      throw new Error('INVALID_CAPTURE_RESPONSE');
+    }
+
+    message('Payment confirmation completed. Do not submit again.');
   } catch (error) {
     message(`Could not resume the test: ${String(error?.message || error)}`);
     if (button) button.disabled = false;
