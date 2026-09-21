@@ -89,7 +89,11 @@ function normalizeCaptureLookup(payload = {}) {
   } catch {
     fail('INVALID_PAYPAL_CAPTURE_LOOKUP', 'PayPal order ID is invalid.');
   }
-  return Object.freeze({ reference, orderId });
+  return Object.freeze({
+    reference,
+    orderId,
+    reconcileOnly: payload.reconcileOnly === true,
+  });
 }
 
 function documentProfileVersion(order) {
@@ -244,9 +248,24 @@ export async function handleCapturePayPalOrder(request, {
       throw new PayPalCaptureError('PAYPAL_CAPTURE_MODE_MISMATCH', 'PayPal environment does not match the reserved order.');
     }
 
-    const capturePayload = await client.captureOrder(lookup.orderId, {
-      idempotencyKey: `legend-paypal-capture-${lookup.reference}`,
-    });
+    let capturePayload;
+    let paymentSource = 'paypal_capture_return';
+
+    if (lookup.reconcileOnly) {
+      if (typeof client.getOrder !== 'function') {
+        throw new PayPalApiError(
+          'PAYPAL_ORDER_LOOKUP_UNAVAILABLE',
+          'PayPal order lookup is unavailable.',
+        );
+      }
+      capturePayload = await client.getOrder(lookup.orderId);
+      paymentSource = 'paypal_completed_order_recovery';
+    } else {
+      capturePayload = await client.captureOrder(lookup.orderId, {
+        idempotencyKey: `legend-paypal-capture-${lookup.reference}`,
+      });
+    }
+
     const capture = validatePayPalCaptureResult(capturePayload, {
       reference: lookup.reference,
       orderId: lookup.orderId,
@@ -259,7 +278,7 @@ export async function handleCapturePayPalOrder(request, {
       ? await profile1Finalizer(profile1PaymentEvidence({
         order: reservedOrder,
         capture,
-        source: 'paypal_capture_return',
+        source: paymentSource,
       }))
       : await store.processPaypalCapture({ ...capture, mode: reservedOrder.mode });
 
