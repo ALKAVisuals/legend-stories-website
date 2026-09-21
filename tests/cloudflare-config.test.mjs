@@ -118,7 +118,7 @@ test('production environment is explicitly separate, Custom-Domain pinned and V3
     { pattern: 'www.legendmural.com', custom_domain: true },
   ]);
   assert.equal(production.vars.LEGENDMURAL_DEPLOY_CONTEXT, 'production');
-  assertGuarded(production.vars, { checkoutPaused: 'false', v3Enabled: true, p3Enabled: true });
+  assertGuarded(production.vars, { checkoutPaused: 'false', v3Enabled: true, p3Enabled: false });
   assert.equal(production.vars.PAYPAL_ALLOW_LIVE, 'true');
   assert.equal(production.vars.ORDER_EMAILS_ENABLED, 'true');
   assertNoSecretsInVars(production.vars);
