@@ -1,5 +1,7 @@
 # LegendMural storefront — READ ME FIRST
 
+> **CURRENT OVERRIDE — 21 September 2026:** read [`CURRENT_STATUS_20260921.md`](CURRENT_STATUS_20260921.md) immediately after this heading. It supersedes older Cloudflare/P3/V3 runtime-state statements where they conflict. The current repository targets normal V3 checkout with P3 disabled, but the last directly proven remote P3 state found in Actions was still enabled; the exact next Production safety action is a separately approved P3 `disable` workflow run.
+
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Scope:** public LegendMural webshop / launch-readiness plus explicitly scoped Cloudflare/payment runtime work  
 **Current runtime state:** Cloudflare hosting/DNS migration complete; PayPal P1/P2/P3 complete; Production order-email runtime enabled; customer checkout still fail-closed  
