@@ -82,27 +82,37 @@ The latest customer-email screenshot exposed two visual/media defects that are n
    - It does not render the purchased product image.
    - The controlled P3 test item itself intentionally has `image: ''`, so it cannot prove real-product thumbnail rendering.
 
-## Exact next engineering step
+## Customer email media fix — IMPLEMENTED / MERGE-READY, NOT DEPLOYED
 
-Fix customer-email media without changing payment truth:
+Storefront PR #291 implements the customer-email media repair exposed by the controlled V3 proof.
 
-1. define a stable email-safe product-image source in the immutable invoice/order delivery data;
-2. render the real product thumbnail for ordinary products;
-3. retain a deliberate fallback only when no legitimate product image exists;
-4. make the LegendMural header logo reliable in major mail clients, preferably without depending on a fragile hot-linked asset path;
-5. add renderer/notifier contract tests for logo + product thumbnail + fallback behavior;
-6. prove the HTML render locally/test-only first;
-7. do **not** create another real-money payment merely to test images unless separately approved.
+Implemented on PR head `5a453fa281aad61c1c8895101cab643515c54ca5`:
 
-Relevant files include:
+- V3 customer email renderer advanced to version 3;
+- canonical LegendMural logo is embedded as a CID attachment from byte-identical repository PNG data;
+- ordinary product rows render the actual immutable snapshot `line.image` as CID product artwork;
+- only approved `https://legendmural.com/media/stikkers/*` or `/media/browser-products/*` sources may be fetched by Resend;
+- missing/invalid product images keep the deliberate `LM` fallback tile;
+- existing PDF attachment and V3 email idempotency key are preserved;
+- unapproved external image origins fail closed before provider delivery;
+- regression coverage locks the embedded logo bytes to `media/LOGO/lm-logo-transparant.png`.
+
+Full PR CI is green:
 
 ```text
-server/notifications/v3-customer-invoice-email.mjs
-server/notifications/resend-paid-order-notifier.mjs
-server/commerce/p3-controlled-test-item.mjs
-data/products/catalog.json
-media/LOGO/lm-logo-transparant.png
+Quality checks: SUCCESS
+Accessibility and purchase-flow audit: SUCCESS
+Cloudflare migration compatibility: SUCCESS
+Mobile checkout WebKit regression: SUCCESS
 ```
+
+No Production deploy, payment, Resend send, Neon/R2 mutation or dashboard change occurred in this implementation proof.
+
+Resend's supported CID attachment mechanism is used so the receiving mail client no longer has to hot-link the logo or product artwork itself.
+
+## Exact next engineering step
+
+> Obtain separate owner approval to merge PR #291. After merge, synchronize this handoff to the merge commit. Do not deploy the email change to Cloudflare Production or create another real-money test without a new explicit Production approval.
 
 ## Dashboard state
 

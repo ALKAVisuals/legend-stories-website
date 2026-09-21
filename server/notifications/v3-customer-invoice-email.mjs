@@ -1,8 +1,11 @@
-export const V3_CUSTOMER_INVOICE_EMAIL_RENDERER_VERSION = 2;
+import { V3_EMAIL_BRAND_LOGO } from './v3-email-inline-assets.mjs';
+
+export const V3_CUSTOMER_INVOICE_EMAIL_RENDERER_VERSION = 3;
 
 const SUPPORTED_SNAPSHOT_SCHEMA_VERSION = 1;
 const SUPPORTED_CURRENCY = 'EUR';
-const BRAND_LOGO_URL = 'https://legendmural.com/media/LOGO/lm-logo-transparant.png';
+const BRAND_ORIGIN = 'https://legendmural.com';
+const PRODUCT_MEDIA_PREFIXES = Object.freeze(['media/stikkers/', 'media/browser-products/']);
 
 export class V3CustomerInvoiceEmailError extends Error {
   constructor(code, message, details = {}) {
@@ -123,8 +126,10 @@ function requireSnapshot(snapshotInput) {
   snapshot.lines.forEach((line, index) => {
     const field = `snapshot.lines[${index}]`;
     requireObject(line, field);
+    requireString(line.productId, `${field}.productId`);
     requireString(line.sku, `${field}.sku`);
     requireString(line.name, `${field}.name`);
+    optionalString(line.image, `${field}.image`);
     requireString(line.variantLabel, `${field}.variantLabel`);
     requireString(line.sizeLabel, `${field}.sizeLabel`);
     requirePositiveInteger(line.quantity, `${field}.quantity`);
@@ -169,6 +174,62 @@ function escapeHtml(value) {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
+}
+
+function resolveProductImage(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw || raw.includes('\\') || raw.includes('\u0000')) return null;
+  const relative = raw.replace(/^\/+/, '');
+  if (!PRODUCT_MEDIA_PREFIXES.some((prefix) => relative.startsWith(prefix))) return null;
+  if (relative.split('/').some((segment) => segment === '.' || segment === '..')) return null;
+
+  let url;
+  try {
+    url = new URL(`/${relative}`, `${BRAND_ORIGIN}/`);
+  } catch {
+    return null;
+  }
+  if (url.origin !== BRAND_ORIGIN) return null;
+  if (!PRODUCT_MEDIA_PREFIXES.some((prefix) => url.pathname.startsWith(`/${prefix}`))) return null;
+
+  const pathname = url.pathname.toLowerCase();
+  if (pathname.endsWith('.png')) return { path: url.href, contentType: 'image/png', extension: 'png' };
+  if (pathname.endsWith('.jpg') || pathname.endsWith('.jpeg')) {
+    return { path: url.href, contentType: 'image/jpeg', extension: 'jpg' };
+  }
+  if (pathname.endsWith('.webp')) return { path: url.href, contentType: 'image/webp', extension: 'webp' };
+  return null;
+}
+
+function buildInlineImagePlan(snapshot) {
+  const inlineImages = [V3_EMAIL_BRAND_LOGO];
+  const contentIdByLineIndex = new Map();
+  const contentIdByPath = new Map();
+  let productImageCounter = 0;
+
+  snapshot.lines.forEach((line, index) => {
+    const image = resolveProductImage(line.image);
+    if (!image) return;
+
+    let contentId = contentIdByPath.get(image.path);
+    if (!contentId) {
+      productImageCounter += 1;
+      contentId = `legendmural-product-${productImageCounter}`;
+      contentIdByPath.set(image.path, contentId);
+      inlineImages.push(Object.freeze({
+        contentId,
+        filename: `legendmural-product-${productImageCounter}.${image.extension}`,
+        contentType: image.contentType,
+        path: image.path,
+      }));
+    }
+    contentIdByLineIndex.set(index, contentId);
+  });
+
+  return Object.freeze({
+    inlineImages: Object.freeze(inlineImages),
+    contentIdByLineIndex,
+  });
 }
 
 function formatMoney(cents) {
@@ -259,25 +320,29 @@ const COLOR = Object.freeze({
   line: '#29402F',
 });
 
-function renderItemRows(snapshot) {
-  return snapshot.lines.map((line) => (
-    '<tr><td style="padding:0 42px 22px 42px;">'
-    + `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:separate;background:${COLOR.surfaceAlt};border:1px solid ${COLOR.line};border-radius:12px;">`
-    + '<tr>'
-    + '<td width="92" valign="middle" style="width:92px;padding:18px 0 18px 18px;">'
-    + `<div aria-hidden="true" style="width:72px;height:82px;border-radius:8px;background:${COLOR.black};border:1px solid rgba(61,168,106,.28);color:${COLOR.greenLight};font-family:${FONT_STACK};font-size:11px;font-weight:700;letter-spacing:1.6px;line-height:82px;text-align:center;">LM</div>`
-    + '</td>'
-    + `<td valign="middle" style="padding:18px 14px;font-family:${FONT_STACK};">`
-    + `<div style="font-size:17px;line-height:1.3;font-weight:700;color:${COLOR.white};">${escapeHtml(line.name)}</div>`
-    + `<div style="margin-top:7px;font-size:13px;line-height:1.5;color:${COLOR.muted};">${escapeHtml(`${line.variantLabel} · ${line.sizeLabel}`)}</div>`
-    + `<div style="margin-top:5px;font-size:12px;line-height:1.5;color:${COLOR.muted};">Quantity ${escapeHtml(line.quantity)}</div>`
-    + `<div style="margin-top:5px;font-size:11px;line-height:1.5;color:#707970;">${escapeHtml(line.sku)}</div>`
-    + '</td>'
-    + `<td width="110" valign="middle" align="right" style="width:110px;padding:18px 18px 18px 8px;font-family:${FONT_STACK};font-size:15px;font-weight:700;color:${COLOR.white};white-space:nowrap;">${escapeHtml(formatMoneyVisual(line.lineTotalCents))}</td>`
-    + '</tr></table></td></tr>'
-  )).join('');
-}
+function renderItemRows(snapshot, contentIdByLineIndex) {
+  return snapshot.lines.map((line, index) => {
+    const contentId = contentIdByLineIndex.get(index);
+    const thumbnail = contentId
+      ? `<img src="cid:${escapeHtml(contentId)}" width="72" height="82" alt="${escapeHtml(line.name)}" style="display:block;width:72px;height:82px;border-radius:8px;background:${COLOR.black};border:1px solid rgba(61,168,106,.28);object-fit:contain;outline:none;text-decoration:none;">`
+      : `<div aria-hidden="true" style="width:72px;height:82px;border-radius:8px;background:${COLOR.black};border:1px solid rgba(61,168,106,.28);color:${COLOR.greenLight};font-family:${FONT_STACK};font-size:11px;font-weight:700;letter-spacing:1.6px;line-height:82px;text-align:center;">LM</div>`;
 
+    return '<tr><td style="padding:0 42px 22px 42px;">'
+      + `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:separate;background:${COLOR.surfaceAlt};border:1px solid ${COLOR.line};border-radius:12px;">`
+      + '<tr>'
+      + '<td width="92" valign="middle" style="width:92px;padding:18px 0 18px 18px;">'
+      + thumbnail
+      + '</td>'
+      + `<td valign="middle" style="padding:18px 14px;font-family:${FONT_STACK};">`
+      + `<div style="font-size:17px;line-height:1.3;font-weight:700;color:${COLOR.white};">${escapeHtml(line.name)}</div>`
+      + `<div style="margin-top:7px;font-size:13px;line-height:1.5;color:${COLOR.muted};">${escapeHtml(`${line.variantLabel} · ${line.sizeLabel}`)}</div>`
+      + `<div style="margin-top:5px;font-size:12px;line-height:1.5;color:${COLOR.muted};">Quantity ${escapeHtml(line.quantity)}</div>`
+      + `<div style="margin-top:5px;font-size:11px;line-height:1.5;color:#707970;">${escapeHtml(line.sku)}</div>`
+      + '</td>'
+      + `<td width="110" valign="middle" align="right" style="width:110px;padding:18px 18px 18px 8px;font-family:${FONT_STACK};font-size:15px;font-weight:700;color:${COLOR.white};white-space:nowrap;">${escapeHtml(formatMoneyVisual(line.lineTotalCents))}</td>`
+      + '</tr></table></td></tr>';
+  }).join('');
+}
 function summaryRow(label, value, { strong = false } = {}) {
   const weight = strong ? '700' : '400';
   const color = strong ? COLOR.white : COLOR.muted;
@@ -288,7 +353,7 @@ function summaryRow(label, value, { strong = false } = {}) {
     + '</tr>';
 }
 
-function renderHtml(snapshot) {
+function renderHtml(snapshot, inlineImagePlan) {
   const customerName = `${snapshot.customer.firstName} ${snapshot.customer.lastName}`;
   const sellerName = snapshot.seller.tradingName || snapshot.seller.legalName;
   const shippingAddressLines = [
@@ -315,7 +380,7 @@ function renderHtml(snapshot) {
     + `<table role="presentation" width="620" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:620px;border-collapse:separate;background:${COLOR.charcoal};border-radius:8px;overflow:hidden;">`
     + `<tr><td height="6" style="height:6px;background:${COLOR.green};font-size:0;line-height:0;">&nbsp;</td></tr>`
     + `<tr><td align="center" style="padding:26px 24px 30px 24px;background:${COLOR.charcoal};background-image:radial-gradient(circle at center,rgba(42,138,74,.28) 0,rgba(42,138,74,.12) 28%,rgba(26,26,26,0) 68%);">`
-    + `<img src="${BRAND_LOGO_URL}" width="260" alt="LegendMural" style="display:block;width:260px;max-width:82%;height:auto;border:0;outline:none;text-decoration:none;filter:drop-shadow(0 0 8px rgba(42,138,74,.50)) drop-shadow(0 0 18px rgba(42,138,74,.18));">`
+    + `<img src="cid:${V3_EMAIL_BRAND_LOGO.contentId}" width="260" alt="LegendMural" style="display:block;width:260px;max-width:82%;height:auto;border:0;outline:none;text-decoration:none;filter:drop-shadow(0 0 8px rgba(42,138,74,.50)) drop-shadow(0 0 18px rgba(42,138,74,.18));">`
     + '</td></tr>'
     + `<tr><td align="center" style="padding:34px 42px 30px 42px;background:${COLOR.surface};font-family:${FONT_STACK};">`
     + `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="border-collapse:separate;background:rgba(42,138,74,.09);border:1px solid rgba(42,138,74,.42);border-radius:999px;"><tr><td style="padding:7px 14px;font-family:${FONT_STACK};font-size:10px;line-height:1.2;font-weight:700;letter-spacing:1.5px;color:${COLOR.greenLight};"><span style="display:inline-block;width:7px;height:7px;margin-right:8px;border-radius:50%;background:${COLOR.greenLight};vertical-align:1px;"></span>PAYMENT RECEIVED</td></tr></table>`
@@ -324,7 +389,7 @@ function renderHtml(snapshot) {
     + `<table role="presentation" width="264" cellspacing="0" cellpadding="0" border="0" style="width:264px;max-width:100%;margin-top:24px;border-collapse:separate;background:${COLOR.surfaceAlt};border:1px solid rgba(42,138,74,.30);border-radius:10px;"><tr><td align="center" style="padding:10px 14px 4px 14px;font-family:${FONT_STACK};font-size:9px;line-height:1.3;font-weight:700;letter-spacing:1.5px;color:#6F776F;">OFFICIAL ORDER NUMBER</td></tr><tr><td align="center" style="padding:0 14px 11px 14px;font-family:${FONT_STACK};font-size:15px;line-height:1.3;font-weight:600;letter-spacing:.6px;color:${COLOR.white};">${escapeHtml(snapshot.document.orderNumber)}</td></tr></table>`
     + '</td></tr>'
     + `<tr><td style="padding:34px 42px 16px 42px;background:${COLOR.surfaceAlt};font-family:${FONT_STACK};font-size:21px;line-height:1.3;font-weight:700;color:${COLOR.white};">Your order</td></tr>`
-    + renderItemRows(snapshot)
+    + renderItemRows(snapshot, inlineImagePlan.contentIdByLineIndex)
     + `<tr><td style="padding:32px 42px 30px 42px;background:${COLOR.surface};">`
     + `<div style="padding-bottom:16px;font-family:${FONT_STACK};font-size:21px;line-height:1.3;font-weight:700;color:${COLOR.white};">Payment summary</div>`
     + '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">'
@@ -364,11 +429,13 @@ function renderHtml(snapshot) {
 export function renderV3CustomerInvoiceEmail({ snapshot: snapshotInput } = {}) {
   const snapshot = requireSnapshot(snapshotInput);
   const subject = `Your LegendMural order ${snapshot.document.orderNumber} is confirmed — invoice ${snapshot.document.invoiceNumber}`;
+  const inlineImagePlan = buildInlineImagePlan(snapshot);
 
   return Object.freeze({
     subject,
     text: renderText(snapshot),
-    html: renderHtml(snapshot),
+    html: renderHtml(snapshot, inlineImagePlan),
+    inlineImages: inlineImagePlan.inlineImages,
     rendererVersion: V3_CUSTOMER_INVOICE_EMAIL_RENDERER_VERSION,
   });
 }
