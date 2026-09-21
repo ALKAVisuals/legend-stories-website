@@ -129,6 +129,78 @@ test('profile-1 PayPal capture routes verified payment evidence only through the
   assert.equal(notifiedOrder.orderNumber, 'TEST-ORDER-1');
 });
 
+test('profile-1 completed-order recovery uses provider GET evidence and shared V3 finalizer without recapture', async () => {
+  let captureCalls = 0;
+  let getOrderCalls = 0;
+  let finalizerInput;
+  const finalizedOrder = order({
+    documentProfileVersion: 1,
+    status: 'paid',
+    paidAt: capturedAt,
+    version: 1,
+    orderNumber: 'TEST-ORDER-1',
+    invoiceId: 1,
+  });
+
+  const response = await handleCapturePayPalOrder(
+    new Request('https://shop.example/api/paypal/capture', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Origin: 'https://shop.example',
+      },
+      body: JSON.stringify({ reference, orderId, reconcileOnly: true }),
+    }),
+    {
+      orderStore: {
+        async getOrderByReference() { return order({ documentProfileVersion: 1 }); },
+        async processPaypalCapture() { throw new Error('legacy path must not run'); },
+      },
+      paypalClient: {
+        mode: 'test',
+        async getOrder(receivedOrderId) {
+          getOrderCalls += 1;
+          assert.equal(receivedOrderId, orderId);
+          return {
+            id: orderId,
+            status: 'COMPLETED',
+            purchase_units: [{
+              reference_id: reference,
+              custom_id: reference,
+              payments: {
+                captures: [{
+                  id: captureId,
+                  status: 'COMPLETED',
+                  amount: { currency_code: 'EUR', value: '44.95' },
+                  create_time: '2026-08-07T12:00:00Z',
+                }],
+              },
+            }],
+          };
+        },
+        async captureOrder() {
+          captureCalls += 1;
+          throw new Error('must not recapture');
+        },
+      },
+      finalizePaidOrder: async (input) => {
+        finalizerInput = input;
+        return { duplicate: false, legacy: false, order: finalizedOrder, invoice: { id: 1 } };
+      },
+      allowedOrigins: 'https://shop.example',
+      capturedAt,
+    },
+  );
+  const payload = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(payload.paid, true);
+  assert.equal(getOrderCalls, 1);
+  assert.equal(captureCalls, 0);
+  assert.equal(finalizerInput.source, 'paypal_completed_order_recovery');
+  assert.equal(finalizerInput.providerCaptureId, captureId);
+});
+
 test('profile-1 capture fails closed before PayPal when the finalizer runtime is absent', async () => {
   let paypalCalls = 0;
   let legacyCalls = 0;
