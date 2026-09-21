@@ -39,9 +39,16 @@ form?.addEventListener('submit', async (event) => {
     if (!response.ok) {
       throw new Error(result?.error?.code || `HTTP_${response.status}`);
     }
-    if (result?.provider !== 'paypal' || result?.mode !== 'live' || !result?.url) {
+    if (result?.provider !== 'paypal'
+      || result?.mode !== 'live'
+      || !result?.url
+      || !result?.sessionId
+      || !result?.reference) {
       throw new Error('INVALID_PAYPAL_RESPONSE');
     }
+
+    sessionStorage.setItem('legendCheckoutSessionId', String(result.sessionId));
+    sessionStorage.setItem('legendCheckoutReference', String(result.reference));
 
     message('PayPal is opening. Do not pay yet.');
     window.location.assign(result.url);

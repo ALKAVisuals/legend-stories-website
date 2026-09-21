@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="description" content="Temporary internal LegendMural PayPal return recovery page for the controlled €0.01 Profile-1 test.">
+  <title>Resume LegendMural €0.01 payment confirmation</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #0d0f12; color: #f5f5f5; }
+    main { max-width: 720px; margin: 0 auto; padding: 40px 20px 64px; }
+    h1 { margin: 0 0 12px; font-size: 30px; }
+    p { color: #b9c0ca; line-height: 1.55; }
+    form { display: grid; gap: 14px; margin-top: 24px; padding: 24px; border: 1px solid #2d333b; border-radius: 16px; background: #15191e; }
+    label { display: grid; gap: 7px; font-weight: 700; }
+    input { width: 100%; box-sizing: border-box; padding: 11px 12px; border-radius: 9px; border: 1px solid #3c444e; background: #0d0f12; color: #fff; font: inherit; }
+    button { padding: 13px 16px; border: 0; border-radius: 10px; font: inherit; font-weight: 800; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: wait; }
+    #status { min-height: 1.5em; font-weight: 700; }
+    .warning { color: #ffd479; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Resume €0.01 payment confirmation</h1>
+    <p>This temporary page restores only the browser return context for the already-created controlled Profile-1 test order.</p>
+    <p class="warning">It does not create a second order. Use it only for the existing €0.01 PayPal test that was already approved.</p>
+    <form id="p3-resume-form" autocomplete="off">
+      <label>Temporary test code
+        <input name="key" type="password" required autocomplete="off">
+      </label>
+      <label>Recovery code
+        <input name="recovery" type="password" required autocomplete="off">
+      </label>
+      <button type="submit">Resume payment confirmation</button>
+      <div id="status" role="status" aria-live="polite"></div>
+    </form>
+  </main>
+  <script type="module" src="/js/p3-v3-one-cent-resume.mjs"></script>
+</body>
+</html>
