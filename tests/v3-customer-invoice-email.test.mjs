@@ -13,7 +13,7 @@ const paidAt = 1_800_300_010;
 const issuedAt = paidAt + 5;
 const paypalOrderId = 'PAYPAL-SYNTHETIC-EMAIL-001';
 
-function buildSnapshot({ firstName = 'Zoë', itemName = 'Legend One' } = {}) {
+function buildSnapshot({ firstName = 'Zoë', itemName = 'Legend One', image = 'media/stikkers/legend-one.png' } = {}) {
   return createV3InvoiceSnapshot({
     order: {
       reference,
@@ -42,7 +42,7 @@ function buildSnapshot({ firstName = 'Zoë', itemName = 'Legend One' } = {}) {
         page: 'legend-one.html',
         sku: 'LM-2026-00001-STATEMENT',
         name: itemName,
-        image: 'media/stikkers/legend-one.png',
+        image,
         variantId: 'statement',
         variantLabel: 'Statement',
         sizeLabel: '70 × 70 cm',
@@ -129,7 +129,7 @@ test('renders deterministic approved V4 transactional text and HTML from the imm
 
   assert.deepEqual(first, second);
   assert.equal(first.rendererVersion, V3_CUSTOMER_INVOICE_EMAIL_RENDERER_VERSION);
-  assert.equal(first.rendererVersion, 2);
+  assert.equal(first.rendererVersion, 3);
   assert.match(first.subject, /ORDER-FORMAT-NOT-LOCKED-000042/);
   assert.match(first.subject, /INVOICE-FORMAT-NOT-LOCKED-000077/);
   assert.match(first.text, /Order number: ORDER-FORMAT-NOT-LOCKED-000042/);
@@ -147,7 +147,7 @@ test('renders deterministic approved V4 transactional text and HTML from the imm
   assert.match(first.html, /#1A1A1A/);
   assert.match(first.html, /#2A8A4A/);
   assert.match(first.html, /#3DA86A/);
-  assert.match(first.html, /https:\/\/legendmural\.com\/media\/LOGO\/lm-logo-transparant\.png/);
+  assert.match(first.html, /src="cid:legendmural-logo"/);
   assert.match(first.html, /alt="LegendMural"/);
   assert.match(first.html, /PAYMENT RECEIVED/);
   assert.match(first.html, /Your order is<br><span style="color:#2A8A4A;">confirmed\.<\/span>/);
@@ -164,8 +164,34 @@ test('renders deterministic approved V4 transactional text and HTML from the imm
   assert.match(first.html, /PDF INVOICE ATTACHED/);
   assert.match(first.html, /PRODUCTION/);
   assert.match(first.html, /SHIPPING/);
+  assert.match(first.html, /src="cid:legendmural-product-1"/);
   assert.equal(first.html.includes('media/stikkers/legend-one.png'), false);
+  assert.equal(first.inlineImages.length, 2);
+  assert.deepEqual(
+    first.inlineImages.map((image) => [image.contentId, image.filename, image.contentType]),
+    [
+      ['legendmural-logo', 'legendmural-logo.png', 'image/png'],
+      ['legendmural-product-1', 'legendmural-product-1.png', 'image/png'],
+    ],
+  );
+  assert.match(first.inlineImages[0].contentBase64, /^iVBORw0KGgo/);
+  assert.equal(first.inlineImages[0].path, undefined);
+  assert.equal(first.inlineImages[1].path, 'https://legendmural.com/media/stikkers/legend-one.png');
+  assert.equal(first.inlineImages[1].contentBase64, undefined);
   assert.equal(first.html.includes('View invoice'), false);
+});
+
+test('falls back to the LM tile and never fetches unapproved product image origins', () => {
+  const missing = renderV3CustomerInvoiceEmail({ snapshot: buildSnapshot({ image: null }) });
+  assert.match(missing.html, />LM<\/div>/);
+  assert.equal(missing.inlineImages.length, 1);
+
+  const external = renderV3CustomerInvoiceEmail({
+    snapshot: buildSnapshot({ image: 'https://attacker.example/product.png' }),
+  });
+  assert.match(external.html, />LM<\/div>/);
+  assert.equal(external.inlineImages.length, 1);
+  assert.equal(external.html.includes('attacker.example'), false);
 });
 
 test('never exposes the internal order reference or PayPal provider identity as customer-facing identifiers', () => {
