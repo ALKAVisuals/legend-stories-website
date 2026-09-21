@@ -2,7 +2,7 @@
 
 **Updated:** 2026-09-21  
 **Repository:** `ALKAVisuals/legend-stories-website`  
-**Starting main:** `c05215754ba7be45b174afb3585694483a6b9bea`  
+**Latest synchronized main before this proof update:** `15191d4a93ea6580c12887971f4238220954afb4`  
 **Purpose:** compact source of truth for the current Cloudflare / PayPal / V3 checkout and invoice-delivery state.
 
 > Read this before older Cloudflare, P3 or V3 status files. Older dated handoffs remain historical evidence but do not override this checkpoint.
@@ -40,34 +40,32 @@ The repository therefore targets normal live V3 checkout, with the temporary P3 
 - PR #288 changed the repository Production target back to `P3_TEST_CHECKOUT_ENABLED=false`.
 - Main Quality and Accessibility workflows for PR #288 completed successfully.
 
-## Important live-runtime discrepancy — resolve before further Production testing
+## Live Production P3 state — RESOLVED
 
-The last verified successful P3-window Production deployment found in GitHub Actions is run `35597623307` on 2026-09-21, from commit `2991b708b925f470d23d5c6433d88957d436222c`.
+The temporary P3/V3 one-cent Production window was explicitly disabled on 2026-09-21 using GitHub Actions run `35602463867`, pinned to exact approved storefront `main` commit `15191d4a93ea6580c12887971f4238220954afb4`.
 
-Its job log proves:
+The successful run proves:
 
 ```text
-WINDOW_ACTION=enable
-exact P3=true state already active
-ordinary checkout is fail-closed while P3 is enabled
+WINDOW_ACTION=disable
+P3_TEST_CHECKOUT_ENABLED=false
+ORDER_EMAILS_ENABLED=true
+V3_PROFILE1_ORDER_CREATION_ENABLED=true
+V3_INVOICE_RECONCILIATION_ENABLED=true
+V3_INVOICE_STORAGE_ENABLED=true
 ```
 
-After PR #288 changed the repository target to `P3_TEST_CHECKOUT_ENABLED=false`, no later successful `Cloudflare Production P3 V3 one-cent window` run with `action=disable` was found during this audit.
+Wrangler deployed `legendmural-cloudflare-production` successfully with `P3_TEST_CHECKOUT_ENABLED=false`.
 
-A later `Cloudflare Production Worker bootstrap` run `35599862492` succeeded only in its policy gate; its Worker-creation/deploy job was skipped, so it is not proof that the live Worker was switched back to P3=false.
+The final live checkout guard also passed:
 
-**Therefore do not claim that the live Production P3 window is disabled yet.** The repository target is disabled, but the last directly proven remote P3 state is enabled.
+```text
+ordinary checkout is active after P3 disable
+HTTP 400 EMPTY_CART
+no PayPal order created by the proof
+```
 
-Exact safety recovery step:
-
-1. fresh-check `main`;
-2. run `.github/workflows/cloudflare-production-p3-v3-one-cent-window.yml`;
-3. choose `action=disable`;
-4. use confirmation phrase `DISABLE_P3_V3_ONE_CENT_TEST_WINDOW`;
-5. pin the exact approved current `main` SHA;
-6. require the workflow's postdeploy verification to prove ordinary checkout returns the normal active `EMPTY_CART` guard rather than `CHECKOUT_PAUSED`.
-
-This is a real Production deploy and requires fresh explicit owner approval immediately before execution.
+Therefore the temporary controlled P3 window is now proven OFF in the live Production Worker, while normal V3 checkout is proven active.
 
 ## Controlled €0.01 V3 proof result
 
@@ -84,7 +82,7 @@ The latest customer-email screenshot exposed two visual/media defects that are n
    - It does not render the purchased product image.
    - The controlled P3 test item itself intentionally has `image: ''`, so it cannot prove real-product thumbnail rendering.
 
-## Exact next engineering step after the P3 window is safely closed
+## Exact next engineering step
 
 Fix customer-email media without changing payment truth:
 
@@ -110,7 +108,7 @@ media/LOGO/lm-logo-transparant.png
 
 `V3_DASHBOARD_INVOICE_API_ENABLED=false` remains the repository Production target. Do not infer that dashboard invoice/PDF end-to-end access is active merely because V3 invoice issuance/storage is active.
 
-The dashboard repository contains older V3 handoffs from early September that still describe Production activation as OFF. Those documents are stale relative to the current storefront repository and should be synchronized in a separate docs-only dashboard update.
+The dashboard repository was synchronized through dashboard PR #77. For payment/V3 runtime truth, this storefront status remains authoritative; dashboard-specific UI/publication state remains in the dashboard repository.
 
 ## Older launch/legal gates
 
