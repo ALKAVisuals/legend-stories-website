@@ -194,6 +194,18 @@ No recipient delivery occurred for this failed proof.
 
 ## Stable email product asset repair — IMPLEMENTED, NOT MERGED / NOT DEPLOYED
 
+Storefront PR #296 currently contains this repair. The tested PR head before this handoff-only synchronization was `316eba7e20c3f9f925c654345af1b49c4dd8a6fb`.
+
+Full CI on that implementation head was green:
+
+```text
+Quality checks: SUCCESS
+Accessibility and purchase-flow audit: SUCCESS
+Cloudflare migration compatibility: SUCCESS
+Netlify preview compatibility: SUCCESS
+Mobile checkout WebKit regression: SUCCESS
+```
+
 The current repair branch adds a deterministic build-time Static Asset namespace:
 
 ```text
