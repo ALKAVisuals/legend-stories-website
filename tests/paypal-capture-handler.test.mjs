@@ -205,6 +205,50 @@ test('PayPal capture lookup cannot be swapped to another reserved order ID', asy
   assert.equal(payload.error.code, 'ORDER_NOT_FOUND');
 });
 
+test('completed provider order can be reconciled without issuing a second PayPal capture request', async () => {
+  let captureCalls = 0;
+  let getOrderCalls = 0;
+  let persisted;
+  const response = await handleCapturePayPalOrder(
+    request({ reference, orderId, reconcileOnly: true }),
+    {
+      orderStore: {
+        async getOrderByReference() { return reservedOrder(); },
+        async processPaypalCapture(capture) {
+          persisted = capture;
+          return {
+            duplicate: false,
+            order: reservedOrder({ status: 'paid', version: 1 }),
+          };
+        },
+      },
+      paypalClient: {
+        mode: 'test',
+        async getOrder(receivedOrderId) {
+          getOrderCalls += 1;
+          assert.equal(receivedOrderId, orderId);
+          return completedCapture();
+        },
+        async captureOrder() {
+          captureCalls += 1;
+          throw new Error('must not capture in reconcileOnly mode');
+        },
+      },
+      allowedOrigins: 'https://shop.example',
+      capturedAt: 1_786_104_001,
+    },
+  );
+  const payload = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(payload.status, 'paid');
+  assert.equal(payload.paid, true);
+  assert.equal(getOrderCalls, 1);
+  assert.equal(captureCalls, 0);
+  assert.equal(persisted.reference, reference);
+  assert.equal(persisted.orderId, orderId);
+});
+
 test('temporary PayPal API failure never persists a local paid state or reconciles notifications', async () => {
   let persistCalls = 0;
   let notificationCalls = 0;
