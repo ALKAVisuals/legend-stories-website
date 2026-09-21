@@ -2,7 +2,7 @@
 
 **Updated:** 2026-09-21  
 **Repository:** `ALKAVisuals/legend-stories-website`  
-**Latest synchronized main:** `734454c28e28d557969428996507188a2dc85c88`  
+**Latest synchronized main:** `e37a9edb61c56d353207166c4d1b46c9b8a9d47c`  
 **Purpose:** compact source of truth for the current Cloudflare / PayPal / V3 checkout and invoice-delivery state.
 
 > Read this before older Cloudflare, P3 or V3 status files. Older dated handoffs remain historical evidence but do not override this checkpoint.
@@ -82,7 +82,7 @@ The latest customer-email screenshot exposed two visual/media defects that are n
    - It does not render the purchased product image.
    - The controlled P3 test item itself intentionally has `image: ''`, so it cannot prove real-product thumbnail rendering.
 
-## Customer email media fix — MERGED, NOT YET DEPLOYED
+## Customer email media fix — MERGED AND DEPLOYED
 
 Storefront PR #291 implemented the customer-email media repair exposed by the controlled V3 proof and was merged to `main` as `812edde5cbebf0014c1d0cfe45bfb4a7105621a3`.
 
@@ -106,7 +106,7 @@ Cloudflare migration compatibility: SUCCESS
 Mobile checkout WebKit regression: SUCCESS
 ```
 
-No Production deploy, payment, Resend send, Neon/R2 mutation or dashboard change occurred in this implementation proof.
+No payment, Resend send, Neon/R2 data mutation or dashboard change occurred in the implementation proof. The code was subsequently deployed to Cloudflare Production as recorded below.
 
 Resend's supported CID attachment mechanism is used so the receiving mail client no longer has to hot-link the logo or product artwork itself.
 
@@ -136,9 +136,45 @@ Important safety result:
 
 PR #293 repaired this workflow and was merged to `main` as `734454c28e28d557969428996507188a2dc85c88`. Routine guarded Production redeploys now verify the already-active state before mutation while the historical launch `preflight` mode remains available for auditability.
 
+## Successful guarded Production deploy
+
+Owner-approved GitHub Actions run `35606356303` successfully deployed exact `main` `e37a9edb61c56d353207166c4d1b46c9b8a9d47c` to `legendmural-cloudflare-production`.
+
+The run proved all safety gates and deployment stages:
+
+```text
+exact commit / owner confirmation: PASS
+repository contract tests: PASS
+storefront build: PASS
+active-state Production predeploy verification: PASS
+Wrangler dry-run: PASS
+Cloudflare Production deploy: PASS
+postdeploy guarded-state verification: PASS
+public checkout OPTIONS proof: PASS
+```
+
+Verified live state after deployment:
+
+```text
+LEGENDMURAL_CHECKOUT_PAUSED=false
+P3_TEST_CHECKOUT_ENABLED=false
+ORDER_EMAILS_ENABLED=true
+V3_PROFILE1_ORDER_CREATION_ENABLED=true
+V3_INVOICE_RECONCILIATION_ENABLED=true
+V3_INVOICE_STORAGE_ENABLED=true
+V3_DASHBOARD_INVOICE_API_ENABLED=false
+V3_INVOICE_PDFS -> legendmural-v3-invoice-pdfs-prod
+```
+
+The public checkout route returned the expected safe CORS/OPTIONS proof and **no PayPal order was created**.
+
+Therefore renderer v3 and the CID logo/product-image email implementation from PR #291 are now live in the Production Worker.
+
+This deployment does **not** itself prove how a specific receiving mail client visually renders the new CID images, because no new customer email was sent during the deployment.
+
 ## Exact next engineering step
 
-> PR #293 is merged. Obtain fresh owner approval for exact `main` `734454c28e28d557969428996507188a2dc85c88`, then rerun `.github/workflows/cloudflare-production-guarded-update.yml` with confirmation phrase `DEPLOY_GUARDED_V3_CHECKOUT_LAUNCH`. Do not reuse the failed run or old commit SHA.
+> Obtain an explicit owner-approved non-payment email-render proof to a chosen test recipient, using synthetic/test invoice data only. Do not create another PayPal order or payment merely to validate the email visuals.
 
 ## Dashboard state
 
