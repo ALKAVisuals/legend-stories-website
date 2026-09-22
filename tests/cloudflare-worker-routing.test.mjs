@@ -68,6 +68,12 @@ test('non-API requests are delegated to Cloudflare Static Assets binding', async
   assert.equal(response.status, 200);
   assert.equal(await response.text(), 'asset-ok');
   assert.deepEqual(seen, ['https://preview.example/shop.html']);
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+  assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
+  assert.equal(response.headers.get('x-frame-options'), 'DENY');
+  assert.equal(response.headers.get('permissions-policy'), 'camera=(), microphone=(), geolocation=()');
+  assert.equal(response.headers.get('content-security-policy'), "frame-ancestors 'none'; base-uri 'self'; object-src 'none'");
+  assert.equal(response.headers.get('strict-transport-security'), null);
 });
 
 test('bare root maps to index.html while preserving query and request metadata', async () => {
@@ -97,6 +103,31 @@ test('bare root maps to index.html while preserving query and request metadata',
     method: 'GET',
     marker: 'preserved',
   }]);
+});
+
+test('Production static responses add HSTS without changing asset content', async () => {
+  const env = {
+    LEGENDMURAL_DEPLOY_CONTEXT: 'production',
+    ASSETS: {
+      async fetch() {
+        return new Response('production-asset', {
+          status: 200,
+          headers: { 'Content-Type': 'text/html; charset=utf-8' },
+        });
+      },
+    },
+  };
+
+  const response = await handleCloudflareFetch(
+    new Request('https://legendmural.com/shop.html'),
+    env,
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(await response.text(), 'production-asset');
+  assert.equal(response.headers.get('content-type'), 'text/html; charset=utf-8');
+  assert.equal(response.headers.get('strict-transport-security'), 'max-age=31536000');
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
 });
 
 test('checkout is fail-closed while the migration configuration keeps checkout paused', async () => {
