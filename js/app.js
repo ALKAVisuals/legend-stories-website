@@ -31,8 +31,6 @@
   };
 
   const CART_SCHEMA_VERSION = '4';
-  // Used by the separate Sticker Fact / Knowledge Graph feature only.
-  const GP_API_KEY = 'V5yqGyVnJ1IFk3fpZojBuvxMAic=';
 
   // ==========================================
   // LOCAL STORAGE - Cart Persistence
@@ -1434,56 +1432,6 @@ function initProductCards() {
   }
 
   // ==========================================
-  // STICKER FACT MODAL
-  // ==========================================
-async function fetchStickerFact(query) {
-  try {
-    const resp = await fetch(`https://kgsearch.googleapis.com/v1/entities:search?query=${encodeURIComponent(query)}&key=${GP_API_KEY}&limit=1`);
-    if (!resp.ok) return null;
-    const data = await resp.json();
-    const element = data.itemListElement && data.itemListElement[0];
-    if (element && element.result && element.result.description) {
-      return element.result.description;
-    }
-    return null;
-  } catch (e) {
-    console.warn('Sticker fact fetch error:', e);
-    return null;
-  }
-}
-
-function initStickerClicks() {
-  // Sticker click handlers — attach to sticker cards with data-sticker-name
-  const stickers = document.querySelectorAll('[data-sticker-name]');
-  stickers.forEach(function(sticker) {
-    sticker.addEventListener('click', async function() {
-      const name = this.dataset.stickerName;
-      const modal = document.getElementById('sticker-modal');
-      const title = document.getElementById('sticker-modal-title');
-      const content = document.getElementById('sticker-modal-content');
-      if (!modal || !title || !content) return;
-      title.textContent = name;
-      content.textContent = 'Loading...';
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-      const fact = await fetchStickerFact(name);
-      content.textContent = fact || 'No fact found for this sticker.';
-    });
-  });
-}
-
-function initStickerModalClose() {
-  const modal = document.getElementById('sticker-modal');
-  const closeBtn = document.getElementById('sticker-modal-close');
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    });
-  }
-}
-
-  // ==========================================
   // INITIALIZATION
   // ==========================================
   async function init() {
@@ -1520,8 +1468,6 @@ function initStickerModalClose() {
       });
     }
     const fns = [
-      initStickerClicks,
-      initStickerModalClose,
       initEventListeners,
       initBeforeAfter,
       initScrollAnimations,
