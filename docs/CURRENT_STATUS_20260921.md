@@ -2,7 +2,7 @@
 
 **Updated:** 2026-09-21  
 **Repository:** `ALKAVisuals/legend-stories-website`  
-**Latest synchronized main:** `46c7f830909fa8ec56305626630c130dac1ba518`  
+**Latest synchronized main:** `6be32a17eebfa4679c2f74c185426bd0858a706f`  
 **Purpose:** compact source of truth for the current Cloudflare / PayPal / V3 checkout and invoice-delivery state.
 
 > Read this before older Cloudflare, P3 or V3 status files. Older dated handoffs remain historical evidence but do not override this checkpoint.
@@ -342,6 +342,35 @@ Historical exposure remains a separate credential-management concern: because th
 ## Exact next engineering step
 
 > Confirm the historical Google Knowledge Graph key is revoked, rotated or safely restricted in Google Cloud if it still exists. No storefront code change is required for that credential action. After that, continue the launch-hardening checklist with the next prioritized site item.
+
+## Static storefront security headers — MERGED AND DEPLOYED
+
+Storefront PR #302 added defense-in-depth headers to Cloudflare-served public storefront responses.
+
+Merged Production code:
+
+`6be32a17eebfa4679c2f74c185426bd0858a706f`
+
+Owner-approved guarded Cloudflare Production run:
+
+`35729393392`
+
+The workflow completed successfully and proved the exact approved main commit was built and deployed, remote guarded state remained valid, and the public checkout route stayed active without creating a PayPal order.
+
+The deployed Worker now applies these headers to static storefront responses:
+
+```text
+Content-Security-Policy: frame-ancestors 'none'; base-uri 'self'; object-src 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Permissions-Policy: camera=(), microphone=(), geolocation=()
+Strict-Transport-Security: max-age=31536000   [Production HTTPS only]
+```
+
+Automated PR checks covering the Cloudflare routing/header contract, accessibility, purchase flow, migration compatibility, Production bootstrap and Mobile WebKit all passed before merge.
+
+The guarded Production workflow itself does not currently perform a live homepage response-header assertion after deploy; it does perform a live safe checkout-route probe. Therefore the deployment of the exact header-bearing Worker is proven, while a separate live-header HTTP probe can be added later if desired.
 
 ## Dashboard state
 
