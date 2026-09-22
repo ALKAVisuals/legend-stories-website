@@ -318,6 +318,30 @@ function canonicalRedirect(request) {
   return null;
 }
 
+function secureStaticResponse(response, request, env) {
+  const headers = new Headers(response.headers);
+  headers.set('Content-Security-Policy', "frame-ancestors 'none'; base-uri 'self'; object-src 'none'");
+  headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  headers.set('X-Content-Type-Options', 'nosniff');
+  headers.set('X-Frame-Options', 'DENY');
+  headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+
+  const url = new URL(request.url);
+  if (
+    productionContext(env)
+    && url.protocol === 'https:'
+    && (url.hostname === 'legendmural.com' || url.hostname === 'www.legendmural.com')
+  ) {
+    headers.set('Strict-Transport-Security', 'max-age=31536000');
+  }
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 export async function handleCloudflareFetch(request, env) {
   const redirect = canonicalRedirect(request);
   if (redirect) return redirect;
@@ -337,10 +361,12 @@ export async function handleCloudflareFetch(request, env) {
 
   if (pathname === '/') {
     requestUrl.pathname = '/index.html';
-    return env.ASSETS.fetch(new Request(requestUrl.toString(), request));
+    const response = await env.ASSETS.fetch(new Request(requestUrl.toString(), request));
+    return secureStaticResponse(response, request, env);
   }
 
-  return env.ASSETS.fetch(request);
+  const response = await env.ASSETS.fetch(request);
+  return secureStaticResponse(response, request, env);
 }
 
 function skippedReconciliation(reason) {
