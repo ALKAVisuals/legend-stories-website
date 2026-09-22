@@ -264,9 +264,33 @@ The safe checkout proof used only `OPTIONS` and created no PayPal order.
 
 The dedicated `dist/email-products/**` namespace is therefore included in the successfully deployed Static Assets build. A provider-side fetch / actual recipient render is still a separate proof and must not be inferred from the deploy alone.
 
+## Successful synthetic non-payment email delivery proof
+
+After explicit owner approval, exactly one synthetic transactional email was sent using the live stable `/email-products/**` product source.
+
+Resend email ID:
+
+`01a0c8b8-1df2-7769-b432-ac72cacd9164`
+
+Provider result:
+
+```text
+status: delivered
+message_id: present
+processed inline attachments: 2
+legendmural-logo.png: 25,948 bytes
+legendmural-product-1.png: 528,353 bytes
+```
+
+This proves that Resend successfully fetched the deployed product image from the dedicated `/email-products/**` Static Asset namespace, processed both CID attachments, and delivered the message to the test recipient.
+
+No PayPal order, payment, Neon order, invoice, R2 write or customer order was created by this proof.
+
+The only remaining visual check is recipient-side rendering: confirm in the receiving mail client that both the LegendMural logo and product artwork are visibly rendered as intended.
+
 ## Exact next engineering step
 
-> With explicit owner approval, send exactly one synthetic non-payment email to the chosen test recipient using the live `/email-products/**` source. Verify Resend delivery state and then visually inspect the received logo and product artwork. Do not create a PayPal order or payment.
+> Visually inspect the delivered synthetic email in the receiving mailbox. If both CID images render correctly, record the visual proof and close this email-media incident. If either image is still not visible, capture the mail-client screenshot and diagnose client-side rendering only; do not create a PayPal order or payment.
 
 ## Dashboard state
 
