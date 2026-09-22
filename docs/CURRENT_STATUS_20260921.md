@@ -286,11 +286,27 @@ This proves that Resend successfully fetched the deployed product image from the
 
 No PayPal order, payment, Neon order, invoice, R2 write or customer order was created by this proof.
 
-The only remaining visual check is recipient-side rendering: confirm in the receiving mail client that both the LegendMural logo and product artwork are visibly rendered as intended.
+The receiving mailbox was then checked by the owner, who confirmed that the delivered email renders correctly. This closes the recipient-side visual verification for the CID logo and product artwork.
+
+## Email-media incident status — CLOSED
+
+The full non-payment proof is now complete:
+
+```text
+stable /email-products/** build path: PASS
+Cloudflare Production deploy: PASS
+Resend product fetch: PASS
+CID logo processing: PASS
+CID product processing: PASS
+provider delivery: PASS
+recipient-side visual rendering: PASS
+```
+
+No further email-media engineering is required for this incident.
 
 ## Exact next engineering step
 
-> Visually inspect the delivered synthetic email in the receiving mailbox. If both CID images render correctly, record the visual proof and close this email-media incident. If either image is still not visible, capture the mail-client screenshot and diagnose client-side rendering only; do not create a PayPal order or payment.
+> Merge the current documentation-only PR that records the successful Production deploy, delivered synthetic proof and recipient-side visual confirmation. Do not perform another email send, PayPal order or Production deploy for this closed incident.
 
 ## Dashboard state
 
