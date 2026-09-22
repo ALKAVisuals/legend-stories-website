@@ -206,7 +206,7 @@ test('V3 invoice email maps approved renderer inline images to Resend CID attach
           filename: 'legendmural-product-1.png',
           contentId: 'legendmural-product-1',
           contentType: 'image/png',
-          path: 'https://legendmural.com/media/stikkers/legend-one.png',
+          path: 'https://legendmural.com/email-products/stikkers/legend-one.png',
         },
       ],
     }),
@@ -231,7 +231,7 @@ test('V3 invoice email maps approved renderer inline images to Resend CID attach
   });
   assert.deepEqual(body.attachments[2], {
     filename: 'legendmural-product-1.png',
-    path: 'https://legendmural.com/media/stikkers/legend-one.png',
+    path: 'https://legendmural.com/email-products/stikkers/legend-one.png',
     content_type: 'image/png',
     content_id: 'legendmural-product-1',
   });
@@ -297,6 +297,23 @@ test('V3 invoice email rejects invalid reference, renderer payload or PDF attach
           contentId: 'evil',
           contentType: 'image/png',
           path: 'https://attacker.example/evil.png',
+        }],
+      }),
+    }),
+    (error) => error instanceof ResendPaidOrderNotifierError
+      && error.code === 'RESEND_PAID_ORDER_INVALID_MESSAGE'
+      && error.details.field === 'renderedEmail.inlineImages[0].path',
+  );
+  await assert.rejects(
+    notifier.sendV3InvoiceEmail({
+      ...base,
+      renderedEmail: renderedV3Email({
+        rendererVersion: 3,
+        inlineImages: [{
+          filename: 'legacy.png',
+          contentId: 'legacy',
+          contentType: 'image/png',
+          path: 'https://legendmural.com/media/stikkers/legacy.png',
         }],
       }),
     }),

@@ -166,6 +166,7 @@ test('renders deterministic approved V4 transactional text and HTML from the imm
   assert.match(first.html, /SHIPPING/);
   assert.match(first.html, /src="cid:legendmural-product-1"/);
   assert.equal(first.html.includes('media/stikkers/legend-one.png'), false);
+  assert.equal(first.html.includes('email-products/stikkers/legend-one.png'), false);
   assert.equal(first.inlineImages.length, 2);
   assert.deepEqual(
     first.inlineImages.map((image) => [image.contentId, image.filename, image.contentType]),
@@ -176,7 +177,7 @@ test('renders deterministic approved V4 transactional text and HTML from the imm
   );
   assert.match(first.inlineImages[0].contentBase64, /^iVBORw0KGgo/);
   assert.equal(first.inlineImages[0].path, undefined);
-  assert.equal(first.inlineImages[1].path, 'https://legendmural.com/media/stikkers/legend-one.png');
+  assert.equal(first.inlineImages[1].path, 'https://legendmural.com/email-products/stikkers/legend-one.png');
   assert.equal(first.inlineImages[1].contentBase64, undefined);
   assert.equal(first.html.includes('View invoice'), false);
 });
