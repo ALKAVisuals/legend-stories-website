@@ -2,7 +2,7 @@
 
 **Updated:** 2026-09-21  
 **Repository:** `ALKAVisuals/legend-stories-website`  
-**Latest synchronized main:** `e96c3489ada7f4522dbd164584e1ae180c76ff24`  
+**Latest synchronized main:** `86f8903eba5587cb1526ecfe8b606900b73a5f15`  
 **Purpose:** compact source of truth for the current Cloudflare / PayPal / V3 checkout and invoice-delivery state.
 
 > Read this before older Cloudflare, P3 or V3 status files. Older dated handoffs remain historical evidence but do not override this checkpoint.
@@ -192,7 +192,7 @@ This isolates the remaining defect to the product-image remote attachment source
 
 No recipient delivery occurred for this failed proof.
 
-## Stable email product asset repair — MERGED, NOT YET DEPLOYED
+## Stable email product asset repair — MERGED AND DEPLOYED
 
 Storefront PR #296 contains this repair and was merged to `main` as `e96c3489ada7f4522dbd164584e1ae180c76ff24`. The final merged PR head was `3b07c697da495bf3c4722314f36a0ccc9653ea74`.
 
@@ -227,9 +227,86 @@ The repair:
 - keeps the brand logo as byte-identical embedded base64 CID data;
 - does not change PayPal, order truth, invoice truth, Neon, R2 or checkout behavior.
 
+## Successful stable email-product Production deploy
+
+Owner-approved GitHub Actions run `35716871532` successfully deployed exact storefront `main` `86f8903eba5587cb1526ecfe8b606900b73a5f15` to `legendmural-cloudflare-production`.
+
+The run proved:
+
+```text
+exact owner confirmation / commit pin: PASS
+guarded contract tests: PASS
+storefront build: PASS
+111 stable email product assets copied: PASS
+111 stable email product assets validated: PASS
+active-state Production predeploy verification: PASS
+Wrangler dry-run: PASS
+Cloudflare Production deploy: PASS
+postdeploy guarded-state verification: PASS
+public checkout OPTIONS proof: PASS
+```
+
+Cloudflare read 456 built Static Asset files. During the Production deploy it uploaded 20 new or modified files while 398 were already present. The Worker and triggers deployed successfully.
+
+Verified runtime state after deploy still includes:
+
+```text
+P3_TEST_CHECKOUT_ENABLED=false
+ORDER_EMAILS_ENABLED=true
+V3_PROFILE1_ORDER_CREATION_ENABLED=true
+V3_INVOICE_RECONCILIATION_ENABLED=true
+V3_INVOICE_STORAGE_ENABLED=true
+V3_DASHBOARD_INVOICE_API_ENABLED=false
+V3_INVOICE_PDFS -> legendmural-v3-invoice-pdfs-prod
+```
+
+The safe checkout proof used only `OPTIONS` and created no PayPal order.
+
+The dedicated `dist/email-products/**` namespace is therefore included in the successfully deployed Static Assets build. A provider-side fetch / actual recipient render is still a separate proof and must not be inferred from the deploy alone.
+
+## Successful synthetic non-payment email delivery proof
+
+After explicit owner approval, exactly one synthetic transactional email was sent using the live stable `/email-products/**` product source.
+
+Resend email ID:
+
+`01a0c8b8-1df2-7769-b432-ac72cacd9164`
+
+Provider result:
+
+```text
+status: delivered
+message_id: present
+processed inline attachments: 2
+legendmural-logo.png: 25,948 bytes
+legendmural-product-1.png: 528,353 bytes
+```
+
+This proves that Resend successfully fetched the deployed product image from the dedicated `/email-products/**` Static Asset namespace, processed both CID attachments, and delivered the message to the test recipient.
+
+No PayPal order, payment, Neon order, invoice, R2 write or customer order was created by this proof.
+
+The receiving mailbox was then checked by the owner, who confirmed that the delivered email renders correctly. This closes the recipient-side visual verification for the CID logo and product artwork.
+
+## Email-media incident status — CLOSED
+
+The full non-payment proof is now complete:
+
+```text
+stable /email-products/** build path: PASS
+Cloudflare Production deploy: PASS
+Resend product fetch: PASS
+CID logo processing: PASS
+CID product processing: PASS
+provider delivery: PASS
+recipient-side visual rendering: PASS
+```
+
+No further email-media engineering is required for this incident.
+
 ## Exact next engineering step
 
-> PR #296 is merged. Obtain fresh owner approval to deploy exact current `main` `e96c3489ada7f4522dbd164584e1ae180c76ff24` to Cloudflare Production. After deployment, verify the dedicated `/email-products/**` asset path live and then send one synthetic non-payment email proof. Do not create another PayPal order or payment.
+> Merge the current documentation-only PR that records the successful Production deploy, delivered synthetic proof and recipient-side visual confirmation. Do not perform another email send, PayPal order or Production deploy for this closed incident.
 
 ## Dashboard state
 
