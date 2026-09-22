@@ -25,7 +25,7 @@ test('street input keeps the iOS-safe editable address configuration', () => {
   assert.match(app, /bindEditableAddressFields\(\{/);
 });
 
-test('Google API key remains scoped to the separate sticker fact feature', () => {
-  assert.match(app, /const GP_API_KEY =/);
-  assert.match(app, /kgsearch\.googleapis\.com\/v1\/entities:search/);
+test('public storefront no longer contains the deprecated Google Knowledge Graph key', () => {
+  assert.doesNotMatch(app, /const GP_API_KEY =/);
+  assert.doesNotMatch(app, /kgsearch\.googleapis\.com\/v1\/entities:search/);
 });

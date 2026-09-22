@@ -2,6 +2,8 @@
 
 > **CURRENT OVERRIDE — 21 September 2026:** read [`CURRENT_STATUS_20260921.md`](CURRENT_STATUS_20260921.md) immediately after this heading. It supersedes older Cloudflare/P3/V3 runtime-state statements where they conflict. The current repository targets normal V3 checkout with P3 disabled, but the last directly proven remote P3 state found in Actions was still enabled; the exact next Production safety action is a separately approved P3 `disable` workflow run.
 
+> **SECURITY CLEANUP — 22 September 2026:** storefront PR #300 removes an unused public Google Knowledge Graph API key/client fetch and the dead sticker-fact modal. No Production deploy is included in that PR. After merge, deploy the resulting code through the guarded Cloudflare Production workflow before considering the public-key exposure removed from the live site. Because the key existed in public repository history, revoke/rotate or explicitly restrict the old Google key separately if it is still active.
+
 **Repository:** `ALKAVisuals/legend-stories-website`  
 **Scope:** public LegendMural webshop / launch-readiness plus explicitly scoped Cloudflare/payment runtime work  
 **Current runtime state:** Cloudflare hosting/DNS migration complete; PayPal P1/P2/P3 complete; Production order-email runtime enabled; customer checkout still fail-closed  
