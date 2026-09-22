@@ -2,7 +2,7 @@
 
 **Updated:** 2026-09-21  
 **Repository:** `ALKAVisuals/legend-stories-website`  
-**Latest synchronized main:** `86f8903eba5587cb1526ecfe8b606900b73a5f15`  
+**Latest synchronized main:** `46c7f830909fa8ec56305626630c130dac1ba518`  
 **Purpose:** compact source of truth for the current Cloudflare / PayPal / V3 checkout and invoice-delivery state.
 
 > Read this before older Cloudflare, P3 or V3 status files. Older dated handoffs remain historical evidence but do not override this checkpoint.
@@ -307,6 +307,41 @@ No further email-media engineering is required for this incident.
 ## Exact next engineering step
 
 > Merge the current documentation-only PR that records the successful Production deploy, delivered synthetic proof and recipient-side visual confirmation. Do not perform another email send, PayPal order or Production deploy for this closed incident.
+
+## Public Google Knowledge Graph key cleanup — MERGED AND DEPLOYED
+
+Storefront PR #300 removed the unused browser-visible Google Knowledge Graph API key and its dead client-side sticker-fact feature.
+
+Merged Production code:
+
+`46c7f830909fa8ec56305626630c130dac1ba518`
+
+Owner-approved guarded Cloudflare Production run:
+
+`35724593502`
+
+The deployment completed successfully and proved:
+
+```text
+exact approved main commit: PASS
+guarded contract tests: PASS
+storefront production build: PASS
+Cloudflare active-state predeploy verification: PASS
+Wrangler dry-run: PASS
+2 changed Static Assets uploaded: PASS
+legendmural-cloudflare-production deploy: PASS
+postdeploy guarded-state verification: PASS
+ordinary public checkout route active: PASS
+PayPal order created by verification: no
+```
+
+The deployed storefront therefore no longer includes the removed Knowledge Graph key/fetch path in the current built code.
+
+Historical exposure remains a separate credential-management concern: because the old key existed in public repository history, it should be revoked/rotated or explicitly restricted in Google Cloud if it is still active. No Google Cloud credential mutation was performed by this repository change.
+
+## Exact next engineering step
+
+> Confirm the historical Google Knowledge Graph key is revoked, rotated or safely restricted in Google Cloud if it still exists. No storefront code change is required for that credential action. After that, continue the launch-hardening checklist with the next prioritized site item.
 
 ## Dashboard state
 
