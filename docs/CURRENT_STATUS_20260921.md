@@ -2,7 +2,7 @@
 
 **Updated:** 2026-09-21  
 **Repository:** `ALKAVisuals/legend-stories-website`  
-**Latest synchronized main:** `b93e165162af71224a0fe98e0ccd9affffca00ef`  
+**Latest synchronized main:** `e96c3489ada7f4522dbd164584e1ae180c76ff24`  
 **Purpose:** compact source of truth for the current Cloudflare / PayPal / V3 checkout and invoice-delivery state.
 
 > Read this before older Cloudflare, P3 or V3 status files. Older dated handoffs remain historical evidence but do not override this checkpoint.
@@ -192,9 +192,9 @@ This isolates the remaining defect to the product-image remote attachment source
 
 No recipient delivery occurred for this failed proof.
 
-## Stable email product asset repair — IMPLEMENTED, NOT MERGED / NOT DEPLOYED
+## Stable email product asset repair — MERGED, NOT YET DEPLOYED
 
-Storefront PR #296 currently contains this repair. The tested PR head before this handoff-only synchronization was `316eba7e20c3f9f925c654345af1b49c4dd8a6fb`.
+Storefront PR #296 contains this repair and was merged to `main` as `e96c3489ada7f4522dbd164584e1ae180c76ff24`. The final merged PR head was `3b07c697da495bf3c4722314f36a0ccc9653ea74`.
 
 Full CI on that implementation head was green:
 
@@ -229,7 +229,7 @@ The repair:
 
 ## Exact next engineering step
 
-> Complete CI for the stable email-product asset repair, then obtain separate owner approval to merge its exact PR head. After merge, obtain a separate Production-deploy approval before retesting one synthetic email. Do not create another PayPal order or payment for this visual proof.
+> PR #296 is merged. Obtain fresh owner approval to deploy exact current `main` `e96c3489ada7f4522dbd164584e1ae180c76ff24` to Cloudflare Production. After deployment, verify the dedicated `/email-products/**` asset path live and then send one synthetic non-payment email proof. Do not create another PayPal order or payment.
 
 ## Dashboard state
 
