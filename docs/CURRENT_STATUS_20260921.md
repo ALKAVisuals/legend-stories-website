@@ -2,7 +2,7 @@
 
 **Updated:** 2026-09-21  
 **Repository:** `ALKAVisuals/legend-stories-website`  
-**Latest synchronized main:** `86f8903eba5587cb1526ecfe8b606900b73a5f15`  
+**Latest synchronized main:** `70d4d9edcaa50fc9cf9d43027ff4238b4249766c`  
 **Purpose:** compact source of truth for the current Cloudflare / PayPal / V3 checkout and invoice-delivery state.
 
 > Read this before older Cloudflare, P3 or V3 status files. Older dated handoffs remain historical evidence but do not override this checkpoint.
@@ -304,9 +304,29 @@ recipient-side visual rendering: PASS
 
 No further email-media engineering is required for this incident.
 
+## Commerce readiness owner decision — no further real-payment proof required
+
+After the successful earlier real-money V3 payment proof, the successful Production checkout activation, and the completed email-media Production proof, the owner explicitly decided that no additional controlled or normal real PayPal payment should be performed merely to re-prove the same path.
+
+Current operational conclusion:
+
+```text
+ordinary Production checkout: active
+PayPal Live: enabled
+durable Profile-1 order creation: enabled
+invoice reconciliation: enabled
+private R2 invoice storage: enabled
+order emails: enabled
+P3 one-cent test window: disabled
+email logo/product CID rendering: proven
+additional real-money regression order required before selling: no
+```
+
+A future real customer order will naturally exercise the combined live path again, but launch readiness is not gated on creating another owner-funded test order.
+
 ## Exact next engineering step
 
-> Merge the current documentation-only PR that records the successful Production deploy, delivered synthetic proof and recipient-side visual confirmation. Do not perform another email send, PayPal order or Production deploy for this closed incident.
+> Treat payment and customer email delivery as operationally ready. Do not create another PayPal test payment unless a new defect, code change or runtime incident creates a concrete reason to re-test it. Continue with the next separately prioritized LegendMural workstream.
 
 ## Dashboard state
 
